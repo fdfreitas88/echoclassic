@@ -1,0 +1,204 @@
+
+/* "Proximas" — a fila de reproducao. E a playlist do servidor espelhada, nao uma
+   copia no cliente: tocar um album carrega o album inteiro no LMS e salta para a
+   faixa, entao o que aparece aqui e exatamente o que o servidor vai tocar.
+
+   Abre pelo hamburguer, que existe em dois lugares: na mini-barra e na fileira
+   de transporte da tela cheia. Fica acima de tudo, inclusive da tela cheia — a
+   ordem inversa ja quebrou duas vezes. */
+Vue.component('lms-queue', {
+  props: { inline: { type: Boolean, default: false } },
+  template: `
+<div :class="{'queue-wrap-inline': inline}">
+  <div v-if="!inline" class="queueback" @click="close"></div>
+  <div ref="queue" class="queue" :class="{overfull: ui.full && !inline, inline: inline}"
+       role="dialog" :aria-modal="String(!inline)" aria-label="Fila de reprodução"
+       :tabindex="inline ? null : -1" @keydown.esc="onEsc" @keydown.tab="trapFocus">
+    <div class="qhead">
+	      <span class="ttl">{{ queueTitle }}</span>
+	      <span class="n" v-if="confirmClear">Limpar a fila inteira?</span>
+	      <span class="n" v-else-if="tracks.length">{{ countLabel }} · {{ remaining }}</span>
+      <template v-if="confirmClear">
+        <button type="button" class="clear destructive pointer" @click="clear">Limpar tudo</button>
+        <button type="button" class="clear pointer" @click="confirmClear = false">Cancelar</button>
+      </template>
+      <template v-else>
+        <button type="button" class="clear pointer" v-if="store.queueUndo.length"
+                @click="undo">Desfazer</button>
+        <button type="button" class="clear pointer" v-if="tracks.length > store.queueIndex + 1"
+                @click="clearUpcoming">Limpar próximas</button>
+        <button type="button" class="clear destructive pointer" v-if="tracks.length"
+                @click="confirmClear = true">Limpar tudo</button>
+      </template>
+      <button v-if="!inline" type="button" class="queue-dismiss pointer"
+              title="Fechar fila" aria-label="Fechar fila" @click="close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+	    <div class="queue-modes">
+	      <button type="button" :class="{on: store.shuffle}" @click="shuffle">{{ shuffleLabel }}</button>
+	      <button type="button" :class="{on: store.repeat}" @click="repeat">{{ repeatLabel }}</button>
+	    </div>
+	    <div v-if="playStartsLabel" class="queue-start" role="status">{{ playStartsLabel }}</div>
+
+	    <div class="qbody" v-if="tracks.length">
+	      <div v-for="t in tracks" :key="t.index + '-' + t.id" class="qrow"
+	           :class="{now: isNow(t)}" :aria-current="isNow(t) ? 'true' : null"
+	           role="group" :aria-label="trackLabel(t)">
+	        <button type="button" class="qrow-main pointer" :aria-label="trackLabel(t)"
+	                @click="jump(t)">
+	          <span v-if="isNow(t)" class="nowmark" aria-hidden="true">▶</span>
+	          <span class="cover" :style="coverStyle(t)"></span>
+	          <span class="ell">
+	            <span class="t ell">{{ t.title }}</span>
+	            <span class="s ell">{{ sub(t) }}</span>
+	          </span>
+	          <span class="dur">{{ dur(t.duration) }}</span>
+	        </button>
+	        <span class="queue-reorder">
+          <button type="button" :data-move="t.index + ':-1'" :disabled="t.index <= 0"
+                  :title="'Mover ' + t.title + ' para cima'" :aria-label="'Mover ' + t.title + ' para cima'"
+                  @click.stop="move(t, -1)">↑</button>
+          <button type="button" :data-move="t.index + ':1'" :disabled="t.index >= tracks.length - 1"
+                  :title="'Mover ' + t.title + ' para baixo'" :aria-label="'Mover ' + t.title + ' para baixo'"
+                  @click.stop="move(t, 1)">↓</button>
+        </span>
+        <button type="button" class="drag pointer" title="Remover"
+                :aria-label="'Remover ' + t.title + ' da fila'" @click.stop="remove(t)">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="qempty" v-else>
+      A fila está vazia. Toque um álbum ou uma playlist e as faixas seguintes
+      entram aqui.
+    </div>
+  </div>
+</div>`,
+  data: function () {
+    return { ui: LmsUi.state, store: LmsStore.state, previousFocus: null,
+             confirmClear: false };
+  },
+  computed: {
+	    tracks: function () { return this.store.queue; },
+	    queueTitle: function () { return 'Fila de reprodução'; },
+    /* queueIndex cai em zero quando o servidor nao manda indice; sem faixa
+       corrente de fato isso marcaria a primeira linha por engano. */
+    hasCurrent: function () {
+      return this.store.mode !== 'stop' || this.store.np.id != null;
+    },
+	    remaining: function () {
+	      var s = LmsStore.queueRemaining();
+	      return s ? LmsFmt.longDuration(s) + ' restantes' : 'ao vivo';
+	    },
+	    countLabel: function () {
+	      var total = this.store.queueTotal || this.tracks.length;
+	      var label = total + (total === 1 ? ' faixa' : ' faixas');
+	      return total > this.tracks.length ? this.tracks.length + ' de ' + label + ' carregadas' : label;
+	    },
+	    playStartsLabel: function () {
+	      if (!this.tracks.length || this.store.mode !== 'stop') return '';
+	      var index = Math.max(0, Math.min(this.tracks.length - 1, this.store.queueIndex || 0));
+	      var track = this.tracks.filter(function (t) { return t.index === index; })[0] || this.tracks[index];
+	      /* O rotulo e montado aqui, entao a frase pronta nunca bate com uma
+	         chave do dicionario. Traduz-se o prefixo antes de concatenar. */
+	      var prefix = (window.LmsStr ? LmsStr.t('Play iniciará: ') : 'Play iniciará: ');
+	      return track ? prefix + track.title : '';
+	    },
+    shuffleLabel: function () {
+      return ['Aleatório desativado', 'Aleatório por músicas', 'Aleatório por álbuns'][this.store.shuffle] ||
+             'Aleatório desativado';
+    },
+    repeatLabel: function () {
+      return ['Repetição desativada', 'Repetir uma música', 'Repetir toda a fila'][this.store.repeat] ||
+             'Repetição desativada';
+    }
+  },
+  methods: {
+    dur: function (s) { return s ? LmsFmt.duration(s) : '—'; },
+    isNow: function (t) {
+      return this.hasCurrent && t.index === this.store.queueIndex;
+    },
+	    sub: function (t) {
+	      var parts = [];
+	      if (t.artist) parts.push(t.artist);
+	      if (t.album) parts.push(t.album);
+	      return parts.join(' — ');
+	    },
+	    trackLabel: function (t) {
+	      return [t.title, this.sub(t), this.dur(t.duration)].filter(Boolean).join(', ');
+	    },
+    coverStyle: function (t) {
+      var url = LmsFmt.coverUrl(t.coverId, 50);
+      return url ? { backgroundImage: 'url(' + url + ')', backgroundSize: 'cover' } : {};
+    },
+    close: function () {
+      if (this.inline) return;
+      LmsUi.state.queueOpen = false;
+      var previous = this.previousFocus;
+      setTimeout(function () { if (previous && previous.focus) previous.focus(); }, 0);
+    },
+    /* So engole o Esc quando ele fecha alguma coisa aqui; inline a folha nao
+       fecha e o Esc precisa chegar ao player cheio. */
+    onEsc: function (event) {
+      if (this.confirmClear) {
+        event.stopPropagation();
+        event.preventDefault();
+        this.confirmClear = false;
+        return;
+      }
+      if (this.inline) return;
+      event.stopPropagation();
+      event.preventDefault();
+      this.close();
+    },
+    trapFocus: function (event) {
+      if (this.inline || !this.$refs.queue) return;
+      var nodes = Array.prototype.slice.call(this.$refs.queue.querySelectorAll('button:not([disabled]), [tabindex="0"]'))
+        .filter(function (node) { return node.offsetParent !== null; });
+      if (!nodes.length) return;
+      if (event.shiftKey && document.activeElement === nodes[0]) {
+        event.preventDefault(); nodes[nodes.length - 1].focus();
+      } else if (!event.shiftKey && document.activeElement === nodes[nodes.length - 1]) {
+        event.preventDefault(); nodes[0].focus();
+      }
+    },
+    jump: function (t) { LmsStore.jumpTo(t.index); },
+    remove: function (t) { LmsStore.removeFromQueue(t.index); },
+    move: function (t, delta) {
+      var to = t.index + delta;
+      if (to < 0 || to >= this.tracks.length) return;
+      var self = this;
+      /* A linha e recriada a cada reordenacao; sem devolver o foco ao botao o
+         teclado cai no body e o passo seguinte fica inalcancavel. */
+      Promise.resolve(LmsStore.moveInQueue(t.index, to)).then(function () {
+        self.$nextTick(function () { self.focusMove(to, delta); });
+      });
+    },
+    focusMove: function (index, delta) {
+      if (!this.$refs.queue) return;
+      var node = this.$refs.queue.querySelector('[data-move="' + index + ':' + delta + '"]');
+      // no topo ou no fim o botao usado fica desabilitado; o par assume o foco
+      if (!node || node.disabled) {
+        node = this.$refs.queue.querySelector('[data-move="' + index + ':' + (-delta) + '"]');
+      }
+      if (node && !node.disabled && node.focus) node.focus();
+    },
+    shuffle: function () { LmsStore.cycleShuffle(); },
+    repeat: function () { LmsStore.cycleRepeat(); },
+    clearUpcoming: function () { LmsStore.clearUpcoming(); },
+    undo: function () { LmsStore.undoQueue(); },
+    clear: function () {
+      this.confirmClear = false;
+      LmsStore.clearQueue();
+    }
+  },
+  created: function () { LmsStore.loadQueue(); },
+  mounted: function () {
+    if (this.inline) return;
+    this.previousFocus = document.activeElement;
+    var self = this;
+    this.$nextTick(function () { if (self.$refs.queue) self.$refs.queue.focus(); });
+  }
+});

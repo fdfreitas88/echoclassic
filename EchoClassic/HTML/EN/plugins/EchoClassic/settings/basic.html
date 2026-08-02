@@ -1,0 +1,33 @@
+[% PROCESS settings/header.html %]
+
+<div class="settingSection">
+	<div class="settingGroup">
+		<div class="prefHead">[% "PLUGIN_ECHOCLASSIC_SHOWSPECBADGES" | string %]</div>
+		<div class="prefDesc">[% "PLUGIN_ECHOCLASSIC_SHOWSPECBADGES_DESC" | string %]</div>
+		<div class="prefs">
+			<input type="checkbox" name="pref_showSpecBadges" value="1" [% IF prefs.showSpecBadges %]checked="checked"[% END %] />
+		</div>
+	</div>
+
+	<div class="settingGroup">
+		<div class="prefHead">[% "PLUGIN_ECHOCLASSIC_MARKHIRES" | string %]</div>
+		<div class="prefDesc">[% "PLUGIN_ECHOCLASSIC_MARKHIRES_DESC" | string %]</div>
+		<div class="prefs">
+			<input type="checkbox" name="pref_markHiRes" value="1" [% IF prefs.markHiRes %]checked="checked"[% END %] />
+		</div>
+	</div>
+
+	<div class="settingGroup">
+		<div class="prefHead">[% "PLUGIN_ECHOCLASSIC_DARKTHEME" | string %]</div>
+		<div class="prefDesc">[% "PLUGIN_ECHOCLASSIC_DARKTHEME_DESC" | string %]</div>
+		<div class="prefs">
+			<input type="checkbox" name="pref_darkTheme" value="1" [% IF prefs.darkTheme %]checked="checked"[% END %] />
+		</div>
+	</div>
+
+	<div class="settingGroup">
+		<div class="prefDesc">[% "PLUGIN_ECHOCLASSIC_SETTINGS_NOTE" | string %]</div>
+	</div>
+</div>
+
+[% PROCESS settings/footer.html %]

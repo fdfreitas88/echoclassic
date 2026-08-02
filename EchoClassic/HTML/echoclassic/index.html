@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+[% PERL %]
+print('<html lang="' . Plugins::EchoClassic::Plugin->getHtmlLang() . '">' . "\n");
+[% END %]
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Echo Classic</title>
+[% PERL %]
+# LMS serves these with Cache-Control: max-age=604800. Every asset URL carries a
+# revision so a reinstall cannot leave the browser running last week's code
+# beside this week's — which is exactly how a working build looked broken once.
+my $rev = Plugins::EchoClassic::Plugin->getAssetRevision();
+print("<link href=\"html/css/ios9.css?r=$rev\" rel=\"stylesheet\">\n");
+[% END %]
+</head>
+<body>
+<div id="app"></div>
+[% PERL %]
+my $lms  = Plugins::EchoClassic::Plugin->getLmsVersion();
+my $skin = Plugins::EchoClassic::Plugin->getSkinVersion();
+my $hint = Plugins::EchoClassic::Plugin->getPlayerHint();
+my $rev  = Plugins::EchoClassic::Plugin->getAssetRevision();
+
+print("<script>\n");
+print('const LMS_VERSION="'        . Plugins::EchoClassic::Plugin::jsLiteral($lms)  . "\";\n");
+print('const LMS_SKIN_VERSION="'   . Plugins::EchoClassic::Plugin::jsLiteral($skin) . "\";\n");
+print('const LMS_PLAYER_HINT="'    . Plugins::EchoClassic::Plugin::jsLiteral($hint) . "\";\n");
+print('const LMS_ASSET_REVISION="' . Plugins::EchoClassic::Plugin::jsLiteral($rev)  . "\";\n");
+print('const LMS_LANG="' . Plugins::EchoClassic::Plugin->getLang() . "\";\n");
+print('const LMS_STRINGS=' . Plugins::EchoClassic::Plugin->getStringMapJson() . ";\n");
+print("</script>\n");
+
+# Load order is dependency order: libraries, then the data layer, then the
+# chrome, then the tab bodies, then the app that mounts them.
+for my $src (qw(
+	html/lib/vue.min.js
+	html/js/i18n.js
+	html/js/format.js
+	html/js/ui.js
+	html/js/api.js
+	html/js/store.js
+	html/js/nav.js
+	html/js/actions.js
+	html/js/chrome/statusbar.js
+	html/js/chrome/navbar.js
+	html/js/chrome/miniplayer.js
+	html/js/chrome/tabbar.js
+	html/js/albumblock.js
+	html/js/detail.js
+	html/js/browse.js
+	html/js/search.js
+	html/js/playlists.js
+	html/js/opmlview.js
+	html/js/settings.js
+	html/js/nowplaying.js
+	html/js/queue.js
+	html/js/app.js
+)) {
+	print("<script src=\"$src?r=$rev\"></script>\n");
+}
+[% END %]
+</body>
+</html>

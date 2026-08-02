@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Descritor de repositorio de extensoes do LMS.
+
+  Depois que o repositorio estiver no GitHub e houver uma release publicada,
+  troque OWNER pelo dono do repositorio e confira que o <url> aponta para um zip
+  que contem a pasta EchoClassic na raiz. O <sha> e o SHA-1 desse zip:
+
+      shasum -a 1 EchoClassic-3.0.1.zip
+
+  O usuario final adiciona a URL crua deste arquivo em
+  Ajustes do servidor > Plugins > Repositorios adicionais:
+
+      https://raw.githubusercontent.com/OWNER/echoclassic/main/repo.xml
+-->
+<extensions>
+  <details>
+    <title lang="EN">Echo Classic</title>
+    <title lang="PT">Echo Classic</title>
+  </details>
+  <plugins>
+    <plugin name="EchoClassic" version="3.0.1" minTarget="8.0" maxTarget="*">
+      <title lang="EN">Echo Classic</title>
+      <title lang="PT">Echo Classic</title>
+      <desc lang="EN">The iPad Music look of iOS 9, over your own library. Shows the native sample rate and bit depth of what actually reaches the DAC.</desc>
+      <desc lang="PT">A aparencia do app Musica do iPad no iOS 9, sobre a sua biblioteca. Mostra a taxa nativa e a profundidade de bits do que realmente chega ao DAC.</desc>
+      <url>https://github.com/OWNER/echoclassic/releases/download/v3.0.1/EchoClassic-3.0.1.zip</url>
+      <link>https://github.com/OWNER/echoclassic</link>
+      <sha>PREENCHER_COM_SHA1_DO_ZIP</sha>
+      <creator>Felipe Freitas</creator>
+      <email>64909764+fdfreitas88@users.noreply.github.com</email>
+    </plugin>
+  </plugins>
+</extensions>

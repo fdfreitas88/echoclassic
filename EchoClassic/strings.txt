@@ -1,0 +1,1073 @@
+ECHOCLASSIC_SKIN
+	EN	Echo Classic
+	PT	Echo Classic
+
+PLUGIN_ECHOCLASSIC_SKIN
+	EN	The iPad Music look of iOS 9, over your own library. Shows the native sample rate and bit depth of what actually reaches the DAC.
+	PT	A aparência do app Música do iPad no iOS 9, sobre a sua biblioteca. Mostra a taxa nativa e a profundidade de bits do que realmente chega ao DAC.
+
+PLUGIN_ECHOCLASSIC_SKIN_SETTINGS
+	EN	Echo Classic
+	PT	Echo Classic
+
+PLUGIN_ECHOCLASSIC_SHOWSPECBADGES
+	EN	Show sample rate and bit depth
+	PT	Mostrar taxa de amostragem e profundidade de bits
+
+PLUGIN_ECHOCLASSIC_SHOWSPECBADGES_DESC
+	EN	Adds the native sample rate and bit depth of the current track to the bottom bar and to the full player.
+	PT	Acrescenta a taxa nativa e a profundidade de bits da faixa atual na barra inferior e no player completo.
+
+PLUGIN_ECHOCLASSIC_MARKHIRES
+	EN	Highlight high resolution audio
+	PT	Destacar áudio de alta resolução
+
+PLUGIN_ECHOCLASSIC_MARKHIRES_DESC
+	EN	Highlights the sample rate or the bit depth when it is above CD quality.
+	PT	Destaca a taxa ou a profundidade de bits quando ela está acima da qualidade de CD.
+
+PLUGIN_ECHOCLASSIC_DARKTHEME
+	EN	Start in dark theme
+	PT	Iniciar no tema escuro
+
+PLUGIN_ECHOCLASSIC_DARKTHEME_DESC
+	EN	Initial theme for a browser that has not opened this skin before. Each browser keeps its own choice after that.
+	PT	Tema inicial para um navegador que ainda não abriu esta skin. Depois disso, cada navegador guarda a própria escolha.
+
+PLUGIN_ECHOCLASSIC_SETTINGS_NOTE
+	EN	These are the defaults for a new browser. The skin's own Settings tab has the full set of options, including colour scheme, fonts and player layout.
+	PT	Estes são os padrões para um navegador novo. A aba Ajustes da própria skin tem o conjunto completo de opções, incluindo esquema de cores, fontes e layout do player.
+
+# ====================================================================
+# Texto da interface. A linha PT e a chave que o JavaScript procura:
+# ela precisa bater exatamente com a frase escrita no template.
+# Para acrescentar um idioma, adicione a linha do codigo dele aqui.
+# ====================================================================
+
+ECHOCLASSIC_UI_15_MINUTES
+	EN	15 minutes
+	PT	15 minutos
+
+ECHOCLASSIC_UI_1_HOUR
+	EN	1 hour
+	PT	1 hora
+
+ECHOCLASSIC_UI_30_MINUTES
+	EN	30 minutes
+	PT	30 minutos
+
+ECHOCLASSIC_UI_ACTIONS_FOR
+	EN	Actions for 
+	PT	Ações para 
+
+ECHOCLASSIC_UI_ACTIVE_PLAYER
+	EN	Active player
+	PT	Player ativo
+
+ECHOCLASSIC_UI_ADAPTIVE
+	EN	Adaptive
+	PT	Adaptável
+
+ECHOCLASSIC_UI_ADD
+	EN	Add
+	PT	Adicionar
+
+ECHOCLASSIC_UI_ADDING_TO_PLAYLIST
+	EN	Adding to playlist…
+	PT	Adicionando à playlist…
+
+ECHOCLASSIC_UI_ADDING_TO_THE_QUEUE
+	EN	Adding to the queue
+	PT	A inclusão na fila
+
+ECHOCLASSIC_UI_ADD_TO_END_OF_QUEUE
+	EN	Add to end of queue
+	PT	Adicionar ao final da fila
+
+ECHOCLASSIC_UI_ADD_TO_PLAYBACK_QUEUE
+	EN	Add to playback queue
+	PT	Adicionar à fila de reprodução
+
+ECHOCLASSIC_UI_ADD_TO_PLAYLIST
+	EN	Add to playlist…
+	PT	Adicionar à playlist…
+
+ECHOCLASSIC_UI_ADVANCED_LMS_SETTINGS
+	EN	Advanced LMS settings
+	PT	Configurações avançadas do LMS
+
+ECHOCLASSIC_UI_ALBUM
+	EN	Album
+	PT	Álbum
+
+ECHOCLASSIC_UI_ALBUMS
+	EN	Albums
+	PT	Álbuns
+
+ECHOCLASSIC_UI_ALBUM_ARTIST
+	EN	Album artist
+	PT	Artista do álbum
+
+ECHOCLASSIC_UI_ALBUM_TECHNICAL_DETAILS
+	EN	Album technical details
+	PT	Informações técnicas do álbum
+
+ECHOCLASSIC_UI_ALPHABETICAL_INDEX
+	EN	Alphabetical index
+	PT	Índice alfabético
+
+ECHOCLASSIC_UI_APPEARANCE
+	EN	Appearance
+	PT	Aparência
+
+ECHOCLASSIC_UI_APPEARANCE_AND_PREFERENCES
+	EN	Appearance and preferences
+	PT	Aparência e preferências
+
+ECHOCLASSIC_UI_ARTIST
+	EN	Artist
+	PT	Artista
+
+ECHOCLASSIC_UI_ARTISTS
+	EN	Artists
+	PT	Artistas
+
+ECHOCLASSIC_UI_ASCENDING_ORDER
+	EN	Ascending order
+	PT	Ordem crescente
+
+ECHOCLASSIC_UI_ATLANTIC_TEAL
+	EN	Atlantic Teal
+	PT	Teal Atlântico
+
+ECHOCLASSIC_UI_AVAILABLE
+	EN	available
+	PT	disponíveis
+
+ECHOCLASSIC_UI_AVAILABLE_DURING_PLAYBACK_WITH_NOTHING_PLAYI
+	EN	Available during playback: with nothing playing there is no end to wait for.
+	PT	Disponível durante a reprodução: sem nada tocando não há fim para esperar.
+
+ECHOCLASSIC_UI_A_PLAYLIST_WITH_THAT_NAME_ALREADY_EXISTED_IT
+	EN	A playlist with that name already existed; it was reused.
+	PT	Já existia uma playlist com esse nome; ela foi reaproveitada.
+
+ECHOCLASSIC_UI_BACK
+	EN	Back
+	PT	Voltar
+
+ECHOCLASSIC_UI_BACK_TO_ADAPTIVE_MODE
+	EN	Back to adaptive mode
+	PT	Voltar ao modo adaptável
+
+ECHOCLASSIC_UI_CANCEL
+	EN	Cancel
+	PT	Cancelar
+
+ECHOCLASSIC_UI_CHANGING_FAVOURITES
+	EN	Changing favourites
+	PT	A alteração dos favoritos
+
+ECHOCLASSIC_UI_CHANGING_REPEAT
+	EN	Changing repeat
+	PT	A alteração da repetição
+
+ECHOCLASSIC_UI_CHANGING_SHUFFLE
+	EN	Changing shuffle
+	PT	A alteração do modo aleatório
+
+ECHOCLASSIC_UI_CHANGING_THE_VOLUME_MODE
+	EN	Changing the volume mode
+	PT	A alteração do modo de volume
+
+ECHOCLASSIC_UI_CHOOSE_AN_ITEM_FROM_THE_LIST_ON_THE_LEFT
+	EN	Choose an item from the list on the left.
+	PT	Escolha um item na lista à esquerda.
+
+ECHOCLASSIC_UI_CLASSIC
+	EN	Classic
+	PT	Clássico
+
+ECHOCLASSIC_UI_CLEARING_THE_UPCOMING_TRACKS
+	EN	Clearing the upcoming tracks
+	PT	A limpeza das próximas faixas
+
+ECHOCLASSIC_UI_CLEAR_ALL
+	EN	Clear all
+	PT	Limpar tudo
+
+ECHOCLASSIC_UI_CLEAR_THE_WHOLE_QUEUE
+	EN	Clear the whole queue?
+	PT	Limpar a fila inteira?
+
+ECHOCLASSIC_UI_CLEAR_UPCOMING
+	EN	Clear upcoming
+	PT	Limpar próximas
+
+ECHOCLASSIC_UI_CLOSE
+	EN	Close
+	PT	Fechar
+
+ECHOCLASSIC_UI_CLOSE_QUEUE
+	EN	Close queue
+	PT	Fechar fila
+
+ECHOCLASSIC_UI_COLOUR_SCHEME
+	EN	Colour scheme
+	PT	Esquema de cores
+
+ECHOCLASSIC_UI_COLUMN_ON_WIDE_SCREENS_OVERLAY_ON_COMPACT_ON
+	EN	Column on wide screens; overlay on compact ones
+	PT	Coluna em telas largas; sobreposição nas compactas
+
+ECHOCLASSIC_UI_COMPOSER
+	EN	Composer
+	PT	Compositor
+
+ECHOCLASSIC_UI_COMPOSITION
+	EN	Composition
+	PT	Composição
+
+ECHOCLASSIC_UI_CONDUCTOR
+	EN	Conductor
+	PT	Regência
+
+ECHOCLASSIC_UI_CONNECTED
+	EN	connected
+	PT	conectado
+
+ECHOCLASSIC_UI_CONNECTION
+	EN	Connection
+	PT	Conexão
+
+ECHOCLASSIC_UI_CONNECTION_RESTORED
+	EN	Connection restored.
+	PT	Conexão restaurada.
+
+ECHOCLASSIC_UI_CONTINUE_PLAYBACK_ON_THIS_PLAYER
+	EN	Continue playback on this player
+	PT	Continuar a reprodução neste player
+
+ECHOCLASSIC_UI_COULD_NOT_ADD_TO_THE_PLAYLIST
+	EN	Could not add to the playlist. 
+	PT	Não foi possível adicionar à playlist. 
+
+ECHOCLASSIC_UI_COULD_NOT_FIND_THE_SERVER
+	EN	Could not find the server.
+	PT	Não foi possível localizar o servidor.
+
+ECHOCLASSIC_UI_COULD_NOT_IMPORT
+	EN	Could not import: 
+	PT	Não foi possível importar: 
+
+ECHOCLASSIC_UI_COULD_NOT_OPEN
+	EN	Could not open
+	PT	Não deu para abrir
+
+ECHOCLASSIC_UI_COULD_NOT_REACH_THE_SERVER
+	EN	Could not reach the server.
+	PT	Não foi possível alcançar o servidor.
+
+ECHOCLASSIC_UI_COULD_NOT_READ_THE_LIBRARY
+	EN	Could not read the library
+	PT	Não deu para ler a biblioteca
+
+ECHOCLASSIC_UI_COULD_NOT_READ_THE_PLAYLISTS
+	EN	Could not read the playlists
+	PT	Não deu para ler as playlists
+
+ECHOCLASSIC_UI_COULD_NOT_READ_THE_SERVER
+	EN	Could not read the server: 
+	PT	Não deu para ler o servidor: 
+
+ECHOCLASSIC_UI_COULD_NOT_UPDATE_FAVOURITES
+	EN	Could not update favourites. 
+	PT	Não foi possível atualizar os favoritos. 
+
+ECHOCLASSIC_UI_CREDITS
+	EN	Credits
+	PT	Créditos
+
+ECHOCLASSIC_UI_CREDITS_AND_INFORMATION
+	EN	Credits and information
+	PT	Créditos e informações
+
+ECHOCLASSIC_UI_CROSSFADE
+	EN	Crossfade
+	PT	Transição
+
+ECHOCLASSIC_UI_CURRENT_POSITION
+	EN	Current position: 
+	PT	Posição atual: 
+
+ECHOCLASSIC_UI_DARK
+	EN	dark
+	PT	escuro
+
+ECHOCLASSIC_UI_DARK_THEME
+	EN	Dark theme
+	PT	Tema escuro
+
+ECHOCLASSIC_UI_DESCENDING_ORDER
+	EN	Descending order
+	PT	Ordem decrescente
+
+ECHOCLASSIC_UI_DISPLAY
+	EN	Display
+	PT	Exibição
+
+ECHOCLASSIC_UI_DONE
+	EN	Done
+	PT	Concluído
+
+ECHOCLASSIC_UI_EDITION
+	EN	Edition 
+	PT	Edição 
+
+ECHOCLASSIC_UI_EDITORIAL_CRIMSON
+	EN	Editorial Crimson
+	PT	Carmim Editorial
+
+ECHOCLASSIC_UI_ENTER_A_FULL_ADDRESS_STARTING_WITH_HTTP_OR_H
+	EN	Enter a full address starting with http:// or https://.
+	PT	Informe um endereço completo, começando por http:// ou https://.
+
+ECHOCLASSIC_UI_ENTER_THE_FULL_STREAM_ADDRESS_INCLUDING_HTTP
+	EN	Enter the full stream address, including http:// or https://
+	PT	Informe o endereço completo do stream, incluindo http:// ou https://
+
+ECHOCLASSIC_UI_EXPORT
+	EN	Export
+	PT	Exportar
+
+ECHOCLASSIC_UI_FAVOURITES
+	EN	Favourites
+	PT	Favoritos
+
+ECHOCLASSIC_UI_FILE_INCOMPATIBLE_WITH_THIS_VERSION_OF_THE_S
+	EN	file incompatible with this version of the skin
+	PT	arquivo incompatível com esta versão da skin
+
+ECHOCLASSIC_UI_FILTER
+	EN	Filter
+	PT	Filtrar
+
+ECHOCLASSIC_UI_FIXED_OUTPUT
+	EN	Fixed output
+	PT	Saída fixa
+
+ECHOCLASSIC_UI_FIXED_OUTPUT_CONFIRMED_SET_THE_VOLUME_ON_THE
+	EN	Fixed output confirmed. Set the volume on the DAC.
+	PT	Saída fixa confirmada. Ajuste o volume no DAC.
+
+ECHOCLASSIC_UI_FIXED_OUTPUT_NO_ATTENUATION
+	EN	Fixed output (no attenuation)
+	PT	Saída fixa (sem atenuação)
+
+ECHOCLASSIC_UI_FIXED_OUTPUT_VOLUME_IS_SET_ON_THE_DAC
+	EN	Fixed output: volume is set on the DAC.
+	PT	Saída fixa: o volume é ajustado no DAC.
+
+ECHOCLASSIC_UI_FLAT
+	EN	Flat
+	PT	Plano
+
+ECHOCLASSIC_UI_FOLLOW_THEME
+	EN	Follow theme
+	PT	Acompanhar tema
+
+ECHOCLASSIC_UI_FONTS
+	EN	Fonts
+	PT	Fontes
+
+ECHOCLASSIC_UI_FORMAT
+	EN	Format
+	PT	Formato
+
+ECHOCLASSIC_UI_FULL_PLAYER
+	EN	Full player
+	PT	Player completo
+
+ECHOCLASSIC_UI_FULL_PLAYER_LAYOUT
+	EN	Full player layout
+	PT	Layout do player completo
+
+ECHOCLASSIC_UI_FULL_SCREEN
+	EN	Full screen
+	PT	Tela cheia
+
+ECHOCLASSIC_UI_GENRE
+	EN	Genre
+	PT	Gênero
+
+ECHOCLASSIC_UI_GENRES
+	EN	Genres
+	PT	Gêneros
+
+ECHOCLASSIC_UI_GROUP_OR_FILTER
+	EN	Group or filter
+	PT	Agrupar ou filtrar
+
+ECHOCLASSIC_UI_HIDE_QUEUE
+	EN	Hide queue
+	PT	Ocultar Próximas
+
+ECHOCLASSIC_UI_HIGHLIGHT_HIGH_RESOLUTION_AUDIO
+	EN	Highlight high resolution audio
+	PT	Destacar áudio de alta resolução
+
+ECHOCLASSIC_UI_HIGHLIGHT_HI_RES
+	EN	Highlight hi-res
+	PT	Destacar hi-res
+
+ECHOCLASSIC_UI_HI_FI_AMBER
+	EN	Hi-Fi Amber
+	PT	Âmbar Hi-Fi
+
+ECHOCLASSIC_UI_HOME
+	EN	Home
+	PT	Início
+
+ECHOCLASSIC_UI_IMPORT
+	EN	Import
+	PT	Importar
+
+ECHOCLASSIC_UI_IMPORT_AND_RELOAD
+	EN	Import and reload
+	PT	Importar e recarregar
+
+ECHOCLASSIC_UI_IMPORT_PREFERENCES_FROM_THIS_FILE
+	EN	Import preferences from this file?
+	PT	Importar preferências deste arquivo?
+
+ECHOCLASSIC_UI_INFORMATION
+	EN	Information
+	PT	Informações
+
+ECHOCLASSIC_UI_INVALID_JSON
+	EN	invalid JSON
+	PT	JSON inválido
+
+ECHOCLASSIC_UI_LIBRARY
+	EN	Library
+	PT	Biblioteca
+
+ECHOCLASSIC_UI_LIGHT
+	EN	light
+	PT	claro
+
+ECHOCLASSIC_UI_LIGHT_THEME
+	EN	Light theme
+	PT	Tema claro
+
+ECHOCLASSIC_UI_LIVE
+	EN	LIVE
+	PT	AO VIVO
+
+ECHOCLASSIC_UI_LIVE_2
+	EN	live
+	PT	ao vivo
+
+ECHOCLASSIC_UI_LMS_ADJUSTS_THE_OUTPUT_LEVEL
+	EN	LMS adjusts the output level
+	PT	O LMS ajusta o nível de saída
+
+ECHOCLASSIC_UI_LMS_DID_NOT_CONFIRM_THE_VOLUME_MODE
+	EN	LMS did not confirm the volume mode.
+	PT	O LMS não confirmou o modo de volume.
+
+ECHOCLASSIC_UI_LMS_HAS_NOT_CONFIRMED_THIS_PLAYER_S_VOLUME_M
+	EN	LMS has not confirmed this player's volume mode yet.
+	PT	O LMS ainda não confirmou o modo de volume deste player.
+
+ECHOCLASSIC_UI_LMS_SERVER
+	EN	LMS Server
+	PT	Servidor LMS
+
+ECHOCLASSIC_UI_LMS_SETTINGS
+	EN	LMS settings
+	PT	Configurações do LMS
+
+ECHOCLASSIC_UI_LOAD_MORE_SONGS
+	EN	Load more songs
+	PT	Carregar mais músicas
+
+ECHOCLASSIC_UI_LOCAL
+	EN	Local
+	PT	Local
+
+ECHOCLASSIC_UI_LOCAL_LIBRARY
+	EN	Local library
+	PT	Biblioteca local
+
+ECHOCLASSIC_UI_LOCK_SCREEN_CONTROLS
+	EN	Lock screen controls
+	PT	Controles na tela bloqueada
+
+ECHOCLASSIC_UI_LOCK_SPLIT
+	EN	Lock split
+	PT	Bloquear divisão
+
+ECHOCLASSIC_UI_MAIN_NAVIGATION
+	EN	Main navigation
+	PT	Navegação principal
+
+ECHOCLASSIC_UI_MINI_PLAYER
+	EN	Mini player
+	PT	Mini player
+
+ECHOCLASSIC_UI_MORE_ACTIONS
+	EN	More actions
+	PT	Mais ações
+
+ECHOCLASSIC_UI_MORE_ACTIONS_FOR
+	EN	More actions for 
+	PT	Mais ações para 
+
+ECHOCLASSIC_UI_MY_MUSIC
+	EN	My Music
+	PT	Minha Música
+
+ECHOCLASSIC_UI_NATIVE_LMS_PAGES_OPEN_INSIDE_SETTINGS_KEEPIN
+	EN	Native LMS pages open inside Settings, keeping Echo Classic navigation.
+	PT	As páginas nativas do LMS abrem dentro dos Ajustes, preservando a navegação do Echo Classic.
+
+ECHOCLASSIC_UI_NAVIGATION
+	EN	Navigation
+	PT	Navegação
+
+ECHOCLASSIC_UI_NEW_PLAYLIST
+	EN	New playlist…
+	PT	Nova playlist…
+
+ECHOCLASSIC_UI_NEXT
+	EN	Next
+	PT	Próxima
+
+ECHOCLASSIC_UI_NEXT_TRACK
+	EN	Next track
+	PT	Próxima faixa
+
+ECHOCLASSIC_UI_NOTHING_PLAYING
+	EN	Nothing playing
+	PT	Nada tocando
+
+ECHOCLASSIC_UI_NOT_AVAILABLE
+	EN	not available
+	PT	não informado
+
+ECHOCLASSIC_UI_NOT_AVAILABLE_2
+	EN	Not available
+	PT	Não informado
+
+ECHOCLASSIC_UI_NOT_CONFIRMED
+	EN	not confirmed
+	PT	não confirmado
+
+ECHOCLASSIC_UI_NOT_CONFIRMED_BY_LMS
+	EN	Not confirmed by LMS
+	PT	Estado não confirmado pelo LMS
+
+ECHOCLASSIC_UI_NOT_SUPPORTED_IN_THIS_BROWSER
+	EN	not supported in this browser
+	PT	não suportados neste navegador
+
+ECHOCLASSIC_UI_NO_ALBUMS_FOR_THIS_ITEM
+	EN	No albums for this item.
+	PT	Nenhum álbum para este item.
+
+ECHOCLASSIC_UI_NO_CONNECTION_TO_THE_PLAYER
+	EN	No connection to the player.
+	PT	Sem conexão com o player.
+
+ECHOCLASSIC_UI_NO_CREDITS_IN_THE_METADATA
+	EN	No credits in the metadata.
+	PT	Créditos não informados nos metadados.
+
+ECHOCLASSIC_UI_NO_CROSSFADE_GAPLESS
+	EN	No crossfade / gapless
+	PT	Sem transição / gapless
+
+ECHOCLASSIC_UI_NO_EDITABLE_PLAYLISTS
+	EN	No editable playlists.
+	PT	Nenhuma playlist editável.
+
+ECHOCLASSIC_UI_NO_ITEMS_FOUND_IN_THIS_CATEGORY
+	EN	No items found in this category.
+	PT	Nenhum item encontrado nesta categoria.
+
+ECHOCLASSIC_UI_NO_PLAYER_IS_AVAILABLE
+	EN	No player is available.
+	PT	Nenhum player está disponível.
+
+ECHOCLASSIC_UI_NO_PLAYER_IS_CONNECTED
+	EN	No player is connected.
+	PT	Nenhum player está conectado.
+
+ECHOCLASSIC_UI_NO_RADIO_SOURCE_IS_AVAILABLE_ENABLE_A_RADIO_
+	EN	No radio source is available. Enable a radio service in the advanced LMS settings.
+	PT	Nenhuma fonte de rádio está disponível. Ative um serviço de rádio nas configurações avançadas do LMS.
+
+ECHOCLASSIC_UI_NO_RESULTS
+	EN	No results
+	PT	Nenhum resultado
+
+ECHOCLASSIC_UI_ORIGINAL_YEAR
+	EN	Original year
+	PT	Ano original
+
+ECHOCLASSIC_UI_PAUSE
+	EN	Pause
+	PT	Pausar
+
+ECHOCLASSIC_UI_PINNED_ITEMS
+	EN	Pinned items
+	PT	Itens fixados
+
+ECHOCLASSIC_UI_PLAY
+	EN	Play
+	PT	Tocar
+
+ECHOCLASSIC_UI_PLAYBACK
+	EN	Playback
+	PT	Reprodução
+
+ECHOCLASSIC_UI_PLAYBACK_2
+	EN	playback
+	PT	reprodução
+
+ECHOCLASSIC_UI_PLAYBACK_3
+	EN	Playback
+	PT	A reprodução
+
+ECHOCLASSIC_UI_PLAYBACK_HISTORY
+	EN	Playback history
+	PT	Histórico de reprodução
+
+ECHOCLASSIC_UI_PLAYBACK_QUEUE
+	EN	Playback queue
+	PT	Fila de reprodução
+
+ECHOCLASSIC_UI_PLAYER
+	EN	Player
+	PT	Player
+
+ECHOCLASSIC_UI_PLAYER_SESSION
+	EN	Player session
+	PT	Sessão do player
+
+ECHOCLASSIC_UI_PLAYER_SYNCHRONISATION
+	EN	Player synchronisation
+	PT	A sincronização dos players
+
+ECHOCLASSIC_UI_PLAYER_VOLUME
+	EN	Player volume
+	PT	Volume do player
+
+ECHOCLASSIC_UI_PLAYLISTS
+	EN	Playlists
+	PT	Playlists
+
+ECHOCLASSIC_UI_PLAYS
+	EN	Plays
+	PT	Reproduções
+
+ECHOCLASSIC_UI_PLAYS_2
+	EN	plays
+	PT	reproduções
+
+ECHOCLASSIC_UI_PLAY_WILL_START
+	EN	Play will start: 
+	PT	Play iniciará: 
+
+ECHOCLASSIC_UI_PREFERENCES_EXPORTED
+	EN	Preferences exported.
+	PT	Preferências exportadas.
+
+ECHOCLASSIC_UI_PREVIOUS
+	EN	Previous
+	PT	Anterior
+
+ECHOCLASSIC_UI_PREVIOUS_TRACK
+	EN	Previous track
+	PT	Faixa anterior
+
+ECHOCLASSIC_UI_PROGRESS_BARS
+	EN	Progress bars
+	PT	Barras de progresso
+
+ECHOCLASSIC_UI_RADIO
+	EN	Radio
+	PT	Rádio
+
+ECHOCLASSIC_UI_RATE_AND_BITS_IN_THE_BOTTOM_BAR
+	EN	Rate and bits in the bottom bar
+	PT	Taxa e bits na barra inferior
+
+ECHOCLASSIC_UI_RATING
+	EN	Rating
+	PT	Avaliação
+
+ECHOCLASSIC_UI_RECENT
+	EN	Recent
+	PT	Recentes
+
+ECHOCLASSIC_UI_RECENTLY_ADDED
+	EN	Recently added
+	PT	Adicionados recentemente
+
+ECHOCLASSIC_UI_RECENTLY_PLAYED
+	EN	Recently played
+	PT	Reproduzidos recentemente
+
+ECHOCLASSIC_UI_RECENT_SHOWS_THE_250_NEWEST_ALBUMS_USE_THE_F
+	EN	Recent shows the 250 newest albums. Use the filter to narrow it down.
+	PT	Recentes mostra os 250 álbuns mais novos. Use o filtro para refinar.
+
+ECHOCLASSIC_UI_RELATED_ARTIST
+	EN	Related artist
+	PT	Artista relacionado
+
+ECHOCLASSIC_UI_RELEASE
+	EN	Release
+	PT	Lançamento
+
+ECHOCLASSIC_UI_REMAINING
+	EN	remaining
+	PT	restantes
+
+ECHOCLASSIC_UI_REMOTE_STREAMING
+	EN	Remote / streaming
+	PT	Remoto / streaming
+
+ECHOCLASSIC_UI_REMOVING_FROM_THE_QUEUE
+	EN	Removing from the queue
+	PT	A remoção da fila
+
+ECHOCLASSIC_UI_REMOVING_SONGS
+	EN	Removing songs…
+	PT	Removendo músicas…
+
+ECHOCLASSIC_UI_REORDERING_THE_QUEUE
+	EN	Reordering the queue
+	PT	A reordenação da fila
+
+ECHOCLASSIC_UI_REPEAT_OFF
+	EN	Repeat off
+	PT	Repetição desativada
+
+ECHOCLASSIC_UI_REPEAT_ONE_SONG
+	EN	Repeat one song
+	PT	Repetir uma música
+
+ECHOCLASSIC_UI_REPEAT_QUEUE
+	EN	Repeat queue
+	PT	Repetir a fila
+
+ECHOCLASSIC_UI_RESET_SPLIT
+	EN	Reset split
+	PT	Restaurar divisão
+
+ECHOCLASSIC_UI_RESIZE_PANELS
+	EN	Resize panels
+	PT	Redimensionar painéis
+
+ECHOCLASSIC_UI_RESOLUTION
+	EN	Resolution
+	PT	Resolução
+
+ECHOCLASSIC_UI_RESTORING_THE_QUEUE
+	EN	Restoring the queue
+	PT	A restauração da fila
+
+ECHOCLASSIC_UI_SAVE
+	EN	Save
+	PT	Salvar
+
+ECHOCLASSIC_UI_SEARCH
+	EN	Search
+	PT	Buscar
+
+ECHOCLASSIC_UI_SEARCH_FAILED
+	EN	Search failed
+	PT	Não deu para buscar
+
+ECHOCLASSIC_UI_SEARCH_THE_LIBRARY
+	EN	Search the library
+	PT	Buscar na biblioteca
+
+ECHOCLASSIC_UI_SECURITY_AND_COMPATIBILITY
+	EN	Security and compatibility
+	PT	Segurança e compatibilidade
+
+ECHOCLASSIC_UI_SELECT
+	EN	Select
+	PT	Selecionar
+
+ECHOCLASSIC_UI_SERVER
+	EN	Server
+	PT	Servidor
+
+ECHOCLASSIC_UI_SERVER_VERSION
+	EN	Server version
+	PT	Versão do servidor
+
+ECHOCLASSIC_UI_SETTINGS
+	EN	Settings
+	PT	Ajustes
+
+ECHOCLASSIC_UI_SHOW_FULL_SCREEN
+	EN	Show full screen
+	PT	Mostrar em tela cheia
+
+ECHOCLASSIC_UI_SHOW_QUEUE
+	EN	Show queue
+	PT	Mostrar Próximas
+
+ECHOCLASSIC_UI_SHUFFLE
+	EN	Shuffle
+	PT	Aleatório
+
+ECHOCLASSIC_UI_SHUFFLE_ALBUMS
+	EN	Shuffle albums
+	PT	Aleatório por álbuns
+
+ECHOCLASSIC_UI_SHUFFLE_OFF
+	EN	Shuffle off
+	PT	Aleatório desativado
+
+ECHOCLASSIC_UI_SHUFFLE_SONGS
+	EN	Shuffle songs
+	PT	Aleatório por músicas
+
+ECHOCLASSIC_UI_SKIN_PREFERENCES
+	EN	Skin preferences
+	PT	Preferências da skin
+
+ECHOCLASSIC_UI_SKIN_VERSION
+	EN	Skin version
+	PT	Versão da skin
+
+ECHOCLASSIC_UI_SLEEP_TIMER
+	EN	Sleep timer
+	PT	Temporizador
+
+ECHOCLASSIC_UI_SONG
+	EN	song
+	PT	música
+
+ECHOCLASSIC_UI_SONGS
+	EN	Songs
+	PT	Músicas
+
+ECHOCLASSIC_UI_SONGS_2
+	EN	songs
+	PT	músicas
+
+ECHOCLASSIC_UI_SPLIT_LOCKED
+	EN	Split locked
+	PT	Divisão bloqueada
+
+ECHOCLASSIC_UI_SPLIT_OPTIONS
+	EN	Split options
+	PT	Opções da divisão
+
+ECHOCLASSIC_UI_STANDARD_RESOLUTION
+	EN	Standard resolution
+	PT	Resolução padrão
+
+ECHOCLASSIC_UI_STOP
+	EN	Stop
+	PT	Parar
+
+ECHOCLASSIC_UI_STOPPED
+	EN	Stopped
+	PT	Parado
+
+ECHOCLASSIC_UI_STOP_AT_END
+	EN	Stop at end
+	PT	Parar ao terminar
+
+ECHOCLASSIC_UI_STOP_WHEN_THIS_PLAYBACK_ENDS
+	EN	Stop when this playback ends
+	PT	Desligar quando esta reprodução terminar
+
+ECHOCLASSIC_UI_STREAMING_SERVICES
+	EN	Streaming services
+	PT	Serviços de streaming
+
+ECHOCLASSIC_UI_STUDIO_INDIGO
+	EN	Studio Indigo
+	PT	Índigo Studio
+
+ECHOCLASSIC_UI_SYSTEM_BLUE
+	EN	System Blue
+	PT	Azul Sistema
+
+ECHOCLASSIC_UI_SYSTEM_DEFAULT
+	EN	System (default)
+	PT	Sistema (padrão)
+
+ECHOCLASSIC_UI_THEME
+	EN	Theme
+	PT	Tema
+
+ECHOCLASSIC_UI_THE_CONNECTION_TO_THE_PLAYER_WAS_LOST
+	EN	The connection to the player was lost.
+	PT	A conexão com o player foi interrompida.
+
+ECHOCLASSIC_UI_THE_CROSSFADE_SETTING
+	EN	The crossfade setting
+	PT	A configuração da transição
+
+ECHOCLASSIC_UI_THE_FILE_COULD_NOT_BE_READ
+	EN	the file could not be read
+	PT	o arquivo não pôde ser lido
+
+ECHOCLASSIC_UI_THE_FILE_HAS_NO_ECHO_CLASSIC_PREFERENCES
+	EN	the file has no Echo Classic preferences
+	PT	o arquivo não traz nenhuma preferência do Echo Classic
+
+ECHOCLASSIC_UI_THE_FILE_IS_NOT_VALID_JSON
+	EN	the file is not valid JSON
+	PT	o arquivo não é JSON válido
+
+ECHOCLASSIC_UI_THE_NEXT_TRACK
+	EN	The next track
+	PT	A próxima faixa
+
+ECHOCLASSIC_UI_THE_OPERATION_DID_NOT_COMPLETE
+	EN	The operation did not complete.
+	PT	A operação não foi concluída.
+
+ECHOCLASSIC_UI_THE_QUEUE
+	EN	The queue
+	PT	A fila
+
+ECHOCLASSIC_UI_THE_RATING
+	EN	The rating
+	PT	A avaliação
+
+ECHOCLASSIC_UI_THE_SEARCH_DID_NOT_COMPLETE
+	EN	The search did not complete.
+	PT	A busca não foi concluída.
+
+ECHOCLASSIC_UI_THE_SERVER_REJECTED_THIS_COMMAND
+	EN	The server rejected this command.
+	PT	O servidor não aceitou este comando.
+
+ECHOCLASSIC_UI_THE_SERVER_RESPONSE_WAS_INCOMPLETE_OR_UNREAD
+	EN	The server response was incomplete or unreadable.
+	PT	A resposta do servidor veio incompleta ou ilegível.
+
+ECHOCLASSIC_UI_THE_SLEEP_TIMER_SETTING
+	EN	The sleep timer setting
+	PT	A configuração do temporizador
+
+ECHOCLASSIC_UI_THIS_ALBUM_RETURNED_NO_TRACKS
+	EN	This album returned no tracks.
+	PT	Este álbum não devolveu faixas.
+
+ECHOCLASSIC_UI_THIS_LIST_HAS_NO_ITEMS_RIGHT_NOW
+	EN	This list has no items right now.
+	PT	Esta lista não tem itens no momento.
+
+ECHOCLASSIC_UI_THIS_PLAYLIST_HAS_NO_SONGS_YET
+	EN	This playlist has no songs yet.
+	PT	Esta playlist ainda não tem músicas.
+
+ECHOCLASSIC_UI_THIS_REMOVES_THE_PLAYLIST_FROM_LMS
+	EN	This removes the playlist from LMS.
+	PT	Esta ação remove a playlist do LMS.
+
+ECHOCLASSIC_UI_THIS_SONG
+	EN	This song
+	PT	Esta música
+
+ECHOCLASSIC_UI_THIS_TRACK_DOES_NOT_BELONG_TO_AN_ALBUM_USE_T
+	EN	This track does not belong to an album. Use the actions to play it or add it to the queue.
+	PT	Esta faixa não pertence a um álbum. Use as ações para reproduzir ou adicionar à fila.
+
+ECHOCLASSIC_UI_TO_QUEUE
+	EN	to queue
+	PT	à fila
+
+ECHOCLASSIC_UI_TRACK
+	EN	track
+	PT	faixa
+
+ECHOCLASSIC_UI_TRACKS
+	EN	Tracks
+	PT	Faixas
+
+ECHOCLASSIC_UI_TRACKS_2
+	EN	tracks
+	PT	faixas
+
+ECHOCLASSIC_UI_TRACK_INFORMATION
+	EN	Track information
+	PT	Informações da faixa
+
+ECHOCLASSIC_UI_TRACK_POSITION
+	EN	Track position
+	PT	Posição da faixa
+
+ECHOCLASSIC_UI_TRANSFERRING_PLAYBACK
+	EN	Transferring playback
+	PT	A transferência da reprodução
+
+ECHOCLASSIC_UI_TRY_AGAIN
+	EN	Try again
+	PT	Tentar novamente
+
+ECHOCLASSIC_UI_TYPE_AN_ARTIST_ALBUM_OR_TRACK
+	EN	Type an artist, album or track.
+	PT	Digite um artista, álbum ou faixa.
+
+ECHOCLASSIC_UI_UNAVAILABLE
+	EN	unavailable
+	PT	indisponível
+
+ECHOCLASSIC_UI_UNDO
+	EN	Undo
+	PT	Desfazer
+
+ECHOCLASSIC_UI_UNITY_GAIN_TO_THE_DAC_LMS_DOES_NOT_TOUCH_THE
+	EN	Unity gain to the DAC: LMS does not touch the samples. Set the volume on the DAC itself.
+	PT	Ganho unitário até o DAC: o LMS não toca nas amostras. Ajuste o volume no próprio DAC.
+
+ECHOCLASSIC_UI_UNLOCK_SPLIT
+	EN	Unlock split
+	PT	Desbloquear divisão
+
+ECHOCLASSIC_UI_VOLUME
+	EN	Volume
+	PT	Volume
+
+ECHOCLASSIC_UI_VOLUME_CONTROLLED_BY_LMS
+	EN	Volume controlled by LMS
+	PT	Volume controlado pelo LMS
+
+ECHOCLASSIC_UI_YEAR
+	EN	Year
+	PT	Ano
+
+ECHOCLASSIC_UI_YEARS
+	EN	Years
+	PT	Anos
+
+ECHOCLASSIC_UI_YEAR_OF_THIS_EDITION
+	EN	Year of this edition
+	PT	Ano desta edição
+
+ECHOCLASSIC_UI_YOU_HAVE_NOT_ADDED_ANY_FAVOURITES_YET_USE_AD
+	EN	You have not added any favourites yet. Use “Add to Favourites” in the menu of a track or station.
+	PT	Você ainda não adicionou favoritos. Use “Adicionar aos Favoritos” no menu de uma faixa ou estação.
+
+ECHOCLASSIC_UI_STYLE_REMEMBERED_PER_THEME
+	EN	The style is remembered separately for each theme. What you choose here applies to the
+	PT	O estilo é lembrado separadamente para cada tema. O que você escolher aqui vale para o tema
+
+ECHOCLASSIC_UI_STYLE_OTHER_THEME_KEEPS
+	EN	theme; the other theme keeps its own.
+	PT	; o outro tema mantém o dele.

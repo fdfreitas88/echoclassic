@@ -1,2 +1,9 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Normaliza fim de linha no repositorio; o servidor le tudo como texto.
+* text=auto eol=lf
+
+# Nao sao codigo do projeto: nao contam em estatisticas nem em diffs de revisao.
+EchoClassic/HTML/echoclassic/html/lib/** linguist-vendored
+*.min.js -diff linguist-generated
+
+# Templates do Template Toolkit sao HTML para efeito de destaque de sintaxe.
+EchoClassic/HTML/EN/**/*.html linguist-language=HTML
