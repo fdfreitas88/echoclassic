@@ -57,3 +57,45 @@ test('validSortForView aceita e recusa exatamente o que aceitava antes', functio
   assert.equal(set('albuns', 'format:a:b'), false, 'o valor do filtro nao pode ter dois-pontos');
   assert.equal(set('anos', 'artist'), false, 'anos aceita apenas name e year');
 });
+
+/* Resolve os computeds na ordem em que eles dependem uns dos outros e devolve um
+   `this` utilizavel. O Vue faria isso sozinho; aqui nao ha Vue. */
+function computedsFor(view, sortKey) {
+  const captured = helpers.browseComponent();
+  const def = captured.def;
+  const data = def.data();
+  const self = { view: view, ui: { sortKey: sortKey }, MEDIA_FORMATS: data.MEDIA_FORMATS, rows: [] };
+  self.mediaDescriptor = def.methods.mediaDescriptor.bind(self);
+  self.groupsAlbumsByArtist = def.computed.groupsAlbumsByArtist.call(self);
+  self.groupsMainArtists = def.computed.groupsMainArtists.call(self);
+  self.allowsMediaFilter = def.computed.allowsMediaFilter.call(self);
+  self.hasMediaFilter = def.computed.hasMediaFilter.call(self);
+  return { self: self, def: def, ctx: captured.ctx };
+}
+
+test('o menu so libera filtro de midia onde a view sabe aplicar', function () {
+  assert.equal(computedsFor('albuns', 'name').self.allowsMediaFilter, true);
+  assert.equal(computedsFor('recentes', 'recent').self.allowsMediaFilter, true);
+  assert.equal(computedsFor('artistas', 'name').self.allowsMediaFilter, false);
+  assert.equal(computedsFor('generos', 'name').self.allowsMediaFilter, false);
+  assert.equal(computedsFor('anos', 'year').self.allowsMediaFilter, false);
+});
+
+/* O bug C: escolher um formato em Artistas trocava a view para Albuns por conta
+   propria, e a tela passava a mostrar albuns onde se esperava artistas. O ui.js
+   ja recusa a chave sozinho -- este desvio era a unica coisa que fazia a tela
+   saltar. */
+test('setSort nao troca de view pelas costas do usuario', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const body = src.split('setSort: function (key)')[1].split('},')[0];
+  assert.doesNotMatch(body, /setMusicView/,
+    'escolher um formato em Artistas nao pode saltar para Albuns');
+});
+
+test('os grupos de midia ficam desabilitados fora de Albuns e Recentes', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  ['Formato', 'Resolução', 'Local', 'Serviços de streaming'].forEach(function (label) {
+    const re = new RegExp('<optgroup label="' + label + '"[^>]*:disabled="!allowsMediaFilter"');
+    assert.match(src, re, label + ' precisa desabilitar fora de Albuns/Recentes');
+  });
+});

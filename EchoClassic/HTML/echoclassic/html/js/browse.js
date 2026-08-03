@@ -40,18 +40,18 @@ Vue.component('lms-browse', {
           <option v-if="view === 'albuns'" value="relatedArtist">Artista relacionado</option>
           <option v-if="view === 'albuns' || view === 'recentes'" value="year">Ano</option>
         </optgroup>
-        <optgroup label="Formato">
+        <optgroup label="Formato" :disabled="!allowsMediaFilter">
           <option v-for="f in MEDIA_FORMATS" :key="f.key" :value="'format:' + f.key">{{ f.label }}</option>
         </optgroup>
-        <optgroup label="Resolução">
+        <optgroup label="Resolução" :disabled="!allowsMediaFilter">
           <option value="quality:hires">Hi-Res</option>
           <option value="quality:standard">Resolução padrão</option>
         </optgroup>
-        <optgroup label="Local">
+        <optgroup label="Local" :disabled="!allowsMediaFilter">
           <option value="origin:local">Biblioteca local</option>
           <option value="origin:remote">Remoto / streaming</option>
         </optgroup>
-        <optgroup label="Serviços de streaming">
+        <optgroup label="Serviços de streaming" :disabled="!allowsMediaFilter">
           <option value="stream:qobuz">Qobuz</option>
           <option value="stream:youtube">YouTube</option>
         </optgroup>
@@ -234,8 +234,9 @@ Vue.component('lms-browse', {
 	    sortTitle: function () {
 	      return this.ui.sortDesc ? 'Mudar para ordem crescente' : 'Mudar para ordem decrescente';
 	    },
+    allowsMediaFilter: function () { return LmsUi.allowsMediaFilter(this.view); },
     hasMediaFilter: function () {
-      return (this.view === 'albuns' || this.view === 'recentes') &&
+      return this.allowsMediaFilter &&
         /^(format|quality|origin|stream):/.test(this.ui.sortKey);
     },
     showsAlbums: function () {
@@ -461,13 +462,11 @@ Vue.component('lms-browse', {
       var s = String(value || '').toLowerCase();
       return s.normalize ? s.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : s;
     },
+    /* Sem guarda aqui, de proposito: LmsUi.setSort ja recusa chave invalida para
+       a view corrente, e o menu desabilita o que nao se aplica. Uma terceira
+       copia da regra so daria mais um lugar para divergir -- e era exatamente
+       essa copia que trocava a view do usuario para fazer a escolha caber. */
     setSort: function (key) {
-      if (/^(format|quality|origin|stream):/.test(key) &&
-          this.view !== 'albuns' && this.view !== 'recentes') {
-        LmsUi.setMusicView('albuns');
-        LmsUi.setSort(key, this.ui.sortDesc);
-        return;
-      }
       LmsUi.setSort(key, this.ui.sortDesc);
     },
     toggleSelect: function () {
