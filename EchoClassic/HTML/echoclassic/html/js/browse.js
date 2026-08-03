@@ -756,9 +756,14 @@ Vue.component('lms-browse', {
 	      } else if (this.artistIndexTruncated) {
 	        this.limitWarning = 'O índice de artistas parou em 10.000 nomes. Álbuns de artistas além desse ponto aparecem como álbum nesta lista.';
 	      } else if (unattributed) {
-	        this.limitWarning = unattributed === 1
+	        /* O numero entra por {n}, depois da traducao. Concatenar o total na
+	           frente produzia uma frase que nunca batia com uma chave do
+	           dicionario -- este aviso aparecia em portugues numa sessao em
+	           ingles. O marcador tambem deixa o tradutor mover o numero. */
+	        this.limitWarning = this.tr(unattributed === 1
 	          ? '1 álbum não pôde ser atribuído a um artista do índice e aparece como álbum nesta lista.'
-	          : unattributed + ' álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.';
+	          : '{n} álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.'
+	        ).replace('{n}', unattributed);
 	      }
 	      if (!this.groupsAlbumsByArtist && !this.groupsAlbumsByRelatedArtist && !this.hasMediaFilter) {
 	        await this.disambiguateDuplicateAlbums(pid, token);

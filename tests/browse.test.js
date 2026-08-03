@@ -329,6 +329,47 @@ test('todo texto novo da interface chega traduzido, vindo do strings.txt real', 
   assert.equal(def.computed.sortSelectLabel.call(self), 'Sort');
 });
 
+/* Os avisos de truncamento sao montados em JavaScript e chegam ao template por
+   {{ limitWarning }}, que o i18n envolve em $t(). Traduzem, portanto -- desde que
+   a frase inteira exista no dicionario. O aviso de albuns nao atribuidos vinha
+   com o total concatenado na frente, entao a frase nunca batia com chave nenhuma
+   e aparecia em portugues numa sessao em ingles. Visto na tela do servidor. */
+test('todo aviso de limitWarning tem entrada no dicionario', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const dict = dictionaryFromStrings('EN');
+
+  /* Pega a expressao inteira de cada atribuicao e tira dela todos os literais.
+     Casar linha a linha deixava passar o ramo singular do ternario, que fica na
+     linha de baixo -- exatamente o tipo de furo que faz o teste passar sem
+     cobrir o que deveria. */
+  const frases = [];
+  const re = /limitWarning\s*=\s*([\s\S]*?);\s*\n/g;
+  let m;
+  while ((m = re.exec(src))) {
+    (m[1].match(/'((?:[^'\\]|\\.)*)'/g) || []).forEach(function (lit) {
+      const frase = lit.slice(1, -1);
+      if (frase.trim() && frase !== '{n}') frases.push(frase);
+    });
+  }
+
+  assert.ok(frases.length >= 6, 'esperava achar os avisos; achei ' + frases.length);
+  assert.ok(frases.some(function (f) { return f.indexOf('1 álbum') === 0; }),
+    'a forma singular precisa entrar na verificacao');
+  frases.forEach(function (frase) {
+    if (!frase.trim()) return;
+    assert.ok(dict[frase], 'aviso sem traducao no strings.txt: ' + frase);
+  });
+});
+
+test('o total de albuns nao atribuidos sobrevive a traducao', function () {
+  const dict = dictionaryFromStrings('EN');
+  const plural = '{n} álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.';
+  assert.ok(dict[plural], 'a forma plural precisa de entrada');
+  assert.match(dict[plural], /\{n\}/, 'a traducao precisa preservar o marcador {n}');
+  assert.equal(dict[plural].replace('{n}', 10).indexOf('{n}'), -1,
+    'depois do replace nao pode sobrar marcador');
+});
+
 /* .pane-left e um grid de duas colunas -- conteudo e a trilha de 28px do indice
    A-Z -- e TODO filho tem posicao explicita. Um filho novo sem grid-row/column
    cai no auto-placement e vai parar na coluna do indice: foi exatamente isso que

@@ -476,6 +476,30 @@ ECHOCLASSIC_UI_LIGHT_THEME
 	EN	Light theme
 	PT	Tema claro
 
+ECHOCLASSIC_UI_LIMIT_ARTIST_INDEX
+	EN	The artist index stopped at 10,000 names. Albums by artists beyond that point appear as albums in this list.
+	PT	O índice de artistas parou em 10.000 nomes. Álbuns de artistas além desse ponto aparecem como álbum nesta lista.
+
+ECHOCLASSIC_UI_LIMIT_GENRES
+	EN	This library has more than 2,000 genres; this screen shows the first 2,000.
+	PT	Esta biblioteca tem mais de 2.000 gêneros; esta tela mostra os 2.000 primeiros.
+
+ECHOCLASSIC_UI_LIMIT_LIBRARY_TRUNCATED
+	EN	The library has more items than this screen loaded. Use the filter to narrow the list.
+	PT	A biblioteca tem mais itens do que esta tela carregou. Use o filtro para refinar a lista.
+
+ECHOCLASSIC_UI_LIMIT_UNATTRIBUTED_MANY
+	EN	{n} albums could not be attributed to an artist in the index and appear as albums in this list.
+	PT	{n} álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.
+
+ECHOCLASSIC_UI_LIMIT_UNATTRIBUTED_ONE
+	EN	1 album could not be attributed to an artist in the index and appears as an album in this list.
+	PT	1 álbum não pôde ser atribuído a um artista do índice e aparece como álbum nesta lista.
+
+ECHOCLASSIC_UI_LIMIT_YEARS
+	EN	This library has more than 500 distinct years; this screen shows the first 500.
+	PT	Esta biblioteca tem mais de 500 anos distintos; esta tela mostra os 500 primeiros.
+
 ECHOCLASSIC_UI_LIVE
 	EN	LIVE
 	PT	AO VIVO
