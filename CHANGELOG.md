@@ -31,6 +31,13 @@ preferências nem na versão mínima do servidor.
 
 ### Alterado
 
+- `repo.xml` passa a declarar `<category>skin</category>`. Sem isso a
+  entrada ficava com categoria vazia e o filtro da página de plugins,
+  que compara `s.category == id` no navegador, escondia o item sempre que
+  qualquer categoria estivesse selecionada — inclusive "Skins", que é a
+  escolha natural de quem procura uma skin. O cabeçalho do repositório
+  continuava aparecendo, e por isso o sintoma era uma seção vazia. Não
+  altera o pacote nem o SHA-1 da release. [código]
 - `INSTALL.sh` deixa de acompanhar o pacote publicado. Ele é um utilitário de
   instalação manual específico do macOS; quem instala pelo gerenciador de
   extensões não tem uso para ele, e o script acabava dentro da pasta do plugin.
