@@ -135,6 +135,79 @@ test('clearMediaFilter devolve cada view a sua ordenacao propria', function () {
   assert.equal(LmsUi.state.musicView, 'albuns');
 });
 
+/* A mensagem generica era literalmente falsa: dizia que a categoria nao tem itens
+   quando o que houve foi um filtro escondendo todos eles. */
+test('a tela vazia diz qual filtro esta escondendo tudo', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const empty = src.split('v-else-if="!rows.length"')[1].split('<template v-else>')[0];
+
+  assert.match(empty, /v-if="hasMediaFilter"[^>]*class="p">[^<]*\{\{ mediaDescriptor\(\) \}\}/,
+    'com filtro ativo, a mensagem precisa nomear o filtro');
+  assert.match(empty, /v-else class="p">Nenhum item encontrado nesta categoria\./,
+    'sem filtro, a mensagem generica continua valendo');
+  assert.match(empty, /v-if="hasMediaFilter"[\s\S]*@click="clearMediaFilter"/,
+    'a tela vazia precisa oferecer a saida');
+});
+
+/* O texto fixo tem de ficar no template, e nao ser montado em JavaScript: o
+   i18n quebra o no de texto nas chaves duplas e procura cada pedaco literal no
+   dicionario, envolvendo so as expressoes em $t(). Uma frase ja concatenada
+   chegaria inteira -- com o nome do filtro no meio -- e nunca bateria com uma
+   chave. O nome do filtro fica no fim, para a frase traduzivel nao ser partida
+   em duas metades dependentes de ordem de palavras. */
+test('a frase da tela vazia e traduzivel: literal no template, filtro ao final', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const empty = src.split('v-else-if="!rows.length"')[1].split('<template v-else>')[0];
+  const linha = empty.split('\n').filter(function (l) { return l.indexOf('mediaDescriptor()') >= 0; })[0];
+  assert.ok(linha, 'deveria haver uma linha com mediaDescriptor()');
+
+  const texto = linha.replace(/^[^>]*>/, '');
+  const antes = texto.split('{{')[0].replace(/^\s+|\s+$/g, '');
+  const depois = texto.split('}}')[1].split('<')[0].replace(/^\s+|\s+$/g, '');
+  assert.ok(antes.length > 10, 'o literal antes do filtro precisa ser uma frase inteira');
+  assert.equal(depois, '.', 'depois do filtro so pode sobrar a pontuacao');
+});
+
+/* Prova de que a decisao acima funciona de ponta a ponta: com dicionario, o
+   literal sai traduzido e o descritor vira $t(...) para resolver em tempo de
+   execucao. Se alguem trocar isto por uma frase montada em JavaScript, o texto
+   volta a aparecer em portugues numa sessao em ingles, e este teste avisa. */
+test('os textos novos traduzem de verdade quando existe dicionario', function () {
+  let def = null;
+  const ctx = helpers.uiContext({
+    LMS_LANG: 'EN',
+    LMS_STRINGS: {
+      'Nada nesta categoria corresponde ao filtro': 'Nothing in this category matches the filter',
+      'Nenhum item encontrado nesta categoria.': 'Nothing found in this category.',
+      'Limpar filtro': 'Clear filter',
+      'Filtro ativo:': 'Active filter:'
+    },
+    Vue: {
+      prototype: {},
+      observable: function (o) { return o; },
+      component: function (name, definition) { def = definition; },
+      nextTick: function (f) { if (f) f(); }
+    }
+  });
+  helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/i18n.js');
+  helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/browse.js');
+
+  const tpl = def.template;
+  assert.match(tpl, /Nothing in this category matches the filter \{\{ \$t\(mediaDescriptor\(\)\) \}\}/);
+  assert.match(tpl, /Active filter: \{\{ \$t\(mediaDescriptor\(\)\) \}\}/);
+  assert.match(tpl, />Clear filter</);
+  assert.doesNotMatch(tpl, /Nada nesta categoria/,
+    'o portugues nao pode sobrar numa sessao com dicionario');
+});
+
+test('mediaDescriptor nomeia o filtro que esvazia Recentes', function () {
+  assert.equal(computedsFor('recentes', 'stream:qobuz').self.mediaDescriptor(), 'Qobuz');
+  assert.equal(computedsFor('albuns', 'quality:hires').self.mediaDescriptor(), 'Hi-Res');
+  assert.equal(computedsFor('albuns', 'format:flac').self.mediaDescriptor(), 'FLAC');
+  assert.equal(computedsFor('recentes', 'recent').self.mediaDescriptor(), '',
+    'sem filtro nao ha descritor, e a mensagem generica e a correta');
+});
+
 /* O portao 4 recalcula uma lista FIXA de pares de contraste. Um token de cor novo
    nao entra nessa lista, entao passaria sem nunca ser medido. */
 test('o chip usa apenas tokens de cor que ja existem no CSS', function () {

@@ -117,7 +117,9 @@ Vue.component('lms-browse', {
       </div>
       <div v-else-if="!rows.length" class="empty">
         <div class="h">{{ viewLabel }}</div>
-        <div class="p">Nenhum item encontrado nesta categoria.</div>
+        <div v-if="hasMediaFilter" class="p">Nada nesta categoria corresponde ao filtro {{ mediaDescriptor() }}.</div>
+        <div v-else class="p">Nenhum item encontrado nesta categoria.</div>
+        <button v-if="hasMediaFilter" class="retry-command" @click="clearMediaFilter">Limpar filtro</button>
       </div>
       <template v-else>
         <div :style="{height: topPad + 'px'}"></div>
