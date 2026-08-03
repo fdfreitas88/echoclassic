@@ -267,6 +267,68 @@ test('os rotulos calculados do menu passam pelo dicionario', function () {
   assert.equal(def.computed.displayGroupLabel.call(self), 'Group or sort');
 });
 
+/* Monta o dicionario a partir do strings.txt de verdade, do mesmo jeito que o
+   Plugin.pm::getStringMap monta: a chave e a frase em portugues, o valor e o
+   idioma da sessao. Verificar que o arquivo "contem o texto" nao provaria nada --
+   o que importa e a frase chegar traduzida na tela. */
+function dictionaryFromStrings(lang) {
+  const text = helpers.read('EchoClassic/strings.txt');
+  const entries = {};
+  let key = '';
+  text.split(/\r?\n/).forEach(function (line) {
+    const top = line.match(/^([A-Z0-9_]+)$/);
+    if (top) { key = top[1]; entries[key] = {}; return; }
+    const value = line.match(/^\t([A-Z]{2})\t([\s\S]*)$/);
+    if (value && key) entries[key][value[1]] = value[2];
+  });
+  const map = {};
+  Object.keys(entries).forEach(function (k) {
+    if (k.indexOf('ECHOCLASSIC_UI_') !== 0) return;
+    const pt = entries[k].PT;
+    const target = entries[k][lang] || entries[k].EN;
+    if (!pt || !target || target === pt) return;   /* Plugin.pm:151 */
+    map[pt] = target;
+  });
+  return map;
+}
+
+test('todo texto novo da interface chega traduzido, vindo do strings.txt real', function () {
+  let def = null;
+  const ctx = helpers.uiContext({
+    LMS_LANG: 'EN',
+    LMS_STRINGS: dictionaryFromStrings('EN'),
+    Vue: {
+      prototype: {},
+      observable: function (o) { return o; },
+      component: function (name, definition) { def = definition; },
+      nextTick: function (f) { if (f) f(); }
+    }
+  });
+  helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/i18n.js');
+  helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/browse.js');
+
+  const tpl = def.template;
+  ['Nada nesta categoria corresponde ao filtro', 'Filtro ativo:', 'Limpar filtro',
+   'Nenhum item encontrado nesta categoria.'].forEach(function (phrase) {
+    assert.ok(tpl.indexOf(phrase) < 0, 'sobrou em portugues no template: ' + phrase);
+  });
+  assert.match(tpl, /Nothing in this category matches the filter/);
+  assert.match(tpl, /Active filter:/);
+  assert.match(tpl, />Clear filter</);
+
+  /* Os rotulos calculados nao vivem no template: passam pelo tr() em tempo de
+     execucao, entao sao conferidos chamando as computeds. */
+  const self = { view: 'recentes' };
+  self.tr = def.methods.tr.bind(self);
+  assert.equal(def.computed.displayGroupLabel.call(self), 'Sort by');
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort or filter');
+  self.view = 'albuns';
+  assert.equal(def.computed.displayGroupLabel.call(self), 'Group or sort');
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Group, sort or filter');
+  self.view = 'artistas';
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort');
+});
+
 /* O portao 4 recalcula uma lista FIXA de pares de contraste. Um token de cor novo
    nao entra nessa lista, entao passaria sem nunca ser medido. */
 test('o chip usa apenas tokens de cor que ja existem no CSS', function () {

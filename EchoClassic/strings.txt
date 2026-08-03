@@ -60,6 +60,10 @@ ECHOCLASSIC_UI_ACTIONS_FOR
 	EN	Actions for 
 	PT	Ações para 
 
+ECHOCLASSIC_UI_ACTIVE_FILTER
+	EN	Active filter:
+	PT	Filtro ativo:
+
 ECHOCLASSIC_UI_ACTIVE_PLAYER
 	EN	Active player
 	PT	Player ativo
@@ -195,6 +199,10 @@ ECHOCLASSIC_UI_CLEARING_THE_UPCOMING_TRACKS
 ECHOCLASSIC_UI_CLEAR_ALL
 	EN	Clear all
 	PT	Limpar tudo
+
+ECHOCLASSIC_UI_CLEAR_FILTER
+	EN	Clear filter
+	PT	Limpar filtro
 
 ECHOCLASSIC_UI_CLEAR_THE_WHOLE_QUEUE
 	EN	Clear the whole queue?
@@ -408,6 +416,14 @@ ECHOCLASSIC_UI_GROUP_OR_FILTER
 	EN	Group or filter
 	PT	Agrupar ou filtrar
 
+ECHOCLASSIC_UI_GROUP_OR_SORT
+	EN	Group or sort
+	PT	Agrupar ou ordenar
+
+ECHOCLASSIC_UI_GROUP_SORT_OR_FILTER
+	EN	Group, sort or filter
+	PT	Agrupar, ordenar ou filtrar
+
 ECHOCLASSIC_UI_HIDE_QUEUE
 	EN	Hide queue
 	PT	Ocultar Próximas
@@ -523,6 +539,10 @@ ECHOCLASSIC_UI_MORE_ACTIONS
 ECHOCLASSIC_UI_MORE_ACTIONS_FOR
 	EN	More actions for 
 	PT	Mais ações para 
+
+ECHOCLASSIC_UI_NOTHING_MATCHES_FILTER
+	EN	Nothing in this category matches the filter
+	PT	Nada nesta categoria corresponde ao filtro
 
 ECHOCLASSIC_UI_OPEN_MY_MUSIC
 	EN	Open My Music
@@ -875,6 +895,18 @@ ECHOCLASSIC_UI_SONGS
 ECHOCLASSIC_UI_SONGS_2
 	EN	songs
 	PT	músicas
+
+ECHOCLASSIC_UI_SORT
+	EN	Sort
+	PT	Ordenar
+
+ECHOCLASSIC_UI_SORT_BY
+	EN	Sort by
+	PT	Ordenar por
+
+ECHOCLASSIC_UI_SORT_OR_FILTER
+	EN	Sort or filter
+	PT	Ordenar ou filtrar
 
 ECHOCLASSIC_UI_SPLIT_LOCKED
 	EN	Split locked
