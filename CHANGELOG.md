@@ -34,6 +34,14 @@ decidir, daqui a seis meses, se pode confiar na correção.
   armadilha por trás de "procurei Beatles na lista de artistas e vieram álbuns".
   O grupo do menu passa a se chamar "Agrupar ou ordenar" só em Álbuns, e
   "Ordenar por" no resto. A ordenação por artista continua existindo. **[código]**
+- **O aviso do filtro aparecia como uma tira vertical colada na lista**, e não
+  como uma barra acima dela. `.pane-left` é um grid de duas colunas — conteúdo e
+  a trilha do índice A-Z — em que todos os filhos têm posição explícita; o aviso
+  entrou sem uma e o auto-placement o jogou na coluna do índice. **[ao vivo]**
+- **Os avisos de truncamento apareciam em português numa sessão em inglês.**
+  Cinco das seis frases nunca tinham entrada em `strings.txt`, e a sexta trazia o
+  total concatenado na frente, então nenhuma chave podia casar com ela. O número
+  passa a entrar por `{n}`, depois da tradução. **[ao vivo]**
 - A suíte de testes estava vermelha desde a 3.1.2: `settings-import` montava um
   `LmsUi` de mentira, sem `TABS`, e quebrou quando `validateImportValue` passou a
   ler os enums da fonte. O código de produção estava certo; o stub é que
