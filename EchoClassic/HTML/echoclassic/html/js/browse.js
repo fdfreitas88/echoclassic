@@ -32,26 +32,26 @@ Vue.component('lms-browse', {
     <div class="library-tools">
       <input v-model="ui.filter" type="search" placeholder="Filtrar"
              :aria-label="'Filtrar ' + viewLabel.toLowerCase()">
-      <select :value="ui.sortKey" aria-label="Agrupar ou filtrar" @change="setSort($event.target.value)">
-        <optgroup label="Exibição">
+      <select :value="ui.sortKey" :aria-label="sortSelectLabel" @change="setSort($event.target.value)">
+        <optgroup :label="displayGroupLabel">
           <option v-if="view === 'recentes'" value="recent">Adicionados recentemente</option>
           <option :value="primaryOptionValue">{{ primaryOptionLabel }}</option>
           <option v-if="view === 'albuns' || view === 'recentes'" value="artist">Artista</option>
           <option v-if="view === 'albuns'" value="relatedArtist">Artista relacionado</option>
           <option v-if="view === 'albuns' || view === 'recentes'" value="year">Ano</option>
         </optgroup>
-        <optgroup label="Formato">
+        <optgroup label="Formato" :disabled="!allowsMediaFilter">
           <option v-for="f in MEDIA_FORMATS" :key="f.key" :value="'format:' + f.key">{{ f.label }}</option>
         </optgroup>
-        <optgroup label="Resolução">
+        <optgroup label="Resolução" :disabled="!allowsMediaFilter">
           <option value="quality:hires">Hi-Res</option>
           <option value="quality:standard">Resolução padrão</option>
         </optgroup>
-        <optgroup label="Local">
+        <optgroup label="Local" :disabled="!allowsMediaFilter">
           <option value="origin:local">Biblioteca local</option>
           <option value="origin:remote">Remoto / streaming</option>
         </optgroup>
-        <optgroup label="Serviços de streaming">
+        <optgroup label="Serviços de streaming" :disabled="!allowsMediaFilter">
           <option value="stream:qobuz">Qobuz</option>
           <option value="stream:youtube">YouTube</option>
         </optgroup>
@@ -104,6 +104,10 @@ Vue.component('lms-browse', {
         </button>
       </div>
     </div>
+    <div v-if="hasMediaFilter" class="filter-chip" role="status">
+      <span class="filter-chip-text ell">Filtro ativo: {{ mediaDescriptor() }}</span>
+      <button type="button" class="filter-chip-clear" @click="clearMediaFilter">Limpar filtro</button>
+    </div>
     <div class="scroller" ref="scroller" @scroll="onScroll">
       <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
       <div v-else-if="error" class="empty">
@@ -113,7 +117,9 @@ Vue.component('lms-browse', {
       </div>
       <div v-else-if="!rows.length" class="empty">
         <div class="h">{{ viewLabel }}</div>
-        <div class="p">Nenhum item encontrado nesta categoria.</div>
+        <div v-if="hasMediaFilter" class="p">Nada nesta categoria corresponde ao filtro {{ mediaDescriptor() }}.</div>
+        <div v-else class="p">Nenhum item encontrado nesta categoria.</div>
+        <button v-if="hasMediaFilter" class="retry-command" @click="clearMediaFilter">Limpar filtro</button>
       </div>
       <template v-else>
         <div :style="{height: topPad + 'px'}"></div>
@@ -211,6 +217,19 @@ Vue.component('lms-browse', {
       }[this.view] || 'Nome';
     },
     primaryOptionValue: function () { return this.view === 'anos' ? 'year' : 'name'; },
+    /* Em Albuns, "Artista" produz linhas de artista -- agrupa. Em Recentes a
+       mesma opcao apenas reordena albuns, porque Recentes nao passa por
+       loadPagedRoot e sempre desenha album. Chamar os dois de "Exibicao" era o
+       que fazia procurar Beatles em Recentes devolver albuns em vez de uma
+       entrada de artista. */
+    displayGroupLabel: function () {
+      return this.tr(this.view === 'albuns' ? 'Agrupar ou ordenar' : 'Ordenar por');
+    },
+    sortSelectLabel: function () {
+      if (this.view === 'albuns') return this.tr('Agrupar, ordenar ou filtrar');
+      if (this.view === 'recentes') return this.tr('Ordenar ou filtrar');
+      return this.tr('Ordenar');
+    },
     frame: function () { return LmsNav.top('musica') || this.rootSelection; },
     groupsAlbumsByArtist: function () {
       return this.view === 'albuns' && this.ui.sortKey === 'artist';
@@ -234,8 +253,9 @@ Vue.component('lms-browse', {
 	    sortTitle: function () {
 	      return this.ui.sortDesc ? 'Mudar para ordem crescente' : 'Mudar para ordem decrescente';
 	    },
+    allowsMediaFilter: function () { return LmsUi.allowsMediaFilter(this.view); },
     hasMediaFilter: function () {
-      return (this.view === 'albuns' || this.view === 'recentes') &&
+      return this.allowsMediaFilter &&
         /^(format|quality|origin|stream):/.test(this.ui.sortKey);
     },
     showsAlbums: function () {
@@ -461,14 +481,23 @@ Vue.component('lms-browse', {
       var s = String(value || '').toLowerCase();
       return s.normalize ? s.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : s;
     },
+    /* Rotulo calculado nao passa pelo translateTemplate: a lista ATTRS do i18n
+       so cobre atributo estatico. Mesmo idioma do tr() de search.js. */
+    tr: function (text) {
+      return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
+    },
+    /* Sem guarda aqui, de proposito: LmsUi.setSort ja recusa chave invalida para
+       a view corrente, e o menu desabilita o que nao se aplica. Uma terceira
+       copia da regra so daria mais um lugar para divergir -- e era exatamente
+       essa copia que trocava a view do usuario para fazer a escolha caber. */
     setSort: function (key) {
-      if (/^(format|quality|origin|stream):/.test(key) &&
-          this.view !== 'albuns' && this.view !== 'recentes') {
-        LmsUi.setMusicView('albuns');
-        LmsUi.setSort(key, this.ui.sortDesc);
-        return;
-      }
       LmsUi.setSort(key, this.ui.sortDesc);
+    },
+    /* Recentes tem ordem propria: 'recent' e a ordem em que o servidor devolveu
+       (sort:new). Devolver 'name' aqui reordenaria em ordem alfabetica e apagaria
+       justamente o criterio que da nome a pagina. */
+    clearMediaFilter: function () {
+      LmsUi.setSort(this.view === 'recentes' ? 'recent' : 'name', this.ui.sortDesc);
     },
     toggleSelect: function () {
       if (this.ui.selectionMode) LmsUi.clearSelection();
@@ -727,9 +756,14 @@ Vue.component('lms-browse', {
 	      } else if (this.artistIndexTruncated) {
 	        this.limitWarning = 'O índice de artistas parou em 10.000 nomes. Álbuns de artistas além desse ponto aparecem como álbum nesta lista.';
 	      } else if (unattributed) {
-	        this.limitWarning = unattributed === 1
+	        /* O numero entra por {n}, depois da traducao. Concatenar o total na
+	           frente produzia uma frase que nunca batia com uma chave do
+	           dicionario -- este aviso aparecia em portugues numa sessao em
+	           ingles. O marcador tambem deixa o tradutor mover o numero. */
+	        this.limitWarning = this.tr(unattributed === 1
 	          ? '1 álbum não pôde ser atribuído a um artista do índice e aparece como álbum nesta lista.'
-	          : unattributed + ' álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.';
+	          : '{n} álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.'
+	        ).replace('{n}', unattributed);
 	      }
 	      if (!this.groupsAlbumsByArtist && !this.groupsAlbumsByRelatedArtist && !this.hasMediaFilter) {
 	        await this.disambiguateDuplicateAlbums(pid, token);

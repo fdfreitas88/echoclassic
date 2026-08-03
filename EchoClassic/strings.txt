@@ -60,6 +60,10 @@ ECHOCLASSIC_UI_ACTIONS_FOR
 	EN	Actions for 
 	PT	Ações para 
 
+ECHOCLASSIC_UI_ACTIVE_FILTER
+	EN	Active filter:
+	PT	Filtro ativo:
+
 ECHOCLASSIC_UI_ACTIVE_PLAYER
 	EN	Active player
 	PT	Player ativo
@@ -195,6 +199,10 @@ ECHOCLASSIC_UI_CLEARING_THE_UPCOMING_TRACKS
 ECHOCLASSIC_UI_CLEAR_ALL
 	EN	Clear all
 	PT	Limpar tudo
+
+ECHOCLASSIC_UI_CLEAR_FILTER
+	EN	Clear filter
+	PT	Limpar filtro
 
 ECHOCLASSIC_UI_CLEAR_THE_WHOLE_QUEUE
 	EN	Clear the whole queue?
@@ -408,6 +416,14 @@ ECHOCLASSIC_UI_GROUP_OR_FILTER
 	EN	Group or filter
 	PT	Agrupar ou filtrar
 
+ECHOCLASSIC_UI_GROUP_OR_SORT
+	EN	Group or sort
+	PT	Agrupar ou ordenar
+
+ECHOCLASSIC_UI_GROUP_SORT_OR_FILTER
+	EN	Group, sort or filter
+	PT	Agrupar, ordenar ou filtrar
+
 ECHOCLASSIC_UI_HIDE_QUEUE
 	EN	Hide queue
 	PT	Ocultar Próximas
@@ -459,6 +475,30 @@ ECHOCLASSIC_UI_LIGHT
 ECHOCLASSIC_UI_LIGHT_THEME
 	EN	Light theme
 	PT	Tema claro
+
+ECHOCLASSIC_UI_LIMIT_ARTIST_INDEX
+	EN	The artist index stopped at 10,000 names. Albums by artists beyond that point appear as albums in this list.
+	PT	O índice de artistas parou em 10.000 nomes. Álbuns de artistas além desse ponto aparecem como álbum nesta lista.
+
+ECHOCLASSIC_UI_LIMIT_GENRES
+	EN	This library has more than 2,000 genres; this screen shows the first 2,000.
+	PT	Esta biblioteca tem mais de 2.000 gêneros; esta tela mostra os 2.000 primeiros.
+
+ECHOCLASSIC_UI_LIMIT_LIBRARY_TRUNCATED
+	EN	The library has more items than this screen loaded. Use the filter to narrow the list.
+	PT	A biblioteca tem mais itens do que esta tela carregou. Use o filtro para refinar a lista.
+
+ECHOCLASSIC_UI_LIMIT_UNATTRIBUTED_MANY
+	EN	{n} albums could not be attributed to an artist in the index and appear as albums in this list.
+	PT	{n} álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.
+
+ECHOCLASSIC_UI_LIMIT_UNATTRIBUTED_ONE
+	EN	1 album could not be attributed to an artist in the index and appears as an album in this list.
+	PT	1 álbum não pôde ser atribuído a um artista do índice e aparece como álbum nesta lista.
+
+ECHOCLASSIC_UI_LIMIT_YEARS
+	EN	This library has more than 500 distinct years; this screen shows the first 500.
+	PT	Esta biblioteca tem mais de 500 anos distintos; esta tela mostra os 500 primeiros.
 
 ECHOCLASSIC_UI_LIVE
 	EN	LIVE
@@ -523,6 +563,10 @@ ECHOCLASSIC_UI_MORE_ACTIONS
 ECHOCLASSIC_UI_MORE_ACTIONS_FOR
 	EN	More actions for 
 	PT	Mais ações para 
+
+ECHOCLASSIC_UI_NOTHING_MATCHES_FILTER
+	EN	Nothing in this category matches the filter
+	PT	Nada nesta categoria corresponde ao filtro
 
 ECHOCLASSIC_UI_OPEN_MY_MUSIC
 	EN	Open My Music
@@ -875,6 +919,18 @@ ECHOCLASSIC_UI_SONGS
 ECHOCLASSIC_UI_SONGS_2
 	EN	songs
 	PT	músicas
+
+ECHOCLASSIC_UI_SORT
+	EN	Sort
+	PT	Ordenar
+
+ECHOCLASSIC_UI_SORT_BY
+	EN	Sort by
+	PT	Ordenar por
+
+ECHOCLASSIC_UI_SORT_OR_FILTER
+	EN	Sort or filter
+	PT	Ordenar ou filtrar
 
 ECHOCLASSIC_UI_SPLIT_LOCKED
 	EN	Split locked

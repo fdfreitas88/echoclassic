@@ -2,14 +2,21 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const helpers = require('./helpers');
 
+/* O LmsUi vem do proprio ui.js, e nao de um stub escrito a mao. O stub antigo
+   era `{ state: {} }`, sem TABS nem MUSIC_VIEWS -- e no 3.1.2, quando
+   validateImportValue deixou de duplicar aqueles enums e passou a ler
+   LmsUi.TABS, o stub virou a unica coisa que nao tinha as listas. O teste quebrou
+   sem que nada estivesse errado no codigo de producao. */
 function settingsMethods() {
   let definition = null;
-  helpers.runBrowserFile('EchoClassic/HTML/echoclassic/html/js/settings.js', {
-    Vue: { component: function (name, def) { definition = def; } },
-    LmsUi: { state: {} },
-    LmsStore: { state: {} },
-    LmsApi: {}
+  const ctx = helpers.uiContext({
+    Vue: {
+      observable: function (o) { return o; },
+      component: function (name, def) { definition = def; },
+      nextTick: function (f) { if (f) f(); }
+    }
   });
+  helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/settings.js');
   return definition.methods;
 }
 

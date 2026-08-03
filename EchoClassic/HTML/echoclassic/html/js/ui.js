@@ -121,13 +121,21 @@
     artistas: 'name', albuns: 'name', recentes: 'recent', generos: 'name', anos: 'year'
   };
 
+  /* So Albuns e Recentes sabem aplicar filtro de midia: sao as duas views cujo
+     carregamento passa por loadMediaIndex. Exportado porque o menu em browse.js
+     precisa da mesma resposta para nao oferecer o que a view nao honra -- ate
+     aqui essa regra estava escrita em tres lugares, e o de browse.js trocava a
+     view do usuario por conta propria para fazer a escolha caber. */
+  function allowsMediaFilter(view) {
+    return view === 'albuns' || view === 'recentes';
+  }
+
   function validSortForView(view, key) {
-    if (view === 'albuns') {
-      return /^(name|artist|relatedArtist|year|(format|quality|origin|stream):[^:]+)$/.test(key || '');
+    if (allowsMediaFilter(view) && /^(format|quality|origin|stream):[^:]+$/.test(key || '')) {
+      return true;
     }
-    if (view === 'recentes') {
-      return /^(recent|name|artist|year|(format|quality|origin|stream):[^:]+)$/.test(key || '');
-    }
+    if (view === 'albuns') return /^(name|artist|relatedArtist|year)$/.test(key || '');
+    if (view === 'recentes') return /^(recent|name|artist|year)$/.test(key || '');
     if (view === 'anos') return key === 'name' || key === 'year';
     return key === 'name';
   }
@@ -538,6 +546,7 @@
     ALBUM_MODES: ALBUM_MODES, setAlbumMode: setAlbumMode,
     setPreference: setPreference,
     viewLabel: viewLabel, setMusicView: setMusicView,
+    allowsMediaFilter: allowsMediaFilter,
     setTab: setTab, restoreTab: restoreTab, toggleTheme: toggleTheme,
     openSearch: openSearch, closeSearch: closeSearch,
     setSort: setSort, openActions: openActions, closeActions: closeActions,

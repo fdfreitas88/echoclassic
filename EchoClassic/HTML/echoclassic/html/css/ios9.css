@@ -198,10 +198,14 @@ button:disabled{opacity:.35}
 .body{flex:1;display:flex;min-width:0;min-height:0;position:relative;overflow:hidden}
 .pane-left{width:var(--pane-current,var(--pane));flex:0 0 var(--pane-current,var(--pane));
   display:grid;grid-template-columns:minmax(0,1fr) 28px;
-  grid-template-rows:auto auto minmax(0,1fr);min-height:0;background:var(--content);
+  /* Linha 3 e do aviso de filtro. Ela e `auto`, entao colapsa para zero quando o
+     v-if nao renderiza o chip -- nao sobra espaco em branco sem filtro ativo.
+     Todo filho deste grid precisa de posicao explicita: sem ela, o auto-placement
+     joga o elemento na coluna 2, que e a trilha de 28px do indice A-Z. */
+  grid-template-rows:auto auto auto minmax(0,1fr);min-height:0;background:var(--content);
   container-type:inline-size}
-.pane-left>.scroller{grid-column:1;grid-row:3}
-.pane-left>.rail{grid-column:2;grid-row:3}
+.pane-left>.scroller{grid-column:1;grid-row:4}
+.pane-left>.rail{grid-column:2;grid-row:4}
 .pane-right{flex:1;min-width:0;overflow-y:auto;background:var(--content)}
 .scroller{flex:1;overflow-y:auto;min-width:0}
 
@@ -1086,6 +1090,15 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .loading-more{min-height:40px;display:flex;align-items:center;justify-content:center;
   color:var(--text2);font-size:12px}
 .loading-more.warning{padding:8px 16px;text-align:center;line-height:1.35}
+/* Fica acima da lista, e nao dentro dela: quando o filtro nao casa com nada, a
+   lista some e este aviso e a unica coisa que continua explicando o vazio. */
+.filter-chip{grid-column:1/-1;grid-row:3;
+  display:flex;align-items:center;gap:8px;padding:6px 16px;
+  background:var(--content);border-bottom:.5px solid var(--hair);
+  font-size:12px;color:var(--text2)}
+.filter-chip-text{flex:1;min-width:0}
+.filter-chip-clear{flex:0 0 auto;background:none;border:0;padding:0;
+  font-size:12px;color:var(--accent);cursor:pointer}
 .visually-hidden{position:absolute!important;width:1px!important;height:1px!important;
   padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;
   white-space:nowrap!important;border:0!important}

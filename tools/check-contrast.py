@@ -29,6 +29,8 @@ PAIRS = [
     ('divisor de lista',                  '--hair',             '--content',     3.0),
     ('borda da barra de progresso',       '--gauge-border',     '--chrome',      3.0),
     ('placeholder da busca',              '--text2',            '--field',       4.5),
+    ('limpar filtro no chip',             '--accent',           '--content',     4.5),
+    ('texto do chip de filtro',           '--text2',            '--content',     4.5),
     ('subtitulo em linha selecionada',    '--text2',            '--selected',    4.5),
     ('cabecalho de grupo dos ajustes',    '--group-head',       '--group-page',  4.5),
     ('acao destrutiva',                   '--destructive',      '--group-bg',    4.5),
