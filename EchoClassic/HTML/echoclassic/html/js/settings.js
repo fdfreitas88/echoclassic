@@ -492,8 +492,8 @@ Vue.component('lms-settings', {
 	            return key + ' tem valor incompatível';
 	          }
 	        }
-	        if (parsed.sortByView !== undefined && !this.isPlainObject(parsed.sortByView)) {
-	          return 'sortByView deveria ser um objeto';
+	        if (parsed.byView !== undefined && !this.isPlainObject(parsed.byView)) {
+	          return 'byView deveria ser um objeto';
 	        }
 	        return null;
 	      }

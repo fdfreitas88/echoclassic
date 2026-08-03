@@ -8,7 +8,7 @@ acontecendo na interface rodando; **[código]** significa que a cadeia foi lida 
 fonte mas o estado não foi reproduzido na tela. A distinção importa para quem for
 decidir, daqui a seis meses, se pode confiar na correção.
 
-## [3.1.3] — 2026-08-03
+## [3.2.0] — 2026-08-03
 
 ### Corrigido
 

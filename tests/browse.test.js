@@ -20,53 +20,64 @@ test('allowsMediaFilter e a fonte unica da regra de filtro por view', function (
 test('o filtro de midia continua gravado por view — este e o bug B', function () {
   const ctx = helpers.uiContext();
   ctx.LmsUi.setMusicView('recentes');
-  ctx.LmsUi.setSort('stream:qobuz', false);
-  assert.equal(ctx.LmsUi.state.sortKey, 'stream:qobuz');
+  ctx.LmsUi.setFilters(['stream:qobuz']);
+  assert.equal(ctx.LmsUi.state.filters[0], 'stream:qobuz');
 
   ctx.LmsUi.setMusicView('artistas');
-  assert.equal(ctx.LmsUi.state.sortKey, 'name', 'artistas nao aceita chave de midia');
-  ctx.LmsUi.setSort('quality:hires', false);
-  assert.equal(ctx.LmsUi.state.sortKey, 'name',
-    'ui.js ja rejeita filtro fora de albuns/recentes, sem precisar de guarda em browse.js');
+  assert.equal(ctx.LmsUi.state.filters.length, 0, 'artistas nao aceita filtro de midia');
+  ctx.LmsUi.setFilters(['quality:hires']);
+  assert.equal(ctx.LmsUi.state.filters.length, 0,
+    'ui.js rejeita filtro fora de albuns/recentes, sem precisar de guarda em browse.js');
 
   ctx.LmsUi.setMusicView('recentes');
-  assert.equal(ctx.LmsUi.state.sortKey, 'stream:qobuz',
+  assert.equal(ctx.LmsUi.state.filters[0], 'stream:qobuz',
     'volta para Recentes com o filtro que esvaziou a tela');
 });
 
 /* A regex de validSortForView foi reescrita para sair de dentro dela a regra de
    quais views filtram. O que ela aceita e recusa nao pode mudar junto. */
-test('validSortForView aceita e recusa exatamente o que aceitava antes', function () {
+test('os tres validadores separam o que antes era uma regex so', function () {
   const ctx = helpers.uiContext();
-  const set = function (view, key) {
-    ctx.LmsUi.setMusicView(view);
-    ctx.LmsUi.setSort(key, false);
-    return ctx.LmsUi.state.sortKey === key;
-  };
+  const u = ctx.LmsUi;
 
-  ['name', 'artist', 'relatedArtist', 'year', 'format:flac', 'quality:hires',
-   'origin:local', 'stream:qobuz'].forEach(function (key) {
-    assert.equal(set('albuns', key), true, 'albuns deveria aceitar ' + key);
+  ['name', 'artist', 'year'].forEach(function (k) {
+    assert.equal(u.validSortKey('albuns', k), true, 'albuns ordena por ' + k);
   });
-  ['recent', 'name', 'artist', 'year', 'format:mp3', 'origin:remote'].forEach(function (key) {
-    assert.equal(set('recentes', key), true, 'recentes deveria aceitar ' + key);
+  ['recent', 'name', 'artist', 'year'].forEach(function (k) {
+    assert.equal(u.validSortKey('recentes', k), true, 'recentes ordena por ' + k);
   });
+  assert.equal(u.validSortKey('artistas', 'year'), false, 'artistas so ordena por nome');
+  assert.equal(u.validSortKey('anos', 'year'), true);
 
-  assert.equal(set('recentes', 'relatedArtist'), false, 'relatedArtist so existe em albuns');
-  assert.equal(set('artistas', 'year'), false, 'artistas so aceita name');
-  assert.equal(set('albuns', 'format:a:b'), false, 'o valor do filtro nao pode ter dois-pontos');
-  assert.equal(set('anos', 'artist'), false, 'anos aceita apenas name e year');
+  assert.equal(u.validGroup('albuns', 'artist'), true);
+  assert.equal(u.validGroup('albuns', 'relatedArtist'), true);
+  assert.equal(u.validGroup('recentes', 'artist'), false, 'Recentes desenha album sempre');
+  assert.equal(u.validGroup('artistas', 'artist'), false);
+
+  assert.equal(u.validFilter('albuns', 'format:flac'), true);
+  assert.equal(u.validFilter('albuns', 'format:a:b'), false, 'valor de filtro nao tem dois-pontos');
+  assert.equal(u.validFilter('artistas', 'format:flac'), false);
 });
 
 /* Resolve os computeds na ordem em que eles dependem uns dos outros e devolve um
    `this` utilizavel. O Vue faria isso sozinho; aqui nao ha Vue. */
-function computedsFor(view, sortKey) {
+function computedsFor(view, key) {
   const captured = helpers.browseComponent();
   const def = captured.def;
   const data = def.data();
-  const self = { view: view, ui: { sortKey: sortKey }, MEDIA_FORMATS: data.MEDIA_FORMATS, rows: [] };
+  /* Roteia a chave para o conceito a que ela pertence, igual ao chooseOption. */
+  const isFilter = /^(format|quality|origin|stream):/.test(key || '');
+  const isGroup = view === 'albuns' && /^(artist|relatedArtist)$/.test(key || '');
+  const ui = {
+    filters: isFilter ? [key] : [],
+    group: isGroup ? [key] : [],
+    sort: [{ key: (!isFilter && !isGroup) ? key : 'name', desc: false }]
+  };
+  const self = { view: view, ui: ui, MEDIA_FORMATS: data.MEDIA_FORMATS, rows: [] };
   self.tr = def.methods.tr.bind(self);
   self.mediaDescriptor = def.methods.mediaDescriptor.bind(self);
+  self.sortKey = def.computed.sortKey.call(self);
+  self.sortDesc = def.computed.sortDesc.call(self);
   self.groupsAlbumsByArtist = def.computed.groupsAlbumsByArtist.call(self);
   self.groupsMainArtists = def.computed.groupsMainArtists.call(self);
   self.allowsMediaFilter = def.computed.allowsMediaFilter.call(self);
@@ -86,9 +97,9 @@ test('o menu so libera filtro de midia onde a view sabe aplicar', function () {
    propria, e a tela passava a mostrar albuns onde se esperava artistas. O ui.js
    ja recusa a chave sozinho -- este desvio era a unica coisa que fazia a tela
    saltar. */
-test('setSort nao troca de view pelas costas do usuario', function () {
+test('a escolha do menu nao troca de view pelas costas do usuario', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
-  const body = src.split('setSort: function (key)')[1].split('},')[0];
+  const body = src.split('chooseOption: function (value)')[1].split('},')[0];
   assert.doesNotMatch(body, /setMusicView/,
     'escolher um formato em Artistas nao pode saltar para Albuns');
 });
@@ -118,26 +129,21 @@ test('o chip do filtro vive fora da lista, e nao dentro dela', function () {
     'o chip precisa estar antes do scroller: dentro dele sumiria junto com as linhas');
 });
 
-test('clearMediaFilter devolve cada view a sua ordenacao propria', function () {
+test('limpar o filtro nao toca na ordenacao — sao estados separados', function () {
   const captured = helpers.browseComponent();
   const LmsUi = captured.ctx.LmsUi;
 
   LmsUi.setMusicView('recentes');
-  LmsUi.setSort('stream:qobuz', false);
+  LmsUi.setSort([{ key: 'artist', desc: true }]);
+  LmsUi.setFilters(['stream:qobuz']);
   captured.def.methods.clearMediaFilter.call({ view: 'recentes', ui: LmsUi.state });
-  assert.equal(LmsUi.state.sortKey, 'recent',
-    "Recentes volta para 'recent' (ordem do servidor), nao para 'name' -- reordenar por nome apagaria o criterio que da nome a pagina");
-  assert.equal(LmsUi.state.musicView, 'recentes', 'limpar o filtro nao troca de view');
 
-  LmsUi.setMusicView('albuns');
-  LmsUi.setSort('quality:hires', false);
-  captured.def.methods.clearMediaFilter.call({ view: 'albuns', ui: LmsUi.state });
-  assert.equal(LmsUi.state.sortKey, 'name');
-  assert.equal(LmsUi.state.musicView, 'albuns');
+  assert.equal(LmsUi.state.filters.length, 0, 'o filtro saiu');
+  assert.equal(LmsUi.state.sort[0].key, 'artist', 'a ordenacao ficou');
+  assert.equal(LmsUi.state.sort[0].desc, true, 'inclusive a direcao');
+  assert.equal(LmsUi.state.musicView, 'recentes', 'e a view nao mudou');
 });
 
-/* A mensagem generica era literalmente falsa: dizia que a categoria nao tem itens
-   quando o que houve foi um filtro escondendo todos eles. */
 test('a tela vazia diz qual filtro esta escondendo tudo', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
   const empty = src.split('v-else-if="!rows.length"')[1].split('<template v-else>')[0];
@@ -238,7 +244,7 @@ test('o rotulo do select acompanha o que a view sabe fazer', function () {
   assert.equal(albuns.def.computed.sortSelectLabel.call(albuns.self), 'Agrupar, ordenar ou filtrar');
 
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
-  assert.match(src, /<select :value="ui\.sortKey" :aria-label="sortSelectLabel"/);
+  assert.match(src, /<select :value="menuValue" :aria-label="sortSelectLabel"/);
   assert.match(src, /<optgroup :label="displayGroupLabel">/);
 });
 

@@ -130,35 +130,83 @@
     return view === 'albuns' || view === 'recentes';
   }
 
-  function validSortForView(view, key) {
-    if (allowsMediaFilter(view) && /^(format|quality|origin|stream):[^:]+$/.test(key || '')) {
-      return true;
-    }
-    if (view === 'albuns') return /^(name|artist|relatedArtist|year)$/.test(key || '');
+  var MEDIA_FILTER = /^(format|quality|origin|stream):[^:]+$/;
+
+  function validFilter(view, key) {
+    return allowsMediaFilter(view) && MEDIA_FILTER.test(key || '');
+  }
+
+  /* Ordenar e reordenar o que ja esta na tela. Nao exclui nada e nao muda a
+     natureza das linhas. */
+  function validSortKey(view, key) {
+    if (view === 'albuns') return /^(name|artist|year)$/.test(key || '');
     if (view === 'recentes') return /^(recent|name|artist|year)$/.test(key || '');
     if (view === 'anos') return key === 'name' || key === 'year';
     return key === 'name';
   }
 
-  var sortByView = Object.assign({}, DEFAULT_SORT_BY_VIEW);
-  if (plainObject(saved.sortByView)) {
-    Object.keys(DEFAULT_SORT_BY_VIEW).forEach(function (view) {
-      if (validSortForView(view, saved.sortByView[view])) {
-        sortByView[view] = saved.sortByView[view];
-      }
-    });
+  /* Agrupar troca a natureza das linhas: a lista passa a mostrar artistas em vez
+     de albuns. So Albuns faz isso, porque so ela passa por loadPagedRoot com
+     indice de artistas. Recentes desenha album sempre -- oferecer "agrupar por
+     artista" la era a promessa vazia do bug C. */
+  function validGroup(view, key) {
+    return view === 'albuns' && /^(artist|relatedArtist)$/.test(key || '');
   }
-  /* Migra a preferencia unica das versoes anteriores para a pagina em que ela
-     foi escolhida. Recentes continua com uma opcao propria e nunca recebe um
-     valor ausente do seu menu. */
-  if (saved.musicView && validSortForView(saved.musicView, saved.sortKey)) {
-    sortByView[saved.musicView] = saved.sortKey;
+
+  function defaultsFor(view) {
+    return {
+      filters: [],
+      sort: [{ key: DEFAULT_SORT_BY_VIEW[view] || 'name', desc: false }],
+      group: []
+    };
   }
-  /* O padrao anterior de Recentes era 'name', e nada no que ficou gravado
-     distingue escolha deliberada de default herdado. Sem esta migracao unica a
-     correcao seria invisivel para quem ja abriu a skin alguma vez. */
-  if (!saved.recentSortMigrated && sortByView.recentes === 'name') {
-    sortByView.recentes = 'recent';
+
+  function sanitize(view, entry) {
+    var out = defaultsFor(view);
+    if (!plainObject(entry)) return out;
+    if (Array.isArray(entry.filters)) {
+      out.filters = entry.filters.filter(function (key) { return validFilter(view, key); });
+    }
+    if (Array.isArray(entry.sort)) {
+      var sort = entry.sort.filter(function (item) {
+        return plainObject(item) && validSortKey(view, item.key);
+      }).map(function (item) { return { key: item.key, desc: !!item.desc }; });
+      if (sort.length) out.sort = sort;
+    }
+    if (Array.isArray(entry.group)) {
+      out.group = entry.group.filter(function (key) { return validGroup(view, key); });
+    }
+    return out;
+  }
+
+  /* Desmembra o sortKey unico da 3.1.x no conceito a que ele pertencia. Sem
+     isto, quem ja usava a skin abre a 3.2.0 e perde a escolha -- ou, pior,
+     ganha um agrupamento que nunca pediu. */
+  function migrateSortKey(view, key, desc) {
+    var entry = defaultsFor(view);
+    if (!key) return entry;
+    if (validFilter(view, key)) { entry.filters = [key]; return entry; }
+    if (validGroup(view, key)) { entry.group = [key]; return entry; }
+    if (validSortKey(view, key)) { entry.sort = [{ key: key, desc: !!desc }]; }
+    return entry;
+  }
+
+  var byView = {};
+  var savedByView = plainObject(saved.byView) ? saved.byView : null;
+  Object.keys(DEFAULT_SORT_BY_VIEW).forEach(function (view) {
+    if (savedByView) { byView[view] = sanitize(view, savedByView[view]); return; }
+    /* Sem byView gravado, o que existe e o formato da 3.1.x. */
+    var legacy = plainObject(saved.sortByView) ? saved.sortByView[view] : null;
+    if (view === saved.musicView && saved.sortKey) legacy = saved.sortKey;
+    /* O padrao anterior de Recentes era 'name', e nada no gravado distingue
+       escolha deliberada de default herdado. */
+    if (view === 'recentes' && !saved.recentSortMigrated && legacy === 'name') legacy = null;
+    byView[view] = migrateSortKey(view, legacy, saved.sortDesc);
+  });
+
+  function viewEntry(view) {
+    if (!byView[view]) byView[view] = defaultsFor(view);
+    return byView[view];
   }
 
   var lightMiniGaugeStyle = isGaugeStyle(saved.lightMiniGaugeStyle) ? saved.lightMiniGaugeStyle
@@ -199,8 +247,11 @@
     actionItem: null,
     actionAnchor: null,
     infoItem: null,
-    sortKey: sortByView[initialMusicView],
-    sortDesc: !!saved.sortDesc,
+    /* Espelho do byView[musicView]. Os tres sao independentes: filtrar exclui,
+       ordenar reordena, agrupar troca a natureza da linha. */
+    filters: viewEntry(initialMusicView).filters.slice(),
+    sort: viewEntry(initialMusicView).sort.map(function (s) { return { key: s.key, desc: s.desc }; }),
+    group: viewEntry(initialMusicView).group.slice(),
     filter: '',
     selectionMode: false,
     selected: {},
@@ -234,8 +285,7 @@
     try {
       localStorage.setItem('echoclassic.ui.v2', JSON.stringify({
         tab: state.tab, musicView: state.musicView, dark: state.dark,
-        sortKey: state.sortKey, sortDesc: state.sortDesc, sortByView: sortByView,
-        recentSortMigrated: true,
+        byView: byView,
         albumMode: state.albumMode, showBadges: state.showBadges,
         markHires: state.markHires, colorScheme: state.colorScheme,
         fontFamily: state.fontFamily, playerPresentation: state.playerPresentation,
@@ -363,18 +413,73 @@
     return '';
   }
 
+  /* Grava o que esta na tela de volta na view que sai, e traz o da view que
+     entra. Cada view lembra o proprio conjunto. */
+  function stash() {
+    byView[state.musicView] = sanitize(state.musicView, {
+      filters: state.filters, sort: state.sort, group: state.group
+    });
+  }
+
+  function adopt(view) {
+    var entry = sanitize(view, viewEntry(view));
+    byView[view] = entry;
+    state.filters = entry.filters.slice();
+    state.sort = entry.sort.map(function (s) { return { key: s.key, desc: s.desc }; });
+    state.group = entry.group.slice();
+  }
+
   function setMusicView(key) {
     for (var i = 0; i < MUSIC_VIEWS.length; i++) {
       if (MUSIC_VIEWS[i].key === key) {
-        sortByView[state.musicView] = validSortForView(state.musicView, state.sortKey)
-          ? state.sortKey : DEFAULT_SORT_BY_VIEW[state.musicView];
+        stash();
         state.musicView = key;
-        state.sortKey = validSortForView(key, sortByView[key])
-          ? sortByView[key] : DEFAULT_SORT_BY_VIEW[key];
+        adopt(key);
         state.picker = false; persist(); return;
       }
     }
   }
+
+  function setFilters(list) {
+    state.filters = (Array.isArray(list) ? list : []).filter(function (key) {
+      return validFilter(state.musicView, key);
+    });
+    stash(); persist();
+  }
+
+  function toggleFilter(key) {
+    var at = state.filters.indexOf(key);
+    setFilters(at < 0 ? state.filters.concat([key]) : state.filters.filter(function (k, i) {
+      return i !== at;
+    }));
+  }
+
+  function clearFilters() { setFilters([]); }
+
+  function setSort(list) {
+    var sort = (Array.isArray(list) ? list : []).filter(function (item) {
+      return item && validSortKey(state.musicView, item.key);
+    }).map(function (item) { return { key: item.key, desc: !!item.desc }; });
+    if (!sort.length) return;
+    state.sort = sort;
+    stash(); persist();
+  }
+
+  function toggleSortDir() {
+    if (!state.sort.length) return;
+    state.sort[0].desc = !state.sort[0].desc;
+    state.sort = state.sort.slice();
+    stash(); persist();
+  }
+
+  function setGroup(list) {
+    state.group = (Array.isArray(list) ? list : []).filter(function (key) {
+      return validGroup(state.musicView, key);
+    });
+    stash(); persist();
+  }
+
+  function clearGroup() { setGroup([]); }
 
   var ALBUM_MODES = Object.freeze([
     Object.freeze({ key: 'albuns', label: 'Álbuns' }),
@@ -420,13 +525,6 @@
 	    }, 0);
 	  }
 
-  function setSort(key, desc) {
-    if (!validSortForView(state.musicView, key)) return;
-    state.sortKey = key;
-    sortByView[state.musicView] = key;
-    state.sortDesc = !!desc;
-    persist();
-  }
 
   function openActions(item, anchor) {
     var rect = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : anchor;
@@ -547,6 +645,9 @@
     setPreference: setPreference,
     viewLabel: viewLabel, setMusicView: setMusicView,
     allowsMediaFilter: allowsMediaFilter,
+    validFilter: validFilter, validSortKey: validSortKey, validGroup: validGroup,
+    setFilters: setFilters, toggleFilter: toggleFilter, clearFilters: clearFilters,
+    setGroup: setGroup, clearGroup: clearGroup, toggleSortDir: toggleSortDir,
     setTab: setTab, restoreTab: restoreTab, toggleTheme: toggleTheme,
     openSearch: openSearch, closeSearch: closeSearch,
     setSort: setSort, openActions: openActions, closeActions: closeActions,

@@ -32,7 +32,7 @@ Vue.component('lms-browse', {
     <div class="library-tools">
       <input v-model="ui.filter" type="search" placeholder="Filtrar"
              :aria-label="'Filtrar ' + viewLabel.toLowerCase()">
-      <select :value="ui.sortKey" :aria-label="sortSelectLabel" @change="setSort($event.target.value)">
+      <select :value="menuValue" :aria-label="sortSelectLabel" @change="chooseOption($event.target.value)">
         <optgroup :label="displayGroupLabel">
           <option v-if="view === 'recentes'" value="recent">Adicionados recentemente</option>
           <option :value="primaryOptionValue">{{ primaryOptionLabel }}</option>
@@ -57,9 +57,9 @@ Vue.component('lms-browse', {
         </optgroup>
       </select>
 	      <button class="icon-command" :title="sortTitle" :aria-label="sortLabel"
-	              :aria-pressed="String(ui.sortDesc)"
-	              @click="LmsUi.setSort(ui.sortKey, !ui.sortDesc)">
-        <span aria-hidden="true">{{ ui.sortDesc ? '↓' : '↑' }}</span>
+	              :aria-pressed="String(sortDesc)"
+	              @click="LmsUi.toggleSortDir()">
+        <span aria-hidden="true">{{ sortDesc ? '↓' : '↑' }}</span>
       </button>
       <button v-if="!ui.selectionMode" class="text-command" @click="toggleSelect">Selecionar</button>
       <div v-else class="selection-tools">
@@ -231,14 +231,16 @@ Vue.component('lms-browse', {
       return this.tr('Ordenar');
     },
     frame: function () { return LmsNav.top('musica') || this.rootSelection; },
+    sortKey: function () { return (this.ui.sort[0] || {}).key || 'name'; },
+    sortDesc: function () { return !!(this.ui.sort[0] || {}).desc; },
     groupsAlbumsByArtist: function () {
-      return this.view === 'albuns' && this.ui.sortKey === 'artist';
+      return this.ui.group.indexOf('artist') >= 0;
     },
     groupsMainArtists: function () {
       return this.view === 'artistas' || this.groupsAlbumsByArtist;
     },
     groupsAlbumsByRelatedArtist: function () {
-      return this.view === 'albuns' && this.ui.sortKey === 'relatedArtist';
+      return this.ui.group.indexOf('relatedArtist') >= 0;
     },
 	    selectionCount: function () { return Object.keys(this.ui.selected).length; },
 	    selectionCountLabel: function () {
@@ -247,16 +249,20 @@ Vue.component('lms-browse', {
 	      return n + (n === 1 ? ' item selecionado' : ' itens selecionados');
 	    },
 	    sortLabel: function () {
-	      return 'Ordem atual: ' + (this.ui.sortDesc ? 'decrescente' : 'crescente') +
+	      return 'Ordem atual: ' + (this.sortDesc ? 'decrescente' : 'crescente') +
 	        '. Alternar ordem';
 	    },
 	    sortTitle: function () {
-	      return this.ui.sortDesc ? 'Mudar para ordem crescente' : 'Mudar para ordem decrescente';
+	      return this.sortDesc ? 'Mudar para ordem crescente' : 'Mudar para ordem decrescente';
 	    },
     allowsMediaFilter: function () { return LmsUi.allowsMediaFilter(this.view); },
     hasMediaFilter: function () {
-      return this.allowsMediaFilter &&
-        /^(format|quality|origin|stream):/.test(this.ui.sortKey);
+      return this.allowsMediaFilter && this.ui.filters.length > 0;
+    },
+    /* O menu ainda e um controle so, entao ele mostra o que estiver ativo,
+       nesta ordem de precedencia: filtro, agrupamento, ordenacao. */
+    menuValue: function () {
+      return this.ui.filters[0] || this.ui.group[0] || this.sortKey;
     },
     showsAlbums: function () {
       return (this.view === 'albuns' && !this.groupsAlbumsByArtist &&
@@ -265,7 +271,7 @@ Vue.component('lms-browse', {
     hasRail: function () {
       /* O indice alfabetico so faz sentido sobre uma lista alfabetica; em
          'recent' as letras nao sobem e saltar levaria a lugar nenhum. */
-      return !this.loading && this.rows.length > 30 && this.ui.sortKey !== 'recent' &&
+      return !this.loading && this.rows.length > 30 && this.sortKey !== 'recent' &&
              (this.view === 'artistas' || this.view === 'albuns' || this.view === 'recentes');
     },
     rowH: function () { return this.showsAlbums ? 88 : 72; },
@@ -274,7 +280,7 @@ Vue.component('lms-browse', {
       var rows = q ? this.rows.filter(function (r) {
         return this.normalize([r.label, r.sub, r.artist, r.year].filter(Boolean).join(' ')).indexOf(q) >= 0;
       }, this) : this.rows.slice();
-      var key = this.ui.sortKey;
+      var key = this.sortKey;
       /* 'recent' e a ordem em que o servidor devolveu (sort:new). Reordenar
          aqui era o que fazia Recentes aparecer em ordem alfabetica. */
       if (key !== 'recent') {
@@ -288,7 +294,7 @@ Vue.component('lms-browse', {
           return typeof av === 'number' ? av - bv : av.localeCompare(bv, 'pt-BR', { sensitivity: 'base' });
         });
       }
-      if (this.ui.sortDesc) rows.reverse();
+      if (this.sortDesc) rows.reverse();
       return rows;
     },
     windowed: function () { return this.displayRows.slice(this.first, this.first + this.visible + 12); },
@@ -309,13 +315,12 @@ Vue.component('lms-browse', {
   },
   watch: {
     view: function () { this.reload(false); },
-    'ui.sortKey': function (next, previous) {
-      var media = /^(format|quality|origin|stream):/;
-      if (this.view === 'albuns' ||
-          (this.view === 'recentes' && (media.test(next || '') || media.test(previous || '')))) {
-        this.reload(false);
-      }
-    },
+    /* Filtrar e agrupar mudam o que e carregado; ordenar so reordena o que ja
+       esta na tela, e displayRows cuida disso sozinho. Antes qualquer troca de
+       sortKey em Albuns recarregava a biblioteca inteira, inclusive para mudar
+       de A-Z para Ano. */
+    'ui.filters': function () { this.reload(false); },
+    'ui.group': function () { this.reload(false); },
     'ui.filter': function () {
       this.first = 0;
       var self = this;
@@ -490,14 +495,22 @@ Vue.component('lms-browse', {
        a view corrente, e o menu desabilita o que nao se aplica. Uma terceira
        copia da regra so daria mais um lugar para divergir -- e era exatamente
        essa copia que trocava a view do usuario para fazer a escolha caber. */
-    setSort: function (key) {
-      LmsUi.setSort(key, this.ui.sortDesc);
+    /* O menu ainda e um controle unico, entao uma escolha substitui a anterior --
+       e o comportamento que existia antes. O que mudou e o destino: a chave vai
+       para o conceito a que pertence, em vez de todas caírem no mesmo campo.
+       A Fase 2 separa o controle e este roteamento desaparece. */
+    chooseOption: function (value) {
+      if (LmsUi.validFilter(this.view, value)) { LmsUi.setFilters([value]); return; }
+      LmsUi.clearFilters();
+      if (LmsUi.validGroup(this.view, value)) { LmsUi.setGroup([value]); return; }
+      LmsUi.clearGroup();
+      LmsUi.setSort([{ key: value, desc: this.sortDesc }]);
     },
     /* Recentes tem ordem propria: 'recent' e a ordem em que o servidor devolveu
        (sort:new). Devolver 'name' aqui reordenaria em ordem alfabetica e apagaria
        justamente o criterio que da nome a pagina. */
     clearMediaFilter: function () {
-      LmsUi.setSort(this.view === 'recentes' ? 'recent' : 'name', this.ui.sortDesc);
+      LmsUi.clearFilters();
     },
     toggleSelect: function () {
       if (this.ui.selectionMode) LmsUi.clearSelection();
@@ -660,7 +673,7 @@ Vue.component('lms-browse', {
       if (!this.hasMediaFilter) return true;
       var meta = this.mediaIndex && this.mediaIndex[String(albumId)];
       if (!meta) return false;
-      var parts = this.ui.sortKey.split(':');
+      var parts = (this.ui.filters[0] || '').split(':');
       if (parts[0] === 'format') return !!meta.formats[parts[1]];
       if (parts[0] === 'quality') return !!meta[parts[1] === 'hires' ? 'hires' : 'standard'];
       if (parts[0] === 'origin') return !!meta[parts[1]];
@@ -674,8 +687,9 @@ Vue.component('lms-browse', {
         'origin:local': 'Biblioteca local', 'origin:remote': 'Remoto / streaming',
         'stream:qobuz': 'Qobuz', 'stream:youtube': 'YouTube'
       };
-      if (labels[this.ui.sortKey]) return labels[this.ui.sortKey];
-      var format = this.ui.sortKey.split(':')[1];
+      var active = this.ui.filters[0] || '';
+      if (labels[active]) return labels[active];
+      var format = active.split(':')[1];
       var found = this.MEDIA_FORMATS.filter(function (item) { return item.key === format; })[0];
       return found ? found.label : format.toUpperCase();
     },

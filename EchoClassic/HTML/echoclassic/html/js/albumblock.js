@@ -228,7 +228,7 @@ Vue.component('lms-album-block', {
     },
     openRelatedArtist: function (artist) {
       LmsUi.setMusicView('albuns');
-      LmsUi.setSort('relatedArtist', false);
+      LmsUi.setGroup(['relatedArtist']);
       Vue.nextTick(function () {
         LmsNav.push('musica', {
           kind: 'artist', id: artist.id, ids: artist.ids,
