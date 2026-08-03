@@ -8,6 +8,58 @@ acontecendo na interface rodando; **[código]** significa que a cadeia foi lida 
 fonte mas o estado não foi reproduzido na tela. A distinção importa para quem for
 decidir, daqui a seis meses, se pode confiar na correção.
 
+## [3.1.3] — 2026-08-03
+
+### Corrigido
+
+- **Recentes aparecia vazia dizendo "Nenhum item encontrado nesta categoria".**
+  O filtro de mídia é gravado por view e sobrevive a sair e voltar, e a única
+  pista de que ele existia era o descritor colado no subtítulo de cada linha —
+  que sumia junto com as linhas. A mensagem afirmava algo falso: a categoria
+  tinha itens, o filtro é que escondia todos. Agora um aviso permanente nomeia o
+  filtro acima da lista, com um botão para limpá-lo, e a tela vazia diz qual
+  filtro está escondendo tudo. **[código]** — reproduzido fora da tela contra a
+  biblioteca real do servidor: das 16 chaves de filtro, 9 esvaziam Recentes;
+  `stream:qobuz` rende 425 álbuns em Álbuns e 0 em Recentes, porque os 100 mais
+  novos são todos locais.
+- **O menu de exibição trocava de view por conta própria.** Escolher um formato
+  ou uma resolução dentro de Artistas, Gêneros ou Anos chamava
+  `setMusicView('albuns')` e a tela saltava para Álbuns sem avisar — quem tinha
+  pedido "Hi-Res" continuava lendo "Artistas" e via uma lista de álbuns. Os
+  quatro grupos de mídia agora ficam desabilitados nas views que não sabem
+  filtrar, e o desvio deixou de existir. **[código]**
+- **"Artista" em Recentes prometia um agrupamento que não existe.** Em Álbuns a
+  opção produz linhas de artista; em Recentes ela apenas reordena álbuns, porque
+  Recentes nunca passa por `loadPagedRoot`. Mesmo rótulo, duas semânticas — é a
+  armadilha por trás de "procurei Beatles na lista de artistas e vieram álbuns".
+  O grupo do menu passa a se chamar "Agrupar ou ordenar" só em Álbuns, e
+  "Ordenar por" no resto. A ordenação por artista continua existindo. **[código]**
+- A suíte de testes estava vermelha desde a 3.1.2: `settings-import` montava um
+  `LmsUi` de mentira, sem `TABS`, e quebrou quando `validateImportValue` passou a
+  ler os enums da fonte. O código de produção estava certo; o stub é que
+  mentia. **[código]**
+
+### Verificado, sem alteração
+
+- **O índice de artistas não está falhando.** Medido contra a biblioteca real
+  (1548 artistas, 1398 álbuns, 14210 faixas), ele atribui 1388 de 1398 álbuns, e
+  os 31 álbuns dos Beatles acertam nos dois contribuidores, 673 e 674. Os 10
+  restantes são `P.F.M.`, `V.S.O.P.` e `Various Artists` — o comportamento
+  documentado de `abbreviatedArtist`. A hipótese de índice corrompido está
+  descartada. **[código]**
+
+### Interno
+
+- `allowsMediaFilter` em `ui.js` vira a fonte única da regra de quais views
+  filtram; havia três cópias, e a de `browse.js` era a que trocava a view.
+- Primeiro teste de `browse.js` e `ui.js`, com arreios (`uiContext`,
+  `browseComponent`) que carregam os módulos reais em vez de stubs inventados.
+- `check-contrast.py` ganha os dois pares do chip de filtro. Valeu: `--accent`
+  sobre `--field` dava 3.88 no tema claro, abaixo do mínimo de 4.5, e nenhum par
+  existente cobria essa combinação.
+- `tools/deploy.sh`, `tools/rollback.sh` e `tools/release.sh`, para instalar e
+  testar no servidor real antes de publicar.
+
 ## [3.1.2] — 2026-08-03
 
 Torna alcançáveis os serviços do servidor — Qobuz entre eles — e fecha os itens
