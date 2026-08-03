@@ -15,11 +15,10 @@ if pgrep -f 'slimserver\.pl' >/dev/null 2>&1; then
   echo "AVISO: o servidor está rodando. A cópia funciona, mas o skin só aparece após reiniciar."
 fi
 mkdir -p "$DEST" || exit 1
-if [ -d "$DEST/EchoClassic" ] || [ -d "$DEST/MojoSkin" ]; then
+if [ -d "$DEST/EchoClassic" ]; then
   BK="$BACKUP_ROOT/$(date +%Y%m%d-%H%M%S)"
   mkdir -p "$BK" || exit 1
-  [ ! -d "$DEST/EchoClassic" ] || mv "$DEST/EchoClassic" "$BK/"
-  [ ! -d "$DEST/MojoSkin" ] || mv "$DEST/MojoSkin" "$BK/"
+  mv "$DEST/EchoClassic" "$BK/"
   echo "[ok] versão anterior movida para $BK"
 fi
 ditto "$SRC" "$DEST/EchoClassic" || exit 1
@@ -29,6 +28,5 @@ echo
 echo "Reinicie o servidor pelo ícone da barra de menus e abra:"
 echo "   http://localhost:9000/echoclassic"
 echo "   http://$(ipconfig getifaddr en0 2>/dev/null || echo '<ip>'):9000/echoclassic"
-echo "   /mojo continua como alias de recuperação"
 echo
 echo "Desinstalar:  rm -rf \"$DEST/EchoClassic\"  e reiniciar o servidor."

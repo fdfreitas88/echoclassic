@@ -125,7 +125,11 @@ Vue.component('lms-album-block', {
     artUrl: function () { return (this.album.art || '').replace('_50x50', ''); },
     metaLine: function () {
       var n = this.tracks.length;
-      return [this.album.releaseType || '', n ? n + (n === 1 ? ' música' : ' músicas') : '']
+      /* A frase e montada por concatenacao, entao o texto pronto nunca bate
+         com uma chave do dicionario. Traduz-se a unidade antes de juntar. */
+      var unit = (n === 1) ? 'música' : 'músicas';
+      if (window.LmsStr) unit = LmsStr.t(unit);
+      return [this.album.releaseType || '', n ? n + ' ' + unit : '']
         .filter(Boolean).join(' • ');
     },
     formatLine: function () {

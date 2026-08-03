@@ -8,6 +8,36 @@ acontecendo na interface rodando; **[código]** significa que a cadeia foi lida 
 fonte mas o estado não foi reproduzido na tela. A distinção importa para quem for
 decidir, daqui a seis meses, se pode confiar na correção.
 
+## [3.1.1] — 2026-08-03
+
+Corrige o que impedia a skin de ser gerenciada pelo próprio LMS depois de
+instalada pelo repositório de extensões. Nenhuma mudança no formato de
+preferências nem na versão mínima do servidor.
+
+### Corrigido
+
+- **`<enforce>1</enforce>` removido do `install.xml`.** Com essa marca, o
+  `Slim/Utils/ExtensionsManager.pm` pula a skin ao montar a lista de plugins
+  (`next if $entry->{'enforce'}`), então ela nunca aparecia em Active Plugins,
+  nunca entrava no conjunto de "já instalados" e não podia ser desabilitada
+  (`PluginManager.pm`: `Can't disable plugin: EchoClassic - 'enforce' set in
+  install.xml`). Como consequência, o servidor a tratava como perpetuamente
+  ausente e repetia o download a cada verificação, e a entrada era podada da
+  seção do repositório, deixando o cabeçalho sem nenhum item para marcar.
+  [código]
+- A linha de metadados do álbum traduz a unidade antes de concatenar o número,
+  então a interface em inglês mostra "12 songs" em vez de "12 músicas". Mesmo
+  padrão já usado na fila de reprodução. [código]
+
+### Alterado
+
+- `INSTALL.sh` deixa de acompanhar o pacote publicado. Ele é um utilitário de
+  instalação manual específico do macOS; quem instala pelo gerenciador de
+  extensões não tem uso para ele, e o script acabava dentro da pasta do plugin.
+  Continua versionado no repositório, ao lado de `tools/install-local.sh`.
+- Removidas do `INSTALL.sh` a migração da pasta com o nome antigo do projeto e
+  a mensagem final que anunciava um alias de recuperação que não existe mais.
+
 ## [3.1.0] — 2026-08-02
 
 Fecha a passada de publicação da skin sem alterar o formato de preferências ou a
