@@ -32,8 +32,8 @@ Vue.component('lms-browse', {
     <div class="library-tools">
       <input v-model="ui.filter" type="search" placeholder="Filtrar"
              :aria-label="'Filtrar ' + viewLabel.toLowerCase()">
-      <select :value="ui.sortKey" aria-label="Agrupar ou filtrar" @change="setSort($event.target.value)">
-        <optgroup label="Exibição">
+      <select :value="ui.sortKey" :aria-label="sortSelectLabel" @change="setSort($event.target.value)">
+        <optgroup :label="displayGroupLabel">
           <option v-if="view === 'recentes'" value="recent">Adicionados recentemente</option>
           <option :value="primaryOptionValue">{{ primaryOptionLabel }}</option>
           <option v-if="view === 'albuns' || view === 'recentes'" value="artist">Artista</option>
@@ -217,6 +217,19 @@ Vue.component('lms-browse', {
       }[this.view] || 'Nome';
     },
     primaryOptionValue: function () { return this.view === 'anos' ? 'year' : 'name'; },
+    /* Em Albuns, "Artista" produz linhas de artista -- agrupa. Em Recentes a
+       mesma opcao apenas reordena albuns, porque Recentes nao passa por
+       loadPagedRoot e sempre desenha album. Chamar os dois de "Exibicao" era o
+       que fazia procurar Beatles em Recentes devolver albuns em vez de uma
+       entrada de artista. */
+    displayGroupLabel: function () {
+      return this.tr(this.view === 'albuns' ? 'Agrupar ou ordenar' : 'Ordenar por');
+    },
+    sortSelectLabel: function () {
+      if (this.view === 'albuns') return this.tr('Agrupar, ordenar ou filtrar');
+      if (this.view === 'recentes') return this.tr('Ordenar ou filtrar');
+      return this.tr('Ordenar');
+    },
     frame: function () { return LmsNav.top('musica') || this.rootSelection; },
     groupsAlbumsByArtist: function () {
       return this.view === 'albuns' && this.ui.sortKey === 'artist';
@@ -467,6 +480,11 @@ Vue.component('lms-browse', {
     normalize: function (value) {
       var s = String(value || '').toLowerCase();
       return s.normalize ? s.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : s;
+    },
+    /* Rotulo calculado nao passa pelo translateTemplate: a lista ATTRS do i18n
+       so cobre atributo estatico. Mesmo idioma do tr() de search.js. */
+    tr: function (text) {
+      return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
     },
     /* Sem guarda aqui, de proposito: LmsUi.setSort ja recusa chave invalida para
        a view corrente, e o menu desabilita o que nao se aplica. Uma terceira

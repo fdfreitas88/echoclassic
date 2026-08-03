@@ -65,6 +65,7 @@ function computedsFor(view, sortKey) {
   const def = captured.def;
   const data = def.data();
   const self = { view: view, ui: { sortKey: sortKey }, MEDIA_FORMATS: data.MEDIA_FORMATS, rows: [] };
+  self.tr = def.methods.tr.bind(self);
   self.mediaDescriptor = def.methods.mediaDescriptor.bind(self);
   self.groupsAlbumsByArtist = def.computed.groupsAlbumsByArtist.call(self);
   self.groupsMainArtists = def.computed.groupsMainArtists.call(self);
@@ -206,6 +207,64 @@ test('mediaDescriptor nomeia o filtro que esvazia Recentes', function () {
   assert.equal(computedsFor('albuns', 'format:flac').self.mediaDescriptor(), 'FLAC');
   assert.equal(computedsFor('recentes', 'recent').self.mediaDescriptor(), '',
     'sem filtro nao ha descritor, e a mensagem generica e a correta');
+});
+
+/* A outra metade do bug C. Em Albuns, "Artista" AGRUPA: produz linhas de artista.
+   Em Recentes a mesma opcao so reordena albuns, porque Recentes nunca passa por
+   loadPagedRoot. Mesmo rotulo, semanticas diferentes -- e por isso "procurei
+   Beatles e vieram albuns". O rotulo do grupo precisa dizer qual das duas coisas
+   esta acontecendo. */
+test('Recentes nao promete agrupar: la a opcao Artista so reordena', function () {
+  const recentes = computedsFor('recentes', 'artist');
+  assert.equal(recentes.self.groupsMainArtists, false,
+    'Recentes nunca produz linha de artista, nem com sortKey=artist');
+
+  const albuns = computedsFor('albuns', 'artist');
+  assert.equal(albuns.self.groupsMainArtists, true, 'em Albuns, Artista agrupa de verdade');
+
+  assert.equal(recentes.def.computed.displayGroupLabel.call(recentes.self), 'Ordenar por');
+  assert.equal(albuns.def.computed.displayGroupLabel.call(albuns.self), 'Agrupar ou ordenar');
+});
+
+test('o rotulo do select acompanha o que a view sabe fazer', function () {
+  const artistas = computedsFor('artistas', 'name');
+  assert.equal(artistas.def.computed.displayGroupLabel.call(artistas.self), 'Ordenar por');
+  assert.equal(artistas.def.computed.sortSelectLabel.call(artistas.self), 'Ordenar');
+
+  const recentes = computedsFor('recentes', 'recent');
+  assert.equal(recentes.def.computed.sortSelectLabel.call(recentes.self), 'Ordenar ou filtrar');
+
+  const albuns = computedsFor('albuns', 'name');
+  assert.equal(albuns.def.computed.sortSelectLabel.call(albuns.self), 'Agrupar, ordenar ou filtrar');
+
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  assert.match(src, /<select :value="ui\.sortKey" :aria-label="sortSelectLabel"/);
+  assert.match(src, /<optgroup :label="displayGroupLabel">/);
+});
+
+/* Atributo dinamico nao passa pelo translateTemplate -- a lista ATTRS do i18n so
+   cobre atributo estatico, e nem inclui `label`. Sem passar pelo dicionario na
+   mao, estes dois rotulos ficariam em portugues numa sessao em ingles. */
+test('os rotulos calculados do menu passam pelo dicionario', function () {
+  let def = null;
+  const ctx = helpers.uiContext({
+    LMS_LANG: 'EN',
+    LMS_STRINGS: { 'Ordenar por': 'Sort by', 'Agrupar ou ordenar': 'Group or sort' },
+    Vue: {
+      prototype: {},
+      observable: function (o) { return o; },
+      component: function (name, definition) { def = definition; },
+      nextTick: function (f) { if (f) f(); }
+    }
+  });
+  helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/i18n.js');
+  helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/browse.js');
+
+  const self = { view: 'recentes' };
+  self.tr = def.methods.tr.bind(self);
+  assert.equal(def.computed.displayGroupLabel.call(self), 'Sort by');
+  self.view = 'albuns';
+  assert.equal(def.computed.displayGroupLabel.call(self), 'Group or sort');
 });
 
 /* O portao 4 recalcula uma lista FIXA de pares de contraste. Um token de cor novo
