@@ -70,6 +70,67 @@ function templates() {
   return out;
 }
 
+/* ui.js e browse.js sao arquivos de navegador: no momento em que carregam ja
+   registram efeitos no documento e no Vue. Estes dois arreios dao o minimo de
+   DOM que cada um encosta, para que possam ser exercitados sem navegador.
+
+   Vale mais do que parece: um stub inventado de LmsUi mente sobre a forma do
+   objeto real -- foi assim que settings-import passou a falhar quando settings.js
+   deixou de duplicar os enums e passou a ler LmsUi.TABS. Aqui o LmsUi e o de
+   verdade, montado a partir do proprio ui.js. */
+function uiContext(extra) {
+  const store = {};
+  const ctx = browserContext(Object.assign({
+    localStorage: {
+      getItem: function (k) { return k in store ? store[k] : null; },
+      setItem: function (k, v) { store[k] = String(v); },
+      removeItem: function (k) { delete store[k]; }
+    },
+    document: {
+      addEventListener: function () {},
+      removeEventListener: function () {},
+      documentElement: {
+        style: { setProperty: function () {} },
+        classList: { add: function () {}, remove: function () {}, toggle: function () {} }
+      },
+      body: {
+        setAttribute: function () {}, removeAttribute: function () {},
+        classList: { add: function () {}, remove: function () {}, toggle: function () {} }
+      }
+    },
+    matchMedia: function () {
+      return { matches: false, addEventListener: function () {}, addListener: function () {} };
+    },
+    navigator: { language: 'pt-BR' },
+    Vue: {
+      observable: function (o) { return o; },
+      component: function () {},
+      nextTick: function (f) { if (f) f(); }
+    },
+    LmsStore: { state: {} },
+    LmsApi: {},
+    LmsNav: { reset: function () {}, top: function () { return null; } }
+  }, extra || {}));
+  runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/ui.js');
+  return ctx;
+}
+
+/* Devolve a definicao que browse.js entrega ao Vue.component, junto do contexto
+   em que ela foi criada -- os metodos fecham sobre o LmsUi daquele contexto,
+   entao trocar LmsUi.setSort ali dentro e o que permite observar as chamadas. */
+function browseComponent() {
+  let definition = null;
+  const ctx = uiContext({
+    Vue: {
+      observable: function (o) { return o; },
+      component: function (name, def) { definition = def; },
+      nextTick: function (f) { if (f) f(); }
+    }
+  });
+  runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/browse.js');
+  return { def: definition, ctx: ctx };
+}
+
 module.exports = {
   root,
   skin,
@@ -77,5 +138,7 @@ module.exports = {
   browserContext,
   runBrowserFile,
   runInContext,
-  templates
+  templates,
+  uiContext,
+  browseComponent
 };
