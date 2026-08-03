@@ -329,6 +329,37 @@ test('todo texto novo da interface chega traduzido, vindo do strings.txt real', 
   assert.equal(def.computed.sortSelectLabel.call(self), 'Sort');
 });
 
+/* .pane-left e um grid de duas colunas -- conteudo e a trilha de 28px do indice
+   A-Z -- e TODO filho tem posicao explicita. Um filho novo sem grid-row/column
+   cai no auto-placement e vai parar na coluna do indice: foi exatamente isso que
+   aconteceu com o chip, que apareceu como uma tira vertical de 32px ao lado da
+   lista. Nenhum teste de unidade pega isso, porque nenhum deles renderiza CSS. */
+test('todo filho de .pane-left tem posicao explicita no grid', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+
+  const pane = css.match(/\.pane-left\{([^}]*)\}/)[1];
+  const linhas = pane.match(/grid-template-rows:([^;]+)/)[1].trim().split(/\s+/);
+
+  /* As classes que o template pendura direto em .pane-left. */
+  const filhos = ['library-tools', 'history-strip', 'filter-chip', 'scroller'];
+  filhos.forEach(function (cls) {
+    assert.ok(src.indexOf('class="' + cls) >= 0 || src.indexOf(cls + '"') >= 0,
+      'esperava encontrar ' + cls + ' no template');
+    const regra = css.match(new RegExp('\\.(pane-left>\\.)?' + cls + '\\{([^}]*)\\}'));
+    assert.ok(regra, 'sem regra CSS para ' + cls);
+    assert.match(regra[2], /grid-row:\s*\d/, cls + ' precisa de grid-row explicito');
+  });
+
+  const scroller = css.match(/\.pane-left>\.scroller\{([^}]*)\}/)[1];
+  const rail = css.match(/\.pane-left>\.rail\{([^}]*)\}/)[1];
+  const ultima = String(linhas.length);
+  assert.match(scroller, new RegExp('grid-row:' + ultima),
+    'a lista tem de ocupar a ultima linha do template');
+  assert.match(rail, new RegExp('grid-row:' + ultima),
+    'o indice A-Z acompanha a lista');
+});
+
 /* O portao 4 recalcula uma lista FIXA de pares de contraste. Um token de cor novo
    nao entra nessa lista, entao passaria sem nunca ser medido. */
 test('o chip usa apenas tokens de cor que ja existem no CSS', function () {
