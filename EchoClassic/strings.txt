@@ -700,6 +700,14 @@ ECHOCLASSIC_UI_PROGRESS_BARS
 	EN	Progress bars
 	PT	Barras de progresso
 
+ECHOCLASSIC_UI_APPS
+	EN	Apps
+	PT	Apps
+
+ECHOCLASSIC_UI_APPS_EMPTY
+	EN	No service is installed. Install a service plugin, such as Qobuz, in Server Settings > Plugins.
+	PT	Nenhum serviço está instalado. Instale um plugin de serviço, como o Qobuz, em Ajustes do servidor › Plugins.
+
 ECHOCLASSIC_UI_RADIO
 	EN	Radio
 	PT	Rádio

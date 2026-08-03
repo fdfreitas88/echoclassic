@@ -26,6 +26,7 @@
       <lms-playlists v-else-if="ui.tab === 'playlists'" :key="plKey"></lms-playlists>
       <lms-settings  v-else-if="ui.tab === 'ajustes'"></lms-settings>
       <lms-opml      v-else-if="ui.tab === 'radio'"     root="radio"     tab="radio"     :key="radioKey"></lms-opml>
+      <lms-opml      v-else-if="ui.tab === 'apps'"      root="apps"      tab="apps"      :key="appsKey"></lms-opml>
       <lms-favorites v-else-if="ui.tab === 'favoritos'" :key="favKey"></lms-favorites>
     </div>
   </main>
@@ -109,6 +110,7 @@
       },
       plKey: function () { return 'pl-' + (this.nav.playlists || []).length; },
       radioKey: function () { return 'radio-' + (this.nav.radio || []).length; },
+      appsKey: function () { return 'apps-' + (this.nav.apps || []).length; },
       favKey: function () { return 'fav-' + (this.nav.favoritos || []).length; }
     },
     methods: {

@@ -5,7 +5,7 @@
    text, `text` is a label with no action. */
 Vue.component('lms-opml', {
   props: {
-    root: { type: String, required: true },   // 'radio' | 'favorites'
+    root: { type: String, required: true },   // 'radio' | 'favorites' | 'apps'
     tab: { type: String, required: true }     // which nav stack to use
   },
   template: `
@@ -57,14 +57,21 @@ Vue.component('lms-opml', {
       Abrir Minha Música
     </button>
   </div>
+  <div v-if="truncated" class="loading-more warning" role="status">
+    Esta lista tem mais de 200 itens e esta tela mostra os 200 primeiros. Use a busca para chegar ao resto.
+  </div>
 </div>`,
   data: function () {
     return { items: [], terms: {}, loading: true, error: '',
-             fieldError: '', fieldErrorIndex: null };
+             fieldError: '', fieldErrorIndex: null, truncated: false };
   },
   computed: {
     frame: function () { return LmsNav.top(this.tab); },
-    rootLabel: function () { return this.root === 'radio' ? 'Rádio' : 'Favoritos'; },
+    rootLabel: function () {
+      if (this.root === 'radio') return 'Rádio';
+      if (this.root === 'apps') return 'Apps';
+      return 'Favoritos';
+    },
     /* O LMS devolve um placeholder do tipo `text` no lugar de uma lista vazia.
        Com items.length === 1 o ramo vazio nunca rodava e a tela mostrava o
        "Empty" cru do servidor. Uma lista so de rotulos e uma lista vazia. */
@@ -87,9 +94,16 @@ Vue.component('lms-opml', {
           'Confira a grafia ou tente um termo mais curto.';
       }
       if (this.frame) return 'Esta lista não tem itens no momento.';
-      return this.root === 'radio'
-        ? 'Nenhuma fonte de rádio está disponível. Ative um serviço de rádio nas configurações avançadas do LMS.'
-        : 'Você ainda não adicionou favoritos. Use “Adicionar aos Favoritos” no menu de uma faixa ou estação.';
+      if (this.root === 'radio') {
+        return 'Nenhuma fonte de rádio está disponível. Ative um serviço de rádio nas configurações avançadas do LMS.';
+      }
+      /* O estado vazio de Apps tem de apontar para onde a solucao esta: os
+         servicos aparecem aqui porque sao plugins do servidor, e quem nunca
+         instalou nenhum nao tem como adivinhar isso. */
+      if (this.root === 'apps') {
+        return 'Nenhum serviço está instalado. Instale um plugin de serviço, como o Qobuz, em Ajustes do servidor › Plugins.';
+      }
+      return 'Você ainda não adicionou favoritos. Use “Adicionar aos Favoritos” no menu de uma faixa ou estação.';
     }
   },
   watch: {
@@ -184,11 +198,22 @@ Vue.component('lms-opml', {
       var f = this.frame;
       this.fieldError = '';
       this.fieldErrorIndex = null;
-      if (f && f.preloaded) { this.items = f.preloaded; this.loading = false; return; }
+      this.truncated = false;
+      if (f && f.preloaded) {
+        this.items = f.preloaded;
+        this.truncated = f.preloaded.length >= 200;
+        this.loading = false;
+        return;
+      }
       this.loading = true;
       this.error = '';
       try {
         this.items = await LmsApi.opmlBrowse(LmsStore.state.playerId || '', this.node(), 0, 200);
+        /* opmlRequest nao passa por pageMeta, entao nao existe sourceCount a
+           consultar: bater exatamente no teto e o unico sinal disponivel.
+           Importa mais agora que a aba Apps usa esta mesma lista - uma pasta do
+           Qobuz com mais de 200 itens terminava sem dizer nada. */
+        this.truncated = this.items.length >= 200;
       } catch (e) {
         this.error = e && e.message ? e.message : String(e);
         this.items = [];

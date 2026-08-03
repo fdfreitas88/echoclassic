@@ -9,6 +9,10 @@
   var POLL_IDLE = 5000;
   var SESSION_KEY = 'echoclassic.session.v2';
   var HISTORY_KEY = 'echoclassic.history.v1';
+  /* Teto da releitura da fila para transferir de player. Alto o bastante para
+     nao alcancar uma fila real; existe para que uma contagem errada do servidor
+     nao vire laco infinito. */
+  var QUEUE_HANDOFF_MAX = 20000;
 
   var state = Vue.observable({
     players: [], playerId: null, connected: false, fixedVolume: false,
@@ -346,11 +350,17 @@
     if (!url) { state.npFavorite = false; state.npFavoriteIndex = null; return; }
     try {
       var r = await api.favoriteExists(url);
+      /* A resposta pode chegar depois de a faixa ter mudado. Sem esta guarda,
+         npFavoriteIndex ficava com o indice do favorito da faixa ANTERIOR e o
+         coracao apagava o favorito errado. actions.js:loadFavorite ja fazia
+         exatamente esta conferencia. */
+      if (state.np.url !== url) return;
       state.npFavorite = r.exists;
       state.npFavoriteIndex = r.index;
     } catch (e) {
       // falha transitoria nao pode ficar cacheada: zerar libera nova tentativa
       lastFavUrl = null;
+      if (state.np.url !== url) return;
       state.npFavorite = false;
       state.npFavoriteIndex = null;
     }
@@ -359,6 +369,11 @@
   async function toggleFavorite() {
     var url = state.np.url;
     if (!url) return;
+    /* O indice so vale para a faixa que o produziu. Se o polling ainda nao
+       reconsultou depois de uma troca de faixa, remover pelo indice apagaria
+       outro favorito: nesse caso o certo e nao fazer nada e deixar a proxima
+       consulta corrigir. */
+    if (state.npFavorite && state.npFavoriteIndex !== null && url !== lastFavUrl) return;
     try {
       if (state.npFavorite && state.npFavoriteIndex !== null) {
         await api.favoriteRemove(state.npFavoriteIndex);
@@ -471,12 +486,15 @@
     await loadQueue();
   }
 
+  /* O desfazer so pode ser oferecido depois de a remocao ter dado certo. Antes,
+     ele era gravado ANTES da chamada: se ela falhasse, guarded() engolia o erro,
+     a faixa continuava na fila e "Desfazer" a inseria de novo - duplicando. */
   async function removeFromQueue(index) {
     if (!state.playerId) return;
     if (index < 0 || index >= state.queue.length) return;
     var item = state.queue.find(function (t) { return t.index === index; });
-    if (item) setQueueUndo([{ item: item, index: index }]);
     await api.queueRemove(state.playerId, index);
+    if (item) setQueueUndo([{ item: item, index: index }]);
     await loadQueue();
   }
 
@@ -502,20 +520,36 @@
 
   async function clearQueue() {
     if (!state.playerId) return;
-    setQueueUndo(state.queue.map(function (item) {
+    var snapshot = state.queue.map(function (item) {
       return { item: item, index: item.index };
-    }));
+    });
     await api.queueClear(state.playerId);
+    setQueueUndo(snapshot);
     await refresh();
     await loadQueue();
   }
 
+  /* Sao N chamadas sequenciais. Duas coisas tinham de mudar aqui:
+     - o player e capturado uma vez. Lendo state.playerId a cada volta, trocar de
+       player no meio do laco mandava as remocoes restantes para a fila do player
+       NOVO, que o usuario nunca pediu para mexer. undoQueue ja fazia assim.
+     - o desfazer passa a conter so o que foi realmente removido. Gravar a lista
+       inteira antes do laco significava que uma falha na metade deixava um
+       "Desfazer" que reinseria tudo, duplicando o que tinha sobrado. */
   async function clearUpcoming() {
-    if (!state.playerId) return;
+    var playerId = state.playerId;
+    if (!playerId) return;
     var removed = state.queue.filter(function (t) { return t.index > state.queueIndex; });
-    setQueueUndo(removed.map(function (item) { return { item: item, index: item.index }; }));
-    for (var i = removed.length - 1; i >= 0; i--) {
-      await api.queueRemove(state.playerId, removed[i].index);
+    var done = [];
+    try {
+      for (var i = removed.length - 1; i >= 0; i--) {
+        if (state.playerId !== playerId) break;
+        await api.queueRemove(playerId, removed[i].index);
+        done.push({ item: removed[i], index: removed[i].index });
+      }
+    } finally {
+      if (done.length) setQueueUndo(done);
+      else clearQueueUndo();
     }
     await loadQueue();
   }
@@ -564,9 +598,39 @@
     await loadQueue();
   }
 
+  /* state.queue e so a janela carregada (500). Transferir a partir dela
+     descartava em silencio tudo a partir da faixa 501. Aqui a fila e relida
+     inteira do servidor antes da transferencia; se ainda assim nao vier tudo, o
+     usuario e avisado em vez de perder faixas sem saber. */
+  function notifyTruncated(got, total) {
+    if (global.LmsUi && global.LmsUi.notify) {
+      global.LmsUi.notify('A fila tem ' + total + ' faixas e só foi possível ler ' +
+        got + '. A transferência leva as ' + got + ' primeiras.', 'error', 7000);
+    }
+  }
+
+  async function fullQueue() {
+    var origin = state.playerId;
+    var loaded = state.queue.slice();
+    var total = state.queueTotal || loaded.length;
+    var page = 500;
+    while (loaded.length < total && loaded.length < QUEUE_HANDOFF_MAX) {
+      var q = await api.queue(origin, loaded.length, page);
+      if (state.playerId !== origin) break;
+      if (!q.tracks || !q.tracks.length) break;
+      loaded = loaded.concat(q.tracks);
+      total = q.total || total;
+    }
+    return { tracks: loaded, total: total };
+  }
+
   async function handoffTo(playerId) {
     if (!playerId || playerId === state.playerId) return;
-    var tracks = state.queue.slice();
+    var full = await fullQueue();
+    if (full.tracks.length < full.total) {
+      notifyTruncated(full.tracks.length, full.total);
+    }
+    var tracks = full.tracks.slice();
     var index = state.queueIndex;
     var position = state.time;
     var wasPlaying = state.mode === 'play';

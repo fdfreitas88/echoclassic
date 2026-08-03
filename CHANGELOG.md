@@ -8,6 +8,67 @@ acontecendo na interface rodando; **[código]** significa que a cadeia foi lida 
 fonte mas o estado não foi reproduzido na tela. A distinção importa para quem for
 decidir, daqui a seis meses, se pode confiar na correção.
 
+## [3.1.2] — 2026-08-03
+
+Torna alcançáveis os serviços do servidor — Qobuz entre eles — e fecha os itens
+de perda silenciosa de dados que a 3.0.1 adiou. Nenhuma mudança no formato de
+preferências nem na versão mínima do servidor.
+
+### Adicionado
+
+- **Aba Apps.** A raiz OPML `apps` já existia em `api.js` e nunca era montada:
+  nenhum valor dinâmico chegava à prop `root` do `lms-opml`, que só recebia
+  literais (`'radio'` em `app.js`, `'favorites'` em `actions.js`). Qobuz,
+  MyQobuz, podcasts e todo menu de plugin do servidor não tinham rota nenhuma na
+  interface, embora `opmlBrowse`, `opmlSearch` e `opmlPlay` já funcionassem para
+  eles. [código]
+
+### Corrigido
+
+- **O coração podia apagar o favorito errado.** `refreshFavorite` escrevia
+  `npFavorite`/`npFavoriteIndex` depois do `await` sem reconferir a faixa; duas
+  trocas rápidas faziam o índice da faixa anterior sobreviver na tela da atual.
+  `actions.js:loadFavorite` já fazia essa conferência. [código]
+- **O desfazer da fila era gravado antes da chamada destrutiva.** Como
+  `guarded()` engole o erro, uma falha deixava um "Desfazer" que reinseria
+  faixas que nunca saíram. `removeFromQueue`, `clearQueue` e `clearUpcoming` só
+  gravam o desfazer depois do sucesso, e `clearUpcoming` guarda apenas o que de
+  fato removeu. [código]
+- **Trocar de player no meio de "Limpar próximas" apagava faixas do player
+  novo.** O laço relia `state.playerId` a cada volta; agora captura uma vez,
+  como `undoQueue` já fazia. [código]
+- **Transferir a reprodução truncava a fila em 500 faixas**, em silêncio.
+  `handoffTo` copiava `state.queue`, que é só a janela carregada. A fila passa a
+  ser relida inteira antes da transferência, e o que não vier é avisado.
+  [código]
+- **O botão de favorito da folha de ações disparava duas vezes.** `busy` era
+  ligado e desligado, mas nunca testado ali — ao contrário de `addToPlaylist`.
+  [código]
+- **Álbuns sumiam do agrupamento por artista.** `browse.js` fazia
+  `if (!artist) return null` e o `filter(Boolean)` seguinte apagava a linha, sem
+  contagem e sem aviso. O alcance era maior do que "álbum sem artista": a raiz
+  Artistas é montada paginando álbuns e mapeando cada um para um artista por
+  nome, então a perda também cobria artista de álbum composto ("A & B"),
+  coletânea de vários artistas, artista que só existe como contribuidor de
+  faixa, e nome abreviado que `canonicalizeArtists` não resolveu. O álbum não
+  atribuído passa a aparecer como álbum, e a tela diz quantos foram. [código]
+- **`lms-detail` e a folha de informações não tinham token de requisição** — os
+  dois únicos componentes com `await` sem guarda de corrida. Clicar no artista A
+  (lento) e depois no B mostrava B e, segundos depois, os álbuns de A sob o
+  cabeçalho de B. [código]
+- **Um erro em pedido secundário deixa de apagar tela que já carregou.** No
+  detalhe, se o bloco do álbum já está renderizado, a falha vira notificação.
+  [código]
+
+### Alterado
+
+- As listas de validação da importação de preferências em `settings.js` eram
+  literais duplicados de `ui.js`. Acrescentar uma aba lá invalidava o valor aqui,
+  em silêncio. Passam a derivar de `LmsUi.TABS` e `LmsUi.MUSIC_VIEWS`. [código]
+- Avisos de truncamento onde ainda não havia: listas OPML em 200 (Rádio,
+  Favoritos e Apps), índice de artistas em 10.000, gêneros em 2.000, anos em
+  500, discografia em 200 e gênero/ano em 1.000. [código]
+
 ## [3.1.1] — 2026-08-03
 
 Corrige o que impedia a skin de ser gerenciada pelo próprio LMS depois de

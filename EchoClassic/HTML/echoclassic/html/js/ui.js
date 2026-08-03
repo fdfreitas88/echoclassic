@@ -8,6 +8,7 @@
   var TABS = Object.freeze([
     Object.freeze({ key: 'favoritos', label: 'Favoritos' }),
     Object.freeze({ key: 'radio', label: 'Rádio' }),
+    Object.freeze({ key: 'apps', label: 'Apps' }),
     Object.freeze({ key: 'playlists', label: 'Playlists' }),
     Object.freeze({ key: 'musica', label: 'Minha Música' }),
     Object.freeze({ key: 'ajustes', label: 'Ajustes' })

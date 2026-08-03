@@ -15,6 +15,9 @@ Vue.component('lms-detail', {
 
   <template v-else-if="frame.kind === 'album'">
     <lms-album-block v-for="a in visibleBlocks" :key="a.id" :album="a" :artist="artist"></lms-album-block>
+    <div v-if="discografiaTruncada" class="loading-more warning" role="status">
+      A discografia deste artista tem mais de 200 álbuns e esta tela mostra os 200 primeiros.
+    </div>
   </template>
 
   <template v-else>
@@ -46,12 +49,16 @@ Vue.component('lms-detail', {
       </div>
       <div v-if="!albums.length" class="empty"><div class="p">Nenhum álbum para este item.</div></div>
     </template>
+    <div v-if="listaTruncada" class="loading-more warning" role="status">
+      Esta lista tem mais de 1.000 álbuns e esta tela mostra os 1.000 primeiros.
+    </div>
   </template>
 </div>`,
   data: function () {
     return { store: LmsStore.state, ui: LmsUi.state, albums: [], blocks: [],
              artist: null, failedArt: {}, photoFailed: false,
-             loading: true, error: '' };
+             loading: true, error: '', requestToken: 0,
+             discografiaTruncada: false, listaTruncada: false };
   },
   computed: {
     initial: function () {
@@ -137,6 +144,11 @@ Vue.component('lms-detail', {
       });
     },
     load: async function () {
+      /* O componente e reaproveitado entre quadros (browse.js o renderiza sem
+         :key) e o watch de frame dispara um load novo por cima do anterior. Sem
+         token, a resposta lenta do artista A sobrescrevia a tela do artista B
+         ja renderizada. Mesmo padrao de browse.js. */
+      var token = ++this.requestToken;
       this.loading = true;
       this.error = '';
       this.albums = [];
@@ -144,6 +156,8 @@ Vue.component('lms-detail', {
       this.artist = null;
       this.failedArt = {};
       this.photoFailed = false;
+      this.discografiaTruncada = false;
+      this.listaTruncada = false;
       var pid = this.store.playerId || '';
       var f = this.frame;
       try {
@@ -159,12 +173,16 @@ Vue.component('lms-detail', {
           };
           this.blocks = [atual];
           this.loading = false;
-          this.artist = await LmsApi.artistOfAlbum(pid, f.id);
+          var quem = await LmsApi.artistOfAlbum(pid, f.id);
+          if (token !== this.requestToken) return;
+          this.artist = quem;
           if (this.artist) {
             var artistFilter = this.artist.ids && this.artist.ids.length > 1
               ? { artistIds: this.artist.ids }
               : { artistId: this.artist.id };
             var todos = await LmsApi.albums(pid, 0, 200, artistFilter);
+            if (token !== this.requestToken) return;
+            this.discografiaTruncada = todos.length >= 200;
             this.blocks = [atual].concat(todos
               .filter(function (x) { return x.id !== f.id; })
               .map(function (x) {
@@ -187,6 +205,8 @@ Vue.component('lms-detail', {
           else if (f.kind === 'genre') filter.genreId = f.id;
           else if (f.kind === 'year') filter.year = f.id;
           var al = await LmsApi.albums(pid, 0, 1000, filter);
+          if (token !== this.requestToken) return;
+          this.listaTruncada = al.length >= 1000;
           this.albums = this.markEditions(al.map(function (x) {
             return {
               id: x.id, title: x.title, year: x.year,
@@ -197,8 +217,17 @@ Vue.component('lms-detail', {
           }));
         }
       } catch (e) {
-        this.error = e && e.message ? e.message : String(e);
+        if (token !== this.requestToken) return;
+        /* Um erro depois de o bloco do album ja estar na tela nao pode apagar o
+           que carregou certo: o pedido secundario falhou, o album nao. */
+        if (this.blocks.length || this.albums.length) {
+          LmsUi.notify('Parte desta tela não pôde ser carregada. ' +
+            (e && e.message ? e.message : String(e)), 'error', 6500);
+        } else {
+          this.error = e && e.message ? e.message : String(e);
+        }
       }
+      if (token !== this.requestToken) return;
       this.loading = false;
     }
   },

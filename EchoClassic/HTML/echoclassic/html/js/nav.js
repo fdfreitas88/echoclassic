@@ -24,14 +24,15 @@
 
   var stacks = Vue.observable({
     musica: validFrames(saved.musica), playlists: validFrames(saved.playlists),
-    radio: validFrames(saved.radio), favoritos: validFrames(saved.favoritos), ajustes: []
+    radio: validFrames(saved.radio), apps: validFrames(saved.apps),
+    favoritos: validFrames(saved.favoritos), ajustes: []
   });
 
   function persist() {
     try {
       localStorage.setItem('echoclassic.nav.v1', JSON.stringify({
         musica: stacks.musica, playlists: stacks.playlists,
-        radio: stacks.radio, favoritos: stacks.favoritos
+        radio: stacks.radio, apps: stacks.apps, favoritos: stacks.favoritos
       }));
     } catch (e) {}
   }

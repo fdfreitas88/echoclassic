@@ -462,8 +462,14 @@ Vue.component('lms-settings', {
 	      catch (e) { return 'o conteúdo de ' + canonical + ' não é JSON válido'; }
 	      if (canonical === 'echoclassic.ui.v2') {
 	        if (!this.isPlainObject(parsed)) return canonical + ' deveria ser um objeto';
-	        var tabs = ['favoritos', 'radio', 'playlists', 'musica', 'ajustes'];
-	        var views = ['recentes', 'artistas', 'albuns', 'generos', 'anos'];
+	        /* Estas duas listas eram literais duplicados de ui.js. Acrescentar uma
+	           aba la quebrava a importacao de preferencias aqui, em silencio: o
+	           valor novo era recusado como invalido. Agora derivam da fonte. */
+	        var keysOf = function (list) {
+	          return list.map(function (entry) { return entry.key; });
+	        };
+	        var tabs = keysOf(LmsUi.TABS);
+	        var views = keysOf(LmsUi.MUSIC_VIEWS);
 	        var albumModes = ['albuns', 'faixas'];
 	        var playerPresentations = ['adaptive', 'fullscreen'];
 	        var playerPositions = ['right', 'left', 'center'];

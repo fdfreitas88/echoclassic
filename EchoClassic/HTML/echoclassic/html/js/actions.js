@@ -154,7 +154,11 @@
         } catch (e) {}
       },
       favorite: async function () {
-        if (!this.item || !this.item.url) return;
+        /* busy era ligado e desligado, mas nunca testado aqui - ao contrario de
+           addToPlaylist. Dois toques rapidos disparavam duas chamadas: duas
+           adicoes do mesmo URL, ou duas remocoes do mesmo indice, e a segunda
+           apagava o favorito que tivesse ocupado aquela posicao. */
+        if (!this.item || !this.item.url || this.busy) return;
         this.busy = true;
         LmsUi.setBusy('Atualizando favoritos…');
         try {
@@ -252,7 +256,8 @@
   </section>
 </div>`,
     data: function () {
-      return { ui: LmsUi.state, info: null, loading: false, error: '', previousFocus: null };
+      return { ui: LmsUi.state, info: null, loading: false, error: '',
+               previousFocus: null, requestToken: 0 };
     },
     computed: {
       item: function () { return this.ui.infoItem; },
@@ -298,11 +303,22 @@
         }
       },
       load: async function (item) {
+        /* A folha e reaproveitada: watch:item dispara um load por cima do
+           anterior. Sem token, abrir a faixa A (lenta), fechar e abrir a B
+           fazia os creditos de A aparecerem sob o titulo de B. */
+        var token = ++this.requestToken;
         this.loading = true;
         this.error = '';
         this.info = null;
-        try { this.info = await LmsApi.songInfo(LmsStore.state.playerId || '', item.id); }
-        catch (e) { this.error = e && e.message ? e.message : String(e); }
+        try {
+          var found = await LmsApi.songInfo(LmsStore.state.playerId || '', item.id);
+          if (token !== this.requestToken) return;
+          this.info = found;
+        } catch (e) {
+          if (token !== this.requestToken) return;
+          this.error = e && e.message ? e.message : String(e);
+        }
+        if (token !== this.requestToken) return;
         this.loading = false;
       }
     },

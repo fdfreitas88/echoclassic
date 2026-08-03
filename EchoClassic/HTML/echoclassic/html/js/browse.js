@@ -183,6 +183,7 @@ Vue.component('lms-browse', {
       ui: LmsUi.state, store: LmsStore.state, LmsUi: LmsUi,
       rows: [], loading: true, error: '',
 	      loadingMore: false, limitWarning: '', requestToken: 0,
+	      artistIndexTruncated: false,
       rootSelection: null,
       first: 0, visible: 14, activeRail: '',
       mediaIndex: null,
@@ -539,6 +540,10 @@ Vue.component('lms-browse', {
         start += sourceCount;
         keepGoing = sourceCount === pageSize;
       }
+      /* O laco irmao em loadPagedRoot avisa quando bate no teto; este apenas
+         devolvia o indice truncado. E o efeito aqui e pior: todo album de um
+         artista alem do limite deixa de ser atribuido. */
+      this.artistIndexTruncated = keepGoing;
       return index;
     },
     canonicalFormat: function (value) {
@@ -651,6 +656,9 @@ Vue.component('lms-browse', {
       var keepGoing = true;
       var mainArtistIndex = this.groupsMainArtists
         ? await this.loadArtistIndex(pid, token) : null;
+      /* Contador dos albuns que o indice de artistas nao soube atribuir. Sem
+         ele, a perda continuaria invisivel mesmo com a linha sendo mostrada. */
+      var unattributed = 0;
       if (token !== this.requestToken || (this.groupsMainArtists && !mainArtistIndex)) return;
       if (this.hasMediaFilter) {
         await this.loadMediaIndex(pid, token);
@@ -673,7 +681,26 @@ Vue.component('lms-browse', {
           };
         }) : this.groupsMainArtists ? page.map(function (x) {
           var artist = mainArtistIndex[this.normalize(x.artist)];
-          if (!artist) return null;
+          /* Antes: `if (!artist) return null`, e o .filter(Boolean) logo abaixo
+             apagava a linha. O album sumia da lista sem contagem e sem aviso.
+             Isso alcanca muito mais do que "album sem artista": artista de
+             album composto ("A & B"), coletanea de varios artistas, artista que
+             so existe como contribuidor de faixa, e o nome abreviado que
+             canonicalizeArtists nao conseguiu resolver.
+
+             A linha passa a ser o proprio album. E uma linha que ja funciona em
+             todo o resto da tela: clicar abre o album. O que ela nao faz e
+             agrupar sob um artista que o indice desconhece — e isso agora e
+             dito na tela, em vez de acontecer em silencio. */
+          if (!artist) {
+            unattributed++;
+            return {
+              key: 'al' + x.id, kind: 'album', id: x.id, label: x.title,
+              sub: [x.artist, x.year || null].filter(Boolean).join(' • '),
+              artist: x.artist, year: x.year, originalYear: x.originalYear,
+              art: LmsFmt.coverUrl(x.artworkTrackId, 50) || null
+            };
+          }
           return {
             key: 'main-ar' + artist.id, kind: 'artist', id: artist.id, ids: artist.ids,
             label: artist.name, art: null
@@ -697,6 +724,12 @@ Vue.component('lms-browse', {
 	      }
 	      if (keepGoing) {
 	        this.limitWarning = 'A biblioteca tem mais itens do que esta tela carregou. Use o filtro para refinar a lista.';
+	      } else if (this.artistIndexTruncated) {
+	        this.limitWarning = 'O índice de artistas parou em 10.000 nomes. Álbuns de artistas além desse ponto aparecem como álbum nesta lista.';
+	      } else if (unattributed) {
+	        this.limitWarning = unattributed === 1
+	          ? '1 álbum não pôde ser atribuído a um artista do índice e aparece como álbum nesta lista.'
+	          : unattributed + ' álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.';
 	      }
 	      if (!this.groupsAlbumsByArtist && !this.groupsAlbumsByRelatedArtist && !this.hasMediaFilter) {
 	        await this.disambiguateDuplicateAlbums(pid, token);
@@ -707,6 +740,7 @@ Vue.component('lms-browse', {
       this.loading = true;
 	      this.loadingMore = false;
 	      this.limitWarning = '';
+	      this.artistIndexTruncated = false;
       this.error = '';
       this.rows = [];
       this.first = 0;
@@ -742,11 +776,15 @@ Vue.component('lms-browse', {
 	          }
         } else if (this.view === 'generos') {
           var g = await LmsApi.genres(pid, 0, 2000);
+          if (token !== this.requestToken) return;
+          if (g.length >= 2000) this.limitWarning = 'Esta biblioteca tem mais de 2.000 gêneros; esta tela mostra os 2.000 primeiros.';
           this.rows = g.map(function (x) {
             return { key: 'g' + x.id, kind: 'genre', id: x.id, label: x.name, art: null };
           });
         } else {
           var y = await LmsApi.years(pid, 0, 500);
+          if (token !== this.requestToken) return;
+          if (y.length >= 500) this.limitWarning = 'Esta biblioteca tem mais de 500 anos distintos; esta tela mostra os 500 primeiros.';
           this.rows = y.map(function (x) {
             return { key: 'y' + x.year, kind: 'year', id: x.year, label: String(x.year), art: null };
           });
