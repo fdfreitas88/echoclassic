@@ -53,6 +53,9 @@ Vue.component('lms-opml', {
   <div v-else class="empty">
     <div class="h">{{ emptyTitle }}</div>
     <div class="p">{{ emptyMessage }}</div>
+    <button v-if="root === 'favorites' && !frame" type="button" class="retry-command" @click="openMusic">
+      Abrir Minha Música
+    </button>
   </div>
 </div>`,
   data: function () {
@@ -110,6 +113,11 @@ Vue.component('lms-opml', {
     },
     searchAction: function (it) {
       return this.isTuneUrl(it) ? 'Sintonizar' : 'Buscar';
+    },
+    openMusic: function () {
+      LmsUi.setTab('musica');
+      LmsUi.setMusicView('albuns');
+      LmsNav.reset('musica');
     },
     /* api.js devolve 'menu' como default para tudo que nao seja audio/search/
        text, inclusive itens sem actions.go — e ai opmlChildNode() e null. Sem

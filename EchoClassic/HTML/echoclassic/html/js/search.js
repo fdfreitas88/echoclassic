@@ -39,7 +39,7 @@ Vue.component('lms-search', {
 	        <span class="art" :style="art(a.artworkTrackId)"></span>
 	        <span class="ell">
 	          <span class="t ell">{{ a.title }}</span>
-	          <span v-if="a.artist" class="s ell">{{ a.artist }}</span>
+	          <span v-if="albumSubtitle(a)" class="s ell">{{ albumSubtitle(a) }}</span>
 	        </span>
 	        <svg class="ic chev" viewBox="0 0 9 15"><path d="M1 1l6.5 6.5L1 14"/></svg>
 	      </button>
@@ -114,7 +114,13 @@ Vue.component('lms-search', {
 	      return url ? { backgroundImage: 'url(' + url + ')', backgroundSize: 'cover' } : {};
 	    },
 	    trackSubtitle: function (t) {
-	      return [t.artist, t.album, t.source].filter(Boolean).join(' • ');
+	      return [t.artist, t.album, this.tr(t.source)].filter(Boolean).join(' • ');
+	    },
+	    albumSubtitle: function (a) {
+	      return [a.artist, a.year || null].filter(Boolean).join(' • ');
+	    },
+	    tr: function (text) {
+	      return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
 	    },
 	    trackLabel: function (t) {
 	      return [t.title, this.trackSubtitle(t)].filter(Boolean).join(', ');

@@ -93,8 +93,10 @@
       },
       back: function () {
         if (!this.depth) return null;
-        return LmsNav.parentLabel(this.ui.tab,
-          this.ui.tab === 'musica' ? LmsUi.viewLabel() : this.tabLabel);
+        var root = this.ui.tab === 'musica' ? LmsUi.viewLabel() : this.tabLabel;
+        var current = LmsNav.top(this.ui.tab);
+        if (this.ui.tab === 'musica' && current && current.label === root) root = this.tabLabel;
+        return LmsNav.parentLabel(this.ui.tab, root);
       },
       /* O picker fica sempre a vista em Minha Musica: sumindo ao entrar num
          artista, perdia-se a referencia de qual raiz se esta vendo. O toggle de

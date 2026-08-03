@@ -8,6 +8,39 @@ acontecendo na interface rodando; **[código]** significa que a cadeia foi lida 
 fonte mas o estado não foi reproduzido na tela. A distinção importa para quem for
 decidir, daqui a seis meses, se pode confiar na correção.
 
+## [3.1.0] — 2026-08-02
+
+Fecha a passada de publicação da skin sem alterar o formato de preferências ou a
+versão mínima do servidor.
+
+### Corrigido
+
+- Resultados de álbum mostram artista e ano; resultados de faixa mostram artista,
+  álbum, duração e origem traduzida. Dados ausentes na busca são enriquecidos por
+  consultas pontuais ao servidor. [ao vivo]
+- A navegação para artistas relacionados preserva a pilha da aba. O botão Voltar
+  usa o rótulo da raiz quando o primeiro quadro repete o título da tela. [ao vivo]
+- Favoritos vazio oferece a ação "Abrir Minha Música" e conduz à biblioteca.
+  [ao vivo]
+- Textos dinâmicos restantes usam o dicionário da sessão antes da concatenação;
+  a interface em inglês não deixa a origem local em português. [ao vivo]
+
+### Verificado
+
+- Reprodução real: play, pause, seek, volume durante polling, anterior, próxima,
+  avanço automático da fila, arquivo local e conteúdo Qobuz. Estado inicial do
+  player restaurado após a sessão. [ao vivo]
+- Cinco viewports sem overflow horizontal, controles interativos aninhados ou
+  botões sem nome; player completo contido e cabeçalho da fila sem sobreposição
+  em 390 px. [medido]
+- Testes unitários cobrem formatação, tradução, importação de preferências,
+  relevância e enriquecimento de busca; verificações estruturais cobrem os estados
+  críticos de DOM. Troca de player, sincronização, transferência de reprodução e
+  stream real sem duração conhecida continuam sem cobertura automatizada.
+  [medido]
+- Validação contínua executa testes, os quatro portões locais e a consistência de
+  versão entre os três manifestos de release. [código]
+
 ## [3.0.1] — 2026-08-02
 
 Fecha os defeitos bloqueadores encontrados na auditoria da 3.0.0. Sem mudança de

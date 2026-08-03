@@ -12,6 +12,7 @@
 
 # artefatos de trabalho
 node_modules/
+dist/
 *.tgz
 *.log
 

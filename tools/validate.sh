@@ -20,11 +20,16 @@ done < <(find "$SKIN/js" -name '*.js' | sort)
 step "2/4  templates Vue"
 if [ ! -d node_modules/vue-template-compiler ]; then
   echo "  instalando vue-template-compiler (so na primeira vez)..."
-  npm install --no-save --silent --no-fund --no-audit vue-template-compiler@2.7.16 || {
-    echo "  PULADO: sem rede e sem vue-template-compiler instalado"; }
+  npm ci --silent --no-fund --no-audit || {
+    echo "  FALHA: nao foi possivel instalar as dependencias de validacao"
+    fail=1
+  }
 fi
 if [ -d node_modules/vue-template-compiler ]; then
   node tools/check-templates.js || fail=1
+else
+  echo "  FALHA: vue-template-compiler indisponivel"
+  fail=1
 fi
 
 step "3/4  referencias entre modulos"

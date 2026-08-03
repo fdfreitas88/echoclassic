@@ -15,7 +15,10 @@ Match the surrounding style rather than the style you prefer.
 ## Before you open a pull request
 
 ```sh
-tools/validate.sh
+npm ci
+npm test
+npm run validate
+npm run check-version
 ```
 
 Four gates, all of which must pass:
@@ -25,6 +28,9 @@ Four gates, all of which must pass:
 3. No `LmsStore.*` / `LmsUi.*` / `LmsNav.*` / `LmsApi.*` / `LmsFmt.*` reference points
    at something the owning module does not export.
 4. Every WCAG contrast pair recomputed from the CSS tokens still passes.
+
+The version check also requires `install.xml`, `Plugin.pm`, and `repo.xml` to
+declare the same release.
 
 Gate 4 is the one people are surprised by. If you change a colour token in
 `ios9.css`, the script recalculates it across both themes and all five accent

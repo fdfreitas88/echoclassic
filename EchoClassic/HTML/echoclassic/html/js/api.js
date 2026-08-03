@@ -231,6 +231,34 @@
 	    });
 	  }
 
+	  async function albumSearchInfo(playerId, album) {
+	    if (!album || album.id == null || (album.artist && album.year)) return album;
+	    try {
+	      var r = await rpc(playerId, ['albums', 0, 1, 'album_id:' + album.id, 'tags:lay']);
+	      var row = loop(r, 'albums_loop')[0] || {};
+	      album.artist = album.artist || canonicalArtist(row.artist);
+	      album.year = album.year || LmsFmt.year(row.year);
+	      album.originalYear = album.originalYear || LmsFmt.year(row.originalyear || row.original_year);
+	    } catch (e) {}
+	    return album;
+	  }
+
+	  async function trackSearchInfo(playerId, track) {
+	    if (!track || track.id == null ||
+	        (track.artist && track.album && track.duration && track.url)) return track;
+	    try {
+	      var info = await songInfo(playerId, track.id);
+	      track.artist = track.artist || info.artist;
+	      track.album = track.album || info.album;
+	      track.albumId = track.albumId != null ? track.albumId : info.albumId;
+	      track.coverId = track.coverId || info.coverId;
+	      track.url = track.url || info.url;
+	      track.duration = track.duration || info.duration;
+	      track.source = sourceFromUrl(track.url, false);
+	    } catch (e) {}
+	    return track;
+	  }
+
   async function artists(playerId, start, count) {
     var r = await rpc(playerId, ['artists', start | 0, count | 0]);
     var source = loop(r, 'artists_loop');
@@ -386,6 +414,9 @@
 	        return searchScore(q, a.title, a.artist) - searchScore(q, b.title, b.artist) ||
 	          a.title.localeCompare(b.title, 'pt-BR', { sensitivity: 'base' });
 	      });
+	    albumsFound = await Promise.all(albumsFound.map(function (album) {
+	      return albumSearchInfo(playerId, album);
+	    }));
 	    var tracksFound = uniqueBy(loop(r, 'tracks_loop').map(function (t) {
 	        return {
 	          id: t.track_id, title: txt(t.track), artist: canonicalArtist(t.artist),
@@ -399,6 +430,9 @@
 	          searchScore(q, b.title, [b.artist, b.album, b.source].join(' ')) ||
 	          a.title.localeCompare(b.title, 'pt-BR', { sensitivity: 'base' });
 	      });
+	    tracksFound = await Promise.all(tracksFound.map(function (track) {
+	      return trackSearchInfo(playerId, track);
+	    }));
 	    var playlistsFound = uniqueBy(playlistRows.map(function (p) {
 	        return { id: p.id, name: txt(p.playlist), kind: 'playlist', url: txt(p.url) };
 	      }), function (p) { return String(p.id); }).sort(function (a, b) {

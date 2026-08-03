@@ -217,7 +217,6 @@ Vue.component('lms-album-block', {
 	    },
     openArtist: function () {
       if (!this.artist) return;
-      LmsNav.reset('musica');
       LmsNav.push('musica', {
         kind: 'artist', id: this.artist.id, ids: this.artist.ids,
         label: this.artist.name, art: null
@@ -227,7 +226,6 @@ Vue.component('lms-album-block', {
       LmsUi.setMusicView('albuns');
       LmsUi.setSort('relatedArtist', false);
       Vue.nextTick(function () {
-        LmsNav.reset('musica');
         LmsNav.push('musica', {
           kind: 'artist', id: artist.id, ids: artist.ids,
           label: artist.name, art: null

@@ -109,7 +109,6 @@ Vue.component('lms-detail', {
     },
     openArtist: function () {
       if (!this.artist) return;
-      LmsNav.reset('musica');
       LmsNav.push('musica', {
         kind: 'artist', id: this.artist.id, ids: this.artist.ids,
         label: this.artist.name, art: null

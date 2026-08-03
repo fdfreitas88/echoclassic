@@ -33,7 +33,7 @@ tools/install-local.sh /some/path # or to a directory you choose
 Then open `http://<server>:9000/echoclassic/`, or pick **Echo Classic** in
 *Server Settings → Interface* to make it the default skin.
 
-`/mojo` stays as a redirect alias so bookmarks from the pre‑rename releases keep working.
+The retired `/mojo` alias is intentionally not registered; it returns 404.
 
 ## Repository layout
 
@@ -59,7 +59,10 @@ There is no build step. Edit the files, restart nothing, reload the page.
 Before committing, run:
 
 ```sh
-tools/validate.sh
+npm ci
+npm test
+npm run validate
+npm run check-version
 ```
 
 It checks JavaScript syntax on every file, compiles all Vue templates, verifies that
@@ -68,16 +71,10 @@ the CSS tokens. All four must pass.
 
 ## Status
 
-Version 3.0.1 closes the blocking defects found in the 3.0.0 audit. Two things are
-known to be incomplete and are tracked for the next releases:
-
-**Internationalisation.** The interface strings are still embedded in Portuguese in
-the JavaScript. `strings.txt` covers only the plugin metadata and the server‑side
-settings page. Until that is extracted, this is a Portuguese skin. See `docs/plano-correcoes.md`.
-
-**Navigation history.** The skin's own navigation stack and the browser history are
-two sources of truth kept in sync by hand, which makes the browser Back button walk
-*into* the navigation instead of out of it.
+Version 3.1.0 completes the publication pass: English and Portuguese interface
+strings, browser-history-backed drill navigation, disambiguated search results,
+actionable empty states, and automated behavior and release validation. See
+[CHANGELOG.md](CHANGELOG.md) for verification details and remaining test scope.
 
 ## Licence
 

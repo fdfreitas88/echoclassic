@@ -524,6 +524,10 @@ ECHOCLASSIC_UI_MORE_ACTIONS_FOR
 	EN	More actions for 
 	PT	Mais ações para 
 
+ECHOCLASSIC_UI_OPEN_MY_MUSIC
+	EN	Open My Music
+	PT	Abrir Minha Música
+
 ECHOCLASSIC_UI_MY_MUSIC
 	EN	My Music
 	PT	Minha Música
