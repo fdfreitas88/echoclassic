@@ -107,9 +107,14 @@ fi
 verify_remote
 REV_AFTER="$(asset_revision)"
 info "asset revision    $REV_BEFORE -> $REV_AFTER"
-if [ "$REV_AFTER" -le "$REV_BEFORE" ] 2>/dev/null; then
-  warn "o asset revision NAO avancou: a URL dos assets nao muda e o navegador
-  serve o JS anterior mesmo com hard reload. Force com:
+# So cobra avanco se algum asset realmente mudou. Um deploy que mexe apenas em
+# Plugin.pm ou strings.txt nao move a revisao -- e nao precisa mover, porque o
+# que o navegador tem em cache continua sendo o atual. Avisar ali seria alarme
+# falso, e alarme falso repetido ensina a ignorar o aviso de verdade.
+if printf '%s\n' "$CHANGES" | grep -q 'HTML/echoclassic/' \
+   && [ "$REV_AFTER" -le "$REV_BEFORE" ] 2>/dev/null; then
+  warn "os assets mudaram mas o asset revision NAO avancou: a URL nao muda e o
+  navegador serve o JS anterior mesmo com hard reload. Force com:
     touch $SRC/HTML/echoclassic/html/js/*.js && tools/deploy.sh"
 fi
 
