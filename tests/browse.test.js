@@ -99,3 +99,63 @@ test('os grupos de midia ficam desabilitados fora de Albuns e Recentes', functio
     assert.match(src, re, label + ' precisa desabilitar fora de Albuns/Recentes');
   });
 });
+
+/* O bug B: com filtro ativo, a unica pista de que ele existia era o
+   mediaDescriptor colado no subtitulo de cada linha -- e quando o filtro zerava
+   a lista, a pista sumia junto com as linhas. O aviso precisa viver FORA da
+   lista, senao ele desaparece exatamente no caso em que e necessario. */
+test('o chip do filtro vive fora da lista, e nao dentro dela', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  assert.match(src, /v-if="hasMediaFilter" class="filter-chip"/);
+  assert.match(src, /Filtro ativo: \{\{ mediaDescriptor\(\) \}\}/);
+  assert.match(src, /@click="clearMediaFilter"/);
+
+  const chipAt = src.indexOf('class="filter-chip"');
+  const scrollerAt = src.indexOf('<div class="scroller"');
+  assert.ok(chipAt > 0 && scrollerAt > 0);
+  assert.ok(chipAt < scrollerAt,
+    'o chip precisa estar antes do scroller: dentro dele sumiria junto com as linhas');
+});
+
+test('clearMediaFilter devolve cada view a sua ordenacao propria', function () {
+  const captured = helpers.browseComponent();
+  const LmsUi = captured.ctx.LmsUi;
+
+  LmsUi.setMusicView('recentes');
+  LmsUi.setSort('stream:qobuz', false);
+  captured.def.methods.clearMediaFilter.call({ view: 'recentes', ui: LmsUi.state });
+  assert.equal(LmsUi.state.sortKey, 'recent',
+    "Recentes volta para 'recent' (ordem do servidor), nao para 'name' -- reordenar por nome apagaria o criterio que da nome a pagina");
+  assert.equal(LmsUi.state.musicView, 'recentes', 'limpar o filtro nao troca de view');
+
+  LmsUi.setMusicView('albuns');
+  LmsUi.setSort('quality:hires', false);
+  captured.def.methods.clearMediaFilter.call({ view: 'albuns', ui: LmsUi.state });
+  assert.equal(LmsUi.state.sortKey, 'name');
+  assert.equal(LmsUi.state.musicView, 'albuns');
+});
+
+/* O portao 4 recalcula uma lista FIXA de pares de contraste. Um token de cor novo
+   nao entra nessa lista, entao passaria sem nunca ser medido. */
+test('o chip usa apenas tokens de cor que ja existem no CSS', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const defined = new Set();
+  let m;
+  const defRe = /(--[a-z0-9-]+)\s*:/g;
+  while ((m = defRe.exec(css))) defined.add(m[1]);
+
+  /* Pega o corpo de cada regra cujo seletor comeca em .filter-chip. Filtrar por
+     linha nao serve: a declaracao continua na linha seguinte, indentada, e e la
+     que os var() aparecem. */
+  const bodies = [];
+  const ruleRe = /\.filter-chip[^{]*\{([^}]*)\}/g;
+  while ((m = ruleRe.exec(css))) bodies.push(m[1]);
+  assert.ok(bodies.length > 0, '.filter-chip precisa ter estilo');
+
+  const used = (bodies.join('\n').match(/var\((--[a-z0-9-]+)\)/g) || [])
+    .map(function (v) { return v.slice(4, -1); });
+  assert.ok(used.length > 0, 'o chip deveria se apoiar nos tokens do tema');
+  used.forEach(function (token) {
+    assert.ok(defined.has(token), 'token de cor inedito no chip: ' + token);
+  });
+});

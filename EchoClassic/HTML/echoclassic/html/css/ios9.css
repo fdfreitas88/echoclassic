@@ -1086,6 +1086,14 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .loading-more{min-height:40px;display:flex;align-items:center;justify-content:center;
   color:var(--text2);font-size:12px}
 .loading-more.warning{padding:8px 16px;text-align:center;line-height:1.35}
+/* Fica acima da lista, e nao dentro dela: quando o filtro nao casa com nada, a
+   lista some e este aviso e a unica coisa que continua explicando o vazio. */
+.filter-chip{display:flex;align-items:center;gap:8px;padding:6px 16px;
+  background:var(--content);border-bottom:.5px solid var(--hair);
+  font-size:12px;color:var(--text2)}
+.filter-chip-text{flex:1;min-width:0}
+.filter-chip-clear{flex:0 0 auto;background:none;border:0;padding:0;
+  font-size:12px;color:var(--accent);cursor:pointer}
 .visually-hidden{position:absolute!important;width:1px!important;height:1px!important;
   padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;
   white-space:nowrap!important;border:0!important}

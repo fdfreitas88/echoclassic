@@ -104,6 +104,10 @@ Vue.component('lms-browse', {
         </button>
       </div>
     </div>
+    <div v-if="hasMediaFilter" class="filter-chip" role="status">
+      <span class="filter-chip-text ell">Filtro ativo: {{ mediaDescriptor() }}</span>
+      <button type="button" class="filter-chip-clear" @click="clearMediaFilter">Limpar filtro</button>
+    </div>
     <div class="scroller" ref="scroller" @scroll="onScroll">
       <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
       <div v-else-if="error" class="empty">
@@ -468,6 +472,12 @@ Vue.component('lms-browse', {
        essa copia que trocava a view do usuario para fazer a escolha caber. */
     setSort: function (key) {
       LmsUi.setSort(key, this.ui.sortDesc);
+    },
+    /* Recentes tem ordem propria: 'recent' e a ordem em que o servidor devolveu
+       (sort:new). Devolver 'name' aqui reordenaria em ordem alfabetica e apagaria
+       justamente o criterio que da nome a pagina. */
+    clearMediaFilter: function () {
+      LmsUi.setSort(this.view === 'recentes' ? 'recent' : 'name', this.ui.sortDesc);
     },
     toggleSelect: function () {
       if (this.ui.selectionMode) LmsUi.clearSelection();
