@@ -93,10 +93,16 @@ the CSS tokens. All four must pass.
 
 ## Status
 
-Version 3.1.0 completes the publication pass: English and Portuguese interface
-strings, browser-history-backed drill navigation, disambiguated search results,
-actionable empty states, and automated behavior and release validation. See
-[CHANGELOG.md](CHANGELOG.md) for verification details and remaining test scope.
+Current version: **3.2.2**.
+
+Filtering, sorting, grouping and playback preference are four separate states,
+reachable from one adaptive panel. Filters combine, grouping adds section headers
+without dropping rows, and the media index survives a page reload. Interface
+strings are translated through `strings.txt`, so the skin follows the language of
+the LMS session.
+
+See [CHANGELOG.md](CHANGELOG.md) for what was verified on a real server, what was
+only read in the code, and what is still untested.
 
 ## Author
 
