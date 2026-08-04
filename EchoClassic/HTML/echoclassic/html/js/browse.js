@@ -37,29 +37,20 @@ Vue.component('lms-browse', {
     <div class="library-tools">
       <input v-model="ui.filter" type="search" placeholder="Filtrar"
              :aria-label="'Filtrar ' + viewLabel.toLowerCase()">
-      <select :value="menuValue" :aria-label="sortSelectLabel" @change="chooseOption($event.target.value)">
-        <optgroup :label="displayGroupLabel">
-          <option v-if="view === 'recentes'" value="recent">Adicionados recentemente</option>
-          <option :value="primaryOptionValue">{{ primaryOptionLabel }}</option>
-          <option v-if="view === 'albuns' || view === 'recentes'" value="artist">Artista</option>
-          <option v-if="view === 'albuns'" value="relatedArtist">Artista relacionado</option>
-          <option v-if="view === 'albuns' || view === 'recentes'" value="year">Ano</option>
-        </optgroup>
-        <optgroup label="Formato" :disabled="!allowsMediaFilter">
-          <option v-for="f in MEDIA_FORMATS" :key="f.key" :value="'format:' + f.key">{{ f.label }}</option>
-        </optgroup>
-        <optgroup label="Resolução" :disabled="!allowsMediaFilter">
-          <option value="quality:hires">Hi-Res</option>
-          <option value="quality:standard">Resolução padrão</option>
-        </optgroup>
-        <optgroup label="Local" :disabled="!allowsMediaFilter">
-          <option value="origin:local">Biblioteca local</option>
-          <option value="origin:remote">Remoto / streaming</option>
-        </optgroup>
-        <optgroup label="Serviços de streaming" :disabled="!allowsMediaFilter">
-          <option value="stream:qobuz">Qobuz</option>
-          <option value="stream:youtube">YouTube</option>
-        </optgroup>
+      <button ref="filterTrigger" class="icon-command filter-command" :class="{on: toolsActive}"
+              :title="filterTitle" :aria-label="filterTriggerLabel" aria-haspopup="dialog"
+              :aria-expanded="String(ui.filterPanel)" @click="openFilters">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h17l-6.5 7.6v5.6l-4 2.3v-7.9z"/></svg>
+        <span v-if="filterCount" class="filter-badge" aria-hidden="true">{{ filterCount }}</span>
+      </button>
+      <select :value="sortKey" :aria-label="sortSelectLabel" @change="chooseSort($event.target.value)">
+        <option v-if="view === 'recentes'" value="recent">Adicionados recentemente</option>
+        <option :value="primaryOptionValue">{{ primaryOptionLabel }}</option>
+        <option v-if="view === 'albuns' || view === 'recentes'" value="artist">Artista</option>
+        <option v-if="view === 'albuns' || view === 'recentes'" value="year">Ano</option>
+        <option v-if="allowsMediaFilter" value="format">Formato</option>
+        <option v-if="allowsMediaFilter" value="source">Biblioteca local primeiro</option>
+        <option v-if="allowsMediaFilter" value="quality">Maior resolução primeiro</option>
       </select>
 	      <button class="icon-command" :title="sortTitle" :aria-label="sortLabel"
 	              :aria-pressed="String(sortDesc)"
@@ -109,15 +100,33 @@ Vue.component('lms-browse', {
         </button>
       </div>
     </div>
-    <div v-if="hasMediaFilter" class="filter-chip" role="status">
-      <span class="filter-chip-label">Filtro ativo:</span>
-      <button v-for="f in activeFilters" :key="f.key" type="button" class="filter-pill"
-              :aria-label="'Remover filtro ' + f.label" @click="LmsUi.toggleFilter(f.key)">
-        <span>{{ f.label }}</span><span class="filter-pill-x" aria-hidden="true">×</span>
-      </button>
-      <span class="filter-chip-count">{{ displayRows.length }}</span>
-      <button type="button" class="filter-chip-clear" @click="clearMediaFilter">Limpar filtro</button>
+    <div v-if="activeChips.length" class="filter-chip">
+      <template v-if="compact">
+        <span class="filter-chip-label">{{ compactSummary }}</span>
+        <button type="button" class="filter-chip-clear" @click="openFilters">Ver filtros</button>
+        <button type="button" class="filter-chip-clear" @click="clearAllTools">Limpar tudo</button>
+      </template>
+      <template v-else>
+        <span class="filter-chip-label">Ativos:</span>
+        <span class="filter-pill-strip">
+          <button v-for="c in activeChips" :key="c.key" type="button" class="filter-pill"
+                  :class="'pill-' + c.kind" :aria-label="c.removeLabel" @click="c.remove()">
+            <span class="filter-pill-mark" aria-hidden="true">{{ c.mark }}</span>
+            <span class="ell">{{ c.label }}</span><span class="filter-pill-x" aria-hidden="true">×</span>
+          </button>
+        </span>
+        <span class="filter-chip-count">{{ resultCount }}</span>
+        <button type="button" class="filter-chip-clear" @click="clearAllTools">Limpar tudo</button>
+      </template>
     </div>
+    <div v-if="listNotes.length" class="filter-chip notes" role="status">
+      <span v-for="n in listNotes" :key="n">{{ n }}</span>
+    </div>
+    <div v-if="filtersIgnored" class="filter-chip warning" role="status">
+      <span class="ell">Artista relacionado monta a lista a partir dos artistas do servidor, então os filtros
+        de mídia não se aplicam aqui.</span>
+    </div>
+    <p aria-live="polite" class="visually-hidden">{{ liveSummary }}</p>
     <div class="scroller" ref="scroller" @scroll="onScroll">
       <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
       <div v-else-if="error" class="empty">
@@ -133,22 +142,28 @@ Vue.component('lms-browse', {
       </div>
       <template v-else>
         <div :style="{height: topPad + 'px'}"></div>
-	        <div v-for="r in windowed" :key="r.key" class="row"
-	             :class="{sel: isSelected(r), chosen: selected(r), artistrow: r.kind === 'artist',
-	                      noart: !r.art, albumrow: showsAlbums}"
-	             role="group" :aria-label="rowLabel(r)">
-	          <button type="button" class="row-main pointer" :aria-label="rowLabel(r)"
-	                  :aria-pressed="ui.selectionMode ? String(selected(r)) : null"
-	                  @click="rowClick(r)">
-	            <span v-if="ui.selectionMode" class="select-mark" :class="{on: selected(r)}"></span>
-	            <span v-if="r.art" class="art" :style="artStyle(r)"></span>
+	        <template v-for="it in windowed">
+	          <div v-if="it.type === 'header'" :key="it.key" class="sec-head"
+	               role="heading" aria-level="3">
+	            <span class="ell">{{ it.label }}</span>
+	            <span class="sec-count">{{ it.count }}</span>
+	          </div>
+	          <div v-else :key="it.key" class="row"
+	             :class="{sel: isSelected(it.row), chosen: selected(it.row), artistrow: it.row.kind === 'artist',
+	                      noart: !it.row.art, albumrow: showsAlbums}"
+	             role="group" :aria-label="rowLabel(it.row)">
+	          <button type="button" class="row-main pointer" :aria-label="rowLabel(it.row)"
+	                  :aria-pressed="ui.selectionMode ? String(selected(it.row)) : null"
+	                  @click="rowClick(it.row)">
+	            <span v-if="ui.selectionMode" class="select-mark" :class="{on: selected(it.row)}"></span>
+	            <span v-if="it.row.art" class="art" :style="artStyle(it.row)"></span>
 	            <span class="ell">
-	              <span class="t ell">{{ r.label }}</span>
-	              <span v-if="r.sub" class="s ell">{{ r.sub }}</span>
+	              <span class="t ell">{{ it.row.label }}</span>
+	              <span v-if="it.row.sub" class="s ell">{{ it.row.sub }}</span>
 	            </span>
 	          </button>
 	          <button v-if="!ui.selectionMode" class="more-command" title="Mais ações"
-	                  :aria-label="'Mais ações para ' + r.label" @click.stop="actions(r, $event)">
+	                  :aria-label="'Mais ações para ' + it.row.label" @click.stop="actions(it.row, $event)">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle class="more-ring" cx="12" cy="12" r="8.5"/>
               <circle class="more-dot" cx="8.5" cy="12" r="1"/>
@@ -156,7 +171,8 @@ Vue.component('lms-browse', {
               <circle class="more-dot" cx="15.5" cy="12" r="1"/>
             </svg>
           </button>
-        </div>
+	          </div>
+	        </template>
 	        <div :style="{height: botPad + 'px'}"></div>
 	        <div v-if="loadingMore" class="loading-more" role="status">Carregando mais itens…</div>
 	        <div v-if="limitWarning" class="loading-more warning" role="status">{{ limitWarning }}</div>
@@ -198,11 +214,15 @@ Vue.component('lms-browse', {
     return {
       ui: LmsUi.state, store: LmsStore.state, LmsUi: LmsUi,
       rows: [], loading: true, error: '',
-	      loadingMore: false, limitWarning: '', requestToken: 0, unknownCounted: false,
+	      loadingMore: false, limitWarning: '', requestToken: 0, unknownCount: 0,
 	      artistIndexTruncated: false,
       rootSelection: null,
       first: 0, visible: 14, activeRail: '',
       mediaIndex: null,
+      /* Largura real, nao nome de aparelho: a mesma tela vira estreita quando o
+         usuario divide a janela ou aumenta a fonte. 700px e o ponto que o CSS
+         desta skin ja usa para passar a uma coluna. */
+      compact: typeof window !== 'undefined' && window.innerWidth <= 700,
       paneWidth: split.width, splitLocked: split.locked, splitMenuOpen: false,
       splitMin: LmsSplitPane.minLeft, splitMax: LmsSplitPane.defaultWidth,
       splitDragging: false, splitStartX: 0, splitStartWidth: 0,
@@ -232,14 +252,10 @@ Vue.component('lms-browse', {
        loadPagedRoot e sempre desenha album. Chamar os dois de "Exibicao" era o
        que fazia procurar Beatles em Recentes devolver albuns em vez de uma
        entrada de artista. */
-    displayGroupLabel: function () {
-      return this.tr(this.view === 'albuns' ? 'Agrupar ou ordenar' : 'Ordenar por');
-    },
-    sortSelectLabel: function () {
-      if (this.view === 'albuns') return this.tr('Agrupar, ordenar ou filtrar');
-      if (this.view === 'recentes') return this.tr('Ordenar ou filtrar');
-      return this.tr('Ordenar');
-    },
+    /* O select passou a fazer uma coisa so. Enquanto ele acumulava filtro e
+       agrupamento, o rotulo tinha de mudar por view para nao mentir sobre o que
+       aquele controle fazia ali; agora ele ordena, em qualquer raiz. */
+    sortSelectLabel: function () { return this.tr('Ordenar por'); },
     frame: function () { return LmsNav.top('musica') || this.rootSelection; },
     sortKey: function () { return (this.ui.sort[0] || {}).key || 'name'; },
     sortDesc: function () { return !!(this.ui.sort[0] || {}).desc; },
@@ -266,18 +282,120 @@ Vue.component('lms-browse', {
 	      return this.sortDesc ? 'Mudar para ordem crescente' : 'Mudar para ordem decrescente';
 	    },
     allowsMediaFilter: function () { return LmsUi.allowsMediaFilter(this.view); },
+    /* Uma leitura so do modo, com padrao explicito: 'none' e o estado em que
+       nada e reordenado, e e ele que vale quando a preferencia nunca foi
+       tocada. */
+    preferMode: function () { return this.ui.prefer || 'none'; },
     hasMediaFilter: function () {
       return this.allowsMediaFilter && this.ui.filters.length > 0;
     },
-    /* O menu ainda e um controle so, entao ele mostra o que estiver ativo,
-       nesta ordem de precedencia: filtro, agrupamento, ordenacao. */
-    menuValue: function () {
-      return this.ui.filters[0] || this.ui.group[0] || this.sortKey;
+    /* Artista relacionado monta a lista a partir do endpoint de artistas: nao ha
+       album para conferir, entao o filtro nao tem como ser aplicado. Dizer isso
+       na tela e o oposto do bug C -- ali a promessa era vazia e ninguem avisava. */
+    filtersIgnored: function () {
+      return this.hasMediaFilter && this.groupsAlbumsByRelatedArtist;
     },
     activeFilters: function () {
       return this.ui.filters.map(function (key) {
         return { key: key, label: this.filterLabel(key) };
       }, this);
+    },
+    sectionKey: function () {
+      return this.allowsMediaFilter ? (this.ui.sections[0] || '') : '';
+    },
+    /* Contagem do badge: quantos filtros o usuario ligou. Agrupamento, ordem e
+       preferencia mudam a apresentacao, nao o conjunto -- eles acendem o icone
+       mas nao entram no numero. */
+    filterCount: function () { return this.activeFilters.length; },
+    toolsActive: function () {
+      return this.filterCount > 0 || !!this.sectionKey || this.ui.group.length > 0 ||
+             this.preferMode !== 'none';
+    },
+    filterTitle: function () {
+      return this.filterCount
+        ? this.tr('Filtros') + ' (' + this.filterCount + ')'
+        : this.tr('Filtros');
+    },
+    filterTriggerLabel: function () {
+      if (!this.filterCount) return this.tr('Filtros');
+      return this.tr('Filtros') + ': ' + this.filterCount + ' ' +
+        this.tr(this.filterCount === 1 ? 'filtro ativo' : 'filtros ativos');
+    },
+    /* Uma pilula por coisa ligada, com a marca do conceito a que ela pertence --
+       filtro exclui, secao agrupa, estrela e preferencia. Sao tres efeitos
+       diferentes e a fileira nunca deixa parecer que sao o mesmo. */
+    activeChips: function () {
+      var self = this;
+      var chips = this.activeFilters.map(function (f) {
+        return {
+          key: 'f:' + f.key, kind: 'filter', mark: '◫', label: f.label,
+          removeLabel: self.tr('Remover filtro') + ' ' + f.label,
+          remove: function () { LmsUi.toggleFilter(f.key); }
+        };
+      });
+      if (this.ui.group.length) {
+        var groupKey = this.ui.group[0];
+        chips.push({
+          key: 'g:' + groupKey, kind: 'group', mark: '⚙',
+          label: this.tr(groupKey === 'artist' ? 'Artista' : 'Artista relacionado'),
+          removeLabel: self.tr('Remover agrupamento'),
+          remove: function () { LmsUi.clearGroup(); }
+        });
+      }
+      if (this.sectionKey) {
+        chips.push({
+          key: 's:' + this.sectionKey, kind: 'group', mark: '⚙',
+          label: this.sectionFacetLabel(this.sectionKey),
+          removeLabel: self.tr('Remover agrupamento'),
+          remove: function () { LmsUi.clearSections(); }
+        });
+      }
+      if (this.preferMode !== 'none') {
+        chips.push({
+          key: 'p:' + this.preferMode, kind: 'prefer', mark: '★',
+          label: this.preferLabel(this.preferMode),
+          removeLabel: self.tr('Remover preferência de reprodução'),
+          remove: function () { LmsUi.setPrefer('none'); }
+        });
+      }
+      return chips;
+    },
+    resultCount: function () { return this.displayRows.length; },
+    /* Dois numeros que existiam so na memoria do componente. Contar sem dizer e
+       a mesma familia do bug B: o dado sumia e nada na tela explicava. */
+    listNotes: function () {
+      var notes = [];
+      if (this.unknownCount) {
+        notes.push(this.tr(this.unknownCount === 1
+          ? '1 álbum ficou de fora por não ter informação de mídia.'
+          : '{n} álbuns ficaram de fora por não terem informação de mídia.'
+        ).replace('{n}', this.unknownCount));
+      }
+      if (this.sectionOverlap) {
+        notes.push(this.tr('Alguns álbuns aparecem em mais de uma seção.'));
+      }
+      return notes;
+    },
+    compactSummary: function () {
+      var n = this.activeChips.length;
+      return n + ' ' + this.tr(n === 1 ? 'ajuste ativo' : 'ajustes ativos');
+    },
+    liveSummary: function () {
+      if (!this.activeChips.length) return '';
+      return this.activeChips.map(function (c) { return c.label; }).join(', ') + ' — ' +
+        this.displayRows.length + ' ' +
+        this.tr(this.displayRows.length === 1 ? 'resultado' : 'resultados');
+    },
+    /* O indice de midia deixa de ser exclusivo do filtro: seccionar por formato
+       e ordenar por resolucao leem a mesma tabela, e a preferencia de
+       reproducao tambem. Sem estender o gatilho, essas tres sairiam vazias --
+       e vazio em silencio e o defeito que esta versao inteira ataca. */
+    needsMediaIndex: function () {
+      if (!this.allowsMediaFilter) return false;
+      if (this.hasMediaFilter) return true;
+      if (LmsUi.sectionNeedsMedia(this.sectionKey)) return true;
+      if (LmsUi.sortNeedsMedia(this.sortKey)) return true;
+      return this.preferMode !== 'none';
     },
     showsAlbums: function () {
       return (this.view === 'albuns' && !this.groupsAlbumsByArtist &&
@@ -285,11 +403,15 @@ Vue.component('lms-browse', {
     },
     hasRail: function () {
       /* O indice alfabetico so faz sentido sobre uma lista alfabetica; em
-         'recent' as letras nao sobem e saltar levaria a lugar nenhum. */
+         'recent' as letras nao sobem e saltar levaria a lugar nenhum. Com
+         secoes a lista tambem deixa de ser monotonica: a letra M aparece uma
+         vez por secao, e o salto escolheria uma delas sem criterio. */
       return !this.loading && this.rows.length > 30 && this.sortKey !== 'recent' &&
+             !this.sectionKey && !LmsUi.sortNeedsMedia(this.sortKey) &&
              (this.view === 'artistas' || this.view === 'albuns' || this.view === 'recentes');
     },
     rowH: function () { return this.showsAlbums ? 88 : 72; },
+    headerH: function () { return 34; },
     displayRows: function () {
       var q = this.normalize(this.ui.filter);
       var rows = q ? this.rows.filter(function (r) {
@@ -300,10 +422,68 @@ Vue.component('lms-browse', {
       if ((this.ui.sort[0] || {}).key !== 'recent') rows.sort(this.rowComparator());
       return rows;
     },
-    windowed: function () { return this.displayRows.slice(this.first, this.first + this.visible + 12); },
-    topPad: function () { return this.first * this.rowH; },
+    /* A lista que a tela desenha: linhas, e cabecalhos quando ha secao. Uma
+       linha pode aparecer em mais de uma secao -- um album com FLAC e MP3 esta
+       nas duas -- entao a chave leva o prefixo da secao. */
+    displayItems: function () {
+      var rows = this.displayRows;
+      if (!this.sectionKey) {
+        return rows.map(function (row) { return { type: 'row', key: row.key, row: row }; });
+      }
+      var buckets = Object.create(null);
+      var order = [];
+      rows.forEach(function (row) {
+        this.sectionValuesFor(row).forEach(function (value) {
+          if (!buckets[value.key]) {
+            buckets[value.key] = { label: value.label, rank: value.rank, rows: [] };
+            order.push(value.key);
+          }
+          buckets[value.key].rows.push(row);
+        });
+      }, this);
+      order.sort(function (a, b) {
+        if (buckets[a].rank !== buckets[b].rank) return buckets[a].rank - buckets[b].rank;
+        return String(buckets[a].label).localeCompare(String(buckets[b].label), 'pt-BR',
+          { sensitivity: 'base' });
+      });
+      var out = [];
+      order.forEach(function (key) {
+        var bucket = buckets[key];
+        out.push({ type: 'header', key: 'h:' + key, label: bucket.label, count: bucket.rows.length });
+        bucket.rows.forEach(function (row) {
+          out.push({ type: 'row', key: key + '|' + row.key, row: row });
+        });
+      });
+      return out;
+    },
+    /* Virtualizacao por soma de prefixos. Enquanto tudo tinha a mesma altura,
+       indice x altura bastava; com cabecalho no meio essa multiplicacao mente,
+       e o sintoma seria a lista saltando durante a rolagem. */
+    itemOffsets: function () {
+      var items = this.displayItems;
+      var offsets = new Array(items.length + 1);
+      var acc = 0;
+      for (var i = 0; i < items.length; i++) {
+        offsets[i] = acc;
+        acc += items[i].type === 'header' ? this.headerH : this.rowH;
+      }
+      offsets[items.length] = acc;
+      return offsets;
+    },
+    windowed: function () { return this.displayItems.slice(this.first, this.first + this.visible + 12); },
+    topPad: function () {
+      return this.itemOffsets[Math.min(this.first, this.displayItems.length)] || 0;
+    },
     botPad: function () {
-      return Math.max(0, this.displayRows.length - this.first - this.windowed.length) * this.rowH;
+      var end = Math.min(this.first + this.windowed.length, this.displayItems.length);
+      return Math.max(0, this.itemOffsets[this.displayItems.length] - this.itemOffsets[end]);
+    },
+    /* Uma faceta multivalorada faz o mesmo album contar em duas secoes; a soma
+       dos cabecalhos passa do total, e quem le precisa saber por que. */
+    sectionOverlap: function () {
+      if (!this.sectionKey) return 0;
+      var rowItems = this.displayItems.filter(function (it) { return it.type === 'row'; });
+      return Math.max(0, rowItems.length - this.displayRows.length);
     },
     railHas: function () {
       var seen = {};
@@ -324,6 +504,13 @@ Vue.component('lms-browse', {
        de A-Z para Ano. */
     'ui.filters': function () { this.reload(false); },
     'ui.group': function () { this.reload(false); },
+    /* Seccionar, ordenar e preferir nao mudam o CONJUNTO carregado -- so a
+       apresentacao. Recarregar a biblioteca para acrescentar cabecalhos seria
+       cobrar dez segundos por uma mudanca de layout. O que pode faltar e o
+       indice de midia, e so ele e buscado. */
+    'ui.sections': function () { this.ensureMediaIndex(); },
+    'ui.prefer': function () { this.ensureMediaIndex(); },
+    'ui.sort': function () { this.ensureMediaIndex(); },
     'ui.filter': function () {
       this.first = 0;
       var self = this;
@@ -424,18 +611,34 @@ Vue.component('lms-browse', {
       var c = ((row && row.label) || '').trim().charAt(0).toUpperCase();
       return /[A-Z]/.test(c) ? c : '#';
     },
+    /* Busca binaria sobre a soma de prefixos: qual item ocupa esta altura de
+       rolagem. Substitui a divisao por altura fixa, que so valia enquanto todos
+       os itens da lista tinham o mesmo tamanho. */
+    indexAtOffset: function (offset) {
+      var offsets = this.itemOffsets;
+      var lo = 0;
+      var hi = Math.max(0, offsets.length - 2);
+      while (lo < hi) {
+        var mid = Math.floor((lo + hi + 1) / 2);
+        if (offsets[mid] <= offset) lo = mid; else hi = mid - 1;
+      }
+      return lo;
+    },
     onScroll: function (e) {
-      var top = Math.max(0, Math.floor(e.target.scrollTop / this.rowH));
+      var top = this.indexAtOffset(Math.max(0, e.target.scrollTop));
       this.first = Math.max(0, top - 6);
       this.visible = Math.ceil(e.target.clientHeight / this.rowH);
-      if (this.displayRows[top]) this.activeRail = this.railLetter(this.displayRows[top]);
+      var item = this.displayItems[top];
+      if (item && item.type === 'row') this.activeRail = this.railLetter(item.row);
     },
     jump: function (L) {
       var self = this;
-      var i = this.displayRows.findIndex(function (r) { return self.railLetter(r) === L; });
+      var i = this.displayItems.findIndex(function (it) {
+        return it.type === 'row' && self.railLetter(it.row) === L;
+      });
       if (i >= 0 && this.$refs.scroller) {
         this.activeRail = L;
-        this.$refs.scroller.scrollTop = i * this.rowH;
+        this.$refs.scroller.scrollTop = this.itemOffsets[i];
       }
     },
     stepRail: function (delta) {
@@ -494,20 +697,90 @@ Vue.component('lms-browse', {
     tr: function (text) {
       return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
     },
-    /* Sem guarda aqui, de proposito: LmsUi.setSort ja recusa chave invalida para
-       a view corrente, e o menu desabilita o que nao se aplica. Uma terceira
-       copia da regra so daria mais um lugar para divergir -- e era exatamente
-       essa copia que trocava a view do usuario para fazer a escolha caber. */
-    /* O menu ainda e um controle unico, entao uma escolha substitui a anterior --
-       e o comportamento que existia antes. O que mudou e o destino: a chave vai
-       para o conceito a que pertence, em vez de todas caírem no mesmo campo.
-       A Fase 2 separa o controle e este roteamento desaparece. */
-    chooseOption: function (value) {
-      if (LmsUi.validFilter(this.view, value)) { LmsUi.setFilters([value]); return; }
-      LmsUi.clearFilters();
-      if (LmsUi.validGroup(this.view, value)) { LmsUi.setGroup([value]); return; }
-      LmsUi.clearGroup();
+    /* O <select> agora e so ordenacao. Filtrar e agrupar tem controle proprio --
+       o icone de funil --, e com isso desaparece o roteamento que mandava tres
+       conceitos pelo mesmo campo. Sem guarda aqui de proposito: LmsUi.setSort ja
+       recusa chave invalida para a view corrente. */
+    chooseSort: function (value) {
       LmsUi.setSort([{ key: value, desc: this.sortDesc }]);
+    },
+    openFilters: function () { LmsUi.openFilterPanel(this.$refs.filterTrigger); },
+    clearAllTools: function () { LmsUi.resetView(); },
+    onToolsResize: function () {
+      this.compact = window.innerWidth <= 700;
+    },
+    filterValues: function (facet) {
+      return this.ui.filters.filter(function (key) {
+        return LmsUi.filterFacet(key) === facet;
+      }).map(function (key) { return key.slice(key.indexOf(':') + 1); });
+    },
+    metaFor: function (id) {
+      return (this.mediaIndex && this.mediaIndex[String(id)]) || null;
+    },
+    /* Ano e um intervalo, e intervalo nao cabe no indice de midia: ele mora na
+       propria linha do album. Filtrado aqui, junto do resto, para que a lista
+       vazia continue tendo uma unica explicacao. */
+    yearMatches: function (album) {
+      var ranges = this.filterValues('year');
+      if (!ranges.length) return true;
+      var year = Number(album && album.year);
+      if (!year) return false;
+      return ranges.some(function (range) {
+        var parts = String(range).split('-');
+        return year >= Number(parts[0]) && year <= Number(parts[1]);
+      });
+    },
+    albumPasses: function (album) {
+      return this.yearMatches(album) && this.mediaMatches(album && album.id);
+    },
+    preferLabel: function (mode) {
+      var labels = {
+        local: 'Preferir biblioteca local', stream: 'Preferir streaming',
+        quality: 'Preferir maior resolução'
+      };
+      return this.tr(labels[mode] || 'Sem preferência');
+    },
+    sectionFacetLabel: function (key) {
+      var labels = {
+        decade: 'Década', format: 'Formato', quality: 'Resolução',
+        origin: 'Origem', stream: 'Serviço de streaming'
+      };
+      return this.tr(labels[key] || key);
+    },
+    /* Um album pode cair em mais de uma secao. Devolver uma lista, e nao um
+       valor, e o que impede a escolha silenciosa de "o formato principal" --
+       um album com FLAC e MP3 aparece nos dois cabecalhos, e a contagem diz. */
+    sectionValuesFor: function (row) {
+      var key = this.sectionKey;
+      if (key === 'decade') {
+        var year = Number(row.year);
+        if (!year) return [{ key: 'unknown', label: this.tr('Ano desconhecido'), rank: 1 }];
+        var decade = Math.floor(year / 10) * 10;
+        return [{ key: 'd' + decade, label: this.tr('Anos') + ' ' + decade, rank: 0 }];
+      }
+      var meta = this.metaFor(row.id);
+      var unknown = [{ key: 'unknown', label: this.tr('Sem informação de mídia'), rank: 1 }];
+      if (!meta) return unknown;
+      var out = [];
+      if (key === 'format') {
+        out = Object.keys(meta.formats).map(function (f) {
+          return { key: 'f' + f, label: this.filterLabel('format:' + f), rank: 0 };
+        }, this);
+      } else if (key === 'quality') {
+        if (meta.hires) out.push({ key: 'hires', label: this.filterLabel('quality:hires'), rank: 0 });
+        if (meta.standard) out.push({ key: 'standard', label: this.filterLabel('quality:standard'), rank: 0 });
+      } else if (key === 'origin') {
+        if (meta.local) out.push({ key: 'local', label: this.filterLabel('origin:local'), rank: 0 });
+        if (meta.remote) out.push({ key: 'remote', label: this.filterLabel('origin:remote'), rank: 0 });
+      } else if (key === 'stream') {
+        out = Object.keys(meta.providers).map(function (p) {
+          return { key: 'p' + p, label: this.filterLabel('stream:' + p), rank: 0 };
+        }, this);
+        if (!out.length && meta.local) {
+          out = [{ key: 'nostream', label: this.tr('Sem serviço de streaming'), rank: 1 }];
+        }
+      }
+      return out.length ? out : unknown;
     },
     /* Recentes tem ordem propria: 'recent' e a ordem em que o servidor devolveu
        (sort:new). Devolver 'name' aqui reordenaria em ordem alfabetica e apagaria
@@ -527,7 +800,54 @@ Vue.component('lms-browse', {
     rowClick: function (r) {
       if (this.ui.selectionMode) LmsUi.toggleSelection(r); else this.open(r);
     },
-    actions: function (r, event) { LmsUi.openActions(r, event && event.currentTarget); },
+    ensureMediaIndex: async function () {
+      if (!this.needsMediaIndex || this.mediaIndex) return;
+      var token = this.requestToken;
+      await this.loadMediaIndex(this.store.playerId || '', token);
+    },
+    /* Edicoes irmas: mesma obra, arquivos diferentes. O casamento e por titulo e
+       artista normalizados, e e de proposito que ele seja estrito -- "Head
+       Hunters" e "Head Hunters (Remastered)" tem titulos diferentes e ficam
+       separados. Casamento incerto sempre erra para o lado de NAO juntar:
+       perder uma edicao e pior do que mostrar duas. */
+    editionsFor: function (row) {
+      if (!row || row.kind !== 'album') return [];
+      var self = this;
+      var key = this.normalize([row.label, row.artist].join('|'));
+      var siblings = this.rows.filter(function (r) {
+        return r.kind === 'album' && self.normalize([r.label, r.artist].join('|')) === key;
+      });
+      if (siblings.length < 2) return [];
+      return siblings.slice().sort(function (a, b) {
+        return LmsFmt.compareEditions(self.metaFor(a.id), self.metaFor(b.id), self.preferMode) ||
+               (Number(a.id) || 0) - (Number(b.id) || 0);
+      }).map(function (r) {
+        return { id: r.id, label: r.label, source: self.editionSource(self.metaFor(r.id)) };
+      });
+    },
+    editionSource: function (meta) {
+      if (!meta) return this.tr('Sem informação de mídia');
+      var providers = Object.keys(meta.providers);
+      var where = providers.length ? this.filterLabel('stream:' + providers[0])
+        : this.tr(meta.local ? 'Biblioteca local' : 'Remoto / streaming');
+      var formats = Object.keys(meta.formats).map(function (f) {
+        return this.filterLabel('format:' + f);
+      }, this);
+      var spec = [formats[0], meta.hires ? 'Hi-Res' : null].filter(Boolean).join(' ');
+      return [where, spec].filter(Boolean).join(' · ');
+    },
+    /* A folha de acoes leva as edicoes junto: e ela quem toca, e a escolha de
+       qual edicao tocar so pode ser feita por quem sabe quais existem. */
+    actions: function (r, event) {
+      var item = r;
+      if (this.preferMode !== 'none') {
+        var editions = this.editionsFor(r);
+        if (editions.length > 1) {
+          item = Object.assign({}, r, { editions: editions, prefer: this.preferMode });
+        }
+      }
+      LmsUi.openActions(item, event && event.currentTarget);
+    },
     historyAction: function (h) {
       if (h.albumId != null) {
         this.rootSelection = null;
@@ -737,9 +1057,21 @@ Vue.component('lms-browse', {
        e ruido, e em decrescente tambem. */
     rowComparator: function () {
       var criteria = (this.ui.sort || []).slice();
+      var self = this;
+      var prefer = this.preferMode || 'none';
+      /* 'format', 'source' e 'quality' saem do indice de midia. Sem entrada no
+         indice o valor e nulo, e nulo vai ao fim -- nunca some. */
       var valueOf = function (row, key) {
         if (key === 'year') return row.year == null || row.year === '' ? null : Number(row.year);
         if (key === 'artist') return row.artist || row.label || '';
+        if (key === 'format' || key === 'source' || key === 'quality') {
+          var meta = self.metaFor(row.id);
+          if (!meta) return null;
+          if (key === 'format') return Object.keys(meta.formats).sort()[0] || null;
+          if (key === 'source') return meta.local ? 0 : (meta.remote ? 1 : null);
+          var rank = LmsFmt.editionRank(meta, 'quality');
+          return rank[2] * 10 + rank[3];   // codec pesa mais que resolucao
+        }
         return row.label || '';
       };
       var texto = function (a, b) {
@@ -766,12 +1098,27 @@ Vue.component('lms-browse', {
         if (t) return t;
         t = texto(a.artist || '', b.artist || '');
         if (t) return t;
+        /* Aqui, e so aqui, entra a preferencia: dois itens que empataram em
+           titulo e artista sao a mesma obra em edicoes diferentes. Colocar isso
+           antes do desempate por titulo faria a preferencia reordenar a
+           biblioteca inteira -- isso e ordenar por origem, que e outra escolha
+           e tem chave propria. */
+        if (prefer !== 'none') {
+          var e = LmsFmt.compareEditions(self.metaFor(a.id), self.metaFor(b.id), prefer);
+          if (e) return e;
+        }
         return (Number(a.id) || 0) - (Number(b.id) || 0);
       };
     },
     matchesValue: function (meta, facet, value) {
       if (facet === 'format') return !!meta.formats[value];
-      if (facet === 'quality') return !!meta[value === 'hires' ? 'hires' : 'standard'];
+      if (facet === 'quality') {
+        if (value === 'hires' || value === 'standard') return !!meta[value];
+        var formats = Object.keys(meta.formats);
+        var hasLossless = formats.some(function (f) { return LmsFmt.isLossless(f); });
+        var hasLossy = formats.some(function (f) { return !LmsFmt.isLossless(f); });
+        return value === 'lossless' ? hasLossless : hasLossy;
+      }
       if (facet === 'origin') return !!meta[value];
       if (facet === 'stream') return !!meta.providers[value];
       return true;
@@ -780,13 +1127,20 @@ Vue.component('lms-browse', {
        "FLAC ou ALAC" e uma escolha dentro do cartao Formato; pedir Hi-Res junto
        e um segundo cartao, e os dois precisam valer. A UI nunca diz AND nem OR. */
     mediaMatches: function (albumId) {
-      if (!this.hasMediaFilter) return true;
+      /* So as facetas que vivem no indice de midia entram aqui. Genero e
+         resolvido pelo servidor e ano vive na propria linha; se as tres
+         passassem por este caminho, filtrar por genero sem indice carregado
+         reprovaria a biblioteca inteira no `if (!meta)` abaixo. */
+      var mediaKeys = this.ui.filters.filter(function (key) {
+        return /^(format|quality|origin|stream):/.test(key);
+      });
+      if (!this.allowsMediaFilter || !mediaKeys.length) return true;
       var meta = this.mediaIndex && this.mediaIndex[String(albumId)];
       /* Sem entrada no indice o album nao casa -- mas isso passa a ser CONTADO
          e dito na tela. Some em silencio foi o bug B. */
-      if (!meta) { this.unknownCounted = true; return false; }
+      if (!meta) { this.unknownCount++; return false; }
       var groups = Object.create(null);
-      this.ui.filters.forEach(function (key) {
+      mediaKeys.forEach(function (key) {
         var at = key.indexOf(':');
         var facet = key.slice(0, at);
         (groups[facet] = groups[facet] || []).push(key.slice(at + 1));
@@ -801,10 +1155,20 @@ Vue.component('lms-browse', {
     filterLabel: function (key) {
       var labels = {
         'quality:hires': 'Hi-Res', 'quality:standard': 'Resolução padrão',
+        'quality:lossless': 'Sem perdas', 'quality:lossy': 'Com perdas',
         'origin:local': 'Biblioteca local', 'origin:remote': 'Remoto / streaming',
         'stream:qobuz': 'Qobuz', 'stream:youtube': 'YouTube'
       };
       if (labels[key]) return this.tr(labels[key]);
+      var facet = LmsUi.filterFacet(key);
+      var raw = String(key || '').slice(String(key || '').indexOf(':') + 1);
+      /* O ano e um intervalo, e um intervalo de um ano so se le melhor como o
+         proprio ano: "1975", nao "1975-1975". */
+      if (facet === 'year') {
+        var parts = raw.split('-');
+        return parts[0] === parts[1] ? parts[0] : parts[0] + '–' + parts[1];
+      }
+      if (facet === 'genre') return LmsUi.genreName(raw) || this.tr('Gênero') + ' ' + raw;
       var format = String(key || '').split(':')[1] || '';
       var found = this.MEDIA_FORMATS.filter(function (item) { return item.key === format; })[0];
       return found ? found.label : format.toUpperCase();
@@ -815,7 +1179,6 @@ Vue.component('lms-browse', {
       return this.activeFilters.map(function (f) { return f.label; }).join(' · ');
     },
     loadPagedRoot: async function (pid, token) {
-      var start = 0;
       var pageSize = 500;
       var keepGoing = true;
       var mainArtistIndex = this.groupsMainArtists
@@ -824,16 +1187,28 @@ Vue.component('lms-browse', {
          ele, a perda continuaria invisivel mesmo com a linha sendo mostrada. */
       var unattributed = 0;
       if (token !== this.requestToken || (this.groupsMainArtists && !mainArtistIndex)) return;
-      if (this.hasMediaFilter) {
+      if (this.needsMediaIndex) {
         await this.loadMediaIndex(pid, token);
         if (token !== this.requestToken) return;
       }
+      /* Genero e a unica faceta que o servidor sabe aplicar, e ele aceita um
+         genero por consulta. Varios generos viram varias passadas cujo
+         resultado se soma -- o mesmo OU que vale dentro de qualquer faceta.
+         appendRows ja deduplica pela chave, entao album em dois generos entra
+         uma vez so. */
+      var genreIds = this.filterValues('genre');
+      var passes = genreIds.length ? genreIds : [null];
+      for (var p = 0; p < passes.length; p++) {
+      var genreId = passes[p];
+      var start = 0;
+      keepGoing = true;
       while (keepGoing && start < 10000) {
         var page;
         if (this.groupsAlbumsByRelatedArtist) {
           page = await LmsApi.artists(pid, start, pageSize);
         } else {
-          page = await LmsApi.albums(pid, start, pageSize);
+          page = await LmsApi.albums(pid, start, pageSize,
+            genreId == null ? null : { genreId: genreId });
         }
         if (token !== this.requestToken) return;
         var sourceCount = page.sourceCount == null ? page.length : page.sourceCount;
@@ -843,7 +1218,13 @@ Vue.component('lms-browse', {
             key: 'ar' + x.id, kind: 'artist', id: x.id, ids: x.ids,
             label: x.name, art: null
           };
-        }) : this.groupsMainArtists ? page.map(function (x) {
+        }) : this.groupsMainArtists ? page.filter(function (x) {
+          /* Filtrar antes de mapear para artista. Sem isto, agrupar por artista
+             com um filtro ligado mostrava a pilula "FLAC" acesa sobre uma lista
+             que ninguem tinha filtrado -- a promessa vazia do bug C, de volta
+             pela porta que a separacao dos estados abriu. */
+          return this.albumPasses(x);
+        }, this).map(function (x) {
           var artist = mainArtistIndex[this.normalize(x.artist)];
           /* Antes: `if (!artist) return null`, e o .filter(Boolean) logo abaixo
              apagava a linha. O album sumia da lista sem contagem e sem aviso.
@@ -870,11 +1251,14 @@ Vue.component('lms-browse', {
             label: artist.name, art: null
           };
         }, this).filter(Boolean) : page.filter(function (x) {
-          return this.mediaMatches(x.id);
+          return this.albumPasses(x);
         }, this).map(function (x) {
           return {
             key: 'al' + x.id, kind: 'album', id: x.id, label: x.title,
-            sub: [x.artist, x.year || null, this.mediaDescriptor()].filter(Boolean).join(' • '),
+            /* O descritor do filtro saiu daqui: com filtros combinados ele
+               repetia a fileira de pilulas inteira em cada uma das centenas de
+               linhas. A fileira e permanente e diz a mesma coisa uma vez. */
+            sub: [x.artist, x.year || null].filter(Boolean).join(' • '),
             artist: x.artist, year: x.year, originalYear: x.originalYear,
             art: LmsFmt.coverUrl(x.artworkTrackId, 50) || null
           };
@@ -885,6 +1269,7 @@ Vue.component('lms-browse', {
         keepGoing = sourceCount === pageSize;
         this.loadingMore = keepGoing;
 	        if (keepGoing) await new Promise(function (resolve) { setTimeout(resolve, 0); });
+	      }
 	      }
 	      if (keepGoing) {
 	        this.limitWarning = 'A biblioteca tem mais itens do que esta tela carregou. Use o filtro para refinar a lista.';
@@ -909,7 +1294,7 @@ Vue.component('lms-browse', {
       this.loading = true;
 	      this.loadingMore = false;
 	      this.limitWarning = '';
-	      this.unknownCounted = false;
+	      this.unknownCount = 0;
 	      this.artistIndexTruncated = false;
       this.error = '';
       this.rows = [];
@@ -924,18 +1309,40 @@ Vue.component('lms-browse', {
         if (this.view === 'artistas' || this.view === 'albuns') {
           await this.loadPagedRoot(pid, token);
         } else if (this.view === 'recentes') {
-          if (this.hasMediaFilter) {
+          if (this.needsMediaIndex) {
             await this.loadMediaIndex(pid, token);
             if (token !== this.requestToken) return;
           }
-	          var al = await LmsApi.albums(pid, 0, 250, { sort: 'new' });
+	          /* Mesma regra de Albuns: cada genero e uma consulta, e as consultas
+	             se somam. Sem isto, filtrar Recentes por genero mostraria a
+	             pilula acesa sobre a lista inteira. */
+	          var recentGenres = this.filterValues('genre');
+	          var al;
+	          if (recentGenres.length) {
+	            var batches = await Promise.all(recentGenres.map(function (id) {
+	              return LmsApi.albums(pid, 0, 250, { sort: 'new', genreId: id });
+	            }));
+	            if (token !== this.requestToken) return;
+	            var seenAlbum = Object.create(null);
+	            al = [];
+	            batches.forEach(function (batch) {
+	              batch.forEach(function (album) {
+	                if (seenAlbum[album.id]) return;
+	                seenAlbum[album.id] = true;
+	                al.push(album);
+	              });
+	            });
+	          } else {
+	            al = await LmsApi.albums(pid, 0, 250, { sort: 'new' });
+	          }
+	          if (token !== this.requestToken) return;
 	          var recentSourceCount = al.sourceCount == null ? al.length : al.sourceCount;
           this.rows = al.filter(function (x) {
-            return this.mediaMatches(x.id);
+            return this.albumPasses(x);
           }, this).map(function (x) {
             return {
               key: 'al' + x.id, kind: 'album', id: x.id, label: x.title,
-              sub: [x.artist, x.year || null, this.mediaDescriptor()].filter(Boolean).join(' • '),
+              sub: [x.artist, x.year || null].filter(Boolean).join(' • '),
               artist: x.artist, year: x.year, originalYear: x.originalYear,
               art: LmsFmt.coverUrl(x.artworkTrackId, 50) || null
             };
@@ -981,10 +1388,13 @@ Vue.component('lms-browse', {
   mounted: function () {
     this.setPaneWidth(this.paneWidth, false);
     window.addEventListener('resize', this.onSplitWindowResize);
+    window.addEventListener('resize', this.onToolsResize);
     document.addEventListener('pointerdown', this.closeSplitMenu);
+    this.onToolsResize();
   },
   beforeDestroy: function () {
     window.removeEventListener('resize', this.onSplitWindowResize);
+    window.removeEventListener('resize', this.onToolsResize);
     document.removeEventListener('pointerdown', this.closeSplitMenu);
     document.body.classList.remove('resizing-split');
   }

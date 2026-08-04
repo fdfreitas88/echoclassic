@@ -30,6 +30,13 @@ PAIRS = [
     ('borda da barra de progresso',       '--gauge-border',     '--chrome',      3.0),
     ('placeholder da busca',              '--text2',            '--field',       4.5),
     ('limpar filtro no chip',             '--accent',           '--content',     4.5),
+    # Pares novos do painel de filtros. Um token ja existente nao garante par
+    # medido: e a combinacao que reprova, e nenhuma linha desta lista cobria
+    # texto sobre --accent nem opcao ligada sobre --selected.
+    ('numero no funil de filtros',        '--chrome',           '--accent',      4.5),
+    ('opcao ligada no painel',            '--text',             '--selected',    4.5),
+    ('cabecalho de secao da lista',       '--text2',            '--group-bg',    4.5),
+    ('rotulo de grupo do painel',         '--text2',            '--group-page',  4.5),
     ('texto do chip de filtro',           '--text2',            '--content',     4.5),
     ('subtitulo em linha selecionada',    '--text2',            '--selected',    4.5),
     ('cabecalho de grupo dos ajustes',    '--group-head',       '--group-page',  4.5),

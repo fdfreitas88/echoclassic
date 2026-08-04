@@ -27,3 +27,17 @@ test('templates keep structural accessibility gates closed', function () {
   assert.match(joined, /albumSubtitle\(a\)/);
   assert.match(helpers.read('EchoClassic/HTML/echoclassic/html/js/opmlview.js'), /Você ainda não adicionou favoritos/);
 });
+
+/* O template so quebra em producao: um erro de compilacao aqui aparece como
+   tela branca no navegador, sem nada no console do servidor. A Fase 2b
+   acrescentou um `<template v-for>` com dois filhos com chave -- exatamente o
+   padrao que o Vue 2 recusa quando a chave esta no lugar errado. */
+test('todo template de componente compila no Vue 2', function () {
+  const compiler = require('vue-template-compiler');
+  const templates = helpers.templates();
+  assert.ok(templates.length > 10, 'esperava encontrar os templates da skin');
+  templates.forEach(function (item) {
+    const out = compiler.compile(item.template);
+    assert.deepEqual(out.errors, [], item.file + ': ' + out.errors.join(' | '));
+  });
+});

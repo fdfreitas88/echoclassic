@@ -65,7 +65,7 @@ function computedsFor(view, key) {
   const captured = helpers.browseComponent();
   const def = captured.def;
   const data = def.data();
-  /* Roteia a chave para o conceito a que ela pertence, igual ao chooseOption. */
+  /* Roteia a chave para o conceito a que ela pertence, igual ao que o painel faz ao aplicar o rascunho. */
   const isFilter = /^(format|quality|origin|stream):/.test(key || '');
   const isGroup = view === 'albuns' && /^(artist|relatedArtist)$/.test(key || '');
   const ui = {
@@ -101,17 +101,63 @@ test('o menu so libera filtro de midia onde a view sabe aplicar', function () {
    saltar. */
 test('a escolha do menu nao troca de view pelas costas do usuario', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
-  const body = src.split('chooseOption: function (value)')[1].split('},')[0];
+  const body = src.split('chooseSort: function (value)')[1].split('},')[0];
   assert.doesNotMatch(body, /setMusicView/,
     'escolher um formato em Artistas nao pode saltar para Albuns');
 });
 
-test('os grupos de midia ficam desabilitados fora de Albuns e Recentes', function () {
+/* O <select> deixou de ser o controle de filtros: enquanto ele era, so cabia um
+   filtro por vez, porque escolher uma opcao substitui a anterior. O funil e o
+   unico caminho para o painel, e o painel e o unico caminho para combinar. */
+test('o funil substitui o select como controle de filtros', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
-  ['Formato', 'Resolução', 'Local', 'Serviços de streaming'].forEach(function (label) {
-    const re = new RegExp('<optgroup label="' + label + '"[^>]*:disabled="!allowsMediaFilter"');
-    assert.match(src, re, label + ' precisa desabilitar fora de Albuns/Recentes');
+  assert.ok(src.indexOf('<optgroup') < 0,
+    'nenhum grupo de filtro pode continuar dentro do select');
+  assert.match(src, /class="icon-command filter-command"/, 'o funil e um botao de barra');
+  assert.match(src, /aria-haspopup="dialog"/, 'o funil abre um dialogo');
+  assert.match(src, /:aria-label="filterTriggerLabel"/, 'botao de icone precisa de nome acessivel');
+  assert.match(src, /:aria-expanded="String\(ui\.filterPanel\)"/);
+  assert.match(src, /class="filter-badge"/, 'a contagem de filtros ativos');
+  assert.match(src, /@click="openFilters"/);
+
+  /* As opcoes de ordenacao que leem o indice de midia so aparecem onde esse
+     indice existe -- oferece-las em Artistas seria a promessa vazia de novo. */
+  ['format', 'source', 'quality'].forEach(function (key) {
+    const re = new RegExp('v-if="allowsMediaFilter" value="' + key + '"');
+    assert.match(src, re, key + ' precisa depender de allowsMediaFilter');
   });
+});
+
+test('o funil acende com qualquer ajuste e conta so os filtros', function () {
+  const captured = helpers.browseComponent();
+  const def = captured.def;
+  const self = {
+    view: 'albuns', rows: [],
+    ui: { filters: ['format:flac', 'quality:hires'], group: [], sections: [], prefer: 'none' },
+    MEDIA_FORMATS: def.data().MEDIA_FORMATS
+  };
+  self.tr = def.methods.tr.bind(self);
+  self.filterLabel = def.methods.filterLabel.bind(self);
+  self.preferMode = def.computed.preferMode.call(self);
+  self.allowsMediaFilter = def.computed.allowsMediaFilter.call(self);
+  self.activeFilters = def.computed.activeFilters.call(self);
+  self.sectionKey = def.computed.sectionKey.call(self);
+  self.filterCount = def.computed.filterCount.call(self);
+  assert.equal(self.filterCount, 2, 'dois filtros, badge 2');
+  assert.equal(def.computed.toolsActive.call(self), true);
+  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filtros: 2 filtros ativos');
+
+  /* Agrupar e preferir mudam a apresentacao, nao o conjunto: acendem o icone
+     mas nao entram na contagem de filtros. */
+  self.ui = { filters: [], group: [], sections: ['decade'], prefer: 'local' };
+  self.preferMode = def.computed.preferMode.call(self);
+  self.activeFilters = def.computed.activeFilters.call(self);
+  self.sectionKey = def.computed.sectionKey.call(self);
+  self.filterCount = def.computed.filterCount.call(self);
+  assert.equal(self.filterCount, 0);
+  assert.equal(def.computed.toolsActive.call(self), true,
+    'secao e preferencia acendem o icone mesmo sem filtro');
+  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filtros');
 });
 
 /* O bug B: com filtro ativo, a unica pista de que ele existia era o
@@ -120,11 +166,14 @@ test('os grupos de midia ficam desabilitados fora de Albuns e Recentes', functio
    lista, senao ele desaparece exatamente no caso em que e necessario. */
 test('o chip do filtro vive fora da lista, e nao dentro dela', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
-  assert.match(src, /v-if="hasMediaFilter" class="filter-chip"/);
-  assert.match(src, /class="filter-chip-label">Filtro ativo:/);
-  assert.match(src, /v-for="f in activeFilters"/, 'uma pilula por filtro ativo');
-  assert.match(src, /@click="LmsUi\.toggleFilter\(f\.key\)"/, 'cada pilula remove so o seu');
-  assert.match(src, /@click="clearMediaFilter"/);
+  assert.match(src, /v-if="activeChips.length" class="filter-chip"/);
+  assert.match(src, /v-for="c in activeChips"/, 'uma pilula por ajuste ativo');
+  assert.match(src, /@click="c\.remove\(\)"/, 'cada pilula remove so o seu');
+  assert.match(src, /@click="clearAllTools"/);
+  /* Em tela estreita a fileira vira resumo: quatro pilulas nao cabem, e deixar
+     a barra crescer para fora da viewport seria pior do que resumir. */
+  assert.match(src, /v-if="compact"/, 'resumo compacto em tela estreita');
+  assert.match(src, /class="filter-pill-strip"/, 'a fileira rola no eixo dela');
 
   const chipAt = src.indexOf('class="filter-chip"');
   const scrollerAt = src.indexOf('<div class="scroller"');
@@ -191,7 +240,8 @@ test('os textos novos traduzem de verdade quando existe dicionario', function ()
       'Nada nesta categoria corresponde ao filtro': 'Nothing in this category matches the filter',
       'Nenhum item encontrado nesta categoria.': 'Nothing found in this category.',
       'Limpar filtro': 'Clear filter',
-      'Filtro ativo:': 'Active filter:'
+      'Limpar tudo': 'Clear all',
+      'Ativos:': 'Active:'
     },
     Vue: {
       prototype: {},
@@ -205,8 +255,9 @@ test('os textos novos traduzem de verdade quando existe dicionario', function ()
 
   const tpl = def.template;
   assert.match(tpl, /Nothing in this category matches the filter \{\{ \$t\(mediaDescriptor\(\)\) \}\}/);
-  assert.match(tpl, /class="filter-chip-label">Active filter:/);
+  assert.match(tpl, /class="filter-chip-label">Active:/);
   assert.match(tpl, />Clear filter</);
+  assert.match(tpl, />Clear all</);
   assert.doesNotMatch(tpl, /Nada nesta categoria/,
     'o portugues nao pode sobrar numa sessao com dicionario');
 });
@@ -232,24 +283,21 @@ test('Recentes nao promete agrupar: la a opcao Artista so reordena', function ()
   const albuns = computedsFor('albuns', 'artist');
   assert.equal(albuns.self.groupsMainArtists, true, 'em Albuns, Artista agrupa de verdade');
 
-  assert.equal(recentes.def.computed.displayGroupLabel.call(recentes.self), 'Ordenar por');
-  assert.equal(albuns.def.computed.displayGroupLabel.call(albuns.self), 'Agrupar ou ordenar');
+  /* O rotulo do select nao precisa mais mudar por view: ele ordena, e so.
+     Agrupar mudou de lugar -- vai para o painel, onde a opcao de artista diz,
+     no proprio rotulo, que a lista passa a mostrar artistas. */
+  assert.equal(recentes.def.computed.sortSelectLabel.call(recentes.self), 'Ordenar por');
+  assert.equal(albuns.def.computed.sortSelectLabel.call(albuns.self), 'Ordenar por');
 });
 
-test('o rotulo do select acompanha o que a view sabe fazer', function () {
+test('o select faz uma coisa so, e o rotulo diz qual', function () {
   const artistas = computedsFor('artistas', 'name');
-  assert.equal(artistas.def.computed.displayGroupLabel.call(artistas.self), 'Ordenar por');
-  assert.equal(artistas.def.computed.sortSelectLabel.call(artistas.self), 'Ordenar');
-
-  const recentes = computedsFor('recentes', 'recent');
-  assert.equal(recentes.def.computed.sortSelectLabel.call(recentes.self), 'Ordenar ou filtrar');
-
-  const albuns = computedsFor('albuns', 'name');
-  assert.equal(albuns.def.computed.sortSelectLabel.call(albuns.self), 'Agrupar, ordenar ou filtrar');
+  assert.equal(artistas.def.computed.sortSelectLabel.call(artistas.self), 'Ordenar por');
 
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
-  assert.match(src, /<select :value="menuValue" :aria-label="sortSelectLabel"/);
-  assert.match(src, /<optgroup :label="displayGroupLabel">/);
+  assert.match(src, /<select :value="sortKey" :aria-label="sortSelectLabel"/,
+    'o select passa a espelhar a ordenacao, e nao um valor de tres conceitos');
+  assert.match(src, /@change="chooseSort\(\$event\.target\.value\)"/);
 });
 
 /* Atributo dinamico nao passa pelo translateTemplate -- a lista ATTRS do i18n so
@@ -259,7 +307,7 @@ test('os rotulos calculados do menu passam pelo dicionario', function () {
   let def = null;
   const ctx = helpers.uiContext({
     LMS_LANG: 'EN',
-    LMS_STRINGS: { 'Ordenar por': 'Sort by', 'Agrupar ou ordenar': 'Group or sort' },
+    LMS_STRINGS: { 'Ordenar por': 'Sort by', 'Filtros': 'Filters', 'filtros ativos': 'active filters' },
     Vue: {
       prototype: {},
       observable: function (o) { return o; },
@@ -270,11 +318,12 @@ test('os rotulos calculados do menu passam pelo dicionario', function () {
   helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/i18n.js');
   helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/browse.js');
 
-  const self = { view: 'recentes' };
+  const self = { view: 'recentes', activeFilters: [{ key: 'format:flac', label: 'FLAC' }] };
   self.tr = def.methods.tr.bind(self);
-  assert.equal(def.computed.displayGroupLabel.call(self), 'Sort by');
-  self.view = 'albuns';
-  assert.equal(def.computed.displayGroupLabel.call(self), 'Group or sort');
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort by');
+  self.filterCount = def.computed.filterCount.call(self);
+  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filters: 1 filtro ativo',
+    'o nome acessivel do funil sai do dicionario, nao do template');
 });
 
 /* Monta o dicionario a partir do strings.txt de verdade, do mesmo jeito que o
@@ -323,20 +372,24 @@ test('todo texto novo da interface chega traduzido, vindo do strings.txt real', 
     assert.ok(tpl.indexOf(phrase) < 0, 'sobrou em portugues no template: ' + phrase);
   });
   assert.match(tpl, /Nothing in this category matches the filter/);
-  assert.match(tpl, /Active filter:/);
+  assert.match(tpl, /Active:/);
   assert.match(tpl, />Clear filter</);
 
   /* Os rotulos calculados nao vivem no template: passam pelo tr() em tempo de
      execucao, entao sao conferidos chamando as computeds. */
   const self = { view: 'recentes' };
   self.tr = def.methods.tr.bind(self);
-  assert.equal(def.computed.displayGroupLabel.call(self), 'Sort by');
-  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort or filter');
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort by');
   self.view = 'albuns';
-  assert.equal(def.computed.displayGroupLabel.call(self), 'Group or sort');
-  assert.equal(def.computed.sortSelectLabel.call(self), 'Group, sort or filter');
-  self.view = 'artistas';
-  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort');
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort by');
+
+  /* Os rotulos do painel tambem: eles sao montados em JavaScript, e o painel e
+     todo texto novo. */
+  self.activeFilters = [];
+  self.ui = { filters: [], group: [], sections: [], prefer: 'local' };
+  self.preferMode = def.computed.preferMode.call(self);
+  assert.equal(def.methods.preferLabel.call(self, 'local'), 'Prefer local library');
+  assert.equal(def.methods.sectionFacetLabel.call(self, 'decade'), 'Decade');
 });
 
 /* Os avisos de truncamento sao montados em JavaScript e chegam ao template por
@@ -443,7 +496,11 @@ function comFiltros(view, filters, sort) {
   const def = captured.def;
   const data = def.data();
   const ui = { filters: filters.slice(), group: [], sort: sort || [{ key: 'name', desc: false }] };
-  const self = { view: view, ui: ui, MEDIA_FORMATS: data.MEDIA_FORMATS, rows: [], mediaIndex: null };
+  /* Semeado como o data() do componente: o contador comeca em zero, e nao
+     indefinido -- um ++ sobre undefined daria NaN e o teste passaria a medir o
+     arreio em vez do produto. */
+  const self = { view: view, ui: ui, MEDIA_FORMATS: data.MEDIA_FORMATS, rows: [],
+                 mediaIndex: null, unknownCount: data.unknownCount };
   self.tr = def.methods.tr.bind(self);
   self.allowsMediaFilter = def.computed.allowsMediaFilter.call(self);
   self.hasMediaFilter = def.computed.hasMediaFilter.call(self);
@@ -494,7 +551,7 @@ test('album sem informacao de midia e contado, nao sumido em silencio', function
   c.self.mediaIndex = { '1': META({ formats: { flac: true } }) };
   assert.equal(c.self.mediaMatches(1), true);
   assert.equal(c.self.mediaMatches(99), false, 'sem meta nao casa');
-  assert.equal(c.self.unknownCounted, true, 'mas foi contabilizado para virar aviso');
+  assert.equal(c.self.unknownCount, 1, 'mas foi contabilizado para virar aviso');
 });
 
 test('cada filtro ativo vira um chip com rotulo proprio', function () {
@@ -596,4 +653,326 @@ test('cache corrompido nao derruba a navegacao', function () {
   try {
     assert.equal(m.readMediaCache.call(self, 'scan-1'), null);
   } finally { delete global.localStorage; }
+});
+
+/* ---------- Fase 4: secoes reais e virtualizacao por soma de prefixos ------- */
+
+/* Array nascido dentro do vm tem outro Array.prototype, e o deepEqual estrito
+   compara o prototipo junto. Achatar por JSON compara o que importa: o
+   conteudo. */
+function plain(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+
+/* Mesmo formato de meta do indice, escrito de um jeito mais curto para as
+   tabelas de caso desta secao. */
+function MIDIA(formats, flags) {
+  const meta = META({});
+  (formats || []).forEach(function (f) { meta.formats[f] = true; });
+  Object.keys(flags || {}).forEach(function (k) {
+    if (k === 'providers') (flags[k] || []).forEach(function (p) { meta.providers[p] = true; });
+    else meta[k] = flags[k];
+  });
+  return meta;
+}
+
+
+/* Monta o componente com linhas e indice de midia, e resolve a cadeia de
+   computeds na ordem em que elas dependem umas das outras. */
+function listaCom(rows, options) {
+  const opts = options || {};
+  const captured = helpers.browseComponent();
+  const def = captured.def;
+  const data = def.data();
+  const self = {
+    view: opts.view || 'albuns', rows: rows,
+    ui: { filters: opts.filters || [], group: opts.group || [],
+          sections: opts.sections || [], sort: opts.sort || [{ key: 'name', desc: false }],
+          prefer: opts.prefer || 'none', filter: '' },
+    mediaIndex: opts.mediaIndex || null,
+    MEDIA_FORMATS: data.MEDIA_FORMATS,
+    first: 0, visible: 10, RAIL: data.RAIL,
+    $refs: {}
+  };
+  ['tr', 'filterLabel', 'normalize', 'metaFor', 'sectionValuesFor', 'sectionFacetLabel',
+   'rowComparator', 'mediaMatches', 'matchesValue', 'yearMatches', 'albumPasses',
+   'filterValues', 'preferLabel', 'railLetter', 'indexAtOffset', 'jump', 'onScroll',
+   'editionsFor', 'editionSource'].forEach(function (name) {
+    self[name] = def.methods[name].bind(self);
+  });
+  ['preferMode', 'allowsMediaFilter', 'hasMediaFilter', 'activeFilters', 'sectionKey',
+   'sortKey', 'sortDesc', 'showsAlbums', 'groupsAlbumsByArtist', 'groupsAlbumsByRelatedArtist',
+   'groupsMainArtists', 'rowH', 'headerH', 'displayRows', 'displayItems', 'itemOffsets',
+   'windowed', 'topPad', 'botPad', 'sectionOverlap', 'hasRail', 'filterCount',
+   'toolsActive', 'activeChips', 'resultCount'].forEach(function (name) {
+    Object.defineProperty(self, name, { get: def.computed[name].bind(self), configurable: true });
+  });
+  return { self: self, def: def, ctx: captured.ctx };
+}
+
+const ALBUNS = [
+  { key: 'al1', kind: 'album', id: 1, label: 'Head Hunters', artist: 'Herbie Hancock', year: 1973 },
+  { key: 'al2', kind: 'album', id: 2, label: 'Thrust', artist: 'Herbie Hancock', year: 1974 },
+  { key: 'al3', kind: 'album', id: 3, label: 'Autobahn', artist: 'Kraftwerk', year: 1974 },
+  { key: 'al4', kind: 'album', id: 4, label: 'Trans-Europe Express', artist: 'Kraftwerk', year: 1977 },
+  { key: 'al5', kind: 'album', id: 5, label: 'Sem ano', artist: 'Desconhecido', year: null }
+];
+
+test('agrupar por decada cria cabecalhos com contagem, sem tirar linha nenhuma', function () {
+  const lista = listaCom(ALBUNS, { sections: ['decade'] });
+  const items = lista.self.displayItems;
+  const headers = items.filter(function (it) { return it.type === 'header'; });
+  const rows = items.filter(function (it) { return it.type === 'row'; });
+
+  assert.equal(rows.length, ALBUNS.length, 'agrupar organiza, nunca exclui');
+  assert.deepEqual(plain(headers.map(function (h) { return h.label; })),
+    ['Anos 1970', 'Ano desconhecido']);
+  assert.deepEqual(plain(headers.map(function (h) { return h.count; })), [4, 1]);
+  assert.equal(headers[headers.length - 1].label, 'Ano desconhecido',
+    'o balde do desconhecido vai por ultimo, e existe');
+});
+
+/* Enquanto tudo tinha a mesma altura, indice x altura bastava. Com cabecalho no
+   meio essa multiplicacao mente, e o sintoma seria a lista saltando durante a
+   rolagem de 1.398 itens. */
+test('a virtualizacao soma alturas reais em vez de multiplicar indice', function () {
+  const lista = listaCom(ALBUNS, { sections: ['decade'] });
+  const self = lista.self;
+  const items = self.displayItems;
+  const offsets = self.itemOffsets;
+
+  let esperado = 0;
+  items.forEach(function (it, i) {
+    assert.equal(offsets[i], esperado, 'deslocamento do item ' + i);
+    esperado += it.type === 'header' ? self.headerH : self.rowH;
+  });
+  assert.equal(offsets[items.length], esperado, 'a soma final e a altura total');
+
+  /* topPad + itens desenhados + botPad tem de fechar a altura exata; se nao
+     fechar, a barra de rolagem mente sobre o tamanho da lista. */
+  self.first = 3;
+  const desenhados = self.windowed.reduce(function (acc, it) {
+    return acc + (it.type === 'header' ? self.headerH : self.rowH);
+  }, 0);
+  assert.equal(self.topPad + desenhados + self.botPad, esperado);
+
+  assert.equal(self.indexAtOffset(0), 0);
+  assert.equal(self.indexAtOffset(offsets[4] + 1), 4, 'a busca binaria acha o item da altura');
+  assert.equal(self.indexAtOffset(esperado + 999), items.length - 1, 'alem do fim, o ultimo');
+});
+
+test('sem secao a lista continua sendo uma linha por item', function () {
+  const lista = listaCom(ALBUNS, {});
+  const items = lista.self.displayItems;
+  assert.equal(items.length, ALBUNS.length);
+  assert.ok(items.every(function (it) { return it.type === 'row'; }));
+  assert.equal(lista.self.itemOffsets[3], 3 * lista.self.rowH,
+    'sem cabecalho, a soma de prefixos coincide com a multiplicacao antiga');
+});
+
+test('um album com dois formatos aparece nas duas secoes, e a soma diz isso', function () {
+  const index = {
+    1: MIDIA(['flac', 'mp3'], { local: true, standard: true }),
+    2: MIDIA(['flac'], { local: true, hires: true })
+  };
+  const lista = listaCom(ALBUNS.slice(0, 2), { sections: ['format'], mediaIndex: index });
+  const items = lista.self.displayItems;
+  const headers = items.filter(function (it) { return it.type === 'header'; });
+
+  assert.deepEqual(plain(headers.map(function (h) { return h.label; })), ['FLAC', 'MP3']);
+  assert.equal(headers[0].count, 2);
+  assert.equal(headers[1].count, 1);
+  assert.equal(lista.self.sectionOverlap, 1,
+    'um album contado duas vezes: a tela precisa poder dizer isso');
+});
+
+test('album sem entrada no indice cai num balde visivel ao seccionar', function () {
+  const index = { 1: MIDIA(['flac'], { local: true }) };
+  const lista = listaCom(ALBUNS.slice(0, 2), { sections: ['format'], mediaIndex: index });
+  const headers = lista.self.displayItems.filter(function (it) { return it.type === 'header'; });
+  assert.deepEqual(plain(headers.map(function (h) { return h.label; })),
+    ['FLAC', 'Sem informação de mídia']);
+});
+
+test('a trilha A-Z se esconde quando a lista deixa de ser alfabetica', function () {
+  const muitos = [];
+  for (let i = 0; i < 40; i++) {
+    muitos.push({ key: 'al' + i, kind: 'album', id: i, label: 'Album ' + i, artist: 'X', year: 1970 });
+  }
+  assert.equal(listaCom(muitos, {}).self.hasRail, true);
+  assert.equal(listaCom(muitos, { sections: ['decade'] }).self.hasRail, false,
+    'com secoes a letra M aparece uma vez por secao e o salto nao teria destino');
+  assert.equal(listaCom(muitos, { sort: [{ key: 'quality', desc: false }] }).self.hasRail, false,
+    'ordenado por resolucao a lista tambem nao e alfabetica');
+});
+
+/* ---------- filtros novos: genero, ano, e o filtro sob agrupamento --------- */
+
+test('o intervalo de ano filtra a linha, e ano ausente nao passa pelo intervalo', function () {
+  const lista = listaCom(ALBUNS, { filters: ['year:1974-1977'] });
+  const self = lista.self;
+  assert.equal(self.yearMatches({ year: 1974 }), true);
+  assert.equal(self.yearMatches({ year: 1977 }), true, 'o limite superior entra');
+  assert.equal(self.yearMatches({ year: 1973 }), false);
+  assert.equal(self.yearMatches({ year: null }), false, 'sem ano nao ha como afirmar que cabe');
+});
+
+/* Genero e a unica faceta que o servidor sabe aplicar; ela nao pode passar pelo
+   indice de midia, senao filtrar por genero sem indice carregado reprovaria a
+   biblioteca inteira no teste de "sem entrada no indice". */
+test('genero nao passa pelo indice de midia', function () {
+  const lista = listaCom(ALBUNS, { filters: ['genre:11'] });
+  assert.equal(lista.self.mediaMatches(1), true,
+    'sem chave de midia entre os filtros, o indice nem e consultado');
+  assert.equal(lista.self.albumPasses({ id: 1, year: 1973 }), true);
+
+  const comMidia = listaCom(ALBUNS, { filters: ['genre:11', 'format:flac'], mediaIndex: {} });
+  assert.equal(comMidia.self.mediaMatches(1), false, 'a chave de formato continua valendo');
+});
+
+/* A promessa vazia de volta pela porta que a separacao dos estados abriu:
+   agrupar por artista com um filtro ligado mostrava a pilula acesa sobre uma
+   lista que ninguem tinha filtrado. */
+test('com agrupamento por artista o filtro e aplicado aos albuns antes do mapeamento', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const trecho = src.split('this.groupsMainArtists ? page')[1].split('this.appendRows')[0];
+  assert.match(trecho, /albumPasses/,
+    'o ramo de artista precisa filtrar os albuns antes de virar linha de artista');
+});
+
+test('Artista relacionado avisa que nao sabe filtrar, em vez de fingir', function () {
+  const lista = listaCom(ALBUNS, { filters: ['format:flac'], group: ['relatedArtist'] });
+  const def = lista.def;
+  Object.defineProperty(lista.self, 'filtersIgnored', {
+    get: def.computed.filtersIgnored.bind(lista.self)
+  });
+  assert.equal(lista.self.filtersIgnored, true);
+
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  assert.match(src, /v-if="filtersIgnored"/, 'o aviso precisa existir na tela');
+});
+
+/* ---------- Fase 5: ranking e escolha ao tocar ----------------------------- */
+
+const LOCAL_MP3 = MIDIA(['mp3'], { local: true, standard: true });
+const STREAM_FLAC_HR = MIDIA(['flac'], { remote: true, hires: true, providers: ['qobuz'] });
+
+test('preferir local poe a edicao local na frente, sem esconder a de streaming', function () {
+  const captured = helpers.browseComponent();
+  const ctx = captured.ctx;
+  assert.ok(ctx.LmsFmt.compareEditions(LOCAL_MP3, STREAM_FLAC_HR, 'local') < 0);
+  assert.ok(ctx.LmsFmt.compareEditions(STREAM_FLAC_HR, LOCAL_MP3, 'local') > 0);
+});
+
+test('preferir streaming inverte a ordem, e so ela', function () {
+  const ctx = helpers.browseComponent().ctx;
+  assert.ok(ctx.LmsFmt.compareEditions(STREAM_FLAC_HR, LOCAL_MP3, 'stream') < 0);
+  assert.ok(ctx.LmsFmt.compareEditions(LOCAL_MP3, STREAM_FLAC_HR, 'stream') > 0);
+});
+
+/* O exemplo canonico: MP3 320 local contra FLAC 24/192 de streaming. Com
+   qualidade, o FLAC vence no eixo do codec antes de chegar ao da resolucao --
+   e a origem nao entra como criterio tecnico. */
+test('preferir resolucao compara codec antes de resolucao e ignora a origem', function () {
+  const ctx = helpers.browseComponent().ctx;
+  assert.ok(ctx.LmsFmt.compareEditions(STREAM_FLAC_HR, LOCAL_MP3, 'quality') < 0,
+    'FLAC 24/192 de streaming vence o MP3 320 local');
+
+  const localFlacCd = MIDIA(['flac'], { local: true, standard: true });
+  assert.ok(ctx.LmsFmt.compareEditions(localFlacCd, STREAM_FLAC_HR, 'quality') > 0,
+    'entre dois lossless, decide a resolucao');
+  assert.ok(ctx.LmsFmt.compareEditions(localFlacCd, LOCAL_MP3, 'quality') < 0,
+    'lossless vence lossy antes de qualquer conta de taxa');
+
+  /* DSD nao se compara tecnicamente com PCM: empata e cai no desempate de
+     origem, em vez de fingir uma ordem que ninguem sabe defender. */
+  const dsd = MIDIA(['dsd'], { local: true, hires: true });
+  const flacHrLocal = MIDIA(['flac'], { local: true, hires: true });
+  assert.ok(ctx.LmsFmt.compareEditions(flacHrLocal, dsd, 'quality') < 0,
+    'lossless PCM e DSD ficam em classes diferentes, sem ordenacao tecnica entre elas');
+
+  /* Metadado ausente nunca exclui: ordena abaixo, e continua na lista. */
+  assert.ok(ctx.LmsFmt.compareEditions(LOCAL_MP3, null, 'quality') < 0);
+});
+
+test('sem preferencia declarada nada e reordenado', function () {
+  const ctx = helpers.browseComponent().ctx;
+  assert.equal(ctx.LmsFmt.compareEditions(STREAM_FLAC_HR, LOCAL_MP3, 'none'), 0);
+  assert.equal(ctx.LmsFmt.compareEditions(LOCAL_MP3, STREAM_FLAC_HR, 'none'), 0);
+});
+
+/* A preferencia entra DEPOIS do desempate por titulo e artista: dois itens que
+   empataram ali sao a mesma obra em edicoes diferentes. Antes disso, ela
+   reordenaria a biblioteca inteira -- isso e ordenar por origem, que e outra
+   escolha e tem chave propria. */
+test('a preferencia reordena edicoes irmas, nao a biblioteca', function () {
+  const rows = [
+    { key: 'al1', kind: 'album', id: 1, label: 'Head Hunters', artist: 'Herbie Hancock', year: 1973 },
+    { key: 'al2', kind: 'album', id: 2, label: 'Head Hunters', artist: 'Herbie Hancock', year: 1973 },
+    { key: 'al3', kind: 'album', id: 3, label: 'Autobahn', artist: 'Kraftwerk', year: 1974 }
+  ];
+  const index = { 1: STREAM_FLAC_HR, 2: LOCAL_MP3, 3: STREAM_FLAC_HR };
+
+  const semPreferencia = listaCom(rows, { mediaIndex: index });
+  assert.deepEqual(plain(semPreferencia.self.displayRows.map(function (r) { return r.id; })), [3, 1, 2],
+    'ordem alfabetica, desempate por id');
+
+  const local = listaCom(rows, { mediaIndex: index, prefer: 'local' });
+  assert.deepEqual(plain(local.self.displayRows.map(function (r) { return r.id; })), [3, 2, 1],
+    'a edicao local sobe entre as irmas; Autobahn continua em primeiro');
+
+  const qualidade = listaCom(rows, { mediaIndex: index, prefer: 'quality' });
+  assert.deepEqual(plain(qualidade.self.displayRows.map(function (r) { return r.id; })), [3, 1, 2]);
+});
+
+test('edicoes irmas exigem titulo e artista iguais — marcador de edicao separa', function () {
+  const rows = [
+    { key: 'al1', kind: 'album', id: 1, label: 'Head Hunters', artist: 'Herbie Hancock' },
+    { key: 'al2', kind: 'album', id: 2, label: 'Head Hunters', artist: 'Herbie Hancock' },
+    { key: 'al3', kind: 'album', id: 3, label: 'Head Hunters (Remastered)', artist: 'Herbie Hancock' }
+  ];
+  const lista = listaCom(rows, { mediaIndex: { 1: STREAM_FLAC_HR, 2: LOCAL_MP3, 3: LOCAL_MP3 },
+                                 prefer: 'local' });
+  const edicoes = lista.self.editionsFor(rows[0]);
+  assert.equal(edicoes.length, 2, 'a versao remasterizada nao entra: e outra obra ate prova em contrario');
+  assert.equal(edicoes[0].id, 2, 'preferir local poe a local em primeiro');
+  assert.match(edicoes[0].source, /Biblioteca local/);
+
+  assert.deepEqual(plain(lista.self.editionsFor(rows[2])), [], 'sem irma, sem escolha a fazer');
+});
+
+test('sem preferencia a folha de acoes nao recebe edicoes — o play fica deterministico', function () {
+  const rows = [
+    { key: 'al1', kind: 'album', id: 1, label: 'Head Hunters', artist: 'Herbie Hancock' },
+    { key: 'al2', kind: 'album', id: 2, label: 'Head Hunters', artist: 'Herbie Hancock' }
+  ];
+  const lista = listaCom(rows, { mediaIndex: { 1: STREAM_FLAC_HR, 2: LOCAL_MP3 } });
+  const def = lista.def;
+  let recebido = null;
+  lista.ctx.LmsUi.openActions = function (item) { recebido = item; };
+  lista.self.actions = def.methods.actions.bind(lista.self);
+
+  lista.self.actions(rows[0], null);
+  assert.equal(recebido.editions, undefined, 'padrao: toca exatamente o que foi clicado');
+});
+
+test('a folha de acoes diz qual edicao vai tocar antes de tocar', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/actions.js');
+  assert.match(src, /chosenEdition/);
+  assert.match(src, /Tocando a edição preferida: \{edition\}\./,
+    'a frase inteira entra no dicionario, com marcador');
+  assert.match(src, /item\.editions\.length > 1/, 'as outras edicoes ficam visiveis na folha');
+});
+
+/* Visto na tela: com quatro pilulas a contagem era espremida a 12px pelo
+   flex:1 e o numero transbordava por cima de "Limpar tudo". */
+test('a contagem de resultados nao disputa espaco com a fileira de pilulas', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const regra = css.match(/\.filter-chip-count\{([^}]*)\}/)[1];
+  assert.match(regra, /flex:0 0 auto/, 'a contagem nao pode encolher');
+  assert.match(regra, /margin-left:auto/, 'ela encosta a direita sem esticar');
+  const strip = css.match(/\.filter-pill-strip\{([^}]*)\}/)[1];
+  assert.match(strip, /flex:1 1 auto/, 'quem estica e a fileira');
+  assert.match(strip, /overflow-x:auto/, 'e ela rola quando nao cabe');
 });

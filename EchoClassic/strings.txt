@@ -1139,3 +1139,274 @@ ECHOCLASSIC_UI_STYLE_REMEMBERED_PER_THEME
 ECHOCLASSIC_UI_STYLE_OTHER_THEME_KEEPS
 	EN	theme; the other theme keeps its own.
 	PT	; o outro tema mantém o dele.
+
+ECHOCLASSIC_UI_FILTERS
+	EN	Filters
+	PT	Filtros
+
+ECHOCLASSIC_UI_FILTER_ACTIVE_ONE
+	EN	active filter
+	PT	filtro ativo
+
+ECHOCLASSIC_UI_FILTER_ACTIVE_MANY
+	EN	active filters
+	PT	filtros ativos
+
+ECHOCLASSIC_UI_TOOLS_ACTIVE_ONE
+	EN	active setting
+	PT	ajuste ativo
+
+ECHOCLASSIC_UI_TOOLS_ACTIVE_MANY
+	EN	active settings
+	PT	ajustes ativos
+
+ECHOCLASSIC_UI_RESULT_ONE
+	EN	result
+	PT	resultado
+
+ECHOCLASSIC_UI_RESULT_MANY
+	EN	results
+	PT	resultados
+
+ECHOCLASSIC_UI_CHIPS_ACTIVE
+	EN	Active:
+	PT	Ativos:
+
+ECHOCLASSIC_UI_REMOVE_FILTER
+	EN	Remove filter
+	PT	Remover filtro
+
+ECHOCLASSIC_UI_REMOVE_GROUPING
+	EN	Remove grouping
+	PT	Remover agrupamento
+
+ECHOCLASSIC_UI_REMOVE_PREFERENCE
+	EN	Remove playback preference
+	PT	Remover preferência de reprodução
+
+ECHOCLASSIC_UI_VIEW_FILTERS
+	EN	View filters
+	PT	Ver filtros
+
+
+ECHOCLASSIC_UI_FILTERS_IGNORED_RELATED
+	EN	Related artist builds the list from the server's artists, so media filters do not apply here.
+	PT	Artista relacionado monta a lista a partir dos artistas do servidor, então os filtros de mídia não se aplicam aqui.
+
+
+ECHOCLASSIC_UI_SORT_FORMAT
+	EN	Format
+	PT	Formato
+
+ECHOCLASSIC_UI_SORT_LOCAL_FIRST
+	EN	Local library first
+	PT	Biblioteca local primeiro
+
+ECHOCLASSIC_UI_SORT_QUALITY_FIRST
+	EN	Highest resolution first
+	PT	Maior resolução primeiro
+
+ECHOCLASSIC_UI_PREFER_NONE
+	EN	No preference
+	PT	Sem preferência
+
+ECHOCLASSIC_UI_PREFER_LOCAL
+	EN	Prefer local library
+	PT	Preferir biblioteca local
+
+ECHOCLASSIC_UI_PREFER_STREAM
+	EN	Prefer streaming
+	PT	Preferir streaming
+
+ECHOCLASSIC_UI_PREFER_QUALITY
+	EN	Prefer highest resolution
+	PT	Preferir maior resolução
+
+ECHOCLASSIC_UI_SECTION_DECADE
+	EN	Decade
+	PT	Década
+
+ECHOCLASSIC_UI_SECTION_ORIGIN
+	EN	Source
+	PT	Origem
+
+ECHOCLASSIC_UI_SECTION_STREAM
+	EN	Streaming service
+	PT	Serviço de streaming
+
+ECHOCLASSIC_UI_SECTION_UNKNOWN_YEAR
+	EN	Unknown year
+	PT	Ano desconhecido
+
+ECHOCLASSIC_UI_SECTION_YEARS
+	EN	Years
+	PT	Anos
+
+ECHOCLASSIC_UI_SECTION_NO_MEDIA
+	EN	No media information
+	PT	Sem informação de mídia
+
+ECHOCLASSIC_UI_SECTION_NO_STREAM
+	EN	No streaming service
+	PT	Sem serviço de streaming
+
+ECHOCLASSIC_UI_QUALITY_LOSSLESS
+	EN	Lossless
+	PT	Sem perdas
+
+ECHOCLASSIC_UI_QUALITY_LOSSY
+	EN	Lossy
+	PT	Com perdas
+
+
+ECHOCLASSIC_UI_PANEL_APPLY
+	EN	Apply
+	PT	Aplicar
+
+ECHOCLASSIC_UI_PANEL_SEARCH
+	EN	Search within filters
+	PT	Buscar dentro dos filtros
+
+ECHOCLASSIC_UI_PANEL_NO_FILTERS
+	EN	This root cannot filter by media. Source, format, resolution, genre and year filters apply in Albums and in Recently added.
+	PT	Esta raiz não sabe filtrar por mídia. Filtros de origem, formato, resolução, gênero e ano valem em Álbuns e em Recentes.
+
+ECHOCLASSIC_UI_PANEL_LOADING_GENRES
+	EN	Loading genres…
+	PT	Carregando gêneros…
+
+ECHOCLASSIC_UI_PANEL_GENRES_LONG
+	EN	The genre list is long. Use the search above to find the rest.
+	PT	A lista de gêneros é longa. Use a busca acima para achar o resto.
+
+ECHOCLASSIC_UI_PANEL_YEAR_FROM
+	EN	From
+	PT	De
+
+ECHOCLASSIC_UI_PANEL_YEAR_TO
+	EN	To
+	PT	Até
+
+ECHOCLASSIC_UI_PANEL_YEAR_FROM_LABEL
+	EN	Start year
+	PT	Ano inicial
+
+ECHOCLASSIC_UI_PANEL_YEAR_TO_LABEL
+	EN	End year
+	PT	Ano final
+
+ECHOCLASSIC_UI_PANEL_CLEAR_YEAR
+	EN	Clear year
+	PT	Limpar ano
+
+ECHOCLASSIC_UI_PANEL_YEAR_DIGITS
+	EN	Use four-digit years.
+	PT	Use anos com quatro dígitos.
+
+ECHOCLASSIC_UI_PANEL_YEAR_ORDER
+	EN	The start year must be lower than or equal to the end year.
+	PT	O ano inicial precisa ser menor ou igual ao final.
+
+ECHOCLASSIC_UI_PANEL_AUDIO_QUALITY
+	EN	Audio quality
+	PT	Qualidade de áudio
+
+ECHOCLASSIC_UI_PANEL_QUALITY_NOTE
+	EN	High resolution is not proof of better mastering. These filters describe what the file is, not how good it sounds.
+	PT	Resolução alta não é prova de masterização melhor. Estes filtros dizem o que o arquivo é, não o quanto ele soa bem.
+
+ECHOCLASSIC_UI_PANEL_SORT_ASC
+	EN	Ascending order (A–Z)
+	PT	Ordem crescente (A–Z)
+
+ECHOCLASSIC_UI_PANEL_SORT_DESC
+	EN	Descending order (Z–A)
+	PT	Ordem decrescente (Z–A)
+
+ECHOCLASSIC_UI_PANEL_GROUP_BY
+	EN	Group by
+	PT	Agrupar por
+
+ECHOCLASSIC_UI_PANEL_GROUP_NONE
+	EN	No grouping
+	PT	Sem agrupamento
+
+ECHOCLASSIC_UI_PANEL_GROUP_ARTIST
+	EN	Artist (the list switches to artists)
+	PT	Artista (a lista passa a mostrar artistas)
+
+ECHOCLASSIC_UI_PANEL_GROUP_NOTE
+	EN	Grouping organises the list and never removes anything from it. An album with more than one format appears in each section it belongs to.
+	PT	Agrupar organiza a lista, nunca tira item dela. Um álbum com mais de um formato aparece em cada seção a que pertence.
+
+ECHOCLASSIC_UI_PANEL_PREFER_TITLE
+	EN	Playback preference
+	PT	Preferência de reprodução
+
+ECHOCLASSIC_UI_PANEL_PREFER_NOTE
+	EN	The preference ranks equivalent editions and picks which one plays. It never hides the others: they stay in the list.
+	PT	A preferência ordena edições equivalentes e escolhe qual toca. Ela nunca esconde as outras: elas continuam na lista.
+
+ECHOCLASSIC_UI_PANEL_VIEWS
+	EN	Saved views
+	PT	Vistas salvas
+
+ECHOCLASSIC_UI_PANEL_NO_VIEWS
+	EN	No saved views yet.
+	PT	Nenhuma vista salva ainda.
+
+ECHOCLASSIC_UI_PANEL_VIEW_NAME
+	EN	View name
+	PT	Nome da vista
+
+ECHOCLASSIC_UI_PANEL_SAVE_VIEW
+	EN	Save view
+	PT	Salvar vista
+
+ECHOCLASSIC_UI_PANEL_VIEW_SAVED
+	EN	View saved.
+	PT	Vista salva.
+
+ECHOCLASSIC_UI_PANEL_VIEW_DEFAULT
+	EN	Default
+	PT	Padrão
+
+ECHOCLASSIC_UI_PANEL_VIEW_RENAME
+	EN	Rename
+	PT	Renomear
+
+ECHOCLASSIC_UI_PANEL_VIEW_DUPLICATE
+	EN	Duplicate
+	PT	Duplicar
+
+ECHOCLASSIC_UI_PANEL_VIEW_DELETE
+	EN	Delete
+	PT	Apagar
+
+ECHOCLASSIC_UI_PANEL_VIEW_NEW_NAME
+	EN	New name
+	PT	Novo nome
+
+ECHOCLASSIC_UI_EDITIONS_NOTE
+	EN	editions of this work in the library. The preference picks the first one and the others stay visible in the list.
+	PT	edições desta obra na biblioteca. A preferência escolhe a primeira e as outras continuam visíveis na lista.
+
+ECHOCLASSIC_UI_EDITION_PLAYING
+	EN	Playing the preferred edition: {edition}.
+	PT	Tocando a edição preferida: {edition}.
+
+ECHOCLASSIC_UI_NAME
+	EN	Name
+	PT	Nome
+
+ECHOCLASSIC_UI_UNKNOWN_MEDIA_ONE
+	EN	1 album was left out because it has no media information.
+	PT	1 álbum ficou de fora por não ter informação de mídia.
+
+ECHOCLASSIC_UI_UNKNOWN_MEDIA_MANY
+	EN	{n} albums were left out because they have no media information.
+	PT	{n} álbuns ficaram de fora por não terem informação de mídia.
+
+ECHOCLASSIC_UI_SECTION_OVERLAP
+	EN	Some albums appear in more than one section.
+	PT	Alguns álbuns aparecem em mais de uma seção.

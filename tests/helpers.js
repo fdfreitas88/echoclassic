@@ -127,8 +127,55 @@ function browseComponent() {
       nextTick: function (f) { if (f) f(); }
     }
   });
+  /* format.js de verdade, e nao um stub: o comparador de edicoes mora la, e um
+     stub inventado mentiria sobre a forma do objeto -- foi assim que
+     settings-import quebrou. */
+  runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/format.js');
   runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/browse.js');
   return { def: definition, ctx: ctx };
+}
+
+/* Mesmo arreio do browse, para o painel: LmsUi de verdade, format.js de verdade,
+   e um LmsApi que devolve os generos que o painel pede. */
+function filterPanelComponent(extra) {
+  let definition = null;
+  const ctx = uiContext(Object.assign({
+    Vue: {
+      observable: function (o) { return o; },
+      component: function (name, def) { definition = def; },
+      nextTick: function (f) { if (f) f(); }
+    },
+    LmsApi: {
+      genres: async function () {
+        return [{ id: 11, name: 'Rock' }, { id: 12, name: 'Jazz' }];
+      }
+    },
+    LmsStore: { state: { playerId: 'p1' } },
+    innerWidth: 1280,
+    innerHeight: 900,
+    addEventListener: function () {},
+    removeEventListener: function () {}
+  }, extra || {}));
+  runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/format.js');
+  runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/filterpanel.js');
+  return { def: definition, ctx: ctx };
+}
+
+/* Instancia o painel sem Vue: liga os dados, resolve os computeds sob demanda e
+   deixa os metodos com um `this` de verdade. */
+function panelInstance(extra) {
+  const captured = filterPanelComponent(extra);
+  const def = captured.def;
+  const self = def.data();
+  self.$nextTick = function (f) { if (f) f(); };
+  self.$refs = {};
+  Object.keys(def.methods).forEach(function (name) {
+    self[name] = def.methods[name].bind(self);
+  });
+  Object.keys(def.computed).forEach(function (name) {
+    Object.defineProperty(self, name, { get: def.computed[name].bind(self) });
+  });
+  return { self: self, def: def, ctx: captured.ctx };
 }
 
 module.exports = {
@@ -140,5 +187,7 @@ module.exports = {
   runInContext,
   templates,
   uiContext,
-  browseComponent
+  browseComponent,
+  filterPanelComponent,
+  panelInstance
 };

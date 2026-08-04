@@ -87,9 +87,76 @@
     return '/music/' + id + '/cover.jpg';
   }
 
+  /* Comparacao de edicoes equivalentes.
+
+     Tupla comparada da esquerda para a direita, nunca um numero somado: somar
+     pesos e o que faz 192 kHz "ganhar" de um FLAC 16/44 bem masterizado por
+     acidente aritmetico. Taxa alta nao e prova de masterizacao melhor, e esta
+     funcao nao finge que e -- ela ordena o que da para verificar e para.
+
+     Os eixos, em ordem:
+       0 disponibilidade   tocavel agora vence indisponivel, sempre
+       1 origem declarada  so quando o usuario declarou preferencia de fonte
+       2 codec             lossless > lossy; DSD em classe propria
+       3 resolucao tecnica so compara dentro de lossless
+       4 desempate final   mantem a ordem total quando o resto empata */
+  var LOSSLESS = { flac: 1, alac: 1, wav: 1, aiff: 1, ape: 1, wavpack: 1 };
+  var UNCOMPARABLE = { dsd: 1 };   // DSD nao se compara tecnicamente com PCM
+
+  function isLossless(formatKey) {
+    return !!LOSSLESS[String(formatKey || '').toLowerCase()];
+  }
+
+  function codecClass(meta) {
+    var formats = (meta && meta.formats) || {};
+    var keys = Object.keys(formats);
+    if (!keys.length) return 3;
+    var best = 3;
+    keys.forEach(function (key) {
+      var rank = LOSSLESS[key] ? 0 : (UNCOMPARABLE[key] ? 1 : 2);
+      if (rank < best) best = rank;
+    });
+    return best;
+  }
+
+  function resolutionClass(meta) {
+    if (!meta) return 2;
+    if (meta.hires) return 0;
+    if (meta.standard) return 1;
+    return 2;
+  }
+
+  function originClass(meta, wanted) {
+    if (!meta) return 1;
+    if (wanted === 'local') return meta.local ? 0 : 1;
+    if (wanted === 'stream') return meta.remote ? 0 : 1;
+    return 0;
+  }
+
+  /* Ausencia nunca exclui: metadado faltando ordena abaixo do conhecido do
+     mesmo codec, e continua na lista. */
+  function editionRank(meta, prefer) {
+    var codec = codecClass(meta);
+    var available = 0;
+    if (prefer === 'local') return [available, originClass(meta, 'local'), codec, resolutionClass(meta), 0];
+    if (prefer === 'stream') return [available, originClass(meta, 'stream'), codec, resolutionClass(meta), 0];
+    if (prefer === 'quality') return [available, 0, codec, resolutionClass(meta), originClass(meta, 'local')];
+    return [0, 0, 0, 0, 0];   // sem preferencia declarada nada e reordenado
+  }
+
+  function compareEditions(a, b, prefer) {
+    var ra = editionRank(a, prefer);
+    var rb = editionRank(b, prefer);
+    for (var i = 0; i < ra.length; i++) {
+      if (ra[i] !== rb[i]) return ra[i] - rb[i];
+    }
+    return 0;
+  }
+
   global.LmsFmt = {
     count: count, duration: duration, longDuration: longDuration,
     rate: rate, depth: depth, format: format, year: year,
-    isHiRes: isHiRes, coverUrl: coverUrl
+    isHiRes: isHiRes, coverUrl: coverUrl,
+    editionRank: editionRank, compareEditions: compareEditions, isLossless: isLossless
   };
 })(window);

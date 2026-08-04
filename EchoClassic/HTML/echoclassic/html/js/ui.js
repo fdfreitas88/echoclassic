@@ -130,17 +130,44 @@
     return view === 'albuns' || view === 'recentes';
   }
 
-  var MEDIA_FILTER = /^(format|quality|origin|stream):[^:]+$/;
+  /* A chave de filtro e um par faceta:valor. Guardar uma lista plana de chaves,
+     e nao um objeto por faceta, e o que faz "remover este filtro" ser a mesma
+     operacao para todas as facetas -- inclusive as que vieram depois. As tres
+     gramaticas existem porque o valor tem forma diferente em cada uma: conjunto
+     fechado, id do servidor, e intervalo. */
+  var MEDIA_FILTER = /^(format|quality|origin|stream):[a-z0-9]+$/;
+  var GENRE_FILTER = /^genre:\d+$/;
+  var YEAR_FILTER = /^year:(\d{4})-(\d{4})$/;
 
   function validFilter(view, key) {
-    return allowsMediaFilter(view) && MEDIA_FILTER.test(key || '');
+    var value = key || '';
+    if (!allowsMediaFilter(view)) return false;
+    if (MEDIA_FILTER.test(value) || GENRE_FILTER.test(value)) return true;
+    var range = YEAR_FILTER.exec(value);
+    return !!range && Number(range[1]) <= Number(range[2]);
+  }
+
+  function filterFacet(key) {
+    var at = String(key || '').indexOf(':');
+    return at < 0 ? '' : String(key).slice(0, at);
+  }
+
+  /* Uma faceta so aceita um intervalo de ano -- dois intervalos ao mesmo tempo
+     seriam um OU que ninguem consegue ler na fileira de pilulas. */
+  function singleValueFacet(facet) {
+    return facet === 'year';
   }
 
   /* Ordenar e reordenar o que ja esta na tela. Nao exclui nada e nao muda a
-     natureza das linhas. */
+     natureza das linhas. 'format', 'source' e 'quality' leem o indice de midia,
+     entao so existem onde esse indice e carregado. */
+  function sortNeedsMedia(key) {
+    return /^(format|source|quality)$/.test(key || '');
+  }
+
   function validSortKey(view, key) {
-    if (view === 'albuns') return /^(name|artist|year)$/.test(key || '');
-    if (view === 'recentes') return /^(recent|name|artist|year)$/.test(key || '');
+    if (view === 'albuns') return /^(name|artist|year|format|source|quality)$/.test(key || '');
+    if (view === 'recentes') return /^(recent|name|artist|year|format|source|quality)$/.test(key || '');
     if (view === 'anos') return key === 'name' || key === 'year';
     return key === 'name';
   }
@@ -153,11 +180,30 @@
     return view === 'albuns' && /^(artist|relatedArtist)$/.test(key || '');
   }
 
+  /* Seccionar e o outro agrupamento: a linha continua sendo o album e ganha um
+     cabecalho acima. Sao dois conceitos com efeitos diferentes na tela, entao
+     ficam em dois estados -- juntar os dois num `group` so foi o que obrigou a
+     reverter a fundacao da Fase 4. */
+  function validSection(view, key) {
+    return allowsMediaFilter(view) && /^(decade|format|quality|origin|stream)$/.test(key || '');
+  }
+
+  function sectionNeedsMedia(key) {
+    return /^(format|quality|origin|stream)$/.test(key || '');
+  }
+
+  var PREFER_MODES = Object.freeze(['none', 'local', 'stream', 'quality']);
+
+  function validPrefer(key) {
+    return PREFER_MODES.indexOf(key) >= 0;
+  }
+
   function defaultsFor(view) {
     return {
       filters: [],
       sort: [{ key: DEFAULT_SORT_BY_VIEW[view] || 'name', desc: false }],
-      group: []
+      group: [],
+      sections: []
     };
   }
 
@@ -165,7 +211,15 @@
     var out = defaultsFor(view);
     if (!plainObject(entry)) return out;
     if (Array.isArray(entry.filters)) {
-      out.filters = entry.filters.filter(function (key) { return validFilter(view, key); });
+      var seenFacet = Object.create(null);
+      out.filters = entry.filters.filter(function (key) {
+        if (!validFilter(view, key)) return false;
+        var facet = filterFacet(key);
+        if (!singleValueFacet(facet)) return true;
+        if (seenFacet[facet]) return false;
+        seenFacet[facet] = true;
+        return true;
+      });
     }
     if (Array.isArray(entry.sort)) {
       var sort = entry.sort.filter(function (item) {
@@ -175,6 +229,14 @@
     }
     if (Array.isArray(entry.group)) {
       out.group = entry.group.filter(function (key) { return validGroup(view, key); });
+    }
+    /* Profundidade 1 por enquanto: a lista e virtualizada por soma de prefixos,
+       e um segundo nivel muda a altura do cabecalho e a contagem de cada faixa
+       de rolagem. Um nivel entrega o exemplo pedido (agrupar por formato). */
+    if (Array.isArray(entry.sections)) {
+      out.sections = entry.sections.filter(function (key) {
+        return validSection(view, key);
+      }).slice(0, 1);
     }
     return out;
   }
@@ -220,6 +282,43 @@
      escolhida se perdia a cada recarga. */
   var initialMusicView = isMusicView(saved.musicView) ? saved.musicView : 'recentes';
 
+  /* Uma vista salva e um conjunto completo -- filtros, ordem, agrupamento,
+     secoes e preferencia -- amarrado a raiz em que faz sentido. Guardar a raiz
+     junto evita aplicar "FLAC + Hi-Res" dentro de Generos, onde nenhuma das
+     duas coisas existe. Chave propria, com versao, porque o formato vai mudar
+     antes do resto das preferencias. */
+  var VIEWS_KEY = 'echoclassic.views.v1';
+
+  function sanitizeView(entry) {
+    if (!plainObject(entry)) return null;
+    var view = isMusicView(entry.view) ? entry.view : 'albuns';
+    var name = String(entry.name || '').replace(/^\s+|\s+$/g, '').slice(0, 60);
+    if (!name) return null;
+    var body = sanitize(view, entry);
+    return {
+      id: String(entry.id || '') || (name.toLowerCase() + '-' + view),
+      name: name, view: view,
+      filters: body.filters, sort: body.sort, group: body.group, sections: body.sections,
+      prefer: validPrefer(entry.prefer) ? entry.prefer : 'none'
+    };
+  }
+
+  function readViews() {
+    var stored = readObject(VIEWS_KEY);
+    var list = Array.isArray(stored.list) ? stored.list : [];
+    var out = [];
+    var seen = Object.create(null);
+    list.forEach(function (entry) {
+      var clean = sanitizeView(entry);
+      if (!clean || seen[clean.id]) return;
+      seen[clean.id] = true;
+      out.push(clean);
+    });
+    return { list: out, defaultId: seen[stored.defaultId] ? String(stored.defaultId) : '' };
+  }
+
+  var savedViews = readViews();
+
   var state = Vue.observable({
 	    tab: isTab(saved.tab) ? saved.tab : 'musica',
     musicView: initialMusicView,
@@ -247,11 +346,22 @@
     actionItem: null,
     actionAnchor: null,
     infoItem: null,
-    /* Espelho do byView[musicView]. Os tres sao independentes: filtrar exclui,
-       ordenar reordena, agrupar troca a natureza da linha. */
+    /* Espelho do byView[musicView]. Os quatro sao independentes: filtrar
+       exclui, ordenar reordena, agrupar troca a natureza da linha, seccionar
+       acrescenta cabecalhos sem tirar nada. */
     filters: viewEntry(initialMusicView).filters.slice(),
     sort: viewEntry(initialMusicView).sort.map(function (s) { return { key: s.key, desc: s.desc }; }),
     group: viewEntry(initialMusicView).group.slice(),
+    sections: viewEntry(initialMusicView).sections.slice(),
+    /* Preferencia de reproducao nao filtra e nao esconde: ela ordena edicoes
+       equivalentes e escolhe qual toca. Por isso e global, e nao por view. */
+    prefer: validPrefer(saved.prefer) ? saved.prefer : 'none',
+    filterPanel: false,
+    /* Nome de genero vem do servidor e a pilula precisa dele para nao mostrar
+       "genre:12". Guardado aqui porque o painel e a lista leem o mesmo mapa. */
+    genreNames: readObject('echoclassic.genrenames.v1'),
+    views: savedViews.list,
+    defaultView: savedViews.defaultId,
     filter: '',
     selectionMode: false,
     selected: {},
@@ -295,7 +405,16 @@
         lightPlayerGaugeStyle: state.lightPlayerGaugeStyle,
         darkMiniGaugeStyle: state.darkMiniGaugeStyle,
         darkPlayerGaugeStyle: state.darkPlayerGaugeStyle,
-        miniGaugeColor: state.miniGaugeColor, playerGaugeColor: state.playerGaugeColor
+        miniGaugeColor: state.miniGaugeColor, playerGaugeColor: state.playerGaugeColor,
+        prefer: state.prefer
+      }));
+    } catch (e) {}
+  }
+
+  function persistViews() {
+    try {
+      localStorage.setItem(VIEWS_KEY, JSON.stringify({
+        list: state.views, defaultId: state.defaultView
       }));
     } catch (e) {}
   }
@@ -417,7 +536,8 @@
      entra. Cada view lembra o proprio conjunto. */
   function stash() {
     byView[state.musicView] = sanitize(state.musicView, {
-      filters: state.filters, sort: state.sort, group: state.group
+      filters: state.filters, sort: state.sort, group: state.group,
+      sections: state.sections
     });
   }
 
@@ -427,6 +547,7 @@
     state.filters = entry.filters.slice();
     state.sort = entry.sort.map(function (s) { return { key: s.key, desc: s.desc }; });
     state.group = entry.group.slice();
+    state.sections = entry.sections.slice();
   }
 
   function setMusicView(key) {
@@ -441,20 +562,31 @@
   }
 
   function setFilters(list) {
-    state.filters = (Array.isArray(list) ? list : []).filter(function (key) {
-      return validFilter(state.musicView, key);
-    });
+    state.filters = sanitize(state.musicView, { filters: list }).filters;
     stash(); persist();
   }
 
+  /* Ligar e desligar um valor. Numa faceta de valor unico -- ano -- o novo
+     substitui o anterior; nas outras ele se soma, e e a soma que a fileira de
+     pilulas mostra. */
   function toggleFilter(key) {
     var at = state.filters.indexOf(key);
-    setFilters(at < 0 ? state.filters.concat([key]) : state.filters.filter(function (k, i) {
-      return i !== at;
-    }));
+    if (at >= 0) {
+      setFilters(state.filters.filter(function (k, i) { return i !== at; }));
+      return;
+    }
+    var facet = filterFacet(key);
+    var kept = singleValueFacet(facet) ? state.filters.filter(function (k) {
+      return filterFacet(k) !== facet;
+    }) : state.filters;
+    setFilters(kept.concat([key]));
   }
 
   function clearFilters() { setFilters([]); }
+
+  function clearFacet(facet) {
+    setFilters(state.filters.filter(function (key) { return filterFacet(key) !== facet; }));
+  }
 
   function setSort(list) {
     var sort = (Array.isArray(list) ? list : []).filter(function (item) {
@@ -480,6 +612,158 @@
   }
 
   function clearGroup() { setGroup([]); }
+
+  function setSections(list) {
+    state.sections = sanitize(state.musicView, { sections: list }).sections;
+    stash(); persist();
+  }
+
+  function clearSections() { setSections([]); }
+
+  function setPrefer(mode) {
+    if (!validPrefer(mode)) return;
+    state.prefer = mode;
+    persist();
+  }
+
+  /* O painel trabalha em rascunho e entrega tudo de uma vez. Aplicar cada
+     caixinha na hora recarregaria a biblioteca a cada clique -- sao segundos
+     por vez, e o usuario ainda esta montando a pergunta. */
+  function applyDraft(draft) {
+    if (!plainObject(draft)) return;
+    var view = state.musicView;
+    var entry = sanitize(view, draft);
+    state.filters = entry.filters.slice();
+    state.sort = entry.sort.map(function (s) { return { key: s.key, desc: s.desc }; });
+    state.group = entry.group.slice();
+    state.sections = entry.sections.slice();
+    if (validPrefer(draft.prefer)) state.prefer = draft.prefer;
+    stash(); persist();
+  }
+
+  function currentDraft() {
+    return {
+      view: state.musicView,
+      filters: state.filters.slice(),
+      sort: state.sort.map(function (s) { return { key: s.key, desc: s.desc }; }),
+      group: state.group.slice(),
+      sections: state.sections.slice(),
+      prefer: state.prefer
+    };
+  }
+
+  /* Volta a raiz ao estado de quem nunca tocou em nada -- inclusive a ordem
+     padrao daquela raiz, que em Recentes nao e alfabetica. */
+  function resetView() {
+    applyDraft(Object.assign(defaultsFor(state.musicView), { prefer: 'none' }));
+  }
+
+  function rememberGenres(list) {
+    var names = {};
+    (Array.isArray(list) ? list : []).forEach(function (genre) {
+      if (genre && genre.id != null) names[String(genre.id)] = String(genre.name || '');
+    });
+    if (!Object.keys(names).length) return;
+    state.genreNames = names;
+    try { localStorage.setItem('echoclassic.genrenames.v1', JSON.stringify(names)); }
+    catch (e) {}
+  }
+
+  function genreName(id) {
+    return state.genreNames[String(id)] || '';
+  }
+
+  function viewId(name) {
+    return String(name).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' +
+      state.musicView + '-' + state.views.length;
+  }
+
+  function saveCurrentView(name) {
+    var clean = sanitizeView(Object.assign(currentDraft(), {
+      name: name, id: viewId(name || 'vista')
+    }));
+    if (!clean) return null;
+    var at = -1;
+    state.views.forEach(function (item, i) {
+      if (item.name.toLowerCase() === clean.name.toLowerCase() && item.view === clean.view) at = i;
+    });
+    /* Salvar com um nome que ja existe naquela raiz atualiza a vista, em vez de
+       criar uma segunda entrada com o mesmo rotulo -- duas linhas iguais na
+       lista seriam impossiveis de distinguir. */
+    if (at >= 0) {
+      clean.id = state.views[at].id;
+      state.views.splice(at, 1, clean);
+    } else {
+      state.views = state.views.concat([clean]);
+    }
+    persistViews();
+    return clean;
+  }
+
+  function findView(id) {
+    return state.views.filter(function (item) { return item.id === id; })[0] || null;
+  }
+
+  function applyView(id) {
+    var found = findView(id);
+    if (!found) return false;
+    if (found.view !== state.musicView) setMusicView(found.view);
+    applyDraft(found);
+    return true;
+  }
+
+  function renameView(id, name) {
+    var found = findView(id);
+    var clean = String(name || '').replace(/^\s+|\s+$/g, '').slice(0, 60);
+    if (!found || !clean) return false;
+    found.name = clean;
+    state.views = state.views.slice();
+    persistViews();
+    return true;
+  }
+
+  function duplicateView(id) {
+    var found = findView(id);
+    if (!found) return false;
+    var copy = sanitizeView(Object.assign({}, found, {
+      id: found.id + '-copia-' + state.views.length,
+      name: (found.name + ' (cópia)').slice(0, 60)
+    }));
+    if (!copy) return false;
+    state.views = state.views.concat([copy]);
+    persistViews();
+    return true;
+  }
+
+  function deleteView(id) {
+    var before = state.views.length;
+    state.views = state.views.filter(function (item) { return item.id !== id; });
+    if (state.defaultView === id) state.defaultView = '';
+    if (state.views.length === before) return false;
+    persistViews();
+    return true;
+  }
+
+  function setDefaultView(id) {
+    state.defaultView = findView(id) ? id : '';
+    persistViews();
+  }
+
+  /* Guardado fora do estado observavel de proposito: e um no do DOM, e o Vue
+     percorreria a arvore inteira tentando torna-lo reativo.
+
+     Por que existe: no macOS, clicar num <button> nao lhe da foco -- e a
+     convencao da plataforma, e o Chrome a segue. Entao document.activeElement
+     no momento da abertura e o <body>, e devolver o foco "para quem abriu"
+     devolvia para lugar nenhum. Quem abre passa o proprio elemento. */
+  var filterTriggerEl = null;
+
+  function openFilterPanel(trigger) {
+    filterTriggerEl = trigger && trigger.focus ? trigger : null;
+    state.filterPanel = true;
+  }
+  function closeFilterPanel() { state.filterPanel = false; }
+  function filterTrigger() { return filterTriggerEl; }
 
   var ALBUM_MODES = Object.freeze([
     Object.freeze({ key: 'albuns', label: 'Álbuns' }),
@@ -646,8 +930,20 @@
     viewLabel: viewLabel, setMusicView: setMusicView,
     allowsMediaFilter: allowsMediaFilter,
     validFilter: validFilter, validSortKey: validSortKey, validGroup: validGroup,
+    validSection: validSection, validPrefer: validPrefer,
+    filterFacet: filterFacet, singleValueFacet: singleValueFacet,
+    sortNeedsMedia: sortNeedsMedia, sectionNeedsMedia: sectionNeedsMedia,
+    PREFER_MODES: PREFER_MODES,
     setFilters: setFilters, toggleFilter: toggleFilter, clearFilters: clearFilters,
+    clearFacet: clearFacet,
     setGroup: setGroup, clearGroup: clearGroup, toggleSortDir: toggleSortDir,
+    setSections: setSections, clearSections: clearSections, setPrefer: setPrefer,
+    applyDraft: applyDraft, currentDraft: currentDraft, resetView: resetView,
+    rememberGenres: rememberGenres, genreName: genreName,
+    saveCurrentView: saveCurrentView, applyView: applyView, renameView: renameView,
+    duplicateView: duplicateView, deleteView: deleteView, setDefaultView: setDefaultView,
+    openFilterPanel: openFilterPanel, closeFilterPanel: closeFilterPanel,
+    filterTrigger: filterTrigger,
     setTab: setTab, restoreTab: restoreTab, toggleTheme: toggleTheme,
     openSearch: openSearch, closeSearch: closeSearch,
     setSort: setSort, openActions: openActions, closeActions: closeActions,

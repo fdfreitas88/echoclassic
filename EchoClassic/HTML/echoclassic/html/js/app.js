@@ -50,6 +50,7 @@
   <lms-selection-bar></lms-selection-bar>
   <lms-action-sheet></lms-action-sheet>
   <lms-info-sheet></lms-info-sheet>
+  <lms-filter-panel></lms-filter-panel>
 
   <template v-if="ui.picker">
     <div class="pickerback" @click="ui.picker = false"></div>

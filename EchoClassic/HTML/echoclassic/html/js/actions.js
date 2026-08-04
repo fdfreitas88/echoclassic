@@ -27,6 +27,11 @@
       <div class="t ell">{{ item.title || item.label || item.name }}</div>
       <div v-if="item.artist || item.sub" class="s ell">{{ item.artist || item.sub }}</div>
     </div>
+    <div v-if="item.editions && item.editions.length > 1" class="sheet-note">
+      <span>{{ item.editions.length }}</span>
+      <span>edições desta obra na biblioteca. A preferência escolhe a primeira e as outras
+        continuam visíveis na lista.</span>
+    </div>
     <button v-if="ctl" @click="playNow">Reproduzir agora</button>
     <button v-if="ctl" @click="next">Reproduzir a seguir</button>
     <button v-if="ctl" @click="later">Adicionar ao final da fila</button>
@@ -125,11 +130,37 @@
           maxHeight: Math.max(120, Math.round(viewportHeight - top - margin)) + 'px'
         };
       },
+      /* Preferencia de reproducao: quando existem edicoes irmas e o usuario
+         declarou uma preferencia, quem toca e a primeira da lista ja ranqueada
+         por browse.js. A tela DIZ qual foi escolhida -- trocar o que toca sem
+         avisar seria a pior forma de errar aqui, porque o sintoma chega pelo
+         ouvido e sem pista nenhuma na interface. As outras edicoes continuam
+         visiveis na lista; nada e escondido. */
+      chosenEdition: function () {
+        var item = this.item;
+        if (!item || !item.editions || item.editions.length < 2) return null;
+        var best = item.editions[0];
+        return best && String(best.id) !== String(item.id) ? best : null;
+      },
       playNow: function () {
         var c = this.ctl;
         if (!c) return;
         var self = this;
-        LmsStore.playContainer(c.key, c.id, 0).then(function (ok) { if (ok !== false) self.close(); });
+        var chosen = this.chosenEdition();
+        var id = chosen ? chosen.id : c.id;
+        LmsStore.playContainer(c.key, id, 0).then(function (ok) {
+          if (ok === false) return;
+          if (chosen) {
+            /* O texto entra no dicionario inteiro, com marcador: concatenar a
+               origem na frente produziria uma frase que nenhuma chave casa --
+               foi assim que os avisos de truncamento apareceram em portugues
+               numa sessao em ingles. */
+            var frase = 'Tocando a edição preferida: {edition}.';
+            if (window.LmsStr && LmsStr.t) frase = LmsStr.t(frase);
+            LmsUi.notify(frase.replace('{edition}', chosen.source), 'info', 4000);
+          }
+          self.close();
+        });
       },
       next: function () {
         var c = this.ctl;

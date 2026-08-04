@@ -202,10 +202,10 @@ button:disabled{opacity:.35}
      v-if nao renderiza o chip -- nao sobra espaco em branco sem filtro ativo.
      Todo filho deste grid precisa de posicao explicita: sem ela, o auto-placement
      joga o elemento na coluna 2, que e a trilha de 28px do indice A-Z. */
-  grid-template-rows:auto auto auto minmax(0,1fr);min-height:0;background:var(--content);
+  grid-template-rows:auto auto auto auto auto minmax(0,1fr);min-height:0;background:var(--content);
   container-type:inline-size}
-.pane-left>.scroller{grid-column:1;grid-row:4}
-.pane-left>.rail{grid-column:2;grid-row:4}
+.pane-left>.scroller{grid-column:1;grid-row:6}
+.pane-left>.rail{grid-column:2;grid-row:6}
 .pane-right{flex:1;min-width:0;overflow-y:auto;background:var(--content)}
 .scroller{flex:1;overflow-y:auto;min-width:0}
 
@@ -1096,6 +1096,22 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   display:flex;align-items:center;gap:8px;padding:6px 16px;
   background:var(--content);border-bottom:.5px solid var(--hair);
   font-size:12px;color:var(--text2)}
+/* O aviso de filtro ignorado tem linha propria: dividir a linha 3 com a fileira
+   de pilulas faria os dois ocuparem a mesma celula do grid. */
+/* Dois avisos lado a lado se truncavam nos dois -- visto na tela. Empilhados,
+   cada um tem a linha inteira e continua legivel. */
+.filter-chip.notes{grid-row:4;flex-direction:column;align-items:flex-start;gap:2px;
+  color:var(--text2)}
+.filter-chip.notes span{max-width:100%;white-space:normal;line-height:1.3}
+.filter-chip.warning{grid-row:5;color:var(--text2)}
+/* A fileira rola no eixo dela quando ha muitos filtros; a barra nunca cresce
+   para fora da tela nem empurra a contagem para longe. */
+.filter-pill-strip{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;
+  overflow-x:auto;padding:1px 0;scrollbar-width:none}
+.filter-pill-strip::-webkit-scrollbar{display:none}
+.filter-pill-mark{color:var(--text2);font-size:11px}
+.filter-pill.pill-group{background:var(--group-bg)}
+.filter-pill.pill-prefer{background:var(--selected)}
 .filter-chip-label{flex:0 0 auto}
 /* Cada filtro e uma pilula clicavel: tocar remove aquele, sem mexer nos outros.
    O x fica dentro do alvo, entao nao ha alvo de 12px para acertar. */
@@ -1103,7 +1119,11 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   padding:2px 8px;border:0;border-radius:10px;background:var(--field);
   font-size:12px;color:var(--text);cursor:pointer}
 .filter-pill-x{color:var(--text2);font-size:13px;line-height:1}
-.filter-chip-count{flex:1;min-width:0;text-align:right;font-variant-numeric:tabular-nums}
+/* A contagem nao disputa espaco com a fileira: com quatro pilulas ela era
+   espremida a 12px e o numero transbordava por cima de "Limpar tudo" -- visto
+   na tela. Quem estica e a fileira; a contagem so encosta a direita. */
+.filter-chip-count{flex:0 0 auto;margin-left:auto;text-align:right;
+  font-variant-numeric:tabular-nums}
 .filter-chip-clear{flex:0 0 auto;background:none;border:0;padding:0;
   font-size:12px;color:var(--accent);cursor:pointer}
 .visually-hidden{position:absolute!important;width:1px!important;height:1px!important;
@@ -1205,4 +1225,80 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;
     animation-iteration-count:1!important;scroll-behavior:auto!important}
+}
+
+
+/* ====== gatilho de filtros, secoes e painel adaptativo ================= */
+/* O funil acende quando ha qualquer ajuste ativo, e o numero conta so os
+   filtros -- agrupar e preferir mudam a apresentacao, nao o conjunto. */
+.filter-command{position:relative}
+.filter-command.on{color:var(--accent)}
+.filter-command.on svg{stroke-width:2.1}
+.filter-badge{position:absolute;top:5px;right:3px;min-width:15px;height:15px;padding:0 3px;
+  border-radius:8px;background:var(--accent);color:var(--chrome);font-size:10px;line-height:15px;
+  text-align:center;font-variant-numeric:tabular-nums}
+.sec-head{height:34px;display:flex;align-items:center;gap:8px;padding:0 16px;
+  background:var(--group-bg);border-bottom:.5px solid var(--hair);
+  font-size:12px;font-weight:600;color:var(--text2);position:relative}
+.sec-count{margin-left:auto;font-variant-numeric:tabular-nums}
+
+.filter-stage{position:fixed;inset:0;z-index:var(--z-sheet)}
+.filter-back{position:absolute;inset:0;background:var(--np-backdrop);z-index:var(--z-sheet-back)}
+.filter-panel{position:absolute;z-index:var(--z-sheet);display:flex;flex-direction:column;
+  background:var(--group-page);color:var(--text);overflow:hidden}
+/* Grande: painel suspenso sobre a lista, ancorado a esquerda como o funil, com
+   a largura vindo do style inline (45-55% da area util). */
+.filter-panel.filter-large{top:64px;left:max(16px,4vw);border-radius:10px;
+  border:.5px solid var(--hair);box-shadow:0 8px 30px var(--shadow)}
+/* Media: gaveta na borda, altura inteira -- nao ha espaco horizontal para um
+   painel centrado sem espremer os rotulos. */
+.filter-panel.filter-medium{top:0;bottom:0;right:0;width:min(480px,92vw);
+  border-left:.5px solid var(--hair);box-shadow:-6px 0 24px var(--shadow)}
+/* Pequena: uma coluna, tela inteira, respeitando a area segura do aparelho. */
+.filter-panel.filter-small{inset:0;width:100%;
+  padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+.filter-head{flex:0 0 auto;min-height:44px;display:grid;
+  grid-template-columns:minmax(72px,auto) 1fr minmax(72px,auto);align-items:center;
+  gap:8px;padding:0 8px;background:var(--chrome);border-bottom:.5px solid var(--hair)}
+.filter-head .ttl{text-align:center;font-weight:600;font-size:17px;margin:0}
+.filter-apply{font-weight:600;text-align:right}
+.filter-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:10px 14px 16px}
+.filter-search{display:block;margin-bottom:12px}
+.filter-search input{width:100%;height:44px;border:0;border-radius:7px;
+  background:var(--field);color:var(--text);padding:0 10px}
+.filter-group{border:0;margin:0 0 14px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.filter-group legend{width:100%;padding:0 0 6px;font-size:12px;font-weight:600;color:var(--text2)}
+.filter-option{min-height:44px;padding:0 12px;border:.5px solid var(--hair);border-radius:8px;
+  background:var(--group-bg);color:var(--text);font-size:14px;text-align:left;cursor:pointer}
+/* O portao de contraste reprovou --accent sobre --selected no tema claro
+   (3,49:1). A opcao ligada passa a usar o texto normal, e o estado continua
+   legivel por outros tres canais: borda de acento, peso e aria-pressed. */
+.filter-option.on{background:var(--selected);color:var(--text);
+  border-color:var(--accent);font-weight:600}
+.filter-option:disabled{color:var(--text2);cursor:default}
+.filter-note{width:100%;margin:6px 0 0;font-size:12px;color:var(--text2);line-height:1.35}
+.filter-years{align-items:flex-end}
+.filter-year{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text2)}
+.filter-year input{width:96px;height:44px;border:.5px solid var(--hair);border-radius:7px;
+  background:var(--field);color:var(--text);padding:0 8px}
+.filter-advanced{margin:0 0 14px}
+.filter-advanced summary{min-height:44px;display:flex;align-items:center;
+  font-size:12px;font-weight:600;color:var(--text2);cursor:pointer}
+.filter-views{flex-direction:column;align-items:stretch}
+.filter-view-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  padding:4px 0;border-bottom:.5px solid var(--hair)}
+.filter-view-name{flex:1 1 140px;min-width:0}
+.filter-view-tag{color:var(--text2);font-size:11px}
+.filter-chip-clear.destructive{color:var(--destructive)}
+.filter-actions{flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  padding:8px 14px;background:var(--chrome);border-top:.5px solid var(--hair)}
+.filter-actions-spacer{flex:1}
+.filter-apply-main{min-width:120px;text-align:center;background:var(--selected);
+  color:var(--accent);border-color:var(--accent);font-weight:600}
+/* Com a folha em tela cheia o corpo atras nao pode rolar junto. */
+body.filter-panel-open{overflow:hidden}
+@media (max-width:700px){
+  .filter-panel.filter-small .filter-group{flex-direction:column;align-items:stretch}
+  .filter-panel.filter-small .filter-years{flex-direction:row;flex-wrap:wrap}
+  .filter-panel.filter-small .filter-year input{width:100%}
 }
