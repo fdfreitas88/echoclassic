@@ -8,6 +8,120 @@ acontecendo na interface rodando; **[código]** significa que a cadeia foi lida 
 fonte mas o estado não foi reproduzido na tela. A distinção importa para quem for
 decidir, daqui a seis meses, se pode confiar na correção.
 
+## [3.2.1] — 2026-08-03
+
+Fecha a distância entre o motor de filtros da 3.2.0 e a tela: os filtros
+combinavam, mas não havia como pedir a combinação. O `<select>` que decidia
+filtrar, agrupar e ordenar ao mesmo tempo dá lugar a um funil na barra e a um
+painel próprio, e com ele entram as facetas, as seções, a preferência de
+reprodução e as vistas salvas.
+
+### Adicionado
+
+- **Um funil na barra abre o painel de filtros**, ao lado da busca, com badge
+  contando os filtros ativos e estado aceso quando qualquer ajuste está valendo.
+  O `<select>` continua existindo e passa a fazer uma coisa só: ordenar.
+  **[ao vivo]**
+- **Filtros combinam pela interface.** Na 3.2.0 o motor já sabia combinar — a
+  verificação daquela versão foi feita injetando estado, porque `chooseOption`
+  substituía o filtro anterior a cada escolha. Agora Hi-Res + FLAC devolve
+  **254 álbuns** escolhidos no painel. **[ao vivo]**
+- **Três facetas novas:** gênero (multisseleção, aplicada pelo servidor com uma
+  consulta por gênero, resultados somados), ano (intervalo, ano exato ou limite
+  aberto — "de 1971" vale até hoje) e qualidade (sem perdas, com perdas, padrão,
+  Hi-Res). **[ao vivo]**
+- **Seções reais na lista**, com cabeçalho e contagem, por década, formato,
+  resolução, origem ou serviço. Agrupar organiza e nunca exclui: um álbum com
+  dois formatos aparece nos dois cabeçalhos, e a tela diz que a soma passa do
+  total. Medido no servidor: **258 linhas para 254 álbuns em 5 seções**.
+  **[ao vivo]**
+- **Preferência de reprodução** — local, streaming ou maior resolução. Ela
+  ordena edições equivalentes e escolhe qual toca; nunca esconde as outras. O
+  padrão é "sem preferência", e nesse modo nada é reordenado: quem não pedir
+  continua com o play exatamente determinístico de antes. **[ao vivo]**
+- **Vistas salvas** em `echoclassic.views.v1`: criar, salvar, carregar, renomear,
+  duplicar, apagar e definir padrão. Uma vista guarda os quatro conceitos e a
+  raiz a que pertence. Verificado o ciclo inteiro — salvar, limpar tudo,
+  **recarregar a página** e restaurar, devolvendo os mesmos 254 álbuns e as
+  mesmas 5 seções. **[ao vivo]**
+- **Três ordenações novas** em Álbuns e Recentes: formato, biblioteca local
+  primeiro e maior resolução primeiro. Conferidas sobre os 1.399 álbuns: por
+  resolução o topo é FLAC hi-res; por origem descendente, remoto. **[ao vivo]**
+
+### Alterado
+
+- **O painel trabalha em rascunho.** Cada troca de filtro recarrega a
+  biblioteca, e a pergunta costuma levar vários cliques; aplicar a cada clique
+  cobraria o preço inteiro por clique. `Aplicar` entrega tudo de uma vez,
+  `Cancelar` descarta. Fora do painel, na fileira de pílulas, a remoção continua
+  imediata — ali a ação já é uma só. **[ao vivo]**
+- **A fileira de filtros ativos escala.** Uma pílula por ajuste, cada uma com a
+  marca do conceito a que pertence (◫ filtra, ⚙ agrupa, ★ prefere), a fileira
+  rolando no próprio eixo, contagem de resultados e "Limpar tudo". Abaixo de
+  700px vira um resumo com "Ver filtros". **[ao vivo]**
+- **O descritor do filtro saiu do subtítulo de cada linha.** Com filtros
+  combinados ele repetia a fileira inteira em cada uma das centenas de linhas.
+  A fileira é permanente e diz a mesma coisa uma vez. **[código]**
+
+### Corrigido
+
+- **Agrupar por artista com um filtro ligado mostrava a pílula acesa sobre uma
+  lista que ninguém tinha filtrado.** O ramo de agrupamento nunca chamava
+  `mediaMatches`. É a família do bug C, reintroduzida pela porta que a separação
+  dos estados abriu na 3.2.0: enquanto o `sortKey` era único, a combinação era
+  inexprimível. O filtro passa a ser aplicado aos álbuns antes de virarem linha
+  de artista. **[código]**
+- **Artista relacionado não sabe filtrar, e agora diz isso.** A lista ali é
+  montada pelo endpoint de artistas: não há álbum para conferir. Em vez de
+  fingir, a tela avisa. **[código]**
+- **O balde do desconhecido virou número na tela.** A 3.2.0 contava álbuns sem
+  informação de mídia num booleano que nada renderizava — contar sem dizer é a
+  mesma família do bug B. Agora a lista informa quantos ficaram de fora.
+  **[ao vivo]**
+- **Em Recentes, filtrar por gênero não fazia nada** — a consulta com
+  `sort:new` ia sem `genre_id`. Passa a valer a mesma regra de Álbuns: uma
+  consulta por gênero, resultados somados. **[código]**
+- **Virtualização por soma de prefixos.** Enquanto tudo tinha a mesma altura,
+  índice × altura bastava; com cabeçalho no meio essa multiplicação mente, e o
+  sintoma seria a lista saltando na rolagem de 1.398 itens. Medido no servidor:
+  `topPad + desenhado + botPad = 22.874px`, exatamente a altura de rolagem.
+  **[ao vivo]**
+- **A trilha A–Z some quando a lista deixa de ser alfabética** — com seções, a
+  letra M aparece uma vez por seção e o salto não teria destino. **[código]**
+
+### Acessibilidade
+
+- O painel é um `dialog` modal com título associado, foco inicial no primeiro
+  controle, `Tab` preso dentro, `Escape` e clique fora fechando. Cada opção é um
+  botão com `aria-pressed` — o estado não depende de cor. Uma região `aria-live`
+  anuncia a mudança de filtros e a contagem de resultados. **[ao vivo]**
+- **O foco voltava para lugar nenhum.** No macOS, clicar num `<button>` não lhe
+  dá foco: é a convenção da plataforma, e o Chrome a segue. `document.activeElement`
+  na abertura era o `<body>`, e devolver o foco a ele é o mesmo que perdê-lo.
+  Quem abre o painel passa o próprio elemento. **[ao vivo]**
+- O portão de contraste reprovou a primeira versão da opção ligada — `--accent`
+  sobre `--selected` dá 3,49:1 no tema claro. Ela passou a usar o texto normal
+  (4,64:1), com borda de acento e peso como sinais redundantes. Quatro pares
+  novos entraram na lista medida, que vai a 21. **[medido]**
+
+### Interno
+
+- Novo `filterpanel.js` com o componente `lms-filter-panel`, sobre os padrões de
+  camada que a skin já tinha — nenhum framework de interface foi acrescentado.
+- `format.js` ganha `editionRank` e `compareEditions`: tupla comparada da
+  esquerda para a direita, nunca soma de pesos, porque somar é o que faz 192 kHz
+  vencer um FLAC 16/44 bem masterizado por acidente aritmético. DSD fica em
+  classe própria, sem ordenação técnica contra PCM.
+- A suíte vai de 47 para 92 testes, com arreio novo para o painel. Quatro deles
+  travam defeitos que só apareceram na tela: o foco do gatilho, a lista de
+  gêneros enterrando o resto do painel, dois avisos truncados na mesma linha e a
+  contagem espremida a 12px pelo `flex`.
+- Todo template de componente passa a ser compilado no `vue-template-compiler`
+  dentro da suíte: erro de template só aparece em produção, como tela branca.
+- **País continua fora**, e agora o estado o recusa explicitamente. A medição na
+  biblioteca real deu 3 álbuns em 1.397 (0,2%) com algo parecido com país, num
+  campo cujo conteúdo dominante é assinatura de ripador. **[medido]**
+
 ## [3.2.0] — 2026-08-03
 
 ### Adicionado
