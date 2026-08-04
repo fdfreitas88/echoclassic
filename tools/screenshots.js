@@ -11,7 +11,7 @@
  * Uso:
  *   node tools/screenshots.js                  todas as imagens
  *   node tools/screenshots.js filters mobile   so as citadas
- *   ECHO_HTTP_HOST=10.0.0.9:9000 node tools/screenshots.js
+ *   ECHO_HTTP_HOST=servidor.local:9000 node tools/screenshots.js
  */
 'use strict';
 
@@ -20,7 +20,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 
-const TARGET = process.env.ECHO_HTTP_HOST || '10.73.254.20:9000';
+const TARGET = process.env.ECHO_HTTP_HOST || 'lms.local:9000';
 const [TARGET_HOST, TARGET_PORT] = TARGET.split(':');
 const PORT = Number(process.env.ECHO_SHOT_PORT || 8899);
 const OUT = path.join(__dirname, '..', 'docs', 'img');

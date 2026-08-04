@@ -98,6 +98,10 @@ strings, browser-history-backed drill navigation, disambiguated search results,
 actionable empty states, and automated behavior and release validation. See
 [CHANGELOG.md](CHANGELOG.md) for verification details and remaining test scope.
 
+## Author
+
+Felipe Freitas.
+
 ## Licence
 
 GPL‑3.0‑or‑later. See [LICENSE](LICENSE).

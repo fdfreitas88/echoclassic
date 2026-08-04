@@ -6,10 +6,10 @@
 # formato dos pontos de restauracao.
 
 # ---------------------------------------------------------------- configuracao
-# Sobrescreva pelo ambiente quando o servidor mudar de endereco:
-#   ECHO_HOST=musicplayer@192.168.0.9 tools/deploy.sh
-HOST="${ECHO_HOST:-musicplayer@10.73.254.20}"
-HTTP_HOST="${ECHO_HTTP_HOST:-10.73.254.20:9000}"
+# O endereco do servidor nao mora no repositorio: cada pessoa aponta para o seu.
+#   ECHO_HOST=usuario@servidor.local ECHO_HTTP_HOST=servidor.local:9000 tools/deploy.sh
+HOST="${ECHO_HOST:-lms@lms.local}"
+HTTP_HOST="${ECHO_HTTP_HOST:-lms.local:9000}"
 
 # Caminho relativo ao $HOME do servidor. E aqui que o LMS extrai o que instala
 # pelo gerenciador de plugins, e e daqui que ele le a skin.

@@ -20,7 +20,7 @@ vazio, e para de deixar o menu oferecer opções que a view corrente não honra.
 
 ## Diagnóstico que fundamenta este plano
 
-Medido contra a biblioteca real do `musicplayer` (LMS 9.1.1, 1548 artistas,
+Medido contra a biblioteca real do o servidor de testes (LMS 9.1.1, 1548 artistas,
 1398 álbuns, 14210 faixas), reexecutando o código do próprio `api.js`:
 
 - **O índice de artistas está saudável.** 1388 de 1398 álbuns são atribuídos. Os
@@ -784,7 +784,7 @@ Esperado: `# fail 0`, `TUDO PASSA`, versão consistente.
 - [ ] **Passo 5: empacotar — `EchoClassic/` na raiz do zip, menos `INSTALL.sh`**
 
 ```bash
-cd /Users/felipefreitas/Desktop/Claude/LMS/EchoClassic && rm -f dist/EchoClassic-3.1.3.zip && zip -r dist/EchoClassic-3.1.3.zip EchoClassic -x 'EchoClassic/INSTALL.sh' -x '*.DS_Store' && unzip -l dist/EchoClassic-3.1.3.zip | tail -3
+cd <caminho-do-checkout> && rm -f dist/EchoClassic-3.1.3.zip && zip -r dist/EchoClassic-3.1.3.zip EchoClassic -x 'EchoClassic/INSTALL.sh' -x '*.DS_Store' && unzip -l dist/EchoClassic-3.1.3.zip | tail -3
 ```
 
 Esperado: 30 arquivos. **Se não forem 30, pare** — o pacote diverge do 3.1.2 e a
@@ -821,10 +821,10 @@ git commit -m "release: 3.1.3 — filtro visivel e menu honesto em Minha Musica"
    O segundo teste da Task 1 existe para travar esse comportamento.
 4. **Nada aqui foi exercitado na tela.** Os arreios rodam `ui.js` e `browse.js`
    fora do navegador e a lógica foi reexecutada contra a biblioteca real, mas
-   nenhum teste de aceitação rodou no `musicplayer`. Depois de instalar, force um
+   nenhum teste de aceitação rodou no o servidor de testes. Depois de instalar, force um
    *hard reload* — o `getAssetRevision` só invalida os assets quando a versão
    muda, e por isso a versão sobe antes de testar.
-5. **Instalar em `10.73.254.20`, não localmente.** `tools/install-local.sh` mira
+5. **Instalar em `lms.local`, não localmente.** `tools/install-local.sh` mira
    o LMS da própria MacBook, que tem outra biblioteca.
 6. **O chip entra como irmão do `.scroller` dentro de `.pane-left`**, então
    ocupa altura que antes era da lista. `.empty` usa `height:100%`, medido contra

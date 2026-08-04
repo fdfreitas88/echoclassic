@@ -1,5 +1,5 @@
 #!/bin/bash
-# Instala a arvore de trabalho local no LMS do musicplayer, guardando antes um
+# Instala a arvore de trabalho local no LMS remoto, guardando antes um
 # ponto de restauracao. Para testar uma correcao antes de publicar.
 #
 # Uso:
