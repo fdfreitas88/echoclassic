@@ -44,7 +44,7 @@ sub initPlugin {
 
 sub getDisplayName { return 'ECHOCLASSIC_SKIN' }
 
-sub getSkinVersion { return '3.2.1' }
+sub getSkinVersion { return '3.2.2' }
 
 sub jsLiteral {
 	my $v = defined $_[0] ? "$_[0]" : '';
