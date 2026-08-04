@@ -105,7 +105,12 @@ Vue.component('lms-browse', {
       </div>
     </div>
     <div v-if="hasMediaFilter" class="filter-chip" role="status">
-      <span class="filter-chip-text ell">Filtro ativo: {{ mediaDescriptor() }}</span>
+      <span class="filter-chip-label">Filtro ativo:</span>
+      <button v-for="f in activeFilters" :key="f.key" type="button" class="filter-pill"
+              :aria-label="'Remover filtro ' + f.label" @click="LmsUi.toggleFilter(f.key)">
+        <span>{{ f.label }}</span><span class="filter-pill-x" aria-hidden="true">×</span>
+      </button>
+      <span class="filter-chip-count">{{ displayRows.length }}</span>
       <button type="button" class="filter-chip-clear" @click="clearMediaFilter">Limpar filtro</button>
     </div>
     <div class="scroller" ref="scroller" @scroll="onScroll">
@@ -188,7 +193,7 @@ Vue.component('lms-browse', {
     return {
       ui: LmsUi.state, store: LmsStore.state, LmsUi: LmsUi,
       rows: [], loading: true, error: '',
-	      loadingMore: false, limitWarning: '', requestToken: 0,
+	      loadingMore: false, limitWarning: '', requestToken: 0, unknownCounted: false,
 	      artistIndexTruncated: false,
       rootSelection: null,
       first: 0, visible: 14, activeRail: '',
@@ -264,6 +269,11 @@ Vue.component('lms-browse', {
     menuValue: function () {
       return this.ui.filters[0] || this.ui.group[0] || this.sortKey;
     },
+    activeFilters: function () {
+      return this.ui.filters.map(function (key) {
+        return { key: key, label: this.filterLabel(key) };
+      }, this);
+    },
     showsAlbums: function () {
       return (this.view === 'albuns' && !this.groupsAlbumsByArtist &&
               !this.groupsAlbumsByRelatedArtist) || this.view === 'recentes';
@@ -280,21 +290,9 @@ Vue.component('lms-browse', {
       var rows = q ? this.rows.filter(function (r) {
         return this.normalize([r.label, r.sub, r.artist, r.year].filter(Boolean).join(' ')).indexOf(q) >= 0;
       }, this) : this.rows.slice();
-      var key = this.sortKey;
       /* 'recent' e a ordem em que o servidor devolveu (sort:new). Reordenar
          aqui era o que fazia Recentes aparecer em ordem alfabetica. */
-      if (key !== 'recent') {
-        rows.sort(function (a, b) {
-          var av = key === 'year' ? Number(a.year || 0) :
-                   (key === 'artist' || key === 'relatedArtist') ?
-                     String(a.artist || a.label || '') : String(a.label || '');
-          var bv = key === 'year' ? Number(b.year || 0) :
-                   (key === 'artist' || key === 'relatedArtist') ?
-                     String(b.artist || b.label || '') : String(b.label || '');
-          return typeof av === 'number' ? av - bv : av.localeCompare(bv, 'pt-BR', { sensitivity: 'base' });
-        });
-      }
-      if (this.sortDesc) rows.reverse();
+      if ((this.ui.sort[0] || {}).key !== 'recent') rows.sort(this.rowComparator());
       return rows;
     },
     windowed: function () { return this.displayRows.slice(this.first, this.first + this.visible + 12); },
@@ -669,29 +667,89 @@ Vue.component('lms-browse', {
       this.mediaIndex = index;
       return index;
     },
+    /* Ordem total. Sem desempate encadeado, dois albuns com o mesmo valor no
+       criterio escolhido trocam de lugar entre renderizacoes -- o comparador
+       nao era determinístico. O id e unico, entao encerra qualquer empate.
+       Nulo vai sempre ao fim, nos DOIS sentidos: em crescente "sem ano" no topo
+       e ruido, e em decrescente tambem. */
+    rowComparator: function () {
+      var criteria = (this.ui.sort || []).slice();
+      var valueOf = function (row, key) {
+        if (key === 'year') return row.year == null || row.year === '' ? null : Number(row.year);
+        if (key === 'artist') return row.artist || row.label || '';
+        return row.label || '';
+      };
+      var texto = function (a, b) {
+        return String(a).localeCompare(String(b), 'pt-BR', { sensitivity: 'base' });
+      };
+      var vazio = function (v) {
+        return v == null || v === '' || (typeof v === 'number' && !isFinite(v));
+      };
+      var cmpOne = function (a, b, key, desc) {
+        var av = valueOf(a, key), bv = valueOf(b, key);
+        if (vazio(av) && vazio(bv)) return 0;
+        if (vazio(av)) return 1;
+        if (vazio(bv)) return -1;
+        var r = (typeof av === 'number' && typeof bv === 'number') ? av - bv : texto(av, bv);
+        return desc ? -r : r;
+      };
+      return function (a, b) {
+        for (var i = 0; i < criteria.length; i++) {
+          if (criteria[i].key === 'recent') continue;
+          var r = cmpOne(a, b, criteria[i].key, criteria[i].desc);
+          if (r) return r;
+        }
+        var t = texto(a.label || '', b.label || '');
+        if (t) return t;
+        t = texto(a.artist || '', b.artist || '');
+        if (t) return t;
+        return (Number(a.id) || 0) - (Number(b.id) || 0);
+      };
+    },
+    matchesValue: function (meta, facet, value) {
+      if (facet === 'format') return !!meta.formats[value];
+      if (facet === 'quality') return !!meta[value === 'hires' ? 'hires' : 'standard'];
+      if (facet === 'origin') return !!meta[value];
+      if (facet === 'stream') return !!meta.providers[value];
+      return true;
+    },
+    /* Dentro de uma faceta os valores somam; entre facetas eles restringem.
+       "FLAC ou ALAC" e uma escolha dentro do cartao Formato; pedir Hi-Res junto
+       e um segundo cartao, e os dois precisam valer. A UI nunca diz AND nem OR. */
     mediaMatches: function (albumId) {
       if (!this.hasMediaFilter) return true;
       var meta = this.mediaIndex && this.mediaIndex[String(albumId)];
-      if (!meta) return false;
-      var parts = (this.ui.filters[0] || '').split(':');
-      if (parts[0] === 'format') return !!meta.formats[parts[1]];
-      if (parts[0] === 'quality') return !!meta[parts[1] === 'hires' ? 'hires' : 'standard'];
-      if (parts[0] === 'origin') return !!meta[parts[1]];
-      if (parts[0] === 'stream') return !!meta.providers[parts[1]];
-      return true;
+      /* Sem entrada no indice o album nao casa -- mas isso passa a ser CONTADO
+         e dito na tela. Some em silencio foi o bug B. */
+      if (!meta) { this.unknownCounted = true; return false; }
+      var groups = Object.create(null);
+      this.ui.filters.forEach(function (key) {
+        var at = key.indexOf(':');
+        var facet = key.slice(0, at);
+        (groups[facet] = groups[facet] || []).push(key.slice(at + 1));
+      });
+      var self = this;
+      return Object.keys(groups).every(function (facet) {
+        return groups[facet].some(function (value) {
+          return self.matchesValue(meta, facet, value);
+        });
+      });
     },
-    mediaDescriptor: function () {
-      if (!this.hasMediaFilter) return '';
+    filterLabel: function (key) {
       var labels = {
         'quality:hires': 'Hi-Res', 'quality:standard': 'Resolução padrão',
         'origin:local': 'Biblioteca local', 'origin:remote': 'Remoto / streaming',
         'stream:qobuz': 'Qobuz', 'stream:youtube': 'YouTube'
       };
-      var active = this.ui.filters[0] || '';
-      if (labels[active]) return labels[active];
-      var format = active.split(':')[1];
+      if (labels[key]) return this.tr(labels[key]);
+      var format = String(key || '').split(':')[1] || '';
       var found = this.MEDIA_FORMATS.filter(function (item) { return item.key === format; })[0];
       return found ? found.label : format.toUpperCase();
+    },
+    /* Mantido para a tela vazia, que fala de um filtro so quando ha um so. */
+    mediaDescriptor: function () {
+      if (!this.hasMediaFilter) return '';
+      return this.activeFilters.map(function (f) { return f.label; }).join(' · ');
     },
     loadPagedRoot: async function (pid, token) {
       var start = 0;
@@ -788,6 +846,7 @@ Vue.component('lms-browse', {
       this.loading = true;
 	      this.loadingMore = false;
 	      this.limitWarning = '';
+	      this.unknownCounted = false;
 	      this.artistIndexTruncated = false;
       this.error = '';
       this.rows = [];

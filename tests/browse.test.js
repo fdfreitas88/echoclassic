@@ -75,6 +75,8 @@ function computedsFor(view, key) {
   };
   const self = { view: view, ui: ui, MEDIA_FORMATS: data.MEDIA_FORMATS, rows: [] };
   self.tr = def.methods.tr.bind(self);
+  self.filterLabel = def.methods.filterLabel.bind(self);
+  self.activeFilters = def.computed.activeFilters.call(self);
   self.mediaDescriptor = def.methods.mediaDescriptor.bind(self);
   self.sortKey = def.computed.sortKey.call(self);
   self.sortDesc = def.computed.sortDesc.call(self);
@@ -119,7 +121,9 @@ test('os grupos de midia ficam desabilitados fora de Albuns e Recentes', functio
 test('o chip do filtro vive fora da lista, e nao dentro dela', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
   assert.match(src, /v-if="hasMediaFilter" class="filter-chip"/);
-  assert.match(src, /Filtro ativo: \{\{ mediaDescriptor\(\) \}\}/);
+  assert.match(src, /class="filter-chip-label">Filtro ativo:/);
+  assert.match(src, /v-for="f in activeFilters"/, 'uma pilula por filtro ativo');
+  assert.match(src, /@click="LmsUi\.toggleFilter\(f\.key\)"/, 'cada pilula remove so o seu');
   assert.match(src, /@click="clearMediaFilter"/);
 
   const chipAt = src.indexOf('class="filter-chip"');
@@ -201,7 +205,7 @@ test('os textos novos traduzem de verdade quando existe dicionario', function ()
 
   const tpl = def.template;
   assert.match(tpl, /Nothing in this category matches the filter \{\{ \$t\(mediaDescriptor\(\)\) \}\}/);
-  assert.match(tpl, /Active filter: \{\{ \$t\(mediaDescriptor\(\)\) \}\}/);
+  assert.match(tpl, /class="filter-chip-label">Active filter:/);
   assert.match(tpl, />Clear filter</);
   assert.doesNotMatch(tpl, /Nada nesta categoria/,
     'o portugues nao pode sobrar numa sessao com dicionario');
@@ -314,7 +318,7 @@ test('todo texto novo da interface chega traduzido, vindo do strings.txt real', 
   helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/browse.js');
 
   const tpl = def.template;
-  ['Nada nesta categoria corresponde ao filtro', 'Filtro ativo:', 'Limpar filtro',
+  ['Nada nesta categoria corresponde ao filtro', 'Limpar filtro',
    'Nenhum item encontrado nesta categoria.'].forEach(function (phrase) {
     assert.ok(tpl.indexOf(phrase) < 0, 'sobrou em portugues no template: ' + phrase);
   });
@@ -430,4 +434,94 @@ test('o chip usa apenas tokens de cor que ja existem no CSS', function () {
   used.forEach(function (token) {
     assert.ok(defined.has(token), 'token de cor inedito no chip: ' + token);
   });
+});
+
+/* ---------- Fase 2: multiplos filtros, balde do desconhecido, ordem estavel ---- */
+
+function comFiltros(view, filters, sort) {
+  const captured = helpers.browseComponent();
+  const def = captured.def;
+  const data = def.data();
+  const ui = { filters: filters.slice(), group: [], sort: sort || [{ key: 'name', desc: false }] };
+  const self = { view: view, ui: ui, MEDIA_FORMATS: data.MEDIA_FORMATS, rows: [], mediaIndex: null };
+  self.tr = def.methods.tr.bind(self);
+  self.allowsMediaFilter = def.computed.allowsMediaFilter.call(self);
+  self.hasMediaFilter = def.computed.hasMediaFilter.call(self);
+  self.filterLabel = def.methods.filterLabel.bind(self);
+  self.matchesValue = def.methods.matchesValue.bind(self);
+  self.mediaMatches = def.methods.mediaMatches.bind(self);
+  self.activeFilters = def.computed.activeFilters.call(self);
+  return { self: self, def: def, ctx: captured.ctx };
+}
+
+const META = function (o) {
+  return Object.assign({ formats: {}, providers: {}, hires: false, standard: false,
+                         local: false, remote: false }, o);
+};
+
+/* Dentro de uma faceta os valores somam (OU); entre facetas eles restringem (E).
+   O usuario le "FLAC ou ALAC" dentro do cartao Formato, e cartoes diferentes se
+   acumulam -- sem nunca precisar da palavra AND. */
+test('valores da mesma faceta sao OU; facetas diferentes sao E', function () {
+  const c = comFiltros('albuns', ['format:flac', 'format:alac', 'quality:hires']);
+  c.self.mediaIndex = {
+    '1': META({ formats: { flac: true }, hires: true }),
+    '2': META({ formats: { alac: true }, hires: true }),
+    '3': META({ formats: { mp3: true }, hires: true }),
+    '4': META({ formats: { flac: true }, hires: false, standard: true })
+  };
+  assert.equal(c.self.mediaMatches(1), true,  'flac + hires passa');
+  assert.equal(c.self.mediaMatches(2), true,  'alac + hires passa (OU dentro de formato)');
+  assert.equal(c.self.mediaMatches(3), false, 'mp3 nao esta entre os formatos pedidos');
+  assert.equal(c.self.mediaMatches(4), false, 'flac mas nao hires: o E entre facetas barra');
+});
+
+test('um filtro sozinho continua funcionando como antes', function () {
+  const c = comFiltros('albuns', ['stream:qobuz']);
+  c.self.mediaIndex = {
+    '1': META({ providers: { qobuz: true }, remote: true }),
+    '2': META({ local: true })
+  };
+  assert.equal(c.self.mediaMatches(1), true);
+  assert.equal(c.self.mediaMatches(2), false);
+});
+
+/* Mesma familia do bug B: dado ausente virando desaparecimento silencioso.
+   O album sem entrada no indice continua fora da lista, mas passa a ser contado
+   e dito na tela. */
+test('album sem informacao de midia e contado, nao sumido em silencio', function () {
+  const c = comFiltros('albuns', ['format:flac']);
+  c.self.mediaIndex = { '1': META({ formats: { flac: true } }) };
+  assert.equal(c.self.mediaMatches(1), true);
+  assert.equal(c.self.mediaMatches(99), false, 'sem meta nao casa');
+  assert.equal(c.self.unknownCounted, true, 'mas foi contabilizado para virar aviso');
+});
+
+test('cada filtro ativo vira um chip com rotulo proprio', function () {
+  const c = comFiltros('albuns', ['format:flac', 'quality:hires', 'stream:qobuz']);
+  const ativos = c.def.computed.activeFilters.call(c.self);
+  assert.equal(ativos.length, 3);
+  assert.deepEqual(ativos.map(function (f) { return f.label; }), ['FLAC', 'Hi-Res', 'Qobuz']);
+  assert.equal(ativos[0].key, 'format:flac');
+});
+
+/* Ordenacao instavel fazia dois albuns homonimos trocarem de lugar entre
+   renderizacoes. O desempate encadeia ate o id, que e unico. */
+test('a ordenacao e total: nulos ao fim e desempate ate o id', function () {
+  const captured = helpers.browseComponent();
+  const cmp = captured.def.methods.rowComparator.call(
+    { ui: { sort: [{ key: 'year', desc: false }] } });
+
+  const a = { id: 2, label: 'Mesmo', artist: 'X', year: 1970 };
+  const b = { id: 1, label: 'Mesmo', artist: 'X', year: 1970 };
+  assert.ok(cmp(a, b) > 0, 'empate total cai no id, e o menor vem antes');
+  assert.ok(cmp(b, a) < 0, 'e o comparador e antissimetrico');
+
+  const semAno = { id: 3, label: 'A', artist: 'X', year: null };
+  const comAno = { id: 4, label: 'Z', artist: 'X', year: 1999 };
+  assert.ok(cmp(semAno, comAno) > 0, 'sem ano vai para o fim...');
+
+  const desc = captured.def.methods.rowComparator.call(
+    { ui: { sort: [{ key: 'year', desc: true }] } });
+  assert.ok(desc(semAno, comAno) > 0, '...inclusive em ordem decrescente');
 });

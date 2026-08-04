@@ -1096,7 +1096,14 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   display:flex;align-items:center;gap:8px;padding:6px 16px;
   background:var(--content);border-bottom:.5px solid var(--hair);
   font-size:12px;color:var(--text2)}
-.filter-chip-text{flex:1;min-width:0}
+.filter-chip-label{flex:0 0 auto}
+/* Cada filtro e uma pilula clicavel: tocar remove aquele, sem mexer nos outros.
+   O x fica dentro do alvo, entao nao ha alvo de 12px para acertar. */
+.filter-pill{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border:0;border-radius:10px;background:var(--field);
+  font-size:12px;color:var(--text);cursor:pointer}
+.filter-pill-x{color:var(--text2);font-size:13px;line-height:1}
+.filter-chip-count{flex:1;min-width:0;text-align:right;font-variant-numeric:tabular-nums}
 .filter-chip-clear{flex:0 0 auto;background:none;border:0;padding:0;
   font-size:12px;color:var(--accent);cursor:pointer}
 .visually-hidden{position:absolute!important;width:1px!important;height:1px!important;
