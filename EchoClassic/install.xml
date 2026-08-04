@@ -6,6 +6,13 @@
 	<version>3.2.1</version>
 	<description>PLUGIN_ECHOCLASSIC_SKIN</description>
 	<creator>Felipe Freitas</creator>
+	<email>64909764+fdfreitas88@users.noreply.github.com</email>
+	<category>skin</category>
+	<!-- Caminho servido pelo LMS: a pasta HTML/echoclassic do plugin vira
+	     /echoclassic/ na raiz do servidor. -->
+	<icon>echoclassic/html/images/icon.svg</icon>
+	<optionsURL>plugins/EchoClassic/settings/basic.html</optionsURL>
+	<homepageURL>https://github.com/fdfreitas88/echoclassic</homepageURL>
 	<defaultState>enabled</defaultState>
 	<type>2</type>
 	<targetApplication>

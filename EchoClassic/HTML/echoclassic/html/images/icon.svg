@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Icone do plugin, mostrado na pagina de Plugins do LMS e na entrada do
+  repositorio de extensoes.
+
+  Desenho proprio, sem marca de terceiros: o azul e o --accent do esquema
+  padrao da skin (#0077B0), e as barras sao a leitura de espectro que da razao
+  de ser ao projeto -- mostrar o que de fato chega ao DAC. Em SVG porque o LMS
+  aceita (a Material Skin usa o mesmo) e porque assim o icone acompanha
+  qualquer densidade de tela sem uma segunda copia.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"
+     role="img" aria-label="Echo Classic">
+  <rect width="128" height="128" rx="28" fill="#0077B0"/>
+  <g fill="#FFFFFF">
+    <rect x="30" y="62" width="10" height="24" rx="5"/>
+    <rect x="48" y="46" width="10" height="40" rx="5"/>
+    <rect x="66" y="34" width="10" height="52" rx="5"/>
+    <rect x="84" y="54" width="10" height="32" rx="5"/>
+  </g>
+  <circle cx="64" cy="98" r="6" fill="#FFFFFF" opacity="0.85"/>
+</svg>
