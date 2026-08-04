@@ -741,8 +741,12 @@
       }
 
       if (state.fixedVolume !== requestedFixed) {
-        global.LmsUi.notify('O LMS manteve ' +
-          (state.fixedVolume ? 'a saída fixa.' : 'o volume por software.'), 'error', 6500);
+        /* Frase inteira no dicionario: concatenar o final produzia um texto
+           que nenhuma chave casa, e o aviso saia em portugues numa sessao em
+           ingles -- a mesma armadilha dos avisos de truncamento. */
+        global.LmsUi.notify(state.fixedVolume
+          ? 'O LMS manteve a saída fixa.'
+          : 'O LMS manteve o volume por software.', 'error', 6500);
         return false;
       }
       global.LmsUi.notify(requestedFixed

@@ -9,6 +9,28 @@ Echo Classic shows the **native sample rate and bit depth of what actually reach
 - Split view on wide screens, single column on phones
 - WCAG 2.1 AA contrast, visible keyboard focus, no motion when the system asks for none
 
+## Screenshots
+
+Taken against a real server (Lyrion Music Server 9.1.1, 1,400 albums), not mockups.
+`node tools/screenshots.js` regenerates them.
+
+![Library](docs/img/library.png)
+
+*Recently added, split view. The album header states what actually reaches the DAC:
+codec, bitrate range, sample rate, bit depth and where the file comes from.*
+
+| | |
+|---|---|
+| ![Filter panel](docs/img/filters.png) | ![Sections and active filters](docs/img/sections.png) |
+| **Filters, sorting, grouping and playback preference** live in one panel that works as a draft: nothing is applied until you press Apply. | **Filters combine, and each one is a removable pill.** Grouping adds section headers with counts and never removes a row from the list. |
+| ![Dark theme](docs/img/dark.png) | ![Settings](docs/img/settings.png) |
+| **Dark theme**, with the hi‑res badge on every track above CD quality. | **Settings**: themes, accents, type, crossfade, sleep timer, and a volume row that says when the DAC is doing the attenuation. |
+
+<img src="docs/img/mobile.png" alt="Filter sheet on a phone" width="320">
+
+*On narrow screens the same panel becomes a full‑screen single‑column sheet, with the
+primary actions pinned to the bottom.*
+
 ## Requirements
 
 Lyrion Music Server 8.0 or later. Developed and verified against 9.1.1 on macOS.

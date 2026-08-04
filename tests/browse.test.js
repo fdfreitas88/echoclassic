@@ -976,3 +976,50 @@ test('a contagem de resultados nao disputa espaco com a fileira de pilulas', fun
   assert.match(strip, /flex:1 1 auto/, 'quem estica e a fileira');
   assert.match(strip, /overflow-x:auto/, 'e ela rola quando nao cabe');
 });
+
+/* Visto na primeira abertura: o painel esquerdo comeca em 360px e a barra tem
+   seis controles. Sem encolher nada, ela quebrava em tres linhas e comia a
+   lista. O que encolhe e o rotulo do comando secundario -- a busca e o funil
+   ficam, porque sao os dois que a barra existe para oferecer. */
+test('a barra cabe em uma linha na divisao padrao', function () {
+  const captured = helpers.browseComponent();
+  const def = captured.def;
+  assert.equal(def.data().paneWidth > 0, true);
+
+  const self = { paneWidth: 360 };
+  assert.equal(def.computed.toolbarTight.call(self), true, '360px e a largura padrao');
+  self.paneWidth = 553;
+  assert.equal(def.computed.toolbarTight.call(self), false, 'com folga o rotulo volta');
+
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  assert.match(src, /class="text-command select-command"/);
+  assert.match(src, /aria-label="Selecionar"/,
+    'virar icone nao pode custar o nome acessivel');
+  assert.match(src, /:title="toolbarTight \? 'Selecionar' : null"/,
+    'e no modo icone precisa de tooltip');
+
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const regra = css.match(/\.library-tools \.select-command\.tight\{([^}]*)\}/)[1];
+  assert.match(regra, /width:44px/, 'o alvo de toque continua com 44px');
+
+  /* Duas fileiras previsiveis em vez de tres imprevisiveis: a busca ocupa a
+     primeira inteira e os comandos ficam na segunda. */
+  const busca = css.match(/\.library-tools\.tight input\{([^}]*)\}/)[1];
+  assert.match(busca, /flex:1 1 100%/);
+  assert.match(src, /class="library-tools" :class="\{tight: toolbarTight\}"/);
+});
+
+/* Visto na foto do README: "Biblioteca local" aparecia em portugues numa sessao
+   em ingles. O rotulo e montado em tempo de execucao e colado no subtitulo da
+   linha, entao nao passa pelo translateTemplate -- precisa do tr() na mao. */
+test('o rotulo de origem da linha passa pelo dicionario', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const corpo = src.split('sourceLabel: function (track)')[1].split('},')[0];
+  assert.match(corpo, /this\.tr\('Biblioteca local'\)/);
+  assert.match(corpo, /this\.tr\('Streaming'\)/);
+
+  const strings = helpers.read('EchoClassic/strings.txt');
+  ['Biblioteca local', 'Streaming'].forEach(function (frase) {
+    assert.ok(strings.indexOf('\t' + frase) >= 0, 'sem traducao: ' + frase);
+  });
+});

@@ -281,7 +281,7 @@
       <div class="sgroup">
         <div class="srow">Formato <span class="v">{{ info.format || '—' }}</span></div>
         <div class="srow">Resolução <span class="v">{{ resolution }}</span></div>
-        <div v-if="info.bitrate" class="srow">Bitrate <span class="v">{{ Math.round(info.bitrate / 1000) }} kbps</span></div>
+        <div v-if="info.bitrate" class="srow">Bitrate <span class="v">{{ Math.round(info.bitrate) }} kbps</span></div>
       </div>
     </div>
   </section>

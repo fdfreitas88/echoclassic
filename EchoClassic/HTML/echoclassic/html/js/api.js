@@ -65,6 +65,21 @@
 
   function loop(res, key) { return (res && res[key]) || []; }
   function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+
+  /* O LMS nao tem uma unidade so para bitrate. No tag do `titles` ele manda a
+     string pronta -- "5641kbps VBR" --, e em outros caminhos manda numero em
+     bits por segundo. Quem consumia dividia por 1000 sempre, entao um FLAC de
+     2116 kbps aparecia como "2 kbps" no cabecalho do album. Normalizar aqui, na
+     fronteira, em vez de espalhar a duvida por cada tela. Devolve kbps. */
+  function kbps(v) {
+    if (v == null || v === '') return 0;
+    var n = parseFloat(v);
+    if (!isFinite(n) || n <= 0) return 0;
+    if (/kbps/i.test(String(v))) return Math.round(n);
+    /* Sem unidade declarada: acima de 10.000 so pode ser bits por segundo --
+       nenhum formato de audio chega a 10 Mbps, e todo lossless passa de 300. */
+    return Math.round(n > 10000 ? n / 1000 : n);
+  }
   function txt(v) { return v == null ? '' : String(v); }
   function pageMeta(items, sourceCount) {
     Object.defineProperty(items, 'sourceCount', {
@@ -342,7 +357,7 @@
         artist: canonicalArtist(t.artist), album: txt(t.album),
         duration: num(t.duration), sampleRate: num(t.samplerate),
         sampleSize: num(t.samplesize), format: txt(t.type).toUpperCase(),
-        bitrate: num(t.bitrate), url: txt(t.url), remote: num(t.remote) === 1,
+        bitrate: kbps(t.bitrate), url: txt(t.url), remote: num(t.remote) === 1,
         rating: num(t.rating), playCount: num(t.playcount),
         year: LmsFmt.year(t.year), originalYear: LmsFmt.year(t.originalyear || t.original_year),
 	        addedTime: num(t.addedTime), lastPlayed: num(t.lastplayed)
@@ -361,7 +376,7 @@
       return {
         id: t.id,
         albumId: t.album_id != null ? t.album_id : t.albumid,
-        format: txt(t.type).toLowerCase(), bitrate: num(t.bitrate),
+        format: txt(t.type).toLowerCase(), bitrate: kbps(t.bitrate),
         sampleRate: num(t.samplerate), sampleSize: num(t.samplesize),
         url: txt(t.url), remote: num(t.remote) === 1
       };
@@ -513,7 +528,7 @@
       comment: txt(flat.comment), url: txt(flat.url),
       fileSize: num(flat.filesize), releaseType: txt(flat.release_type),
       sampleRate: num(flat.samplerate), sampleSize: num(flat.samplesize),
-      format: txt(flat.type).toUpperCase(), bitrate: num(flat.bitrate)
+      format: txt(flat.type).toUpperCase(), bitrate: kbps(flat.bitrate)
     };
     songCacheSet(trackId, info);
     return info;
@@ -832,6 +847,7 @@
     playlistTracks: playlistTracks, loadContainer: loadContainer,
     artists: artists, albums: albums, tracks: tracks,
     libraryTracks: libraryTracks, search: search,
+    __kbps: kbps,
     artistOfAlbum: artistOfAlbum, artistsOfAlbum: artistsOfAlbum,
     genres: genres, years: years,
     players: players, status: status, songInfo: songInfo,

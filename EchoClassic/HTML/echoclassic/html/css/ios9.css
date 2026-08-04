@@ -274,6 +274,21 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
   background:var(--field);padding:0 9px}
 .library-tools select,.setting-select{height:44px;border:.5px solid var(--hair);
   border-radius:6px;background:var(--group-bg);padding:0 22px 0 7px;max-width:105px}
+/* "Adicionados recentemente" nao cabia em 105px e saia cortado no meio da
+   palavra. Com folga na barra, o campo cresce ate caber. */
+.library-tools:not(.tight) select{max-width:168px}
+/* Com a divisao estreita os seis controles nao cabem numa linha so -- na
+   largura padrao de 360px eles quebravam em TRES, e a lista perdia 100px de
+   altura logo na primeira abertura. Em vez de disputar pixel a pixel, a barra
+   assume duas fileiras previsiveis: a busca ocupa a primeira inteira, os
+   comandos ficam na segunda. Nenhum controle some, e o alvo de toque nao muda. */
+.library-tools.tight{row-gap:6px}
+.library-tools.tight input{flex:1 1 100%;min-width:0}
+.library-tools .select-command.tight{width:44px;flex:0 0 44px;padding:0;
+  display:flex;align-items:center;justify-content:center}
+.library-tools .select-command.tight svg{width:20px;height:20px;fill:none;
+  stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.library-tools.tight .split-options-command{margin-left:auto}
 .icon-command{width:44px;height:44px;color:var(--accent);font-size:20px;flex:0 0 44px}
 .icon-command svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;
   stroke-linecap:round;stroke-linejoin:round}

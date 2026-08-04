@@ -140,7 +140,7 @@ Vue.component('lms-album-block', {
     },
     bitRateLine: function () {
       var rates = this.tracks.map(function (track) {
-        return Math.round((track.bitrate || 0) / 1000);
+        return Math.round(track.bitrate || 0);
       })
         .filter(function (rate) { return rate > 0; });
       var bitrate = '';

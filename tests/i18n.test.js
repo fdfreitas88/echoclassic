@@ -49,3 +49,64 @@ test('i18n rewrites default expressions but preserves Vue filters', function () 
   assert.match(translated, /\{\{ amount \| count \}\}/);
   assert.match(translated, /placeholder="Album"/);
 });
+
+/* friendlyError devolve literais em portugues que a interpolacao do template
+   traduz em tempo de execucao -- mas so se a frase existir no dicionario. A de
+   timeout nao existia, e aparecia em portugues numa sessao em ingles, por cima
+   do cabecalho. Este teste cobre todas de uma vez. */
+test('toda frase de friendlyError tem entrada no strings.txt', function () {
+  const store = helpers.read('EchoClassic/HTML/echoclassic/html/js/store.js');
+  const corpo = store.split('function friendlyError')[1].split('\n  }')[0];
+  const frases = (corpo.match(/return '[^']+'/g) || [])
+    .map(function (m) { return m.slice(8, -1); })
+    .filter(function (f) { return /[a-zA-Z]/.test(f) && f.indexOf('{') < 0; });
+  assert.ok(frases.length >= 4, 'esperava achar as frases de erro');
+
+  const strings = helpers.read('EchoClassic/strings.txt');
+  frases.forEach(function (frase) {
+    assert.ok(strings.indexOf('\t' + frase) >= 0,
+      'frase de erro sem traducao possivel: ' + frase);
+  });
+});
+
+/* O projeto e internacional: nenhum rotulo montado em JavaScript pode chegar a
+   tela sem ter como ser traduzido. Este teste varre os literais de interface de
+   todos os modulos -- os que o translateTemplate nao alcanca, porque nascem de
+   um return e nao de um no de texto -- e cobra entrada no strings.txt. Foi
+   assim que "Ajuste o volume no DAC" e "Biblioteca local" apareceram em
+   portugues numa sessao em ingles, e o segundo saiu numa foto do README. */
+test('todo rotulo de interface montado em JavaScript pode ser traduzido', function () {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const strings = helpers.read('EchoClassic/strings.txt');
+  const dir = path.join(helpers.skin, 'js');
+
+  const arquivos = [];
+  (function walk(d) {
+    fs.readdirSync(d, { withFileTypes: true }).forEach(function (entry) {
+      const full = path.join(d, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.js')) arquivos.push(full);
+    });
+  })(dir);
+
+  const portugues = /\b(não|você|está|para|com|sem|pelo|pela|dos|das|uma|nenhum|todos|volume|ajuste|servidor|reprodução|faixa|álbum|fila|erro|falha|fixo|escala|cheia|silêncio|aviso|salva|salvo)\b/i;
+  const literal = /return '([^'\\]{8,120})'|\? '([^'\\]{8,120})' : '([^'\\]{8,120})'/g;
+  const faltando = [];
+
+  arquivos.forEach(function (file) {
+    const src = fs.readFileSync(file, 'utf8');
+    let m;
+    while ((m = literal.exec(src))) {
+      [m[1], m[2], m[3]].forEach(function (frase) {
+        if (!frase || !portugues.test(frase)) return;
+        /* Frase com marcador e montada depois da traducao; tag HTML nao e texto. */
+        if (frase.indexOf('{') >= 0 || frase.indexOf('<') >= 0) return;
+        if (strings.indexOf('\t' + frase) >= 0) return;
+        faltando.push(path.basename(file) + ': ' + frase);
+      });
+    }
+  });
+
+  assert.deepEqual(faltando, [], 'rotulos sem entrada no strings.txt');
+});

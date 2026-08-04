@@ -1410,3 +1410,71 @@ ECHOCLASSIC_UI_UNKNOWN_MEDIA_MANY
 ECHOCLASSIC_UI_SECTION_OVERLAP
 	EN	Some albums appear in more than one section.
 	PT	Alguns álbuns aparecem em mais de uma seção.
+
+ECHOCLASSIC_UI_ERR_TIMEOUT
+	EN	The server took too long to answer.
+	PT	O servidor demorou demais para responder.
+
+ECHOCLASSIC_UI_REMOVE_FAVOURITES
+	EN	Remove from Favourites
+	PT	Remover dos Favoritos
+
+ECHOCLASSIC_UI_REMOVE_FAVOURITES_LC
+	EN	Remove from favourites
+	PT	Remover dos favoritos
+
+ECHOCLASSIC_UI_REMOVE_PINNED
+	EN	Remove from pinned items
+	PT	Remover dos itens fixados
+
+ECHOCLASSIC_UI_NO_ITEM_SELECTED
+	EN	No item selected
+	PT	Nenhum item selecionado
+
+ECHOCLASSIC_UI_SORT_TO_ASC
+	EN	Switch to ascending order
+	PT	Mudar para ordem crescente
+
+ECHOCLASSIC_UI_SORT_TO_DESC
+	EN	Switch to descending order
+	PT	Mudar para ordem decrescente
+
+ECHOCLASSIC_UI_VOLUME_MODE_BUSY
+	EN	Confirming volume mode…
+	PT	Confirmando modo de volume…
+
+ECHOCLASSIC_UI_VOLUME_AT_DAC
+	EN	Set the volume on the DAC
+	PT	Ajuste o volume no DAC
+
+ECHOCLASSIC_UI_NO_PLAYLIST_MATCH
+	EN	No playlist matches this filter.
+	PT	Nenhuma playlist encontrada com esse filtro.
+
+ECHOCLASSIC_UI_NO_PLAYLIST_SAVED
+	EN	No saved playlists. Tap “New playlist…” to create the first one.
+	PT	Nenhuma playlist salva. Toque em “Nova playlist…” para criar a primeira.
+
+ECHOCLASSIC_UI_NO_PLAYER_CONNECTED
+	EN	No player connected.
+	PT	Nenhum player conectado.
+
+ECHOCLASSIC_UI_KEPT_FIXED_OUTPUT
+	EN	LMS kept fixed output.
+	PT	O LMS manteve a saída fixa.
+
+ECHOCLASSIC_UI_KEPT_SOFTWARE_VOLUME
+	EN	LMS kept software volume.
+	PT	O LMS manteve o volume por software.
+
+ECHOCLASSIC_UI_VOLUME_FIXED_FULL
+	EN	fixed — full scale
+	PT	fixo — escala cheia
+
+ECHOCLASSIC_UI_VOLUME_LMS_SHORT
+	EN	LMS volume
+	PT	Volume LMS
+
+ECHOCLASSIC_UI_NO_PLAYER_SHORT
+	EN	no player
+	PT	sem player

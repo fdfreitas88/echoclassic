@@ -34,7 +34,7 @@ Vue.component('lms-browse', {
 <div ref="split" class="split-body" :class="{'split-locked': splitLocked}"
      :style="{'--pane-current': paneWidth + 'px'}">
   <div class="pane-left">
-    <div class="library-tools">
+    <div class="library-tools" :class="{tight: toolbarTight}">
       <input v-model="ui.filter" type="search" placeholder="Filtrar"
              :aria-label="'Filtrar ' + viewLabel.toLowerCase()">
       <button ref="filterTrigger" class="icon-command filter-command" :class="{on: toolsActive}"
@@ -57,7 +57,15 @@ Vue.component('lms-browse', {
 	              @click="LmsUi.toggleSortDir()">
         <span aria-hidden="true">{{ sortDesc ? '↓' : '↑' }}</span>
       </button>
-      <button v-if="!ui.selectionMode" class="text-command" @click="toggleSelect">Selecionar</button>
+      <button v-if="!ui.selectionMode" class="text-command select-command"
+              :class="{tight: toolbarTight}" :title="toolbarTight ? 'Selecionar' : null"
+              aria-label="Selecionar" @click="toggleSelect">
+        <svg v-if="toolbarTight" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4.5 6.5h15M4.5 12h15M4.5 17.5h15"/><circle cx="8" cy="6.5" r="2.2"/>
+          <circle cx="14" cy="12" r="2.2"/><circle cx="10" cy="17.5" r="2.2"/>
+        </svg>
+        <span v-else>Selecionar</span>
+      </button>
       <div v-else class="selection-tools">
 	        <span class="selection-count" aria-live="polite">{{ selectionCountLabel }}</span>
         <button class="selection-add-command" :disabled="!selectionCount"
@@ -361,6 +369,11 @@ Vue.component('lms-browse', {
       return chips;
     },
     resultCount: function () { return this.displayRows.length; },
+    /* A barra tem seis controles e o painel esquerdo comeca em 360px: sem
+       encolher nada, ela quebrava em tres linhas e comia a lista logo na
+       primeira abertura. O que encolhe e o rotulo do comando secundario -- a
+       busca e o funil ficam, do tamanho que estavam. */
+    toolbarTight: function () { return this.paneWidth < 430; },
     /* Dois numeros que existiam so na memoria do componente. Contar sem dizer e
        a mesma familia do bug B: o dado sumia e nada na tela explicava. */
     listNotes: function () {
@@ -927,12 +940,16 @@ Vue.component('lms-browse', {
       if (/^(youtube|yt|ytmusic)$/.test(scheme)) return 'youtube';
       return scheme;
     },
+    /* Rotulo montado em tempo de execucao e colado no subtitulo da linha: nao
+       passa pelo translateTemplate, entao precisa do tr() na mao. Sem ele,
+       "Biblioteca local" aparecia em portugues numa sessao em ingles -- visto
+       na tela, na propria foto do README. */
     sourceLabel: function (track) {
       var provider = this.providerFromUrl(track && track.url);
       if (provider === 'qobuz') return 'Qobuz';
       if (provider === 'youtube') return 'YouTube';
-      if ((track && track.remote) || (provider && provider !== 'file')) return 'Streaming';
-      return 'Biblioteca local';
+      if ((track && track.remote) || (provider && provider !== 'file')) return this.tr('Streaming');
+      return this.tr('Biblioteca local');
     },
     disambiguateDuplicateAlbums: async function (pid, token) {
       var groups = Object.create(null);
