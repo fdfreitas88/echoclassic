@@ -8,6 +8,53 @@ acontecendo na interface rodando; **[código]** significa que a cadeia foi lida 
 fonte mas o estado não foi reproduzido na tela. A distinção importa para quem for
 decidir, daqui a seis meses, se pode confiar na correção.
 
+## [3.2.2] — 2026-08-04
+
+Prepares the plugin for the official LMS repository, and closes what the README
+screenshots exposed. No change to the filter model or to persisted preferences.
+
+### Added
+
+- **Six screenshots in the README**, taken against the real server (LMS 9.1.1,
+  1,400 albums) rather than mocked up. `tools/screenshots.js` regenerates them:
+  it proxies the real server and injects a single script into the HTML document,
+  so the data still comes from LMS and nothing in the product changes. **[live]**
+- **Plugin icon**, drawn for the project — no third-party mark. **[code]**
+- `install.xml` gains `email`, `category`, `icon`, `optionsURL` and
+  `homepageURL`; `repo.xml` gains `<icon>`. These are the fields the plugins
+  already listed in the official repository carry, and the settings page existed
+  without ever being announced. **[code]**
+- `docs/lms-repository-submission.md`: what the aggregator validates, read in
+  `buildrepo.pl` and in `ExtensionsManager.pm`, plus the item-by-item checklist
+  and the pull request command. **[code]**
+
+### Fixed
+
+- **Sixteen interface labels appeared in Portuguese in an English session.**
+  "Local library" in the row subtitle, "Set the volume on the DAC" in the player,
+  "fixed — full scale" in Settings, and thirteen more. They are all built by a
+  `return` in JavaScript, and `translateTemplate` only reaches text nodes — so
+  they needed entries in `strings.txt` and, in two cases, an explicit `tr()`.
+  The first one was caught in a README screenshot. **[live]**
+- **A sentence assembled by concatenation could never match a dictionary key.**
+  `'O LMS manteve ' + ending` became two whole sentences, the same trap that
+  made the truncation warnings show up untranslated. **[code]**
+- **Bitrate was shown divided by a thousand.** LMS returns `"5641kbps VBR"` as a
+  string in the `titles` tag and a number in bits per second elsewhere; the UI
+  divided by 1000 either way, so a 2116 kbps FLAC read as "2 kbps" in the album
+  header. Normalised once, at the API boundary. **[live]**
+- **The library toolbar broke into three rows at the default split width.**
+  360 px is what a first run gets, and six controls do not fit; the list lost a
+  hundred pixels of height before the user touched anything. The toolbar now
+  takes two predictable rows and the secondary command becomes an icon — with
+  its accessible name and its 44 px target intact. **[live]**
+
+### Internal
+
+- A test sweeps every module for interface literals with no entry in
+  `strings.txt`. It is what found the sixteen, and it fails if they come back.
+- The test suite goes from 92 to 97.
+
 ## [3.2.1] — 2026-08-03
 
 Fecha a distância entre o motor de filtros da 3.2.0 e a tela: os filtros
