@@ -41,3 +41,22 @@ test('todo template de componente compila no Vue 2', function () {
     assert.deepEqual(out.errors, [], item.file + ': ' + out.errors.join(' | '));
   });
 });
+
+/* Um "--" dentro de comentario XML e ilegal, e um SVG mal formado pode
+   simplesmente nao ser desenhado -- o icone do plugin e a primeira coisa que o
+   usuario ve na pagina de Plugins. */
+test('todo SVG servido como arquivo e XML bem formado', function () {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { execFileSync } = require('node:child_process');
+  const dir = path.join(helpers.skin, 'images');
+  if (!fs.existsSync(dir)) return;
+  fs.readdirSync(dir).filter(function (f) { return f.endsWith('.svg'); }).forEach(function (f) {
+    const full = path.join(dir, f);
+    execFileSync('python3', ['-c',
+      'import sys,xml.dom.minidom as m; m.parse(sys.argv[1])', full]);
+    const src = fs.readFileSync(full, 'utf8');
+    assert.doesNotMatch(src.replace(/<!--[\s\S]*?-->/g, ''), /--/,
+      f + ': dois hifens fora de comentario tambem quebram parsers estritos');
+  });
+});

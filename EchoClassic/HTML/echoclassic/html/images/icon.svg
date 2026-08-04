@@ -3,11 +3,14 @@
   Icone do plugin, mostrado na pagina de Plugins do LMS e na entrada do
   repositorio de extensoes.
 
-  Desenho proprio, sem marca de terceiros: o azul e o --accent do esquema
-  padrao da skin (#0077B0), e as barras sao a leitura de espectro que da razao
-  de ser ao projeto -- mostrar o que de fato chega ao DAC. Em SVG porque o LMS
-  aceita (a Material Skin usa o mesmo) e porque assim o icone acompanha
+  Desenho proprio, sem marca de terceiros. O azul e o mesmo token de acento do
+  esquema padrao da skin (#0077B0), e as barras sao a leitura de espectro que da
+  razao de ser ao projeto: mostrar o que de fato chega ao DAC. Em SVG porque o
+  LMS aceita (a Material Skin usa o mesmo) e porque assim o icone acompanha
   qualquer densidade de tela sem uma segunda copia.
+
+  Sem dois hifens seguidos aqui dentro: e ilegal num comentario XML, e um SVG
+  mal formado pode simplesmente nao ser desenhado.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"
      role="img" aria-label="Echo Classic">
