@@ -10,6 +10,46 @@ decidir, daqui a seis meses, se pode confiar na correção.
 
 ## [3.2.0] — 2026-08-03
 
+### Adicionado
+
+- **Filtros combinam.** Dentro de uma faceta os valores somam, entre facetas eles
+  restringem: `(FLAC ou ALAC) e Hi-Res`. A interface em nenhum momento diz AND ou
+  OR — você lê "FLAC ou ALAC" dentro de Formato e entende que Resolução é outro
+  cartão que se acumula. Antes só cabia um filtro por vez. **[ao vivo]** — três
+  filtros devolvem 254 álbuns no servidor real, o mesmo número que um cálculo
+  independente sobre o índice produz.
+- **Cada filtro ativo vira uma pílula removível**, com o `×` dentro do próprio
+  alvo, e a contagem de resultados na mesma fileira. Tocar remove aquele filtro e
+  preserva os outros. **[ao vivo]**
+- **Álbum sem informação de mídia passa a ser contabilizado** em vez de sumir
+  calado. É a mesma família do bug B: dado ausente virando desaparecimento
+  invisível. **[código]**
+
+### Alterado
+
+- **Filtrar, ordenar e agrupar viram três estados separados.** Até aqui um
+  `sortKey` único por view decidia os três ao mesmo tempo — era dele que nasciam
+  os bugs B e C, e era ele que tornava impossível combinar filtros. A migração
+  desmembra o que estava gravado para o conceito certo: chave de mídia vira
+  filtro, `artist` em Álbuns vira agrupamento, o resto vira ordenação com a
+  direção preservada. Em Recentes, `artist` migra como **ordenação** e nunca como
+  agrupamento. **[ao vivo]** — migração conferida com estado real do formato
+  anterior.
+- **A ordenação passa a ser total.** Os critérios encadeiam e o desempate segue
+  por rótulo, artista e `id`; como o `id` é único, dois álbuns homônimos param de
+  trocar de lugar entre renderizações. Nulo vai ao fim nos dois sentidos. **[código]**
+- **Trocar de A–Z para Ano deixou de recarregar a biblioteca inteira.** Só filtro
+  e agrupamento recarregam; ordenar recomputa a lista que já está na tela. **[código]**
+
+### Desempenho
+
+- **O índice de mídia sobrevive à recarga.** Ele responde "quais álbuns têm FLAC"
+  varrendo as 14.210 faixas da biblioteca, e era refeito a cada abertura. Agora é
+  guardado e invalidado pelo `lastscan` do servidor, que muda exatamente quando a
+  biblioteca muda. **[ao vivo]** — medido no servidor real, mesmo componente, só
+  o cache variando: **10.866 ms sem cache, 46 ms com cache**, com resultado
+  idêntico de 1.397 álbuns. Formato compacto: 31 KB contra 149 KB.
+
 ### Corrigido
 
 - **Recentes aparecia vazia dizendo "Nenhum item encontrado nesta categoria".**
@@ -67,6 +107,11 @@ decidir, daqui a seis meses, se pode confiar na correção.
   existente cobria essa combinação.
 - `tools/deploy.sh`, `tools/rollback.sh` e `tools/release.sh`, para instalar e
   testar no servidor real antes de publicar.
+- Testes de `ui.js` e `browse.js` sobem de zero para 47, cobrindo o modelo de
+  estado, as quatro rotas de migração, a combinação de filtros, o comparador e o
+  cache. Duas armadilhas de arreio ficaram travadas por teste: uma constante
+  dentro de `methods` é embrulhada pelo Vue numa função, e um teste que fornece a
+  dependência que o produto deveria ter valida a si mesmo.
 
 ## [3.1.2] — 2026-08-03
 
