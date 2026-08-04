@@ -525,3 +525,75 @@ test('a ordenacao e total: nulos ao fim e desempate ate o id', function () {
     { ui: { sort: [{ key: 'year', desc: true }] } });
   assert.ok(desc(semAno, comAno) > 0, '...inclusive em ordem decrescente');
 });
+
+/* ---------- Fase 3: o indice de midia sobrevive a recarga ------------------- */
+
+test('a chave do cache e uma string de verdade, e nao uma funcao embrulhada', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  assert.match(src, /var LMS_MEDIA_CACHE_KEY = 'echoclassic\.media\.v1'/,
+    'a chave tem de viver fora de methods; o Vue embrulha nao-funcoes');
+  const methods = src.slice(src.indexOf('methods: {'));
+  assert.doesNotMatch(methods, /MEDIA_CACHE_KEY:\s*'/,
+    'uma string dentro de methods vira funcao e a chave vira o corpo dela');
+});
+
+test('empacotar e desempacotar o indice preserva a informacao', function () {
+  const def = helpers.browseComponent().def;
+  const m = def.methods;
+  const original = {
+    '1': { formats: { flac: true, mp3: true }, providers: { qobuz: true },
+           hires: true, standard: false, local: false, remote: true },
+    '2': { formats: {}, providers: {}, hires: false, standard: true, local: true, remote: false }
+  };
+  const volta = m.unpackMedia.call({}, m.packMedia.call({}, original));
+
+  assert.deepEqual(Object.keys(volta).sort(), ['1', '2']);
+  assert.equal(volta['1'].formats.flac, true);
+  assert.equal(volta['1'].formats.mp3, true);
+  assert.equal(volta['1'].providers.qobuz, true);
+  assert.equal(volta['1'].hires, true);
+  assert.equal(volta['1'].remote, true);
+  assert.equal(volta['1'].local, false);
+  assert.equal(volta['2'].standard, true);
+  assert.equal(volta['2'].local, true);
+  assert.equal(Object.keys(volta['2'].formats).length, 0, 'album sem formato continua sem formato');
+});
+
+/* A chave de invalidacao e o lastscan do servidor: muda exatamente quando a
+   biblioteca muda. Um cache que sobrevive a um rescan mostraria formato de
+   arquivos que nao existem mais. */
+test('o cache so vale enquanto o lastscan for o mesmo', function () {
+  const def = helpers.browseComponent().def;
+  const m = def.methods;
+  const loja = {};
+  /* Nao fornecemos a chave: ela tem de vir do proprio modulo. Fornece-la aqui
+     foi o que deixou este teste passar enquanto o produto gravava sob uma chave
+     que era o texto de uma funcao -- o arreio validava a si mesmo. */
+  const self = { packMedia: m.packMedia, unpackMedia: m.unpackMedia };
+  const ctxLocal = {
+    getItem: function (k) { return k in loja ? loja[k] : null; },
+    setItem: function (k, v) { loja[k] = String(v); }
+  };
+  global.localStorage = ctxLocal;
+  try {
+    m.writeMediaCache.call(self, 'scan-1', { '7': { formats: { flac: true }, providers: {},
+      hires: true, standard: false, local: true, remote: false } });
+
+    const igual = m.readMediaCache.call(self, 'scan-1');
+    assert.ok(igual && igual['7'], 'mesmo lastscan: o cache serve');
+    assert.equal(igual['7'].formats.flac, true);
+
+    assert.equal(m.readMediaCache.call(self, 'scan-2'), null, 'lastscan novo invalida');
+    assert.equal(m.readMediaCache.call(self, ''), null, 'sem lastscan nao arrisca');
+  } finally { delete global.localStorage; }
+});
+
+test('cache corrompido nao derruba a navegacao', function () {
+  const def = helpers.browseComponent().def;
+  const m = def.methods;
+  const self = { unpackMedia: m.unpackMedia };
+  global.localStorage = { getItem: function () { return '{lixo nao json'; } };
+  try {
+    assert.equal(m.readMediaCache.call(self, 'scan-1'), null);
+  } finally { delete global.localStorage; }
+});

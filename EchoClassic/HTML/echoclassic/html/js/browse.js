@@ -24,6 +24,11 @@ var LmsSplitPane = {
   }
 };
 
+/* Fora do componente de proposito: `methods` so aceita funcao, e o Vue embrulha
+   qualquer outro valor -- uma string ali vira uma funcao vazia, e a chave de
+   storage vira o texto do corpo dessa funcao. */
+var LMS_MEDIA_CACHE_KEY = 'echoclassic.media.v1';
+
 Vue.component('lms-browse', {
   template: `
 <div ref="split" class="split-body" :class="{'split-locked': splitLocked}"
@@ -630,8 +635,65 @@ Vue.component('lms-browse', {
         }
       }, this));
     },
+    /* O indice ocupa ~150 KB em memoria e ~31 KB compactado. Guardar em
+       localStorage e suficiente e mantem o idioma do resto do codigo; o
+       IndexedDB so se pagaria numa biblioteca uma ordem de grandeza maior.
+       Formato: [formatos, provedores, bits] -- objetos de booleanos gastariam
+       cinco vezes mais espaco para a mesma informacao. */
+    packMedia: function (index) {
+      var out = {};
+      Object.keys(index).forEach(function (id) {
+        var m = index[id];
+        out[id] = [
+          Object.keys(m.formats).join(','),
+          Object.keys(m.providers).join(','),
+          (m.hires ? 1 : 0) | (m.standard ? 2 : 0) | (m.local ? 4 : 0) | (m.remote ? 8 : 0)
+        ];
+      });
+      return out;
+    },
+    unpackMedia: function (packed) {
+      var index = Object.create(null);
+      Object.keys(packed || {}).forEach(function (id) {
+        var row = packed[id];
+        if (!Array.isArray(row)) return;
+        var meta = { formats: Object.create(null), providers: Object.create(null),
+                     hires: !!(row[2] & 1), standard: !!(row[2] & 2),
+                     local: !!(row[2] & 4), remote: !!(row[2] & 8) };
+        String(row[0] || '').split(',').forEach(function (f) { if (f) meta.formats[f] = true; });
+        String(row[1] || '').split(',').forEach(function (p) { if (p) meta.providers[p] = true; });
+        index[id] = meta;
+      });
+      return index;
+    },
+    readMediaCache: function (lastscan) {
+      if (!lastscan) return null;
+      try {
+        var saved = JSON.parse(localStorage.getItem(LMS_MEDIA_CACHE_KEY) || '');
+        if (!saved || saved.lastscan !== lastscan) return null;
+        var index = this.unpackMedia(saved.index);
+        return Object.keys(index).length ? index : null;
+      } catch (e) { return null; }
+    },
+    writeMediaCache: function (lastscan, index) {
+      if (!lastscan) return;
+      try {
+        localStorage.setItem(LMS_MEDIA_CACHE_KEY,
+          JSON.stringify({ lastscan: lastscan, index: this.packMedia(index) }));
+      } catch (e) {
+        /* Cota estourada nao pode derrubar a navegacao: sem cache a skin so
+           volta a levar os dez segundos de sempre. */
+      }
+    },
     loadMediaIndex: async function (pid, token) {
       if (this.mediaIndex) return this.mediaIndex;
+      /* O lastscan muda quando a biblioteca muda; enquanto ele for o mesmo, o
+         indice guardado continua valendo e a espera de ~10s desaparece. */
+      var lastscan = '';
+      try { lastscan = (await LmsApi.serverInfo()).lastscan; } catch (e) { lastscan = ''; }
+      if (token !== this.requestToken) return null;
+      var cached = this.readMediaCache(lastscan);
+      if (cached) { this.mediaIndex = cached; return cached; }
       var index = Object.create(null);
       var start = 0;
       var pageSize = 2000;
@@ -665,6 +727,7 @@ Vue.component('lms-browse', {
         keepGoing = sourceCount === pageSize;
       }
       this.mediaIndex = index;
+      this.writeMediaCache(lastscan, index);
       return index;
     },
     /* Ordem total. Sem desempate encadeado, dois albuns com o mesmo valor no

@@ -749,6 +749,9 @@
     var r = await rpc('', ['serverstatus', 0, 0]);
     return {
       version: txt(r.version),
+      /* Carimbo do ultimo scan da biblioteca. E a chave certa para invalidar
+         cache derivado: muda exatamente quando o conteudo muda. */
+      lastscan: txt(r.lastscan),
       artists: num(r['info total artists']),
       albums: num(r['info total albums']),
       songs: num(r['info total songs']),
