@@ -44,10 +44,10 @@ Vue.component('lms-browse', {
         <span v-if="filterCount" class="filter-badge" aria-hidden="true">{{ filterCount }}</span>
       </button>
       <select :value="sortKey" :aria-label="sortSelectLabel" @change="chooseSort($event.target.value)">
-        <option v-if="view === 'recentes'" value="recent">Recently added</option>
+        <option v-if="view === 'recent'" value="recent">Recently added</option>
         <option :value="primaryOptionValue">{{ primaryOptionLabel }}</option>
-        <option v-if="view === 'albuns' || view === 'recentes'" value="artist">Artist</option>
-        <option v-if="view === 'albuns' || view === 'recentes'" value="year">Year</option>
+        <option v-if="view === 'albums' || view === 'recent'" value="artist">Artist</option>
+        <option v-if="view === 'albums' || view === 'recent'" value="year">Year</option>
         <option v-if="allowsMediaFilter" value="format">Format</option>
         <option v-if="allowsMediaFilter" value="source">Local library first</option>
         <option v-if="allowsMediaFilter" value="quality">Highest resolution first</option>
@@ -95,7 +95,7 @@ Vue.component('lms-browse', {
         </button>
       </div>
     </div>
-    <div v-if="view === 'recentes' && store.history.length" class="history-strip">
+    <div v-if="view === 'recent' && store.history.length" class="history-strip">
       <div class="sectitle">Recently played</div>
       <div class="history-scroll">
         <button v-for="h in store.history.slice(0, 12)" :key="h.id + '-' + h.playedAt"
@@ -249,11 +249,11 @@ Vue.component('lms-browse', {
     viewLabel: function () { return LmsUi.viewLabel(); },
     primaryOptionLabel: function () {
       return {
-        artistas: 'Artist', albuns: 'Album', recentes: 'Album',
-        generos: 'Genre', anos: 'Year'
+        artists: 'Artist', albums: 'Album', recent: 'Album',
+        genres: 'Genre', years: 'Year'
       }[this.view] || 'Name';
     },
-    primaryOptionValue: function () { return this.view === 'anos' ? 'year' : 'name'; },
+    primaryOptionValue: function () { return this.view === 'years' ? 'year' : 'name'; },
     /* Em Albuns, "Artist" produz linhas de artista -- agrupa. Em Recentes a
        mesma opcao apenas reordena albuns, porque Recentes nao passa por
        loadPagedRoot e sempre desenha album. Chamar os dois de "Exibicao" era o
@@ -263,14 +263,14 @@ Vue.component('lms-browse', {
        agrupamento, o rotulo tinha de mudar por view para nao mentir sobre o que
        aquele controle fazia ali; agora ele ordena, em qualquer raiz. */
     sortSelectLabel: function () { return this.tr('Sort by'); },
-    frame: function () { return LmsNav.top('musica') || this.rootSelection; },
+    frame: function () { return LmsNav.top('music') || this.rootSelection; },
     sortKey: function () { return (this.ui.sort[0] || {}).key || 'name'; },
     sortDesc: function () { return !!(this.ui.sort[0] || {}).desc; },
     groupsAlbumsByArtist: function () {
       return this.ui.group.indexOf('artist') >= 0;
     },
     groupsMainArtists: function () {
-      return this.view === 'artistas' || this.groupsAlbumsByArtist;
+      return this.view === 'artists' || this.groupsAlbumsByArtist;
     },
     groupsAlbumsByRelatedArtist: function () {
       return this.ui.group.indexOf('relatedArtist') >= 0;
@@ -296,7 +296,7 @@ Vue.component('lms-browse', {
     hasMediaFilter: function () {
       return this.allowsMediaFilter && this.ui.filters.length > 0;
     },
-    /* Artista relacionado monta a lista a partir do endpoint de artistas: nao ha
+    /* Artista relacionado monta a lista a partir do endpoint de artists: nao ha
        album para conferir, entao o filtro nao tem como ser aplicado. Dizer isso
        na tela e o oposto do bug C -- ali a promessa era vazia e ninguem avisava. */
     filtersIgnored: function () {
@@ -410,8 +410,8 @@ Vue.component('lms-browse', {
       return this.preferMode !== 'none';
     },
     showsAlbums: function () {
-      return (this.view === 'albuns' && !this.groupsAlbumsByArtist &&
-              !this.groupsAlbumsByRelatedArtist) || this.view === 'recentes';
+      return (this.view === 'albums' && !this.groupsAlbumsByArtist &&
+              !this.groupsAlbumsByRelatedArtist) || this.view === 'recent';
     },
     hasRail: function () {
       /* O indice alfabetico so faz sentido sobre uma lista alfabetica; em
@@ -420,7 +420,7 @@ Vue.component('lms-browse', {
          vez por secao, e o salto escolheria uma delas sem criterio. */
       return !this.loading && this.rows.length > 30 && this.sortKey !== 'recent' &&
              !this.sectionKey && !LmsUi.sortNeedsMedia(this.sortKey) &&
-             (this.view === 'artistas' || this.view === 'albuns' || this.view === 'recentes');
+             (this.view === 'artists' || this.view === 'albums' || this.view === 'recent');
     },
     rowH: function () { return this.showsAlbums ? 88 : 72; },
     headerH: function () { return 34; },
@@ -606,7 +606,7 @@ Vue.component('lms-browse', {
     isSelected: function (r) {
       var selectedFrame = this.frame;
       if (r.kind === 'artist') {
-        var frames = LmsNav.stacks.musica || [];
+        var frames = LmsNav.stacks.music || [];
         for (var i = frames.length - 1; i >= 0; i--) {
           if (frames[i].kind === 'artist') {
             selectedFrame = frames[i];
@@ -670,8 +670,8 @@ Vue.component('lms-browse', {
     },
     open: function (r) {
       this.rootSelection = null;
-      LmsNav.reset('musica');
-      LmsNav.push('musica', {
+      LmsNav.reset('music');
+      LmsNav.push('music', {
         kind: r.kind, id: r.id, ids: r.ids,
         label: r.label, sub: r.sub, art: r.art,
         year: r.year, originalYear: r.originalYear
@@ -686,7 +686,7 @@ Vue.component('lms-browse', {
       };
     },
     ensureRecentSelection: function () {
-      if (this.view !== 'recentes' || window.innerWidth <= 700) return;
+      if (this.view !== 'recent' || window.innerWidth <= 700) return;
       /* A guarda precisa ser sobre a lista que o usuario ve: com um filtro que
          nao casa com nada, rows tem itens e displayRows nao, e redimensionar a
          janela lia displayRows[0] indefinido. */
@@ -863,8 +863,8 @@ Vue.component('lms-browse', {
     historyAction: function (h) {
       if (h.albumId != null) {
         this.rootSelection = null;
-        LmsNav.reset('musica');
-        LmsNav.push('musica', {
+        LmsNav.reset('music');
+        LmsNav.push('music', {
           kind: 'album', id: h.albumId, label: h.album || h.title,
           art: LmsFmt.coverUrl(h.coverId, 50), artist: h.artist || ''
         });
@@ -1318,13 +1318,13 @@ Vue.component('lms-browse', {
       this.activeRail = '';
       if (!preserveNavigation) {
         this.rootSelection = null;
-        LmsNav.reset('musica');
+        LmsNav.reset('music');
       }
       var pid = this.store.playerId || '';
       try {
-        if (this.view === 'artistas' || this.view === 'albuns') {
+        if (this.view === 'artists' || this.view === 'albums') {
           await this.loadPagedRoot(pid, token);
-        } else if (this.view === 'recentes') {
+        } else if (this.view === 'recent') {
           if (this.needsMediaIndex) {
             await this.loadMediaIndex(pid, token);
             if (token !== this.requestToken) return;
@@ -1367,7 +1367,7 @@ Vue.component('lms-browse', {
 	          if (recentSourceCount === 250) {
 	            this.limitWarning = 'Recent shows the 250 newest albums. Use the filter to narrow it down.';
 	          }
-        } else if (this.view === 'generos') {
+        } else if (this.view === 'genres') {
           var g = await LmsApi.genres(pid, 0, 2000);
           if (token !== this.requestToken) return;
           if (g.length >= 2000) this.limitWarning = 'This library has more than 2,000 genres; this screen shows the first 2,000.';

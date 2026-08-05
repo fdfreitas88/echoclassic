@@ -29,21 +29,21 @@ function ui(saved) {
 
 test('cada view comeca com filtro vazio e a ordenacao propria', function () {
   const u = ui();
-  u.setMusicView('recentes');
+  u.setMusicView('recent');
   assert.deepEqual(plain(u.state.filters), []);
   assert.deepEqual(plain(u.state.group), []);
   assert.equal(u.state.sort[0].key, 'recent', 'Recentes nasce na ordem do servidor');
 
-  u.setMusicView('anos');
+  u.setMusicView('years');
   assert.equal(u.state.sort[0].key, 'year');
 
-  u.setMusicView('albuns');
+  u.setMusicView('albums');
   assert.equal(u.state.sort[0].key, 'name');
 });
 
 test('filtrar e ordenar deixam de ser a mesma coisa', function () {
   const u = ui();
-  u.setMusicView('albuns');
+  u.setMusicView('albums');
   u.setSort([{ key: 'year', desc: true }]);
   u.setFilters(['format:flac']);
 
@@ -58,7 +58,7 @@ test('filtrar e ordenar deixam de ser a mesma coisa', function () {
 
 test('agrupar e ordenar deixam de ser a mesma coisa', function () {
   const u = ui();
-  u.setMusicView('albuns');
+  u.setMusicView('albums');
   u.setSort([{ key: 'year', desc: false }]);
   u.setGroup(['artist']);
 
@@ -71,11 +71,11 @@ test('agrupar e ordenar deixam de ser a mesma coisa', function () {
 
 test('so Albuns agrupa; Recentes ordena por artista mas nunca agrupa', function () {
   const u = ui();
-  u.setMusicView('albuns');
+  u.setMusicView('albums');
   u.setGroup(['artist']);
   assert.deepEqual(plain(u.state.group), ['artist']);
 
-  u.setMusicView('recentes');
+  u.setMusicView('recent');
   u.setGroup(['artist']);
   assert.deepEqual(plain(u.state.group), [], 'Recentes desenha album sempre — nao ha o que agrupar');
   u.setSort([{ key: 'artist', desc: false }]);
@@ -84,26 +84,26 @@ test('so Albuns agrupa; Recentes ordena por artista mas nunca agrupa', function 
 
 test('filtro de midia so existe onde a view sabe aplicar', function () {
   const u = ui();
-  u.setMusicView('artistas');
+  u.setMusicView('artists');
   u.setFilters(['quality:hires']);
   assert.deepEqual(plain(u.state.filters), [], 'Artistas nao filtra por midia');
 
-  u.setMusicView('albuns');
+  u.setMusicView('albums');
   u.setFilters(['quality:hires', 'lixo:inexistente']);
   assert.deepEqual(plain(u.state.filters), ['quality:hires'], 'chave invalida e descartada, o resto entra');
 });
 
 test('cada view lembra o proprio conjunto', function () {
   const u = ui();
-  u.setMusicView('albuns');
+  u.setMusicView('albums');
   u.setFilters(['format:flac']);
   u.setSort([{ key: 'year', desc: true }]);
 
-  u.setMusicView('recentes');
+  u.setMusicView('recent');
   u.setFilters(['stream:qobuz']);
   assert.deepEqual(plain(u.state.filters), ['stream:qobuz']);
 
-  u.setMusicView('albuns');
+  u.setMusicView('albums');
   assert.deepEqual(plain(u.state.filters), ['format:flac'], 'Albuns manteve o dele');
   assert.equal(u.state.sort[0].key, 'year');
 });
@@ -112,26 +112,26 @@ test('cada view lembra o proprio conjunto', function () {
    gravado, e ele precisa ser desmembrado no conceito certo -- senao a pessoa
    abre a 3.2.0 e perde a escolha, ou pior, ganha um agrupamento que nao pediu. */
 test('migra sortKey de midia para filtro, preservando a ordenacao padrao', function () {
-  const u = ui({ musicView: 'recentes', sortKey: 'stream:qobuz', sortDesc: false,
-                 sortByView: { recentes: 'stream:qobuz' }, recentSortMigrated: true });
-  u.setMusicView('recentes');
+  const u = ui({ musicView: 'recent', sortKey: 'stream:qobuz', sortDesc: false,
+                 sortByView: { recent: 'stream:qobuz' }, recentSortMigrated: true });
+  u.setMusicView('recent');
   assert.deepEqual(plain(u.state.filters), ['stream:qobuz'], 'virou filtro');
   assert.equal(u.state.sort[0].key, 'recent', 'e a ordenacao voltou ao padrao da view');
   assert.deepEqual(plain(u.state.group), []);
 });
 
 test('migra sortKey de agrupamento para grupo, e nao para filtro', function () {
-  const u = ui({ musicView: 'albuns', sortKey: 'artist', sortDesc: false,
-                 sortByView: { albuns: 'artist' }, recentSortMigrated: true });
-  u.setMusicView('albuns');
+  const u = ui({ musicView: 'albums', sortKey: 'artist', sortDesc: false,
+                 sortByView: { albums: 'artist' }, recentSortMigrated: true });
+  u.setMusicView('albums');
   assert.deepEqual(plain(u.state.group), ['artist'], 'em Albuns, Artista agrupa');
   assert.deepEqual(plain(u.state.filters), []);
 });
 
 test('migra sortKey de ordenacao para ordenacao, com a direcao', function () {
-  const u = ui({ musicView: 'albuns', sortKey: 'year', sortDesc: true,
-                 sortByView: { albuns: 'year' }, recentSortMigrated: true });
-  u.setMusicView('albuns');
+  const u = ui({ musicView: 'albums', sortKey: 'year', sortDesc: true,
+                 sortByView: { albums: 'year' }, recentSortMigrated: true });
+  u.setMusicView('albums');
   assert.equal(u.state.sort[0].key, 'year');
   assert.equal(u.state.sort[0].desc, true, 'a direcao sobreviveu');
   assert.deepEqual(plain(u.state.group), []);
@@ -139,16 +139,16 @@ test('migra sortKey de ordenacao para ordenacao, com a direcao', function () {
 });
 
 test('em Recentes, Artista migra como ordenacao — nunca como agrupamento', function () {
-  const u = ui({ musicView: 'recentes', sortKey: 'artist', sortDesc: false,
-                 sortByView: { recentes: 'artist' }, recentSortMigrated: true });
-  u.setMusicView('recentes');
+  const u = ui({ musicView: 'recent', sortKey: 'artist', sortDesc: false,
+                 sortByView: { recent: 'artist' }, recentSortMigrated: true });
+  u.setMusicView('recent');
   assert.deepEqual(plain(u.state.group), [], 'era a armadilha do bug C; nao pode virar grupo');
   assert.equal(u.state.sort[0].key, 'artist');
 });
 
 test('inverter a ordem mexe so no criterio primario', function () {
   const u = ui();
-  u.setMusicView('albuns');
+  u.setMusicView('albums');
   u.setSort([{ key: 'year', desc: false }]);
   u.toggleSortDir();
   assert.equal(u.state.sort[0].desc, true);
@@ -168,13 +168,13 @@ test('o estado sobrevive a recarga', function () {
     }).LmsUi;
   };
   const a = fresh();
-  a.setMusicView('albuns');
+  a.setMusicView('albums');
   a.setFilters(['format:flac']);
   a.setSort([{ key: 'year', desc: true }]);
   a.setGroup(['artist']);
 
   const b = fresh();
-  b.setMusicView('albuns');
+  b.setMusicView('albums');
   assert.deepEqual(plain(b.state.filters), ['format:flac']);
   assert.equal(b.state.sort[0].key, 'year');
   assert.equal(b.state.sort[0].desc, true);

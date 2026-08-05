@@ -22,7 +22,7 @@ test('templates keep structural accessibility gates closed', function () {
     }
   });
   assert.match(joined, /<h1[^>]*>\{\{ pageHeading \}\}<\/h1>/);
-  assert.match(joined, /Fila de reprodução/);
+  assert.match(joined, /Playback queue/);
   assert.match(joined, /Abrir Minha Música/);
   assert.match(joined, /albumSubtitle\(a\)/);
   assert.match(helpers.read('EchoClassic/HTML/echoclassic/html/js/opmlview.js'), /Você ainda não adicionou favoritos/);

@@ -129,9 +129,9 @@ Vue.component('lms-opml', {
       return this.isTuneUrl(it) ? 'Sintonizar' : 'Search';
     },
     openMusic: function () {
-      LmsUi.setTab('musica');
-      LmsUi.setMusicView('albuns');
-      LmsNav.reset('musica');
+      LmsUi.setTab('music');
+      LmsUi.setMusicView('albums');
+      LmsNav.reset('music');
     },
     /* api.js devolve 'menu' como default para tudo que nao seja audio/search/
        text, inclusive itens sem actions.go — e ai opmlChildNode() e null. Sem

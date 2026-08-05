@@ -16,7 +16,7 @@ Vue.component('lms-playlists', {
       <div style="flex:1;min-width:0">
         <div class="albhead">
           <input v-if="editing" v-model="editName" class="playlist-name-input"
-                 aria-label="Nome da playlist" @keyup.enter="rename">
+                 aria-label="Playlist name" @keyup.enter="rename">
           <div v-else class="big ell">{{ frame.label }}</div>
         </div>
         <div class="albsub">{{ tracks.length }} {{ tracks.length === 1 ? 'song' : 'songs' }}<span v-if="total"> • {{ total }}</span></div>
@@ -24,7 +24,7 @@ Vue.component('lms-playlists', {
           <button class="playlist-command pointer" @click="playAll">Play</button>
           <button class="playlist-command pointer" @click="shuffle">Shuffle</button>
           <button class="playlist-command pointer"
-                  @click="toggleEdit">{{ editing ? 'Done' : 'Editar' }}</button>
+                  @click="toggleEdit">{{ editing ? 'Done' : 'Edit' }}</button>
           <button v-if="editing && selectedCount" class="playlist-command pointer"
                   @click="removeSelected">Remove {{ selectedCount }}</button>
 	          <button v-if="editing" class="playlist-command destructive pointer"
@@ -79,15 +79,15 @@ Vue.component('lms-playlists', {
 	      <span class="ell"><span class="t ell">New playlist…</span></span>
 	    </button>
     <div v-else class="opsearch">
-      <input ref="newname" v-model="newName" placeholder="Nome da playlist"
+      <input ref="newname" v-model="newName" placeholder="Playlist name"
              @keyup.enter="doCreate" @keyup.esc="creating = false">
-      <button class="opsearch-action pointer" @click="doCreate">Criar</button>
+      <button class="opsearch-action pointer" @click="doCreate">Create</button>
       <button class="opsearch-action secondary pointer" @click="creating = false">Cancel</button>
     </div>
 	    <div v-if="notice" class="optext">{{ notice }}</div>
 	    <div v-if="lists.length > 30" class="opsearch">
-	      <input v-model="filter" type="search" placeholder="Filtrar playlists"
-	             aria-label="Filtrar playlists">
+	      <input v-model="filter" type="search" placeholder="Filter playlists"
+	             aria-label="Filter playlists">
 	    </div>
 
 	    <button v-for="p in filteredLists" :key="p.id" type="button" class="row noart pointer"

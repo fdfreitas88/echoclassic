@@ -132,7 +132,7 @@
         </p>
       </fieldset>
 
-      <fieldset v-if="show('Preferência')" class="filter-group">
+      <fieldset v-if="show('Preference')" class="filter-group">
         <legend>Playback preference</legend>
         <button v-for="p in preferOptions" :key="p.key" type="button" class="filter-option"
                 :class="{on: draft.prefer === p.key}" :aria-pressed="String(draft.prefer === p.key)"
@@ -150,7 +150,7 @@
             {{ v.name }}<span v-if="ui.defaultView === v.id" class="filter-view-tag"> · padrão</span>
           </button>
           <button type="button" class="filter-chip-clear"
-                  :aria-label="'Definir ' + v.name + ' como padrão'"
+                  :aria-label="'Set ' + v.name + ' as default'"
                   @click="LmsUi.setDefaultView(v.id)">Default</button>
           <button type="button" class="filter-chip-clear" :aria-label="'Rename' + v.name"
                   @click="rename(v)">Rename</button>
@@ -225,7 +225,7 @@
         var view = this.ui.musicView;
         var all = [
           { key: 'recent', label: this.tr('Recently added') },
-          { key: 'name', label: view === 'anos' ? this.tr('Year') : this.tr('Name') },
+          { key: 'name', label: view === 'years' ? this.tr('Year') : this.tr('Name') },
           { key: 'artist', label: this.tr('Artist') },
           { key: 'year', label: this.tr('Year') },
           { key: 'format', label: this.tr('Format') },

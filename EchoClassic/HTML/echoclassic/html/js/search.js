@@ -161,21 +161,21 @@ Vue.component('lms-search', {
       this.run();
     },
     enterMusic: function (view, frame) {
-      LmsUi.setTab('musica');
+      LmsUi.setTab('music');
       LmsUi.setMusicView(view);
-      LmsNav.reset('musica');
+      LmsNav.reset('music');
       /* Fechar a busca remonta lms-browse, cujo carregamento limpa a pilha.
          Empilhar no proximo tick garante que o destino sobreviva a remontagem. */
-      this.$nextTick(function () { LmsNav.push('musica', frame); });
+      this.$nextTick(function () { LmsNav.push('music', frame); });
     },
     openArtist: function (a) {
-      this.enterMusic('artistas', {
+      this.enterMusic('artists', {
         kind: 'artist', id: a.id, ids: a.ids,
         label: a.name, art: null
       });
     },
     openAlbum: function (a) {
-      this.enterMusic('albuns', {
+      this.enterMusic('albums', {
         kind: 'album', id: a.id, label: a.title,
         sub: [a.artist, a.year || null].filter(Boolean).join(' • '),
         art: LmsFmt.coverUrl(a.artworkTrackId, 50) || null,
@@ -188,7 +188,7 @@ Vue.component('lms-search', {
         LmsUi.notify('This track does not belong to an album. Use the actions to play it or add it to the queue.');
         return;
       }
-      this.enterMusic('albuns', {
+      this.enterMusic('albums', {
         kind: 'album', id: t.albumId, label: t.album || t.title,
         sub: t.artist || '', art: LmsFmt.coverUrl(t.coverId, 50) || null
       });

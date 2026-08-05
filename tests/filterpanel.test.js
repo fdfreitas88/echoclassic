@@ -145,7 +145,7 @@ test('o rascunho nao mexe no estado ativo ate Aplicar', function () {
   const panel = captured.self;
   const LmsUi = captured.ctx.LmsUi;
 
-  LmsUi.setMusicView('albuns');
+  LmsUi.setMusicView('albums');
   panel.reset();
   panel.toggle('format:flac');
   panel.toggle('quality:hires');
@@ -162,7 +162,7 @@ test('Cancelar descarta o rascunho', function () {
   const panel = captured.self;
   const LmsUi = captured.ctx.LmsUi;
 
-  LmsUi.setMusicView('albuns');
+  LmsUi.setMusicView('albums');
   LmsUi.setFilters(['format:flac']);
   panel.reset();
   panel.toggle('format:mp3');
@@ -178,7 +178,7 @@ test('genero vira filtro com id do servidor e rotulo legivel', async function ()
   const panel = captured.self;
   const LmsUi = captured.ctx.LmsUi;
 
-  LmsUi.setMusicView('albuns');
+  LmsUi.setMusicView('albums');
   panel.reset();
   await panel.loadGenres();
   assert.equal(panel.genres.length, 2);
@@ -191,7 +191,7 @@ test('genero vira filtro com id do servidor e rotulo legivel', async function ()
   /* A pilula precisa dizer "Rock", e nao "genre:11": o mapa de nomes vive no
      LmsUi justamente para o painel e a lista lerem o mesmo. */
   const browse = helpers.browseComponent();
-  const self = { view: 'albuns', ui: LmsUi.state, rows: [],
+  const self = { view: 'albums', ui: LmsUi.state, rows: [],
                  MEDIA_FORMATS: browse.def.data().MEDIA_FORMATS };
   self.tr = browse.def.methods.tr.bind(self);
   self.filterLabel = browse.def.methods.filterLabel.bind(self);
@@ -208,20 +208,20 @@ test('a busca dentro dos filtros reduz as opcoes e esconde secao vazia', async f
 
   panel.needle = 'fla';
   assert.deepEqual(plain(panel.visibleFormats.map(function (f) { return f.key; })), ['flac']);
-  assert.equal(panel.show('Formato'), true);
-  assert.equal(panel.show('Gênero'), false, 'nenhum genero casa "fla"');
+  assert.equal(panel.show('Format'), true);
+  assert.equal(panel.show('Genre'), false, 'nenhum genero casa "fla"');
 
   panel.needle = 'rock';
   assert.deepEqual(plain(panel.visibleGenres.map(function (g) { return g.name; })), ['Rock']);
 
   panel.needle = '';
-  assert.equal(panel.show('Ano'), true, 'sem busca, tudo aparece');
+  assert.equal(panel.show('Year'), true, 'sem busca, tudo aparece');
 });
 
 test('o ano aceita intervalo, ano exato e limite aberto', function () {
   const captured = helpers.panelInstance();
   const panel = captured.self;
-  captured.ctx.LmsUi.setMusicView('albuns');
+  captured.ctx.LmsUi.setMusicView('albums');
   panel.reset();
 
   panel.yearFrom = '1971'; panel.yearTo = '1977';
@@ -242,7 +242,7 @@ test('o ano aceita intervalo, ano exato e limite aberto', function () {
   panel.yearFrom = '1990'; panel.yearTo = '1980';
   panel.commitYears();
   assert.equal(panel.draft.filters.length, 0, 'intervalo invertido nao vira filtro');
-  assert.match(panel.yearError, /menor ou igual/);
+  assert.match(panel.yearError, /lower than or equal/);
 
   panel.clearYears();
   assert.equal(panel.draft.filters.length, 0);
@@ -251,7 +251,7 @@ test('o ano aceita intervalo, ano exato e limite aberto', function () {
 
 test('uma faceta de valor unico nao acumula: o ano novo substitui o anterior', function () {
   const ctx = helpers.uiContext();
-  ctx.LmsUi.setMusicView('albuns');
+  ctx.LmsUi.setMusicView('albums');
   ctx.LmsUi.toggleFilter('year:1971-1977');
   ctx.LmsUi.toggleFilter('year:1980-1989');
   assert.deepEqual(plain(ctx.LmsUi.state.filters), ['year:1980-1989']);
@@ -269,8 +269,8 @@ test('uma faceta de valor unico nao acumula: o ano novo substitui o anterior', f
    que a lista nao saberia aplicar. */
 test('pais nao existe no LMS, e o estado nao finge que existe', function () {
   const ctx = helpers.uiContext();
-  ctx.LmsUi.setMusicView('albuns');
-  assert.equal(ctx.LmsUi.validFilter('albuns', 'country:de'), false);
+  ctx.LmsUi.setMusicView('albums');
+  assert.equal(ctx.LmsUi.validFilter('albums', 'country:de'), false);
   ctx.LmsUi.setFilters(['country:de']);
   assert.deepEqual(plain(ctx.LmsUi.state.filters), [], 'chave inventada nao entra no estado');
 
@@ -285,7 +285,7 @@ test('ordenar e agrupar continuam separados de filtrar', function () {
   const panel = captured.self;
   const LmsUi = captured.ctx.LmsUi;
 
-  LmsUi.setMusicView('albuns');
+  LmsUi.setMusicView('albums');
   panel.reset();
   panel.toggle('format:flac');
   panel.chooseSort('name');
@@ -312,17 +312,17 @@ test('o menu de agrupar so oferece o que a raiz sabe fazer', function () {
   const panel = captured.self;
   const LmsUi = captured.ctx.LmsUi;
 
-  LmsUi.setMusicView('albuns');
+  LmsUi.setMusicView('albums');
   let values = panel.groupOptions.map(function (o) { return o.value; });
   assert.deepEqual(plain(values), ['', 'artist', 'relatedArtist', 'sec:decade', 'sec:format',
                             'sec:quality', 'sec:origin', 'sec:stream']);
 
-  LmsUi.setMusicView('recentes');
+  LmsUi.setMusicView('recent');
   values = panel.groupOptions.map(function (o) { return o.value; });
   assert.ok(values.indexOf('artist') < 0, 'Recentes nunca produz linha de artista');
   assert.ok(values.indexOf('sec:decade') >= 0, 'mas sabe seccionar');
 
-  LmsUi.setMusicView('generos');
+  LmsUi.setMusicView('genres');
   values = panel.groupOptions.map(function (o) { return o.value; });
   assert.deepEqual(plain(values), [''], 'Generos nao agrupa nem secciona');
 });
@@ -332,15 +332,15 @@ test('as opcoes de ordenacao acompanham a raiz', function () {
   const panel = captured.self;
   const LmsUi = captured.ctx.LmsUi;
 
-  LmsUi.setMusicView('albuns');
+  LmsUi.setMusicView('albums');
   let keys = panel.sortOptions.map(function (o) { return o.key; });
   assert.deepEqual(plain(keys), ['name', 'artist', 'year', 'format', 'source', 'quality']);
 
-  LmsUi.setMusicView('recentes');
+  LmsUi.setMusicView('recent');
   keys = panel.sortOptions.map(function (o) { return o.key; });
   assert.equal(keys[0], 'recent', 'Recentes tem a ordem nativa do servidor');
 
-  LmsUi.setMusicView('artistas');
+  LmsUi.setMusicView('artists');
   keys = panel.sortOptions.map(function (o) { return o.key; });
   assert.deepEqual(plain(keys), ['name'], 'Artistas nao ordena pelo que nao carrega');
 });
@@ -348,7 +348,7 @@ test('as opcoes de ordenacao acompanham a raiz', function () {
 test('inverter a direcao nao troca o criterio', function () {
   const captured = helpers.panelInstance();
   const panel = captured.self;
-  captured.ctx.LmsUi.setMusicView('albuns');
+  captured.ctx.LmsUi.setMusicView('albums');
   panel.reset();
   panel.chooseSort('year');
   panel.toggleDir();
@@ -364,7 +364,7 @@ test('uma vista salva guarda os quatro conceitos e volta inteira', function () {
   const panel = captured.self;
   const LmsUi = captured.ctx.LmsUi;
 
-  LmsUi.setMusicView('albuns');
+  LmsUi.setMusicView('albums');
   panel.reset();
   panel.toggle('genre:11');
   panel.toggle('format:flac');
@@ -398,7 +398,7 @@ test('uma vista salva guarda os quatro conceitos e volta inteira', function () {
 test('renomear, duplicar, apagar e definir padrao', function () {
   const ctx = helpers.uiContext();
   const LmsUi = ctx.LmsUi;
-  LmsUi.setMusicView('albuns');
+  LmsUi.setMusicView('albums');
   LmsUi.setFilters(['format:flac']);
   const saved = LmsUi.saveCurrentView('Só FLAC');
   assert.ok(saved);
@@ -408,7 +408,7 @@ test('renomear, duplicar, apagar e definir padrao', function () {
 
   assert.equal(LmsUi.duplicateView(saved.id), true);
   assert.equal(LmsUi.state.views.length, 2);
-  assert.match(LmsUi.state.views[1].name, /cópia/);
+  assert.match(LmsUi.state.views[1].name, /copy/);
 
   LmsUi.setDefaultView(saved.id);
   assert.equal(LmsUi.state.defaultView, saved.id);
@@ -421,7 +421,7 @@ test('renomear, duplicar, apagar e definir padrao', function () {
 test('salvar com o nome de uma vista existente atualiza, e nao duplica', function () {
   const ctx = helpers.uiContext();
   const LmsUi = ctx.LmsUi;
-  LmsUi.setMusicView('albuns');
+  LmsUi.setMusicView('albums');
   LmsUi.setFilters(['format:flac']);
   LmsUi.saveCurrentView('Minha vista');
   LmsUi.setFilters(['format:mp3']);
@@ -439,7 +439,7 @@ test('as vistas sobrevivem a recarga, e uma vista corrompida nao derruba a skin'
     removeItem: function (k) { delete store[k]; }
   };
   const primeiro = helpers.uiContext({ localStorage: fakeStorage });
-  primeiro.LmsUi.setMusicView('albuns');
+  primeiro.LmsUi.setMusicView('albums');
   primeiro.LmsUi.setFilters(['format:flac', 'year:1971-1977']);
   primeiro.LmsUi.saveCurrentView('Setentões');
 
@@ -450,7 +450,7 @@ test('as vistas sobrevivem a recarga, e uma vista corrompida nao derruba a skin'
   /* Uma vista com faceta desconhecida nao pode descartar o resto: a faceta sai,
      a vista fica. */
   store['echoclassic.views.v1'] = JSON.stringify({
-    list: [{ id: 'x', name: 'Meio quebrada', view: 'albuns',
+    list: [{ id: 'x', name: 'Meio quebrada', view: 'albums',
              filters: ['format:flac', 'country:de', 42], sort: 'nao e lista',
              sections: ['inventada'], prefer: 'marte' }],
     defaultId: 'nao existe'
@@ -494,7 +494,7 @@ test('a secao de generos mostra uma amostra ate haver busca', async function () 
 
 test('a busca tambem esconde as vistas salvas', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/filterpanel.js');
-  assert.match(src, /v-if="show\('Vistas salvas'\)" class="filter-group filter-views"/);
+  assert.match(src, /v-if="show\('Saved views'\)" class="filter-group filter-views"/);
 });
 
 /* Dois avisos na mesma linha se truncavam nos dois -- visto na tela. */

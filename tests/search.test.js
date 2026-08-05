@@ -66,6 +66,6 @@ test('search ranks exact matches first and enriches album and track context', as
   assert.equal(found.tracks[0].artist, 'Exact Artist');
   assert.equal(found.tracks[0].album, 'Exact Album');
   assert.equal(found.tracks[0].duration, 222);
-  assert.equal(found.tracks[0].source, 'Biblioteca local');
+  assert.equal(found.tracks[0].source, 'Local library');
   assert.ok(harness.calls.some(function (cmd) { return cmd[0] === 'songinfo'; }));
 });

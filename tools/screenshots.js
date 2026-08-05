@@ -114,7 +114,7 @@ const SHOTS = {
     setup: async function (api) {
       await api.ready();
       api.reset();
-      window.LmsUi.setTab('ajustes');
+      window.LmsUi.setTab('settings');
       await api.sleep(2500);
     }
   },
@@ -132,7 +132,7 @@ const SHOTS = {
     setup: async function (api) {
       await api.ready();
       api.reset();
-      window.LmsUi.setTab('ajustes');
+      window.LmsUi.setTab('settings');
       await api.sleep(2500);
       const head = Array.prototype.find.call(
         document.querySelectorAll('.settings-scroller *'),
@@ -146,7 +146,7 @@ const SHOTS = {
     setup: async function (api) {
       await api.ready();
       api.reset();
-      window.LmsUi.setTab('ajustes');
+      window.LmsUi.setTab('settings');
       await api.sleep(2500);
       const box = document.querySelector('.settings-scroller') ||
         document.querySelector('.tab-body .scroller') || document.querySelector('.scroller');

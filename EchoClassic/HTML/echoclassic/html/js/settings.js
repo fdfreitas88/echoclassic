@@ -494,7 +494,7 @@ Vue.component('lms-settings', {
 	        };
 	        var tabs = keysOf(LmsUi.TABS);
 	        var views = keysOf(LmsUi.MUSIC_VIEWS);
-	        var albumModes = ['albuns', 'tracks'];
+	        var albumModes = ['albums', 'tracks'];
 	        var playerPresentations = ['adaptive', 'fullscreen'];
 	        var playerPositions = ['right', 'left', 'center'];
 	        var gaugeStyles = ['flat', 'classic'];
@@ -513,7 +513,7 @@ Vue.component('lms-settings', {
 	        for (var e = 0; e < enums.length; e++) {
 	          var key = enums[e][0];
 	          if (parsed[key] !== undefined && enums[e][1].indexOf(parsed[key]) < 0) {
-	            return key + ' tem valor incompatível';
+	            return key + ' has an incompatible value';
 	          }
 	        }
 	        if (parsed.byView !== undefined && !this.isPlainObject(parsed.byView)) {
@@ -529,7 +529,7 @@ Vue.component('lms-settings', {
       }
       if (canonical === 'echoclassic.nav.v1') {
         if (!this.isPlainObject(parsed)) return 'echoclassic.nav.v1 deveria ser um objeto';
-        var stacks = ['musica', 'playlists', 'radio', 'favoritos'];
+        var stacks = ['music', 'playlists', 'radio', 'favourites'];
         for (var i = 0; i < stacks.length; i++) {
           var stack = parsed[stacks[i]];
           if (stack === undefined) continue;

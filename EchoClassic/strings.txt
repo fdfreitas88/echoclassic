@@ -1695,3 +1695,27 @@ ECHOCLASSIC_UI_MOVE_PREFIX
 ECHOCLASSIC_UI_NONE_LOWER
 	EN	none
 	PT	nenhum
+
+ECHOCLASSIC_UI_PLAYLIST_NAME
+	EN	Playlist name
+	PT	Nome da playlist
+
+ECHOCLASSIC_UI_FILTER_PLAYLISTS
+	EN	Filter playlists
+	PT	Filtrar playlists
+
+ECHOCLASSIC_UI_INCOMPATIBLE_VALUE
+	EN	 has an incompatible value
+	PT	 tem valor incompatível
+
+ECHOCLASSIC_UI_COPY_SUFFIX
+	EN	 (copy)
+	PT	 (cópia)
+
+ECHOCLASSIC_UI_EDIT
+	EN	Edit
+	PT	Editar
+
+ECHOCLASSIC_UI_CREATE
+	EN	Create
+	PT	Criar

@@ -6,21 +6,21 @@
   'use strict';
 
   var TABS = Object.freeze([
-    Object.freeze({ key: 'favoritos', label: 'Favourites' }),
+    Object.freeze({ key: 'favourites', label: 'Favourites' }),
     Object.freeze({ key: 'radio', label: 'Radio' }),
     Object.freeze({ key: 'apps', label: 'Apps' }),
     Object.freeze({ key: 'playlists', label: 'Playlists' }),
-    Object.freeze({ key: 'musica', label: 'My Music' }),
-    Object.freeze({ key: 'ajustes', label: 'Settings' })
+    Object.freeze({ key: 'music', label: 'My Music' }),
+    Object.freeze({ key: 'settings', label: 'Settings' })
   ]);
 
   /* The four roots of Minha Musica, picked from the nav bar title like iOS 9. */
   var MUSIC_VIEWS = Object.freeze([
-    Object.freeze({ key: 'recentes', label: 'Recent' }),
-    Object.freeze({ key: 'artistas', label: 'Artists' }),
-    Object.freeze({ key: 'albuns', label: 'Albums' }),
-    Object.freeze({ key: 'generos', label: 'Genres' }),
-    Object.freeze({ key: 'anos', label: 'Years' })
+    Object.freeze({ key: 'recent', label: 'Recent' }),
+    Object.freeze({ key: 'artists', label: 'Artists' }),
+    Object.freeze({ key: 'albums', label: 'Albums' }),
+    Object.freeze({ key: 'genres', label: 'Genres' }),
+    Object.freeze({ key: 'years', label: 'Years' })
   ]);
 
   var COLOR_SCHEMES = Object.freeze([
@@ -118,7 +118,7 @@
      por data de inclusao e reordenar no cliente apagava justamente o criterio
      que da nome a pagina. */
   var DEFAULT_SORT_BY_VIEW = {
-    artistas: 'name', albuns: 'name', recentes: 'recent', generos: 'name', anos: 'year'
+    artists: 'name', albums: 'name', recent: 'recent', genres: 'name', years: 'year'
   };
 
   /* So Albuns e Recentes sabem aplicar filtro de midia: sao as duas views cujo
@@ -127,7 +127,7 @@
      aqui essa regra estava escrita em tres lugares, e o de browse.js trocava a
      view do usuario por conta propria para fazer a escolha caber. */
   function allowsMediaFilter(view) {
-    return view === 'albuns' || view === 'recentes';
+    return view === 'albums' || view === 'recent';
   }
 
   /* A chave de filtro e um par faceta:valor. Guardar uma lista plana de chaves,
@@ -166,9 +166,9 @@
   }
 
   function validSortKey(view, key) {
-    if (view === 'albuns') return /^(name|artist|year|format|source|quality)$/.test(key || '');
-    if (view === 'recentes') return /^(recent|name|artist|year|format|source|quality)$/.test(key || '');
-    if (view === 'anos') return key === 'name' || key === 'year';
+    if (view === 'albums') return /^(name|artist|year|format|source|quality)$/.test(key || '');
+    if (view === 'recent') return /^(recent|name|artist|year|format|source|quality)$/.test(key || '');
+    if (view === 'years') return key === 'name' || key === 'year';
     return key === 'name';
   }
 
@@ -177,7 +177,7 @@
      indice de artistas. Recentes desenha album sempre -- oferecer "agrupar por
      artista" la era a promessa vazia do bug C. */
   function validGroup(view, key) {
-    return view === 'albuns' && /^(artist|relatedArtist)$/.test(key || '');
+    return view === 'albums' && /^(artist|relatedArtist)$/.test(key || '');
   }
 
   /* Seccionar e o outro agrupamento: a linha continua sendo o album e ganha um
@@ -262,7 +262,7 @@
     if (view === saved.musicView && saved.sortKey) legacy = saved.sortKey;
     /* O padrao anterior de Recentes era 'name', e nada no gravado distingue
        escolha deliberada de default herdado. */
-    if (view === 'recentes' && !saved.recentSortMigrated && legacy === 'name') legacy = null;
+    if (view === 'recent' && !saved.recentSortMigrated && legacy === 'name') legacy = null;
     byView[view] = migrateSortKey(view, legacy, saved.sortDesc);
   });
 
@@ -280,7 +280,7 @@
 
   /* persist() ja gravava musicView; so o estado inicial ignorava, e a raiz
      escolhida se perdia a cada recarga. */
-  var initialMusicView = isMusicView(saved.musicView) ? saved.musicView : 'recentes';
+  var initialMusicView = isMusicView(saved.musicView) ? saved.musicView : 'recent';
 
   /* Uma vista salva e um conjunto completo -- filtros, ordem, agrupamento,
      secoes e preferencia -- amarrado a raiz em que faz sentido. Guardar a raiz
@@ -291,7 +291,7 @@
 
   function sanitizeView(entry) {
     if (!plainObject(entry)) return null;
-    var view = isMusicView(entry.view) ? entry.view : 'albuns';
+    var view = isMusicView(entry.view) ? entry.view : 'albums';
     var name = String(entry.name || '').replace(/^\s+|\s+$/g, '').slice(0, 60);
     if (!name) return null;
     var body = sanitize(view, entry);
@@ -320,9 +320,9 @@
   var savedViews = readViews();
 
   var state = Vue.observable({
-	    tab: isTab(saved.tab) ? saved.tab : 'musica',
+	    tab: isTab(saved.tab) ? saved.tab : 'music',
     musicView: initialMusicView,
-    albumMode: saved.albumMode || 'albuns',   // 'albuns' = grade de capas | 'tracks' = pilha completa
+    albumMode: saved.albumMode || 'albums',   // 'albums' = grade de capas | 'tracks' = pilha completa
     dark: !!saved.dark,
     searching: false,
     query: '',
@@ -727,7 +727,7 @@
     if (!found) return false;
     var copy = sanitizeView(Object.assign({}, found, {
       id: found.id + '-copia-' + state.views.length,
-      name: (found.name + ' (cópia)').slice(0, 60)
+      name: (found.name + ' (copy)').slice(0, 60)
     }));
     if (!copy) return false;
     state.views = state.views.concat([copy]);
@@ -766,7 +766,7 @@
   function filterTrigger() { return filterTriggerEl; }
 
   var ALBUM_MODES = Object.freeze([
-    Object.freeze({ key: 'albuns', label: 'Albums' }),
+    Object.freeze({ key: 'albums', label: 'Albums' }),
     Object.freeze({ key: 'tracks', label: 'Tracks' })
   ]);
 
