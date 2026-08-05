@@ -18,16 +18,16 @@
     <title lang="PT">Echo Classic</title>
   </details>
   <plugins>
-    <plugin name="EchoClassic" version="3.2.4" minTarget="8.0" maxTarget="*">
+    <plugin name="EchoClassic" version="3.2.5" minTarget="8.0" maxTarget="*">
       <title lang="EN">Echo Classic</title>
       <title lang="PT">Echo Classic</title>
       <desc lang="EN">The iPad Music look of iOS 9, over your own library. Shows the native sample rate and bit depth of what actually reaches the DAC.</desc>
       <desc lang="PT">A aparencia do app Musica do iPad no iOS 9, sobre a sua biblioteca. Mostra a taxa nativa e a profundidade de bits do que realmente chega ao DAC.</desc>
-      <url>https://github.com/fdfreitas88/echoclassic/releases/download/v3.2.4/EchoClassic-3.2.4.zip</url>
+      <url>https://github.com/fdfreitas88/echoclassic/releases/download/v3.2.5/EchoClassic-3.2.5.zip</url>
       <link>https://github.com/fdfreitas88/echoclassic</link>
       <category>skin</category>
       <icon>https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/EchoClassic/HTML/echoclassic/html/images/icon.svg</icon>
-      <sha>c9d24732ac7a8c02d1a627c80af906c687b22da4</sha>
+      <sha>3185a058c175126c6fd003a87392eaf27743a2f8</sha>
       <creator>Felipe Freitas</creator>
     </plugin>
   </plugins>
