@@ -33,7 +33,7 @@ Vue.component('lms-album-block', {
       <div class="ameta">{{ metaLine }}</div>
       <div v-if="album.originalYear || album.year" class="edition-years">
         <span>Year of this edition: {{ album.year || 'not available' }}</span>
-        <span>Ano original: {{ album.originalYear || 'not available' }}</span>
+        <span>Original year: {{ album.originalYear || 'not available' }}</span>
       </div>
       <div v-if="tracks.length" class="album-facts" aria-label="Album technical details">
         <span class="album-fact" :title="'Formato: ' + formatLine">

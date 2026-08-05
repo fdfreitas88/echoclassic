@@ -1652,10 +1652,6 @@ ECHOCLASSIC_UI_QUEUE_HAS
 	EN	The queue has 
 	PT	A fila tem 
 
-ECHOCLASSIC_UI_QUEUE_TRANSFER_FIRST
-	EN	.
-	PT	 primeiras.
-
 ECHOCLASSIC_UI_NEXT_POSITION
 	EN	. Next: 
 	PT	. Próxima: 
@@ -1664,17 +1660,11 @@ ECHOCLASSIC_UI_LOADING
 	EN	Loading…
 	PT	Carregando…
 
-ECHOCLASSIC_UI_SUFFIX_DOWN
-	EN	 down
-	PT	 para baixo
 
 ECHOCLASSIC_UI_SYNC
 	EN	Sync
 	PT	Sincronizar
 
-ECHOCLASSIC_UI_SUFFIX_UP
-	EN	 up
-	PT	 para cima
 
 ECHOCLASSIC_UI_DELETE_QUOTED
 	EN	Delete “
@@ -1771,3 +1761,35 @@ ECHOCLASSIC_UI_REMOVE
 ECHOCLASSIC_UI_FULLSCREEN_DESC
 	EN	Always fills the whole screen
 	PT	Sempre ocupa toda a tela
+
+ECHOCLASSIC_UI_GAUGE_HELP_DARK
+	EN	The style is remembered separately for each theme. What you choose here applies to the dark theme; the other theme keeps its own.
+	PT	O estilo é lembrado separadamente para cada tema. O que você escolher aqui vale para o tema escuro; o outro tema mantém o seu.
+
+ECHOCLASSIC_UI_GAUGE_HELP_LIGHT
+	EN	The style is remembered separately for each theme. What you choose here applies to the light theme; the other theme keeps its own.
+	PT	O estilo é lembrado separadamente para cada tema. O que você escolher aqui vale para o tema claro; o outro tema mantém o seu.
+
+ECHOCLASSIC_UI_MINI_GAUGE_STYLE_DARK
+	EN	Mini player style (dark theme)
+	PT	Estilo no mini player (tema escuro)
+
+ECHOCLASSIC_UI_MINI_GAUGE_STYLE_LIGHT
+	EN	Mini player style (light theme)
+	PT	Estilo no mini player (tema claro)
+
+ECHOCLASSIC_UI_PLAYER_GAUGE_STYLE_DARK
+	EN	Full player style (dark theme)
+	PT	Estilo no player completo (tema escuro)
+
+ECHOCLASSIC_UI_PLAYER_GAUGE_STYLE_LIGHT
+	EN	Full player style (light theme)
+	PT	Estilo no player completo (tema claro)
+
+ECHOCLASSIC_UI_MINI_PLAYER_COLOUR
+	EN	Mini player colour
+	PT	Cor no mini player
+
+ECHOCLASSIC_UI_FULL_PLAYER_COLOUR
+	EN	Full player colour
+	PT	Cor no player completo

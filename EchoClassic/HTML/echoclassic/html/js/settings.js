@@ -165,12 +165,12 @@ Vue.component('lms-settings', {
   <div class="sgh">Progress bars</div>
   <div class="sgroup gauge-settings-group">
     <div class="player-help">
-      The style is remembered separately for each theme. What you choose here applies to the {{ ui.dark ? 'dark' : 'light' }}theme; the other theme keeps its own.
+      {{ gaugeHelp }}
     </div>
     <div class="srow gauge-style-row">
-      <span>Estilo no mini player ({{ ui.dark ? 'tema escuro' : 'tema claro' }})</span>
+      <span>{{ miniGaugeStyleLabel }}</span>
       <div class="gauge-segmented" role="radiogroup"
-           :aria-label="'Estilo da barra de progresso do mini player no tema ' + (ui.dark ? 'dark' : 'light')">
+           :aria-label="miniGaugeStyleLabel">
         <button v-for="style in gaugeStyles" :key="'mini-' + style.key" type="button"
                 role="radio" :aria-checked="ui.miniGaugeStyle === style.key ? 'true' : 'false'"
                 :tabindex="ui.miniGaugeStyle === style.key ? 0 : -1"
@@ -179,7 +179,7 @@ Vue.component('lms-settings', {
                 @click="miniGaugeStyle(style.key)">{{ style.label }}</button>
       </div>
     </div>
-    <label class="srow">Cor no mini player
+    <label class="srow">Mini player colour
       <select class="setting-select mini-gauge-color" :value="ui.miniGaugeColor"
               @change="gaugeColor('mini', $event.target.value)">
         <option v-for="color in gaugeColors" :key="'mini-color-' + color.key"
@@ -187,9 +187,9 @@ Vue.component('lms-settings', {
       </select>
     </label>
     <div class="srow gauge-style-row">
-      <span>Estilo no player completo ({{ ui.dark ? 'tema escuro' : 'tema claro' }})</span>
+      <span>{{ playerGaugeStyleLabel }}</span>
       <div class="gauge-segmented" role="radiogroup"
-           :aria-label="'Estilo da barra de progresso do player completo no tema ' + (ui.dark ? 'dark' : 'light')">
+           :aria-label="playerGaugeStyleLabel">
         <button v-for="style in gaugeStyles" :key="'player-' + style.key" type="button"
                 role="radio" :aria-checked="ui.playerGaugeStyle === style.key ? 'true' : 'false'"
                 :tabindex="ui.playerGaugeStyle === style.key ? 0 : -1"
@@ -198,7 +198,7 @@ Vue.component('lms-settings', {
                 @click="playerGaugeStyle(style.key)">{{ style.label }}</button>
       </div>
     </div>
-    <label class="srow">Cor no player completo
+    <label class="srow">Full player colour
       <select class="setting-select player-gauge-color" :value="ui.playerGaugeColor"
               @change="gaugeColor('player', $event.target.value)">
         <option v-for="color in gaugeColors" :key="'player-color-' + color.key"
@@ -326,6 +326,21 @@ Vue.component('lms-settings', {
       if (!this.store.volumeModeSynced) return 'not confirmed';
       return this.volumeValue + '%';
     },
+    /* Built whole rather than glued around an interpolation: translateTemplate
+       matches a text node against the dictionary, and a sentence split by
+       {{ }} can never match. That is exactly how these three stayed Portuguese
+       in an English session. */
+    gaugeHelp: function () {
+      return this.tr(this.ui.dark
+        ? 'The style is remembered separately for each theme. What you choose here applies to the dark theme; the other theme keeps its own.'
+        : 'The style is remembered separately for each theme. What you choose here applies to the light theme; the other theme keeps its own.');
+    },
+    miniGaugeStyleLabel: function () {
+      return this.tr(this.ui.dark ? 'Mini player style (dark theme)' : 'Mini player style (light theme)');
+    },
+    playerGaugeStyleLabel: function () {
+      return this.tr(this.ui.dark ? 'Full player style (dark theme)' : 'Full player style (light theme)');
+    },
     volumeHint: function () {
       if (this.store.fixedVolume) return 'Fixed output: volume is set on the DAC.';
       if (!this.store.connected) return 'No player connected.';
@@ -374,6 +389,9 @@ Vue.component('lms-settings', {
     /* setLanguage guarda a escolha e recarrega: os templates ja foram
        reescritos no registro dos componentes, entao nao ha como trocar o
        idioma da tela em pe. */
+    tr: function (text) {
+      return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
+    },
     language: function (key) {
       if (window.LmsStr && LmsStr.setLanguage) LmsStr.setLanguage(key);
     },

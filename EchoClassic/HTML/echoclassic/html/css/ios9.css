@@ -620,6 +620,17 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .font-option-check{width:10px;height:18px;margin:0 4px 3px 8px;flex:0 0 10px;
   border:solid var(--accent);border-width:0 2px 2px 0;transform:rotate(45deg);opacity:0}
 .font-option-row[aria-checked="true"] .font-option-check{opacity:1}
+/* Language rows behave like the font rows: a tick marks the current choice.
+   Without these the picker rendered as plain text with no indication of what
+   was selected. */
+.language-row{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}
+.language-row:active{background:var(--selected)}
+.language-row:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.language-label{min-width:0;flex:1}
+.language-check{width:10px;height:18px;margin:0 4px 3px 8px;flex:0 0 10px;
+  border:solid var(--accent);border-width:0 2px 2px 0;transform:rotate(45deg);opacity:0}
+.language-row[aria-checked="true"] .language-check{opacity:1}
+.language-note{min-height:34px;align-items:flex-start;padding-top:6px}
 .player-presentation-row{width:100%;min-height:58px;border:0;background:transparent;
   text-align:left;cursor:pointer}
 .player-presentation-row:active{background:var(--selected)}
