@@ -1,12 +1,17 @@
 # Changelog
 
-Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
-Versionamento semântico.
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Semantic versioning.
 
-Cada item traz como o efeito foi comprovado. **[ao vivo]** significa que foi visto
-acontecendo na interface rodando; **[código]** significa que a cadeia foi lida no
-fonte mas o estado não foi reproduzido na tela. A distinção importa para quem for
-decidir, daqui a seis meses, se pode confiar na correção.
+Every item says how the effect was established. **[live]** means it was seen
+happening in the running interface; **[code]** means the chain was read in the
+source but the state was not reproduced on screen. The distinction matters to
+whoever has to decide, six months from now, whether a fix can be trusted.
+
+Entries up to 3.2.1 were written in Portuguese, which was the project's source
+language at the time. They are left as they were: they describe releases that
+were already published under those notes, and rewriting them would misreport
+what was announced.
 
 ## [3.2.4] — 2026-08-05
 

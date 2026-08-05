@@ -203,7 +203,7 @@ test('a tela vazia diz qual filtro esta escondendo tudo', function () {
 
   assert.match(empty, /v-if="hasMediaFilter"[^>]*class="p">[^<]*\{\{ mediaDescriptor\(\) \}\}/,
     'com filtro ativo, a mensagem precisa nomear o filtro');
-  assert.match(empty, /v-else class="p">Nenhum item encontrado nesta categoria\./,
+  assert.match(empty, /v-else class="p">No items found in this category\./,
     'sem filtro, a mensagem generica continua valendo');
   assert.match(empty, /v-if="hasMediaFilter"[\s\S]*@click="clearMediaFilter"/,
     'a tela vazia precisa oferecer a saida');
@@ -324,9 +324,9 @@ test('os rotulos calculados do menu passam pelo dicionario', function () {
 
   const self = { view: 'recent', activeFilters: [{ key: 'format:flac', label: 'FLAC' }] };
   self.tr = def.methods.tr.bind(self);
-  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort by');
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Ordenar por');
   self.filterCount = def.computed.filterCount.call(self);
-  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filters: 1 active filter',
+  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filtros: 1 active filter',
     'o nome acessivel do funil sai do dicionario, nao do template');
 });
 
@@ -375,25 +375,25 @@ test('todo texto novo da interface chega traduzido, vindo do strings.txt real', 
    'No items found in this category.'].forEach(function (phrase) {
     assert.ok(tpl.indexOf(phrase) < 0, 'sobrou em portugues no template: ' + phrase);
   });
-  assert.match(tpl, /Nada nesta categoria passa pelo filtro/);
-  assert.match(tpl, /Active:/);
-  assert.match(tpl, />Clear filter</);
+  assert.match(tpl, /Nada nesta categoria corresponde ao filtro/);
+  assert.match(tpl, /Ativos:/);
+  assert.match(tpl, />Limpar filtro</);
 
   /* Os rotulos calculados nao vivem no template: passam pelo tr() em tempo de
      execucao, entao sao conferidos chamando as computeds. */
   const self = { view: 'recent' };
   self.tr = def.methods.tr.bind(self);
-  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort by');
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Ordenar por');
   self.view = 'albums';
-  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort by');
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Ordenar por');
 
   /* Os rotulos do painel tambem: eles sao montados em JavaScript, e o painel e
      todo texto novo. */
   self.activeFilters = [];
   self.ui = { filters: [], group: [], sections: [], prefer: 'local' };
   self.preferMode = def.computed.preferMode.call(self);
-  assert.equal(def.methods.preferLabel.call(self, 'local'), 'Prefer local library');
-  assert.equal(def.methods.sectionFacetLabel.call(self, 'decade'), 'Decade');
+  assert.equal(def.methods.preferLabel.call(self, 'local'), 'Preferir biblioteca local');
+  assert.equal(def.methods.sectionFacetLabel.call(self, 'decade'), 'Década');
 });
 
 /* Os avisos de truncamento sao montados em JavaScript e chegam ao template por
@@ -403,7 +403,7 @@ test('todo texto novo da interface chega traduzido, vindo do strings.txt real', 
    e aparecia em portugues numa sessao em ingles. Visto na tela do servidor. */
 test('todo aviso de limitWarning tem entrada no dicionario', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
-  const dict = dictionaryFromStrings('EN');
+  const dict = dictionaryFromStrings('PT');
 
   /* Pega a expressao inteira de cada atribuicao e tira dela todos os literais.
      Casar linha a linha deixava passar o ramo singular do ternario, que fica na
@@ -420,7 +420,7 @@ test('todo aviso de limitWarning tem entrada no dicionario', function () {
   }
 
   assert.ok(frases.length >= 6, 'esperava achar os avisos; achei ' + frases.length);
-  assert.ok(frases.some(function (f) { return f.indexOf('1 álbum') === 0; }),
+  assert.ok(frases.some(function (f) { return f.indexOf('1 album') === 0; }),
     'a forma singular precisa entrar na verificacao');
   frases.forEach(function (frase) {
     if (!frase.trim()) return;
@@ -429,7 +429,7 @@ test('todo aviso de limitWarning tem entrada no dicionario', function () {
 });
 
 test('o total de albuns nao atribuidos sobrevive a traducao', function () {
-  const dict = dictionaryFromStrings('EN');
+  const dict = dictionaryFromStrings('PT');
   const plural = '{n} albums could not be attributed to an artist in the index and appear as albums in this list.';
   assert.ok(dict[plural], 'a forma plural precisa de entrada');
   assert.match(dict[plural], /\{n\}/, 'a traducao precisa preservar o marcador {n}');
@@ -964,7 +964,7 @@ test('sem preferencia a folha de acoes nao recebe edicoes — o play fica determ
 test('a folha de acoes diz qual edicao vai tocar antes de tocar', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/actions.js');
   assert.match(src, /chosenEdition/);
-  assert.match(src, /Tocando a edição preferida: \{edition\}\./,
+  assert.match(src, /Playing the preferred edition: \{edition\}\./,
     'a frase inteira entra no dicionario, com marcador');
   assert.match(src, /item\.editions\.length > 1/, 'as outras edicoes ficam visiveis na folha');
 });
