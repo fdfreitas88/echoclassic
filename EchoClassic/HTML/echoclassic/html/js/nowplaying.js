@@ -15,7 +15,7 @@ Vue.component('lms-nowplaying', {
   <section ref="dialog" class="npfull" :class="{'with-queue': ui.queueInline}"
            role="dialog" :aria-modal="String(isModal)" aria-label="Reproduzindo agora"
            tabindex="-1" @keydown.tab="trapFocus" @keydown.esc.stop.prevent="close">
-	    <button type="button" class="dismiss pointer" title="Fechar" aria-label="Fechar player" @click="close">
+	    <button type="button" class="dismiss pointer" title="Close" aria-label="Fechar player" @click="close">
       <svg viewBox="0 0 24 12"><path d="M3 3l9 6 9-6"/></svg>
     </button>
     <button v-if="!fullscreen" type="button" class="player-position pointer"
@@ -30,8 +30,8 @@ Vue.component('lms-nowplaying', {
       </svg>
     </button>
     <button type="button" class="player-size pointer"
-	            :title="fullscreen ? 'Voltar ao modo adaptável' : 'Mostrar em tela cheia'"
-	            :aria-label="fullscreen ? 'Voltar ao modo adaptável' : 'Mostrar em tela cheia'"
+	            :title="fullscreen ? 'Back to adaptive mode' : 'Show full screen'"
+	            :aria-label="fullscreen ? 'Back to adaptive mode' : 'Show full screen'"
 	            @click="toggleFullscreen">
       <svg v-if="fullscreen" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M9 3v6H3M15 3v6h6M9 21v-6H3M15 21v-6h6"/>
@@ -47,7 +47,7 @@ Vue.component('lms-nowplaying', {
     </div>
 
     <div class="head">
-      <div class="t ell">{{ np.title || 'Nada tocando' }}</div>
+      <div class="t ell">{{ np.title || 'Nothing playing' }}</div>
       <div class="s ell">{{ subtitle }}</div>
     </div>
 
@@ -56,29 +56,29 @@ Vue.component('lms-nowplaying', {
         <i :style="{width: pct + '%'}"></i><b :style="{left: 'calc(' + pct + '% - 12px)'}"></b>
         <input class="range-hit" type="range" min="0" :max="store.duration || 1"
                step="1" :value="seekValue" :disabled="np.live || !store.duration"
-               aria-label="Posição da faixa" @input="previewSeek"
+               aria-label="Track position" @input="previewSeek"
                @pointercancel="cancelSeek" @change="commitSeek">
       </div>
       <div class="times">
         <span>{{ elapsed }}</span>
         <span v-if="!np.live">-{{ remaining }}</span>
-        <span v-else class="live">AO VIVO</span>
+        <span v-else class="live">LIVE</span>
       </div>
     </div>
 
     <div v-if="hasTrack" class="transport">
-	      <button type="button" class="np-action previous pointer" title="Anterior" aria-label="Faixa anterior" @click="prev">
+	      <button type="button" class="np-action previous pointer" title="Previous" aria-label="Previous track" @click="prev">
         <svg viewBox="0 0 32 32"><path d="M15 16L28 7v18zM4 16l11-9v18z"/></svg>
       </button>
-	      <button type="button" class="np-action playpause pointer" :title="playing ? 'Pausar' : 'Tocar'"
-	              :aria-label="playing ? 'Pausar' : 'Tocar'" @click="toggle">
+	      <button type="button" class="np-action playpause pointer" :title="playing ? 'Pause' : 'Play'"
+	              :aria-label="playing ? 'Pause' : 'Play'" @click="toggle">
         <svg v-if="playing" viewBox="0 0 32 32"><rect x="6" y="4" width="7" height="24" rx="1"/><rect x="19" y="4" width="7" height="24" rx="1"/></svg>
         <svg v-else viewBox="0 0 32 32"><path d="M8 4l20 12L8 28z"/></svg>
       </button>
-	      <button type="button" class="np-action stop pointer" title="Parar" aria-label="Parar" @click="stop">
+	      <button type="button" class="np-action stop pointer" title="Stop" aria-label="Stop" @click="stop">
         <svg viewBox="0 0 32 32"><rect x="7" y="7" width="18" height="18" rx="1"/></svg>
       </button>
-	      <button type="button" class="np-action next pointer" title="Próxima" aria-label="Próxima faixa" @click="next">
+	      <button type="button" class="np-action next pointer" title="Next" aria-label="Next track" @click="next">
         <svg viewBox="0 0 32 32"><path d="M17 16L4 25V7zM28 16l-11 9V7z"/></svg>
       </button>
     </div>
@@ -92,7 +92,7 @@ Vue.component('lms-nowplaying', {
           <b :style="{left: 'calc(' + volPct + '% - 12px)'}"></b>
           <input class="range-hit" type="range" min="0" max="100" step="1"
                  :value="volumeValue" :disabled="store.fixedVolume"
-                 :title="store.fixedVolume ? 'Desativado: controle o volume pelo DAC' : 'Volume'"
+                 :title="store.fixedVolume ? 'Disabled: set the volume on the DAC' : 'Volume'"
                  aria-label="Volume" @pointerdown="beginVolume"
                  @pointercancel="cancelVolume" @pointerup="releaseVolume"
                  @lostpointercapture="releaseVolume"
@@ -125,8 +125,8 @@ Vue.component('lms-nowplaying', {
         <span v-for="b in badges" :key="b.text" class="badge" :class="{hi: b.hi}">{{ b.text }}</span>
       </div>
       <button type="button" class="secondary-action pointer" :class="{on: ui.queueInline}"
-            :title="ui.queueInline ? 'Ocultar Próximas' : 'Mostrar Próximas'"
-            :aria-label="ui.queueInline ? 'Ocultar Próximas' : 'Mostrar Próximas'"
+            :title="ui.queueInline ? 'Hide queue' : 'Show queue'"
+            :aria-label="ui.queueInline ? 'Hide queue' : 'Show queue'"
             :aria-pressed="String(ui.queueInline)" @click="toggleQueueInline">
         <svg class="mono queue-toggle" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
       </button>
@@ -135,12 +135,12 @@ Vue.component('lms-nowplaying', {
     <div class="np-tools">
       <button type="button" :class="{on: store.shuffle}" @click="shuffle">{{ shuffleLabel }}</button>
       <button type="button" :class="{on: store.repeat}" @click="repeat">{{ repeatLabel }}</button>
-      <button type="button" v-if="np.id" @click="info">Informações</button>
+      <button type="button" v-if="np.id" @click="info">Information</button>
     </div>
-    <div v-if="store.canRate && np.id" class="rating-row" aria-label="Avaliação">
+    <div v-if="store.canRate && np.id" class="rating-row" aria-label="Rating">
       <button type="button" v-for="n in 5" :key="n" :class="{on: n <= rating}" @click="rate(n)"
               :aria-label="n + (n === 1 ? ' estrela' : ' estrelas')">★</button>
-      <span>{{ playCount }} {{ playCount === 1 ? 'reprodução' : 'reproduções' }}</span>
+      <span>{{ playCount }} {{ playCount === 1 ? 'playback' : 'plays' }}</span>
     </div>
 
     <lms-queue v-if="ui.queueInline" :inline="true"></lms-queue>
@@ -184,16 +184,16 @@ Vue.component('lms-nowplaying', {
     },
     volPct: function () { return this.store.fixedVolume ? 100 : this.volumeValue; },
     volumeModeTitle: function () {
-      if (this.store.volumeModeBusy) return 'Confirmando modo de volume…';
-      return this.store.fixedVolume ? 'Saída fixa (sem atenuação)' : 'Volume controlado pelo LMS';
+      if (this.store.volumeModeBusy) return 'Confirming volume mode…';
+      return this.store.fixedVolume ? 'Fixed output (no attenuation)' : 'Volume controlled by LMS';
     },
     volumeModeDetail: function () {
-      if (!this.store.volumeModeSynced) return 'Estado não confirmado pelo LMS';
-      return this.store.fixedVolume ? 'Ajuste o volume no DAC' : 'O LMS ajusta o nível de saída';
+      if (!this.store.volumeModeSynced) return 'Not confirmed by LMS';
+      return this.store.fixedVolume ? 'Set the volume on the DAC' : 'LMS adjusts the output level';
     },
     compactVolumeModeTitle: function () {
       if (this.store.volumeModeBusy) return 'Confirmando';
-      return this.store.fixedVolume ? 'Saída fixa' : 'Volume LMS';
+      return this.store.fixedVolume ? 'Fixed output' : 'LMS volume';
     },
     coverUrl: function () { return LmsFmt.coverUrl(this.np.coverId, 600); },
     badges: function () {
@@ -215,21 +215,21 @@ Vue.component('lms-nowplaying', {
       return this.store.trackInfo ? this.store.trackInfo.playCount || 0 : 0;
     },
     favoriteLabel: function () {
-      return this.store.npFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+      return this.store.npFavorite ? 'Remove from favourites' : 'Add to favourites';
     },
     /* Um valor fora de 0..2 vindo do servidor deixaria o botao sem texto. */
     shuffleLabel: function () {
-      return ['Aleatório desativado', 'Aleatório por músicas', 'Aleatório por álbuns'][this.store.shuffle] ||
-             'Aleatório desativado';
+      return ['Shuffle off', 'Shuffle songs', 'Shuffle albums'][this.store.shuffle] ||
+             'Shuffle off';
     },
     repeatLabel: function () {
-      return ['Repetição desativada', 'Repetir uma música', 'Repetir toda a fila'][this.store.repeat] ||
-             'Repetição desativada';
+      return ['Repeat off', 'Repeat one song', 'Repeat the whole queue'][this.store.repeat] ||
+             'Repeat off';
     },
     positionTitle: function () {
       var labels = { right: 'direita', left: 'esquerda', center: 'centro' };
       var next = { right: 'left', left: 'center', center: 'right' }[this.ui.playerPosition];
-      return 'Posição atual: ' + labels[this.ui.playerPosition] + '. Próxima: ' + labels[next];
+      return 'Current position: ' + labels[this.ui.playerPosition] + '. Next: ' + labels[next];
     }
   },
   watch: {

@@ -5,11 +5,11 @@ const helpers = require('./helpers');
 test('allowsMediaFilter e a fonte unica da regra de filtro por view', function () {
   const ctx = helpers.uiContext();
   assert.equal(typeof ctx.LmsUi.allowsMediaFilter, 'function');
-  assert.equal(ctx.LmsUi.allowsMediaFilter('albuns'), true);
-  assert.equal(ctx.LmsUi.allowsMediaFilter('recentes'), true);
-  assert.equal(ctx.LmsUi.allowsMediaFilter('artistas'), false);
-  assert.equal(ctx.LmsUi.allowsMediaFilter('generos'), false);
-  assert.equal(ctx.LmsUi.allowsMediaFilter('anos'), false);
+  assert.equal(ctx.LmsUi.allowsMediaFilter('albums'), true);
+  assert.equal(ctx.LmsUi.allowsMediaFilter('recent'), true);
+  assert.equal(ctx.LmsUi.allowsMediaFilter('artists'), false);
+  assert.equal(ctx.LmsUi.allowsMediaFilter('genres'), false);
+  assert.equal(ctx.LmsUi.allowsMediaFilter('years'), false);
 });
 
 /* Este teste nao cobra correcao nenhuma: ele trava o comportamento atual, que e
@@ -19,17 +19,17 @@ test('allowsMediaFilter e a fonte unica da regra de filtro por view', function (
    isso apagando a memoria por view, este teste avisa. */
 test('o filtro de midia continua gravado por view — este e o bug B', function () {
   const ctx = helpers.uiContext();
-  ctx.LmsUi.setMusicView('recentes');
+  ctx.LmsUi.setMusicView('recent');
   ctx.LmsUi.setFilters(['stream:qobuz']);
   assert.equal(ctx.LmsUi.state.filters[0], 'stream:qobuz');
 
-  ctx.LmsUi.setMusicView('artistas');
+  ctx.LmsUi.setMusicView('artists');
   assert.equal(ctx.LmsUi.state.filters.length, 0, 'artistas nao aceita filtro de midia');
   ctx.LmsUi.setFilters(['quality:hires']);
   assert.equal(ctx.LmsUi.state.filters.length, 0,
     'ui.js rejeita filtro fora de albuns/recentes, sem precisar de guarda em browse.js');
 
-  ctx.LmsUi.setMusicView('recentes');
+  ctx.LmsUi.setMusicView('recent');
   assert.equal(ctx.LmsUi.state.filters[0], 'stream:qobuz',
     'volta para Recentes com o filtro que esvaziou a tela');
 });
@@ -41,22 +41,22 @@ test('os tres validadores separam o que antes era uma regex so', function () {
   const u = ctx.LmsUi;
 
   ['name', 'artist', 'year'].forEach(function (k) {
-    assert.equal(u.validSortKey('albuns', k), true, 'albuns ordena por ' + k);
+    assert.equal(u.validSortKey('albums', k), true, 'albuns ordena por ' + k);
   });
   ['recent', 'name', 'artist', 'year'].forEach(function (k) {
-    assert.equal(u.validSortKey('recentes', k), true, 'recentes ordena por ' + k);
+    assert.equal(u.validSortKey('recent', k), true, 'recentes ordena por ' + k);
   });
-  assert.equal(u.validSortKey('artistas', 'year'), false, 'artistas so ordena por nome');
-  assert.equal(u.validSortKey('anos', 'year'), true);
+  assert.equal(u.validSortKey('artists', 'year'), false, 'artistas so ordena por nome');
+  assert.equal(u.validSortKey('years', 'year'), true);
 
-  assert.equal(u.validGroup('albuns', 'artist'), true);
-  assert.equal(u.validGroup('albuns', 'relatedArtist'), true);
-  assert.equal(u.validGroup('recentes', 'artist'), false, 'Recentes desenha album sempre');
-  assert.equal(u.validGroup('artistas', 'artist'), false);
+  assert.equal(u.validGroup('albums', 'artist'), true);
+  assert.equal(u.validGroup('albums', 'relatedArtist'), true);
+  assert.equal(u.validGroup('recent', 'artist'), false, 'Recentes desenha album sempre');
+  assert.equal(u.validGroup('artists', 'artist'), false);
 
-  assert.equal(u.validFilter('albuns', 'format:flac'), true);
-  assert.equal(u.validFilter('albuns', 'format:a:b'), false, 'valor de filtro nao tem dois-pontos');
-  assert.equal(u.validFilter('artistas', 'format:flac'), false);
+  assert.equal(u.validFilter('albums', 'format:flac'), true);
+  assert.equal(u.validFilter('albums', 'format:a:b'), false, 'valor de filtro nao tem dois-pontos');
+  assert.equal(u.validFilter('artists', 'format:flac'), false);
 });
 
 /* Resolve os computeds na ordem em que eles dependem uns dos outros e devolve um
@@ -67,7 +67,7 @@ function computedsFor(view, key) {
   const data = def.data();
   /* Roteia a chave para o conceito a que ela pertence, igual ao que o painel faz ao aplicar o rascunho. */
   const isFilter = /^(format|quality|origin|stream):/.test(key || '');
-  const isGroup = view === 'albuns' && /^(artist|relatedArtist)$/.test(key || '');
+  const isGroup = view === 'albums' && /^(artist|relatedArtist)$/.test(key || '');
   const ui = {
     filters: isFilter ? [key] : [],
     group: isGroup ? [key] : [],
@@ -88,11 +88,11 @@ function computedsFor(view, key) {
 }
 
 test('o menu so libera filtro de midia onde a view sabe aplicar', function () {
-  assert.equal(computedsFor('albuns', 'name').self.allowsMediaFilter, true);
-  assert.equal(computedsFor('recentes', 'recent').self.allowsMediaFilter, true);
-  assert.equal(computedsFor('artistas', 'name').self.allowsMediaFilter, false);
-  assert.equal(computedsFor('generos', 'name').self.allowsMediaFilter, false);
-  assert.equal(computedsFor('anos', 'year').self.allowsMediaFilter, false);
+  assert.equal(computedsFor('albums', 'name').self.allowsMediaFilter, true);
+  assert.equal(computedsFor('recent', 'recent').self.allowsMediaFilter, true);
+  assert.equal(computedsFor('artists', 'name').self.allowsMediaFilter, false);
+  assert.equal(computedsFor('genres', 'name').self.allowsMediaFilter, false);
+  assert.equal(computedsFor('years', 'year').self.allowsMediaFilter, false);
 });
 
 /* O bug C: escolher um formato em Artistas trocava a view para Albuns por conta
@@ -120,11 +120,16 @@ test('o funil substitui o select como controle de filtros', function () {
   assert.match(src, /class="filter-badge"/, 'a contagem de filtros ativos');
   assert.match(src, /@click="openFilters"/);
 
-  /* As opcoes de ordenacao que leem o indice de midia so aparecem onde esse
-     indice existe -- oferece-las em Artistas seria a promessa vazia de novo. */
+  /* Sort options that read the media index only exist where that index does --
+     offering them in Artists would be the empty promise again. Asserted on the
+     option list rather than on markup, so it survives the control changing
+     shape. */
+  const withMedia = computedsFor('albums', 'name');
+  const withoutMedia = computedsFor('artists', 'name');
+  const keysOf = (c) => c.def.computed.sortOptions.call(c.self).map((o) => o.key);
   ['format', 'source', 'quality'].forEach(function (key) {
-    const re = new RegExp('v-if="allowsMediaFilter" value="' + key + '"');
-    assert.match(src, re, key + ' precisa depender de allowsMediaFilter');
+    assert.ok(keysOf(withMedia).includes(key), key + ' belongs in Albums');
+    assert.ok(!keysOf(withoutMedia).includes(key), key + ' must not appear in Artists');
   });
 });
 
@@ -132,7 +137,7 @@ test('o funil acende com qualquer ajuste e conta so os filtros', function () {
   const captured = helpers.browseComponent();
   const def = captured.def;
   const self = {
-    view: 'albuns', rows: [],
+    view: 'albums', rows: [],
     ui: { filters: ['format:flac', 'quality:hires'], group: [], sections: [], prefer: 'none' },
     MEDIA_FORMATS: def.data().MEDIA_FORMATS
   };
@@ -145,7 +150,7 @@ test('o funil acende com qualquer ajuste e conta so os filtros', function () {
   self.filterCount = def.computed.filterCount.call(self);
   assert.equal(self.filterCount, 2, 'dois filtros, badge 2');
   assert.equal(def.computed.toolsActive.call(self), true);
-  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filtros: 2 filtros ativos');
+  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filters: 2 active filters');
 
   /* Agrupar e preferir mudam a apresentacao, nao o conjunto: acendem o icone
      mas nao entram na contagem de filtros. */
@@ -157,7 +162,7 @@ test('o funil acende com qualquer ajuste e conta so os filtros', function () {
   assert.equal(self.filterCount, 0);
   assert.equal(def.computed.toolsActive.call(self), true,
     'secao e preferencia acendem o icone mesmo sem filtro');
-  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filtros');
+  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filters');
 });
 
 /* O bug B: com filtro ativo, a unica pista de que ele existia era o
@@ -186,15 +191,15 @@ test('limpar o filtro nao toca na ordenacao — sao estados separados', function
   const captured = helpers.browseComponent();
   const LmsUi = captured.ctx.LmsUi;
 
-  LmsUi.setMusicView('recentes');
+  LmsUi.setMusicView('recent');
   LmsUi.setSort([{ key: 'artist', desc: true }]);
   LmsUi.setFilters(['stream:qobuz']);
-  captured.def.methods.clearMediaFilter.call({ view: 'recentes', ui: LmsUi.state });
+  captured.def.methods.clearMediaFilter.call({ view: 'recent', ui: LmsUi.state });
 
   assert.equal(LmsUi.state.filters.length, 0, 'o filtro saiu');
   assert.equal(LmsUi.state.sort[0].key, 'artist', 'a ordenacao ficou');
   assert.equal(LmsUi.state.sort[0].desc, true, 'inclusive a direcao');
-  assert.equal(LmsUi.state.musicView, 'recentes', 'e a view nao mudou');
+  assert.equal(LmsUi.state.musicView, 'recent', 'e a view nao mudou');
 });
 
 test('a tela vazia diz qual filtro esta escondendo tudo', function () {
@@ -203,7 +208,7 @@ test('a tela vazia diz qual filtro esta escondendo tudo', function () {
 
   assert.match(empty, /v-if="hasMediaFilter"[^>]*class="p">[^<]*\{\{ mediaDescriptor\(\) \}\}/,
     'com filtro ativo, a mensagem precisa nomear o filtro');
-  assert.match(empty, /v-else class="p">Nenhum item encontrado nesta categoria\./,
+  assert.match(empty, /v-else class="p">No items found in this category\./,
     'sem filtro, a mensagem generica continua valendo');
   assert.match(empty, /v-if="hasMediaFilter"[\s\S]*@click="clearMediaFilter"/,
     'a tela vazia precisa oferecer a saida');
@@ -235,13 +240,15 @@ test('a frase da tela vazia e traduzivel: literal no template, filtro ao final',
 test('os textos novos traduzem de verdade quando existe dicionario', function () {
   let def = null;
   const ctx = helpers.uiContext({
-    LMS_LANG: 'EN',
-    LMS_STRINGS: {
-      'Nada nesta categoria corresponde ao filtro': 'Nothing in this category matches the filter',
-      'Nenhum item encontrado nesta categoria.': 'Nothing found in this category.',
-      'Limpar filtro': 'Clear filter',
-      'Limpar tudo': 'Clear all',
-      'Ativos:': 'Active:'
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: {
+      PT: {
+        'Nothing in this category matches the filter': 'Nada nesta categoria passa pelo filtro',
+        'No items found in this category.': 'Nada encontrado nesta categoria.',
+        'Clear filter': 'Limpar filtro',
+        'Clear all': 'Limpar tudo',
+        'Active:': 'Ativo:'
+      }
     },
     Vue: {
       prototype: {},
@@ -254,50 +261,54 @@ test('os textos novos traduzem de verdade quando existe dicionario', function ()
   helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/browse.js');
 
   const tpl = def.template;
-  assert.match(tpl, /Nothing in this category matches the filter \{\{ \$t\(mediaDescriptor\(\)\) \}\}/);
-  assert.match(tpl, /class="filter-chip-label">Active:/);
-  assert.match(tpl, />Clear filter</);
-  assert.match(tpl, />Clear all</);
-  assert.doesNotMatch(tpl, /Nada nesta categoria/,
-    'o portugues nao pode sobrar numa sessao com dicionario');
+  assert.match(tpl, /Nada nesta categoria passa pelo filtro \{\{ \$t\(mediaDescriptor\(\)\) \}\}/);
+  assert.match(tpl, /class="filter-chip-label">Ativo:/);
+  assert.match(tpl, />Limpar filtro</);
+  assert.match(tpl, />Limpar tudo</);
+  assert.doesNotMatch(tpl, /Nothing in this category/,
+    'the English source must not survive a session that has a dictionary');
 });
 
 test('mediaDescriptor nomeia o filtro que esvazia Recentes', function () {
-  assert.equal(computedsFor('recentes', 'stream:qobuz').self.mediaDescriptor(), 'Qobuz');
-  assert.equal(computedsFor('albuns', 'quality:hires').self.mediaDescriptor(), 'Hi-Res');
-  assert.equal(computedsFor('albuns', 'format:flac').self.mediaDescriptor(), 'FLAC');
-  assert.equal(computedsFor('recentes', 'recent').self.mediaDescriptor(), '',
+  assert.equal(computedsFor('recent', 'stream:qobuz').self.mediaDescriptor(), 'Qobuz');
+  assert.equal(computedsFor('albums', 'quality:hires').self.mediaDescriptor(), 'Hi-Res');
+  assert.equal(computedsFor('albums', 'format:flac').self.mediaDescriptor(), 'FLAC');
+  assert.equal(computedsFor('recent', 'recent').self.mediaDescriptor(), '',
     'sem filtro nao ha descritor, e a mensagem generica e a correta');
 });
 
-/* A outra metade do bug C. Em Albuns, "Artista" AGRUPA: produz linhas de artista.
+/* A outra metade do bug C. Em Albuns, "Artist" AGRUPA: produz linhas de artista.
    Em Recentes a mesma opcao so reordena albuns, porque Recentes nunca passa por
    loadPagedRoot. Mesmo rotulo, semanticas diferentes -- e por isso "procurei
    Beatles e vieram albuns". O rotulo do grupo precisa dizer qual das duas coisas
    esta acontecendo. */
 test('Recentes nao promete agrupar: la a opcao Artista so reordena', function () {
-  const recentes = computedsFor('recentes', 'artist');
+  const recentes = computedsFor('recent', 'artist');
   assert.equal(recentes.self.groupsMainArtists, false,
     'Recentes nunca produz linha de artista, nem com sortKey=artist');
 
-  const albuns = computedsFor('albuns', 'artist');
+  const albuns = computedsFor('albums', 'artist');
   assert.equal(albuns.self.groupsMainArtists, true, 'em Albuns, Artista agrupa de verdade');
 
   /* O rotulo do select nao precisa mais mudar por view: ele ordena, e so.
      Agrupar mudou de lugar -- vai para o painel, onde a opcao de artista diz,
      no proprio rotulo, que a lista passa a mostrar artistas. */
-  assert.equal(recentes.def.computed.sortSelectLabel.call(recentes.self), 'Ordenar por');
-  assert.equal(albuns.def.computed.sortSelectLabel.call(albuns.self), 'Ordenar por');
+  assert.equal(recentes.def.computed.sortSelectLabel.call(recentes.self), 'Sort by');
+  assert.equal(albuns.def.computed.sortSelectLabel.call(albuns.self), 'Sort by');
 });
 
 test('o select faz uma coisa so, e o rotulo diz qual', function () {
-  const artistas = computedsFor('artistas', 'name');
-  assert.equal(artistas.def.computed.sortSelectLabel.call(artistas.self), 'Ordenar por');
+  const artistas = computedsFor('artists', 'name');
+  assert.equal(artistas.def.computed.sortSelectLabel.call(artistas.self), 'Sort by');
 
+  /* The native select is gone: it was capped at 105px to fit the toolbar and
+     cut labels mid-word. An icon opens a menu that sizes to its own content. */
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
-  assert.match(src, /<select :value="sortKey" :aria-label="sortSelectLabel"/,
-    'o select passa a espelhar a ordenacao, e nao um valor de tres conceitos');
-  assert.match(src, /@change="chooseSort\(\$event\.target\.value\)"/);
+  assert.doesNotMatch(src, /<select :value="sortKey"/, 'the clipped select must not come back');
+  assert.match(src, /aria-haspopup="menu"/, 'the trigger announces that it opens a menu');
+  assert.match(src, /@click="openSortMenu"/);
+  assert.match(src, /<lms-sort-menu v-if="ui\.sortMenu"/, 'the menu is rendered only while open');
+  assert.match(src, /@choose="chooseSort"/);
 });
 
 /* Atributo dinamico nao passa pelo translateTemplate -- a lista ATTRS do i18n so
@@ -306,8 +317,10 @@ test('o select faz uma coisa so, e o rotulo diz qual', function () {
 test('os rotulos calculados do menu passam pelo dicionario', function () {
   let def = null;
   const ctx = helpers.uiContext({
-    LMS_LANG: 'EN',
-    LMS_STRINGS: { 'Ordenar por': 'Sort by', 'Filtros': 'Filters', 'filtros ativos': 'active filters' },
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: {
+      PT: { 'Sort by': 'Ordenar por', 'Filters': 'Filtros', 'active filters': 'filtros ativos' }
+    },
     Vue: {
       prototype: {},
       observable: function (o) { return o; },
@@ -318,11 +331,11 @@ test('os rotulos calculados do menu passam pelo dicionario', function () {
   helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/i18n.js');
   helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/browse.js');
 
-  const self = { view: 'recentes', activeFilters: [{ key: 'format:flac', label: 'FLAC' }] };
+  const self = { view: 'recent', activeFilters: [{ key: 'format:flac', label: 'FLAC' }] };
   self.tr = def.methods.tr.bind(self);
-  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort by');
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Ordenar por');
   self.filterCount = def.computed.filterCount.call(self);
-  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filters: 1 filtro ativo',
+  assert.equal(def.computed.filterTriggerLabel.call(self), 'Filtros: 1 active filter',
     'o nome acessivel do funil sai do dicionario, nao do template');
 });
 
@@ -343,10 +356,10 @@ function dictionaryFromStrings(lang) {
   const map = {};
   Object.keys(entries).forEach(function (k) {
     if (k.indexOf('ECHOCLASSIC_UI_') !== 0) return;
-    const pt = entries[k].PT;
-    const target = entries[k][lang] || entries[k].EN;
-    if (!pt || !target || target === pt) return;   /* Plugin.pm:151 */
-    map[pt] = target;
+    const source = entries[k].EN;
+    const target = entries[k][lang];
+    if (!source || !target || target === source) return;   /* Plugin.pm */
+    map[source] = target;
   });
   return map;
 }
@@ -354,8 +367,8 @@ function dictionaryFromStrings(lang) {
 test('todo texto novo da interface chega traduzido, vindo do strings.txt real', function () {
   let def = null;
   const ctx = helpers.uiContext({
-    LMS_LANG: 'EN',
-    LMS_STRINGS: dictionaryFromStrings('EN'),
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: { PT: dictionaryFromStrings('PT') },
     Vue: {
       prototype: {},
       observable: function (o) { return o; },
@@ -367,29 +380,29 @@ test('todo texto novo da interface chega traduzido, vindo do strings.txt real', 
   helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/browse.js');
 
   const tpl = def.template;
-  ['Nada nesta categoria corresponde ao filtro', 'Limpar filtro',
-   'Nenhum item encontrado nesta categoria.'].forEach(function (phrase) {
+  ['Nothing in this category matches the filter', 'Clear filter',
+   'No items found in this category.'].forEach(function (phrase) {
     assert.ok(tpl.indexOf(phrase) < 0, 'sobrou em portugues no template: ' + phrase);
   });
-  assert.match(tpl, /Nothing in this category matches the filter/);
-  assert.match(tpl, /Active:/);
-  assert.match(tpl, />Clear filter</);
+  assert.match(tpl, /Nada nesta categoria corresponde ao filtro/);
+  assert.match(tpl, /Ativos:/);
+  assert.match(tpl, />Limpar filtro</);
 
   /* Os rotulos calculados nao vivem no template: passam pelo tr() em tempo de
      execucao, entao sao conferidos chamando as computeds. */
-  const self = { view: 'recentes' };
+  const self = { view: 'recent' };
   self.tr = def.methods.tr.bind(self);
-  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort by');
-  self.view = 'albuns';
-  assert.equal(def.computed.sortSelectLabel.call(self), 'Sort by');
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Ordenar por');
+  self.view = 'albums';
+  assert.equal(def.computed.sortSelectLabel.call(self), 'Ordenar por');
 
   /* Os rotulos do painel tambem: eles sao montados em JavaScript, e o painel e
      todo texto novo. */
   self.activeFilters = [];
   self.ui = { filters: [], group: [], sections: [], prefer: 'local' };
   self.preferMode = def.computed.preferMode.call(self);
-  assert.equal(def.methods.preferLabel.call(self, 'local'), 'Prefer local library');
-  assert.equal(def.methods.sectionFacetLabel.call(self, 'decade'), 'Decade');
+  assert.equal(def.methods.preferLabel.call(self, 'local'), 'Preferir biblioteca local');
+  assert.equal(def.methods.sectionFacetLabel.call(self, 'decade'), 'Década');
 });
 
 /* Os avisos de truncamento sao montados em JavaScript e chegam ao template por
@@ -399,7 +412,7 @@ test('todo texto novo da interface chega traduzido, vindo do strings.txt real', 
    e aparecia em portugues numa sessao em ingles. Visto na tela do servidor. */
 test('todo aviso de limitWarning tem entrada no dicionario', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
-  const dict = dictionaryFromStrings('EN');
+  const dict = dictionaryFromStrings('PT');
 
   /* Pega a expressao inteira de cada atribuicao e tira dela todos os literais.
      Casar linha a linha deixava passar o ramo singular do ternario, que fica na
@@ -416,7 +429,7 @@ test('todo aviso de limitWarning tem entrada no dicionario', function () {
   }
 
   assert.ok(frases.length >= 6, 'esperava achar os avisos; achei ' + frases.length);
-  assert.ok(frases.some(function (f) { return f.indexOf('1 álbum') === 0; }),
+  assert.ok(frases.some(function (f) { return f.indexOf('1 album') === 0; }),
     'a forma singular precisa entrar na verificacao');
   frases.forEach(function (frase) {
     if (!frase.trim()) return;
@@ -425,8 +438,8 @@ test('todo aviso de limitWarning tem entrada no dicionario', function () {
 });
 
 test('o total de albuns nao atribuidos sobrevive a traducao', function () {
-  const dict = dictionaryFromStrings('EN');
-  const plural = '{n} álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.';
+  const dict = dictionaryFromStrings('PT');
+  const plural = '{n} albums could not be attributed to an artist in the index and appear as albums in this list.';
   assert.ok(dict[plural], 'a forma plural precisa de entrada');
   assert.match(dict[plural], /\{n\}/, 'a traducao precisa preservar o marcador {n}');
   assert.equal(dict[plural].replace('{n}', 10).indexOf('{n}'), -1,
@@ -520,7 +533,7 @@ const META = function (o) {
    O usuario le "FLAC ou ALAC" dentro do cartao Formato, e cartoes diferentes se
    acumulam -- sem nunca precisar da palavra AND. */
 test('valores da mesma faceta sao OU; facetas diferentes sao E', function () {
-  const c = comFiltros('albuns', ['format:flac', 'format:alac', 'quality:hires']);
+  const c = comFiltros('albums', ['format:flac', 'format:alac', 'quality:hires']);
   c.self.mediaIndex = {
     '1': META({ formats: { flac: true }, hires: true }),
     '2': META({ formats: { alac: true }, hires: true }),
@@ -534,7 +547,7 @@ test('valores da mesma faceta sao OU; facetas diferentes sao E', function () {
 });
 
 test('um filtro sozinho continua funcionando como antes', function () {
-  const c = comFiltros('albuns', ['stream:qobuz']);
+  const c = comFiltros('albums', ['stream:qobuz']);
   c.self.mediaIndex = {
     '1': META({ providers: { qobuz: true }, remote: true }),
     '2': META({ local: true })
@@ -547,7 +560,7 @@ test('um filtro sozinho continua funcionando como antes', function () {
    O album sem entrada no indice continua fora da lista, mas passa a ser contado
    e dito na tela. */
 test('album sem informacao de midia e contado, nao sumido em silencio', function () {
-  const c = comFiltros('albuns', ['format:flac']);
+  const c = comFiltros('albums', ['format:flac']);
   c.self.mediaIndex = { '1': META({ formats: { flac: true } }) };
   assert.equal(c.self.mediaMatches(1), true);
   assert.equal(c.self.mediaMatches(99), false, 'sem meta nao casa');
@@ -555,7 +568,7 @@ test('album sem informacao de midia e contado, nao sumido em silencio', function
 });
 
 test('cada filtro ativo vira um chip com rotulo proprio', function () {
-  const c = comFiltros('albuns', ['format:flac', 'quality:hires', 'stream:qobuz']);
+  const c = comFiltros('albums', ['format:flac', 'quality:hires', 'stream:qobuz']);
   const ativos = c.def.computed.activeFilters.call(c.self);
   assert.equal(ativos.length, 3);
   assert.deepEqual(ativos.map(function (f) { return f.label; }), ['FLAC', 'Hi-Res', 'Qobuz']);
@@ -686,7 +699,7 @@ function listaCom(rows, options) {
   const def = captured.def;
   const data = def.data();
   const self = {
-    view: opts.view || 'albuns', rows: rows,
+    view: opts.view || 'albums', rows: rows,
     ui: { filters: opts.filters || [], group: opts.group || [],
           sections: opts.sections || [], sort: opts.sort || [{ key: 'name', desc: false }],
           prefer: opts.prefer || 'none', filter: '' },
@@ -727,9 +740,9 @@ test('agrupar por decada cria cabecalhos com contagem, sem tirar linha nenhuma',
 
   assert.equal(rows.length, ALBUNS.length, 'agrupar organiza, nunca exclui');
   assert.deepEqual(plain(headers.map(function (h) { return h.label; })),
-    ['Anos 1970', 'Ano desconhecido']);
+    ['Years 1970', 'Unknown year']);
   assert.deepEqual(plain(headers.map(function (h) { return h.count; })), [4, 1]);
-  assert.equal(headers[headers.length - 1].label, 'Ano desconhecido',
+  assert.equal(headers[headers.length - 1].label, 'Unknown year',
     'o balde do desconhecido vai por ultimo, e existe');
 });
 
@@ -792,7 +805,7 @@ test('album sem entrada no indice cai num balde visivel ao seccionar', function 
   const lista = listaCom(ALBUNS.slice(0, 2), { sections: ['format'], mediaIndex: index });
   const headers = lista.self.displayItems.filter(function (it) { return it.type === 'header'; });
   assert.deepEqual(plain(headers.map(function (h) { return h.label; })),
-    ['FLAC', 'Sem informação de mídia']);
+    ['FLAC', 'No media information']);
 });
 
 test('a trilha A-Z se esconde quando a lista deixa de ser alfabetica', function () {
@@ -937,7 +950,7 @@ test('edicoes irmas exigem titulo e artista iguais — marcador de edicao separa
   const edicoes = lista.self.editionsFor(rows[0]);
   assert.equal(edicoes.length, 2, 'a versao remasterizada nao entra: e outra obra ate prova em contrario');
   assert.equal(edicoes[0].id, 2, 'preferir local poe a local em primeiro');
-  assert.match(edicoes[0].source, /Biblioteca local/);
+  assert.match(edicoes[0].source, /Local library/);
 
   assert.deepEqual(plain(lista.self.editionsFor(rows[2])), [], 'sem irma, sem escolha a fazer');
 });
@@ -960,13 +973,13 @@ test('sem preferencia a folha de acoes nao recebe edicoes — o play fica determ
 test('a folha de acoes diz qual edicao vai tocar antes de tocar', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/actions.js');
   assert.match(src, /chosenEdition/);
-  assert.match(src, /Tocando a edição preferida: \{edition\}\./,
+  assert.match(src, /Playing the preferred edition: \{edition\}\./,
     'a frase inteira entra no dicionario, com marcador');
   assert.match(src, /item\.editions\.length > 1/, 'as outras edicoes ficam visiveis na folha');
 });
 
 /* Visto na tela: com quatro pilulas a contagem era espremida a 12px pelo
-   flex:1 e o numero transbordava por cima de "Limpar tudo". */
+   flex:1 e o numero transbordava por cima de "Clear all". */
 test('a contagem de resultados nao disputa espaco com a fileira de pilulas', function () {
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
   const regra = css.match(/\.filter-chip-count\{([^}]*)\}/)[1];
@@ -981,45 +994,52 @@ test('a contagem de resultados nao disputa espaco com a fileira de pilulas', fun
    seis controles. Sem encolher nada, ela quebrava em tres linhas e comia a
    lista. O que encolhe e o rotulo do comando secundario -- a busca e o funil
    ficam, porque sao os dois que a barra existe para oferecer. */
-test('a barra cabe em uma linha na divisao padrao', function () {
+test('the toolbar fits one row at the default split', function () {
   const captured = helpers.browseComponent();
   const def = captured.def;
   assert.equal(def.data().paneWidth > 0, true);
 
+  /* 360px is the default split. The five controls measure 294px there, so the
+     Select command keeps its text -- it only becomes an icon below 320, which
+     is where they stop fitting. Before the sort select became an icon this
+     tripped at 430 and the bar took two rows at the default width. */
   const self = { paneWidth: 360 };
-  assert.equal(def.computed.toolbarTight.call(self), true, '360px e a largura padrao');
-  self.paneWidth = 553;
-  assert.equal(def.computed.toolbarTight.call(self), false, 'com folga o rotulo volta');
+  assert.equal(def.computed.toolbarTight.call(self), false,
+    'at the default 360px split everything fits one row with its label');
+  self.paneWidth = 300;
+  assert.equal(def.computed.toolbarTight.call(self), true,
+    'below 320 the Select command gives up its text');
 
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
   assert.match(src, /class="text-command select-command"/);
-  assert.match(src, /aria-label="Selecionar"/,
+  assert.match(src, /aria-label="Select"/,
     'virar icone nao pode custar o nome acessivel');
-  assert.match(src, /:title="toolbarTight \? 'Selecionar' : null"/,
+  assert.match(src, /:title="toolbarTight \? 'Select' : null"/,
     'e no modo icone precisa de tooltip');
 
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
   const regra = css.match(/\.library-tools \.select-command\.tight\{([^}]*)\}/)[1];
   assert.match(regra, /width:44px/, 'o alvo de toque continua com 44px');
 
-  /* Duas fileiras previsiveis em vez de tres imprevisiveis: a busca ocupa a
-     primeira inteira e os comandos ficam na segunda. */
-  const busca = css.match(/\.library-tools\.tight input\{([^}]*)\}/)[1];
-  assert.match(busca, /flex:1 1 100%/);
+  /* The search field no longer takes a row of its own: that rule existed to
+     make room for a 105px select, and forcing it now pushed the icons onto a
+     third row -- taller than what it replaced. */
+  assert.doesNotMatch(css, /\.library-tools\.tight input\{[^}]*flex:1 1 100%/,
+    'the forced row break must not come back');
   assert.match(src, /class="library-tools" :class="\{tight: toolbarTight\}"/);
 });
 
-/* Visto na foto do README: "Biblioteca local" aparecia em portugues numa sessao
+/* Visto na foto do README: "Local library" aparecia em portugues numa sessao
    em ingles. O rotulo e montado em tempo de execucao e colado no subtitulo da
    linha, entao nao passa pelo translateTemplate -- precisa do tr() na mao. */
 test('o rotulo de origem da linha passa pelo dicionario', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
   const corpo = src.split('sourceLabel: function (track)')[1].split('},')[0];
-  assert.match(corpo, /this\.tr\('Biblioteca local'\)/);
+  assert.match(corpo, /this\.tr\('Local library'\)/);
   assert.match(corpo, /this\.tr\('Streaming'\)/);
 
   const strings = helpers.read('EchoClassic/strings.txt');
-  ['Biblioteca local', 'Streaming'].forEach(function (frase) {
+  ['Local library', 'Streaming'].forEach(function (frase) {
     assert.ok(strings.indexOf('\t' + frase) >= 0, 'sem traducao: ' + frase);
   });
 });

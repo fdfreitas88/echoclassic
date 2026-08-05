@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const helpers = require('./helpers');
 
-test('strings.txt parses PT keys and EN values', function () {
+test('strings.txt is keyed by English, with the translations alongside', function () {
   const text = helpers.read('EchoClassic/strings.txt');
   const entries = {};
   let key = '';
@@ -16,8 +16,9 @@ test('strings.txt parses PT keys and EN values', function () {
     const value = line.match(/^\t([A-Z]{2})\t([\s\S]*)$/);
     if (value && key) entries[key][value[1]] = value[2];
   });
-  assert.equal(entries.ECHOCLASSIC_UI_SEARCH.PT, 'Buscar');
   assert.equal(entries.ECHOCLASSIC_UI_SEARCH.EN, 'Search');
+  assert.equal(entries.ECHOCLASSIC_UI_SEARCH.PT, 'Buscar');
+  assert.equal(entries.ECHOCLASSIC_UI_SEARCH_THE_LIBRARY.EN, 'Search the library');
   assert.equal(entries.ECHOCLASSIC_UI_SEARCH_THE_LIBRARY.PT, 'Buscar na biblioteca');
   assert.ok(Object.keys(entries).length >= 250);
 });
@@ -25,13 +26,16 @@ test('strings.txt parses PT keys and EN values', function () {
 test('i18n rewrites default expressions but preserves Vue filters', function () {
   const captured = {};
   const ctx = helpers.runBrowserFile('EchoClassic/HTML/echoclassic/html/js/i18n.js', {
-    LMS_LANG: 'EN',
-    LMS_STRINGS: {
-      'Ajustes': 'Settings',
-      'não informado': 'unknown',
-      'Volume': 'Volume',
-      'Álbum': 'Album'
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: {
+      PT: {
+        'Settings': 'Ajustes',
+        'not available': 'não informado',
+        'Volume': 'Volume',
+        'Album': 'Álbum'
+      }
     },
+    LMS_LANG_NAMES: { EN: 'English', PT: 'Português' },
     Vue: {
       prototype: {},
       component: function (name, definition) {
@@ -42,12 +46,12 @@ test('i18n rewrites default expressions but preserves Vue filters', function () 
     document: { readyState: 'complete' }
   });
 
-  const tpl = "<div>Ajustes {{ value || 'não informado' }} {{ amount | count }} <input placeholder=\"Álbum\"></div>";
+  const tpl = "<div>Settings {{ value || 'not available' }} {{ amount | count }} <input placeholder=\"Album\"></div>";
   const translated = ctx.LmsStr.translateTemplate(tpl);
-  assert.match(translated, />Settings/);
-  assert.match(translated, /\{\{ \$t\(value \|\| 'não informado'\) \}\}/);
+  assert.match(translated, />Ajustes/);
+  assert.match(translated, /\{\{ \$t\(value \|\| 'not available'\) \}\}/);
   assert.match(translated, /\{\{ amount \| count \}\}/);
-  assert.match(translated, /placeholder="Album"/);
+  assert.match(translated, /placeholder="Álbum"/);
 });
 
 /* friendlyError devolve literais em portugues que a interpolacao do template
@@ -73,7 +77,7 @@ test('toda frase de friendlyError tem entrada no strings.txt', function () {
    tela sem ter como ser traduzido. Este teste varre os literais de interface de
    todos os modulos -- os que o translateTemplate nao alcanca, porque nascem de
    um return e nao de um no de texto -- e cobra entrada no strings.txt. Foi
-   assim que "Ajuste o volume no DAC" e "Biblioteca local" apareceram em
+   assim que "Set the volume on the DAC" e "Local library" apareceram em
    portugues numa sessao em ingles, e o segundo saiu numa foto do README. */
 test('todo rotulo de interface montado em JavaScript pode ser traduzido', function () {
   const fs = require('node:fs');

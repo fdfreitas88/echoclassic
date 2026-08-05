@@ -10,10 +10,10 @@ Vue.component('lms-opml', {
   },
   template: `
 <div class="scroller">
-  <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
+  <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
   <div v-else-if="error" class="empty">
-    <div class="h">Não deu para abrir</div><div class="p">{{ error }}</div>
-    <button class="retry-command" @click="load">Tentar novamente</button>
+    <div class="h">Could not open</div><div class="p">{{ error }}</div>
+    <button class="retry-command" @click="load">Try again</button>
   </div>
   <template v-else-if="hasContent">
     <template v-for="(it, i) in items">
@@ -54,11 +54,11 @@ Vue.component('lms-opml', {
     <div class="h">{{ emptyTitle }}</div>
     <div class="p">{{ emptyMessage }}</div>
     <button v-if="root === 'favorites' && !frame" type="button" class="retry-command" @click="openMusic">
-      Abrir Minha Música
+      Open My Music
     </button>
   </div>
   <div v-if="truncated" class="loading-more warning" role="status">
-    Esta lista tem mais de 200 itens e esta tela mostra os 200 primeiros. Use a busca para chegar ao resto.
+    This list has more than 200 items and this screen shows the first 200. Use search to reach the rest.
   </div>
 </div>`,
   data: function () {
@@ -68,9 +68,9 @@ Vue.component('lms-opml', {
   computed: {
     frame: function () { return LmsNav.top(this.tab); },
     rootLabel: function () {
-      if (this.root === 'radio') return 'Rádio';
+      if (this.root === 'radio') return 'Radio';
       if (this.root === 'apps') return 'Apps';
-      return 'Favoritos';
+      return 'Favourites';
     },
     /* O LMS devolve um placeholder do tipo `text` no lugar de uma lista vazia.
        Com items.length === 1 o ramo vazio nunca rodava e a tela mostrava o
@@ -83,27 +83,27 @@ Vue.component('lms-opml', {
       return f && f.term ? String(f.term) : '';
     },
     emptyTitle: function () {
-      if (this.searchTerm) return 'Nenhum resultado';
+      if (this.searchTerm) return 'No results';
       return this.frame ? this.frame.label : this.rootLabel;
     },
     emptyMessage: function () {
       /* Uma busca sem resultado nao e um servico ausente: mandar "ative um
          serviço de rádio" com o TuneIn funcionando e conselho errado. */
       if (this.searchTerm) {
-        return 'A busca por “' + this.searchTerm + '” não encontrou nada. ' +
+        return 'The search for “' + this.searchTerm + '” found nothing. ' +
           'Confira a grafia ou tente um termo mais curto.';
       }
-      if (this.frame) return 'Esta lista não tem itens no momento.';
+      if (this.frame) return 'This list has no items right now.';
       if (this.root === 'radio') {
-        return 'Nenhuma fonte de rádio está disponível. Ative um serviço de rádio nas configurações avançadas do LMS.';
+        return 'No radio source is available. Enable a radio service in the advanced LMS settings.';
       }
       /* O estado vazio de Apps tem de apontar para onde a solucao esta: os
          servicos aparecem aqui porque sao plugins do servidor, e quem nunca
-         instalou nenhum nao tem como adivinhar isso. */
+         instalou none nao tem como adivinhar isso. */
       if (this.root === 'apps') {
-        return 'Nenhum serviço está instalado. Instale um plugin de serviço, como o Qobuz, em Ajustes do servidor › Plugins.';
+        return 'No service is installed. Install a service plugin, such as Qobuz, in Server Settings > Plugins.';
       }
-      return 'Você ainda não adicionou favoritos. Use “Adicionar aos Favoritos” no menu de uma faixa ou estação.';
+      return 'You have not added any favourites yet. Use “Add to Favourites” in the menu of a track or station.';
     }
   },
   watch: {
@@ -122,16 +122,16 @@ Vue.component('lms-opml', {
     },
     searchTitle: function (it) {
       return this.isTuneUrl(it)
-        ? 'Informe o endereço completo do stream, incluindo http:// ou https://'
-        : 'Buscar em ' + it.title;
+        ? 'Enter the full stream address, including http:// or https://'
+        : 'Searchr em ' + it.title;
     },
     searchAction: function (it) {
-      return this.isTuneUrl(it) ? 'Sintonizar' : 'Buscar';
+      return this.isTuneUrl(it) ? 'Sintonizar' : 'Search';
     },
     openMusic: function () {
-      LmsUi.setTab('musica');
-      LmsUi.setMusicView('albuns');
-      LmsNav.reset('musica');
+      LmsUi.setTab('music');
+      LmsUi.setMusicView('albums');
+      LmsNav.reset('music');
     },
     /* api.js devolve 'menu' como default para tudo que nao seja audio/search/
        text, inclusive itens sem actions.go — e ai opmlChildNode() e null. Sem
@@ -166,18 +166,18 @@ Vue.component('lms-opml', {
       } catch (e) {
         /* Falhar ao tocar UMA estacao nao pode apagar a lista inteira: isso e
            recado de notificacao, nao erro fatal de carregamento. */
-        LmsUi.notify('Não deu para tocar “' + (it.title || 'esta estação') + '”. ' +
+        LmsUi.notify('Could not play “' + (it.title || 'this station') + '”. ' +
           (e && e.message ? e.message : String(e)), 'error', 6500);
       }
     },
     search: async function (it, i) {
       var term = (this.terms[i] || '').trim();
       if (!term) {
-        this.setFieldError(i, 'Digite algo para buscar.');
+        this.setFieldError(i, 'Type something to search for.');
         return;
       }
       if (this.isTuneUrl(it) && !/^[a-z][a-z0-9+.-]*:\/\//i.test(term)) {
-        this.setFieldError(i, 'Informe um endereço completo, começando por http:// ou https://.');
+        this.setFieldError(i, 'Enter a full address starting with http:// or https://.');
         return;
       }
       this.clearFieldError(i);

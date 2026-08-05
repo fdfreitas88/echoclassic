@@ -22,19 +22,19 @@
 
     <div class="body" :class="{split: isSplit, drilled: drilled}">
       <lms-search    v-if="ui.searching"></lms-search>
-      <lms-browse    v-else-if="ui.tab === 'musica'"></lms-browse>
+      <lms-browse    v-else-if="ui.tab === 'music'"></lms-browse>
       <lms-playlists v-else-if="ui.tab === 'playlists'" :key="plKey"></lms-playlists>
-      <lms-settings  v-else-if="ui.tab === 'ajustes'"></lms-settings>
+      <lms-settings  v-else-if="ui.tab === 'settings'"></lms-settings>
       <lms-opml      v-else-if="ui.tab === 'radio'"     root="radio"     tab="radio"     :key="radioKey"></lms-opml>
       <lms-opml      v-else-if="ui.tab === 'apps'"      root="apps"      tab="apps"      :key="appsKey"></lms-opml>
-      <lms-favorites v-else-if="ui.tab === 'favoritos'" :key="favKey"></lms-favorites>
+      <lms-favorites v-else-if="ui.tab === 'favourites'" :key="favKey"></lms-favorites>
     </div>
   </main>
 
   <div v-if="store.initialized && !store.connected" class="connection-banner" role="alert">
-    <span>{{ store.lastError || 'Sem conexão com o player.' }}</span>
+    <span>{{ store.lastError || 'No connection to the player.' }}</span>
     <button :disabled="store.reconnecting" @click="reconnect">
-      {{ store.reconnecting ? 'Reconectando…' : 'Tentar novamente' }}
+      {{ store.reconnecting ? 'Reconectando…' : 'Try again' }}
     </button>
   </div>
   <div v-if="ui.busyMessage" class="operation-banner" role="status">{{ ui.busyMessage }}</div>
@@ -72,7 +72,7 @@
 	        return '';
 	      },
 	      pageHeading: function () {
-	        if (this.ui.searching) return 'Busca';
+	        if (this.ui.searching) return 'Search';
 	        return this.title || this.tabLabel || 'Echo Classic';
 	      },
       depth: function () { return (this.nav[this.ui.tab] || []).length; },
@@ -85,41 +85,41 @@
         if (this.adaptivePlayerOpen) classes['player-' + this.ui.playerPosition] = true;
         return classes;
       },
-      isSplit: function () { return this.ui.tab === 'musica' && !this.ui.searching; },
+      isSplit: function () { return this.ui.tab === 'music' && !this.ui.searching; },
       /* Minha Musica keeps its root title while drilling, because the list stays
          on screen beside the detail; the other tabs replace the whole view. */
       title: function () {
-        if (this.ui.tab === 'musica') return LmsUi.viewLabel();
+        if (this.ui.tab === 'music') return LmsUi.viewLabel();
         var top = LmsNav.top(this.ui.tab);
         return top ? top.label : this.tabLabel;
       },
       back: function () {
         if (!this.depth) return null;
-        var root = this.ui.tab === 'musica' ? LmsUi.viewLabel() : this.tabLabel;
+        var root = this.ui.tab === 'music' ? LmsUi.viewLabel() : this.tabLabel;
         var current = LmsNav.top(this.ui.tab);
-        if (this.ui.tab === 'musica' && current && current.label === root) root = this.tabLabel;
+        if (this.ui.tab === 'music' && current && current.label === root) root = this.tabLabel;
         return LmsNav.parentLabel(this.ui.tab, root);
       },
       /* O picker fica sempre a vista em Minha Musica: sumindo ao entrar num
          artista, perdia-se a referencia de qual raiz se esta vendo. O toggle de
          apresentacao aparece ao lado dele, como continuacao. */
-      pickable: function () { return this.ui.tab === 'musica'; },
+      pickable: function () { return this.ui.tab === 'music'; },
       /* Dentro de um artista o centro deixa de ser o picker e vira o toggle: a
          escolha de raiz nao faz sentido ali, e a de apresentacao faz. */
       segments: function () {
-        return (this.ui.tab === 'musica' && this.depth) ? LmsUi.ALBUM_MODES : [];
+        return (this.ui.tab === 'music' && this.depth) ? LmsUi.ALBUM_MODES : [];
       },
       plKey: function () { return 'pl-' + (this.nav.playlists || []).length; },
       radioKey: function () { return 'radio-' + (this.nav.radio || []).length; },
       appsKey: function () { return 'apps-' + (this.nav.apps || []).length; },
-      favKey: function () { return 'fav-' + (this.nav.favoritos || []).length; }
+      favKey: function () { return 'fav-' + (this.nav.favourites || []).length; }
     },
     methods: {
       goBack: function () { LmsNav.back(this.ui.tab); },
       reconnect: function () { LmsStore.reconnect(); },
       pickView: function (key) {
         LmsUi.setMusicView(key);
-        LmsNav.reset('musica');
+        LmsNav.reset('music');
       }
     }
   });

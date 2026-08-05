@@ -35,68 +35,62 @@ Vue.component('lms-browse', {
      :style="{'--pane-current': paneWidth + 'px'}">
   <div class="pane-left">
     <div class="library-tools" :class="{tight: toolbarTight}">
-      <input v-model="ui.filter" type="search" placeholder="Filtrar"
-             :aria-label="'Filtrar ' + viewLabel.toLowerCase()">
+      <input v-model="ui.filter" type="search" placeholder="Filter"
+             :aria-label="'Filter' + viewLabel.toLowerCase()">
       <button ref="filterTrigger" class="icon-command filter-command" :class="{on: toolsActive}"
               :title="filterTitle" :aria-label="filterTriggerLabel" aria-haspopup="dialog"
               :aria-expanded="String(ui.filterPanel)" @click="openFilters">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h17l-6.5 7.6v5.6l-4 2.3v-7.9z"/></svg>
         <span v-if="filterCount" class="filter-badge" aria-hidden="true">{{ filterCount }}</span>
       </button>
-      <select :value="sortKey" :aria-label="sortSelectLabel" @change="chooseSort($event.target.value)">
-        <option v-if="view === 'recentes'" value="recent">Adicionados recentemente</option>
-        <option :value="primaryOptionValue">{{ primaryOptionLabel }}</option>
-        <option v-if="view === 'albuns' || view === 'recentes'" value="artist">Artista</option>
-        <option v-if="view === 'albuns' || view === 'recentes'" value="year">Ano</option>
-        <option v-if="allowsMediaFilter" value="format">Formato</option>
-        <option v-if="allowsMediaFilter" value="source">Biblioteca local primeiro</option>
-        <option v-if="allowsMediaFilter" value="quality">Maior resolução primeiro</option>
-      </select>
-	      <button class="icon-command" :title="sortTitle" :aria-label="sortLabel"
-	              :aria-pressed="String(sortDesc)"
-	              @click="LmsUi.toggleSortDir()">
-        <span aria-hidden="true">{{ sortDesc ? '↓' : '↑' }}</span>
+      <button ref="sortTrigger" class="icon-command sort-command" :class="{on: ui.sortMenu}"
+              :title="sortTriggerTitle" :aria-label="sortTriggerLabel" aria-haspopup="menu"
+              :aria-expanded="String(ui.sortMenu)" @click="openSortMenu">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 6.5h11M4 12h7M4 17.5h4"/>
+          <path d="M17.5 9.5v10M14.5 16.5l3 3 3-3"/>
+        </svg>
       </button>
       <button v-if="!ui.selectionMode" class="text-command select-command"
-              :class="{tight: toolbarTight}" :title="toolbarTight ? 'Selecionar' : null"
-              aria-label="Selecionar" @click="toggleSelect">
+              :class="{tight: toolbarTight}" :title="toolbarTight ? 'Select' : null"
+              aria-label="Select" @click="toggleSelect">
         <svg v-if="toolbarTight" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4.5 6.5h15M4.5 12h15M4.5 17.5h15"/><circle cx="8" cy="6.5" r="2.2"/>
           <circle cx="14" cy="12" r="2.2"/><circle cx="10" cy="17.5" r="2.2"/>
         </svg>
-        <span v-else>Selecionar</span>
+        <span v-else>Select</span>
       </button>
       <div v-else class="selection-tools">
 	        <span class="selection-count" aria-live="polite">{{ selectionCountLabel }}</span>
         <button class="selection-add-command" :disabled="!selectionCount"
-                title="Adicionar à fila de reprodução" aria-label="Adicionar à fila de reprodução"
+                title="Add to playback queue" aria-label="Add to playback queue"
                 @click="queueSelection">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M9 6h12M9 12h12M9 18h12M3 6h2M3 12h2M3 18h2M17 3v6M14 6h6"/>
           </svg>
-          <span>Adicionar<span class="selection-wide-label"> à fila</span></span>
+          <span>Add<span class="selection-wide-label"> to queue</span></span>
         </button>
-        <button class="text-command selection-done-command" @click="toggleSelect">Concluído</button>
+        <button class="text-command selection-done-command" @click="toggleSelect">Done</button>
       </div>
       <button ref="splitOptionsButton" class="icon-command split-options-command"
-              title="Opções da divisão" :aria-expanded="String(splitMenuOpen)"
+              title="Split options" :aria-expanded="String(splitMenuOpen)"
               @click="splitMenuOpen = !splitMenuOpen">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h17v13h-17zM10 5.5v13M14 9l2-2 2 2M18 15l-2 2-2-2"/></svg>
       </button>
       <div v-if="splitMenuOpen" ref="splitMenu" class="split-options" role="menu">
         <button role="menuitem" @click="resetSplit">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7v5h5M5.5 16a7 7 0 1 0 .3-8.3L4 9"/></svg>
-          <span>Restaurar divisão</span>
+          <span>Reset split</span>
         </button>
         <button role="menuitem" @click="toggleSplitLock">
           <svg v-if="splitLocked" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 9.6-2M5 10h14v11H5zM3 3l18 18"/></svg>
           <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5z"/></svg>
-          <span>{{ splitLocked ? 'Desbloquear divisão' : 'Bloquear divisão' }}</span>
+          <span>{{ splitLocked ? 'Unlock split' : 'Lock split' }}</span>
         </button>
       </div>
     </div>
-    <div v-if="view === 'recentes' && store.history.length" class="history-strip">
-      <div class="sectitle">Reproduzidos recentemente</div>
+    <div v-if="view === 'recent' && store.history.length" class="history-strip">
+      <div class="sectitle">Recently played</div>
       <div class="history-scroll">
         <button v-for="h in store.history.slice(0, 12)" :key="h.id + '-' + h.playedAt"
                 class="history-item" :aria-label="historyLabel(h)" @click="historyAction(h)">
@@ -111,11 +105,11 @@ Vue.component('lms-browse', {
     <div v-if="activeChips.length" class="filter-chip">
       <template v-if="compact">
         <span class="filter-chip-label">{{ compactSummary }}</span>
-        <button type="button" class="filter-chip-clear" @click="openFilters">Ver filtros</button>
-        <button type="button" class="filter-chip-clear" @click="clearAllTools">Limpar tudo</button>
+        <button type="button" class="filter-chip-clear" @click="openFilters">View filters</button>
+        <button type="button" class="filter-chip-clear" @click="clearAllTools">Clear all</button>
       </template>
       <template v-else>
-        <span class="filter-chip-label">Ativos:</span>
+        <span class="filter-chip-label">Active:</span>
         <span class="filter-pill-strip">
           <button v-for="c in activeChips" :key="c.key" type="button" class="filter-pill"
                   :class="'pill-' + c.kind" :aria-label="c.removeLabel" @click="c.remove()">
@@ -124,29 +118,28 @@ Vue.component('lms-browse', {
           </button>
         </span>
         <span class="filter-chip-count">{{ resultCount }}</span>
-        <button type="button" class="filter-chip-clear" @click="clearAllTools">Limpar tudo</button>
+        <button type="button" class="filter-chip-clear" @click="clearAllTools">Clear all</button>
       </template>
     </div>
     <div v-if="listNotes.length" class="filter-chip notes" role="status">
       <span v-for="n in listNotes" :key="n">{{ n }}</span>
     </div>
     <div v-if="filtersIgnored" class="filter-chip warning" role="status">
-      <span class="ell">Artista relacionado monta a lista a partir dos artistas do servidor, então os filtros
-        de mídia não se aplicam aqui.</span>
+      <span class="ell">Related artist builds the list from the server's artists, so media filters do not apply here.</span>
     </div>
     <p aria-live="polite" class="visually-hidden">{{ liveSummary }}</p>
     <div class="scroller" ref="scroller" @scroll="onScroll">
-      <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
+      <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
       <div v-else-if="error" class="empty">
-        <div class="h">Não deu para ler a biblioteca</div>
+        <div class="h">Could not read the library</div>
         <div class="p">{{ error }}</div>
-        <button class="retry-command" @click="reload(true)">Tentar novamente</button>
+        <button class="retry-command" @click="reload(true)">Try again</button>
       </div>
       <div v-else-if="!rows.length" class="empty">
         <div class="h">{{ viewLabel }}</div>
-        <div v-if="hasMediaFilter" class="p">Nada nesta categoria corresponde ao filtro {{ mediaDescriptor() }}.</div>
-        <div v-else class="p">Nenhum item encontrado nesta categoria.</div>
-        <button v-if="hasMediaFilter" class="retry-command" @click="clearMediaFilter">Limpar filtro</button>
+        <div v-if="hasMediaFilter" class="p">Nothing in this category matches the filter {{ mediaDescriptor() }}.</div>
+        <div v-else class="p">No items found in this category.</div>
+        <button v-if="hasMediaFilter" class="retry-command" @click="clearMediaFilter">Clear filter</button>
       </div>
       <template v-else>
         <div :style="{height: topPad + 'px'}"></div>
@@ -170,8 +163,8 @@ Vue.component('lms-browse', {
 	              <span v-if="it.row.sub" class="s ell">{{ it.row.sub }}</span>
 	            </span>
 	          </button>
-	          <button v-if="!ui.selectionMode" class="more-command" title="Mais ações"
-	                  :aria-label="'Mais ações para ' + it.row.label" @click.stop="actions(it.row, $event)">
+	          <button v-if="!ui.selectionMode" class="more-command" title="More actions"
+	                  :aria-label="'More actions for ' + it.row.label" @click.stop="actions(it.row, $event)">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle class="more-ring" cx="12" cy="12" r="8.5"/>
               <circle class="more-dot" cx="8.5" cy="12" r="1"/>
@@ -182,13 +175,13 @@ Vue.component('lms-browse', {
 	          </div>
 	        </template>
 	        <div :style="{height: botPad + 'px'}"></div>
-	        <div v-if="loadingMore" class="loading-more" role="status">Carregando mais itens…</div>
+	        <div v-if="loadingMore" class="loading-more" role="status">Loading more items…</div>
 	        <div v-if="limitWarning" class="loading-more warning" role="status">{{ limitWarning }}</div>
 	      </template>
     </div>
     <div v-if="hasRail" class="rail" role="slider" tabindex="0"
-         aria-label="Índice alfabético" aria-valuemin="0" :aria-valuemax="RAIL.length - 1"
-         :aria-valuenow="railIndex" :aria-valuetext="activeRail || 'Início'"
+         aria-label="Alphabetical index" aria-valuemin="0" :aria-valuemax="RAIL.length - 1"
+         :aria-valuenow="railIndex" :aria-valuetext="activeRail || 'Home'"
          @keydown.up.prevent="stepRail(-1)" @keydown.left.prevent="stepRail(-1)"
          @keydown.down.prevent="stepRail(1)" @keydown.right.prevent="stepRail(1)"
          @touchstart.prevent="scrubRail" @touchmove.prevent="scrubRail">
@@ -199,7 +192,7 @@ Vue.component('lms-browse', {
   </div>
 
   <div class="split-divider" role="separator" aria-orientation="vertical"
-       :aria-label="splitLocked ? 'Divisão bloqueada' : 'Redimensionar painéis'"
+       :aria-label="splitLocked ? 'Split locked' : 'Resize panels'"
        :aria-valuemin="splitMin" :aria-valuemax="splitMax" :aria-valuenow="Math.round(paneWidth)"
        :tabindex="splitLocked ? -1 : 0"
        @pointerdown="startSplitResize" @pointermove="moveSplitResize"
@@ -213,9 +206,12 @@ Vue.component('lms-browse', {
     <lms-detail v-if="frame" :frame="frame"></lms-detail>
     <div v-else class="empty">
       <div class="h">{{ viewLabel }}</div>
-      <div class="p">Escolha um item na lista à esquerda.</div>
+      <div class="p">Choose an item from the list on the left.</div>
     </div>
   </div>
+
+  <lms-sort-menu v-if="ui.sortMenu" :options="sortOptions" :value="sortKey" :desc="sortDesc"
+                 @choose="chooseSort" @direction="LmsUi.toggleSortDir()"></lms-sort-menu>
 </div>`,
   data: function () {
     var split = LmsSplitPane.load();
@@ -250,12 +246,42 @@ Vue.component('lms-browse', {
     viewLabel: function () { return LmsUi.viewLabel(); },
     primaryOptionLabel: function () {
       return {
-        artistas: 'Artista', albuns: 'Álbum', recentes: 'Álbum',
-        generos: 'Gênero', anos: 'Ano'
-      }[this.view] || 'Nome';
+        artists: 'Artist', albums: 'Album', recent: 'Album',
+        genres: 'Genre', years: 'Year'
+      }[this.view] || 'Name';
     },
-    primaryOptionValue: function () { return this.view === 'anos' ? 'year' : 'name'; },
-    /* Em Albuns, "Artista" produz linhas de artista -- agrupa. Em Recentes a
+    primaryOptionValue: function () { return this.view === 'years' ? 'year' : 'name'; },
+    /* The list the menu renders. It used to live as seven <option> tags with
+       v-if conditions between them; as data it can be read, and tested, in one
+       place. */
+    sortOptions: function () {
+      var out = [];
+      if (this.view === 'recent') out.push({ key: 'recent', label: this.tr('Recently added') });
+      out.push({ key: this.primaryOptionValue, label: this.tr(this.primaryOptionLabel) });
+      if (this.view === 'albums' || this.view === 'recent') {
+        out.push({ key: 'artist', label: this.tr('Artist') });
+        out.push({ key: 'year', label: this.tr('Year') });
+      }
+      if (this.allowsMediaFilter) {
+        out.push({ key: 'format', label: this.tr('Format') });
+        out.push({ key: 'source', label: this.tr('Local library first') });
+        out.push({ key: 'quality', label: this.tr('Highest resolution first') });
+      }
+      return out;
+    },
+    sortTriggerTitle: function () {
+      var current = this.sortOptions.filter(function (o) { return o.key === this.sortKey; }, this)[0];
+      return this.tr('Sort by') + (current ? ': ' + current.label : '');
+    },
+    /* Spoken by a screen reader, so it says the current state as well as what
+       the control does. It was Portuguese, glued together from three literals
+       -- which is also why no dictionary lookup could ever reach it. */
+    sortTriggerLabel: function () {
+      var current = this.sortOptions.filter(function (o) { return o.key === this.sortKey; }, this)[0];
+      return this.tr('Sort by') + (current ? ': ' + current.label : '') + '. ' +
+        (this.sortDesc ? this.tr('Descending order') : this.tr('Ascending order'));
+    },
+    /* Em Albuns, "Artist" produz linhas de artista -- agrupa. Em Recentes a
        mesma opcao apenas reordena albuns, porque Recentes nao passa por
        loadPagedRoot e sempre desenha album. Chamar os dois de "Exibicao" era o
        que fazia procurar Beatles em Recentes devolver albuns em vez de uma
@@ -263,15 +289,15 @@ Vue.component('lms-browse', {
     /* O select passou a fazer uma coisa so. Enquanto ele acumulava filtro e
        agrupamento, o rotulo tinha de mudar por view para nao mentir sobre o que
        aquele controle fazia ali; agora ele ordena, em qualquer raiz. */
-    sortSelectLabel: function () { return this.tr('Ordenar por'); },
-    frame: function () { return LmsNav.top('musica') || this.rootSelection; },
+    sortSelectLabel: function () { return this.tr('Sort by'); },
+    frame: function () { return LmsNav.top('music') || this.rootSelection; },
     sortKey: function () { return (this.ui.sort[0] || {}).key || 'name'; },
     sortDesc: function () { return !!(this.ui.sort[0] || {}).desc; },
     groupsAlbumsByArtist: function () {
       return this.ui.group.indexOf('artist') >= 0;
     },
     groupsMainArtists: function () {
-      return this.view === 'artistas' || this.groupsAlbumsByArtist;
+      return this.view === 'artists' || this.groupsAlbumsByArtist;
     },
     groupsAlbumsByRelatedArtist: function () {
       return this.ui.group.indexOf('relatedArtist') >= 0;
@@ -279,15 +305,10 @@ Vue.component('lms-browse', {
 	    selectionCount: function () { return Object.keys(this.ui.selected).length; },
 	    selectionCountLabel: function () {
 	      var n = this.selectionCount;
-	      if (!n) return 'Nenhum item selecionado';
-	      return n + (n === 1 ? ' item selecionado' : ' itens selecionados');
-	    },
-	    sortLabel: function () {
-	      return 'Ordem atual: ' + (this.sortDesc ? 'decrescente' : 'crescente') +
-	        '. Alternar ordem';
-	    },
-	    sortTitle: function () {
-	      return this.sortDesc ? 'Mudar para ordem crescente' : 'Mudar para ordem decrescente';
+	      if (!n) return 'No item selected';
+	      /* Each half is looked up on its own: a number glued to a phrase can
+	         never match a dictionary key as a whole. */
+	      return n + ' ' + this.tr(n === 1 ? 'item selected' : 'items selected');
 	    },
     allowsMediaFilter: function () { return LmsUi.allowsMediaFilter(this.view); },
     /* Uma leitura so do modo, com padrao explicito: 'none' e o estado em que
@@ -297,7 +318,7 @@ Vue.component('lms-browse', {
     hasMediaFilter: function () {
       return this.allowsMediaFilter && this.ui.filters.length > 0;
     },
-    /* Artista relacionado monta a lista a partir do endpoint de artistas: nao ha
+    /* Artista relacionado monta a lista a partir do endpoint de artists: nao ha
        album para conferir, entao o filtro nao tem como ser aplicado. Dizer isso
        na tela e o oposto do bug C -- ali a promessa era vazia e ninguem avisava. */
     filtersIgnored: function () {
@@ -321,13 +342,13 @@ Vue.component('lms-browse', {
     },
     filterTitle: function () {
       return this.filterCount
-        ? this.tr('Filtros') + ' (' + this.filterCount + ')'
-        : this.tr('Filtros');
+        ? this.tr('Filters') + ' (' + this.filterCount + ')'
+        : this.tr('Filters');
     },
     filterTriggerLabel: function () {
-      if (!this.filterCount) return this.tr('Filtros');
-      return this.tr('Filtros') + ': ' + this.filterCount + ' ' +
-        this.tr(this.filterCount === 1 ? 'filtro ativo' : 'filtros ativos');
+      if (!this.filterCount) return this.tr('Filters');
+      return this.tr('Filters') + ': ' + this.filterCount + ' ' +
+        this.tr(this.filterCount === 1 ? 'active filter' : 'active filters');
     },
     /* Uma pilula por coisa ligada, com a marca do conceito a que ela pertence --
        filtro exclui, secao agrupa, estrela e preferencia. Sao tres efeitos
@@ -337,7 +358,7 @@ Vue.component('lms-browse', {
       var chips = this.activeFilters.map(function (f) {
         return {
           key: 'f:' + f.key, kind: 'filter', mark: '◫', label: f.label,
-          removeLabel: self.tr('Remover filtro') + ' ' + f.label,
+          removeLabel: self.tr('Remove filter') + ' ' + f.label,
           remove: function () { LmsUi.toggleFilter(f.key); }
         };
       });
@@ -345,8 +366,8 @@ Vue.component('lms-browse', {
         var groupKey = this.ui.group[0];
         chips.push({
           key: 'g:' + groupKey, kind: 'group', mark: '⚙',
-          label: this.tr(groupKey === 'artist' ? 'Artista' : 'Artista relacionado'),
-          removeLabel: self.tr('Remover agrupamento'),
+          label: this.tr(groupKey === 'artist' ? 'Artist' : 'Related artist'),
+          removeLabel: self.tr('Remove grouping'),
           remove: function () { LmsUi.clearGroup(); }
         });
       }
@@ -354,7 +375,7 @@ Vue.component('lms-browse', {
         chips.push({
           key: 's:' + this.sectionKey, kind: 'group', mark: '⚙',
           label: this.sectionFacetLabel(this.sectionKey),
-          removeLabel: self.tr('Remover agrupamento'),
+          removeLabel: self.tr('Remove grouping'),
           remove: function () { LmsUi.clearSections(); }
         });
       }
@@ -362,7 +383,7 @@ Vue.component('lms-browse', {
         chips.push({
           key: 'p:' + this.preferMode, kind: 'prefer', mark: '★',
           label: this.preferLabel(this.preferMode),
-          removeLabel: self.tr('Remover preferência de reprodução'),
+          removeLabel: self.tr('Remove playback preference'),
           remove: function () { LmsUi.setPrefer('none'); }
         });
       }
@@ -373,31 +394,34 @@ Vue.component('lms-browse', {
        encolher nada, ela quebrava em tres linhas e comia a lista logo na
        primeira abertura. O que encolhe e o rotulo do comando secundario -- a
        busca e o funil ficam, do tamanho que estavam. */
-    toolbarTight: function () { return this.paneWidth < 430; },
+    /* 294px is what the five controls measure with gaps and padding; below that
+       the Select command drops its text and becomes an icon. It used to trip at
+       430 because the sort select was 105px wide on its own. */
+    toolbarTight: function () { return this.paneWidth < 320; },
     /* Dois numeros que existiam so na memoria do componente. Contar sem dizer e
        a mesma familia do bug B: o dado sumia e nada na tela explicava. */
     listNotes: function () {
       var notes = [];
       if (this.unknownCount) {
         notes.push(this.tr(this.unknownCount === 1
-          ? '1 álbum ficou de fora por não ter informação de mídia.'
-          : '{n} álbuns ficaram de fora por não terem informação de mídia.'
+          ? '1 album was left out because it has no media information.'
+          : '{n} albums were left out because they have no media information.'
         ).replace('{n}', this.unknownCount));
       }
       if (this.sectionOverlap) {
-        notes.push(this.tr('Alguns álbuns aparecem em mais de uma seção.'));
+        notes.push(this.tr('Some albums appear in more than one section.'));
       }
       return notes;
     },
     compactSummary: function () {
       var n = this.activeChips.length;
-      return n + ' ' + this.tr(n === 1 ? 'ajuste ativo' : 'ajustes ativos');
+      return n + ' ' + this.tr(n === 1 ? 'active setting' : 'active settings');
     },
     liveSummary: function () {
       if (!this.activeChips.length) return '';
       return this.activeChips.map(function (c) { return c.label; }).join(', ') + ' — ' +
         this.displayRows.length + ' ' +
-        this.tr(this.displayRows.length === 1 ? 'resultado' : 'resultados');
+        this.tr(this.displayRows.length === 1 ? 'result' : 'results');
     },
     /* O indice de midia deixa de ser exclusivo do filtro: seccionar por formato
        e ordenar por resolucao leem a mesma tabela, e a preferencia de
@@ -411,17 +435,17 @@ Vue.component('lms-browse', {
       return this.preferMode !== 'none';
     },
     showsAlbums: function () {
-      return (this.view === 'albuns' && !this.groupsAlbumsByArtist &&
-              !this.groupsAlbumsByRelatedArtist) || this.view === 'recentes';
+      return (this.view === 'albums' && !this.groupsAlbumsByArtist &&
+              !this.groupsAlbumsByRelatedArtist) || this.view === 'recent';
     },
     hasRail: function () {
       /* O indice alfabetico so faz sentido sobre uma lista alfabetica; em
-         'recent' as letras nao sobem e saltar levaria a lugar nenhum. Com
+         'recent' as letras nao sobem e saltar levaria a lugar none. Com
          secoes a lista tambem deixa de ser monotonica: a letra M aparece uma
          vez por secao, e o salto escolheria uma delas sem criterio. */
       return !this.loading && this.rows.length > 30 && this.sortKey !== 'recent' &&
              !this.sectionKey && !LmsUi.sortNeedsMedia(this.sortKey) &&
-             (this.view === 'artistas' || this.view === 'albuns' || this.view === 'recentes');
+             (this.view === 'artists' || this.view === 'albums' || this.view === 'recent');
     },
     rowH: function () { return this.showsAlbums ? 88 : 72; },
     headerH: function () { return 34; },
@@ -607,7 +631,7 @@ Vue.component('lms-browse', {
     isSelected: function (r) {
       var selectedFrame = this.frame;
       if (r.kind === 'artist') {
-        var frames = LmsNav.stacks.musica || [];
+        var frames = LmsNav.stacks.music || [];
         for (var i = frames.length - 1; i >= 0; i--) {
           if (frames[i].kind === 'artist') {
             selectedFrame = frames[i];
@@ -624,7 +648,7 @@ Vue.component('lms-browse', {
       var c = ((row && row.label) || '').trim().charAt(0).toUpperCase();
       return /[A-Z]/.test(c) ? c : '#';
     },
-    /* Busca binaria sobre a soma de prefixos: qual item ocupa esta altura de
+    /* Search binaria sobre a soma de prefixos: qual item ocupa esta altura de
        rolagem. Substitui a divisao por altura fixa, que so valia enquanto todos
        os itens da lista tinham o mesmo tamanho. */
     indexAtOffset: function (offset) {
@@ -671,8 +695,8 @@ Vue.component('lms-browse', {
     },
     open: function (r) {
       this.rootSelection = null;
-      LmsNav.reset('musica');
-      LmsNav.push('musica', {
+      LmsNav.reset('music');
+      LmsNav.push('music', {
         kind: r.kind, id: r.id, ids: r.ids,
         label: r.label, sub: r.sub, art: r.art,
         year: r.year, originalYear: r.originalYear
@@ -687,7 +711,7 @@ Vue.component('lms-browse', {
       };
     },
     ensureRecentSelection: function () {
-      if (this.view !== 'recentes' || window.innerWidth <= 700) return;
+      if (this.view !== 'recent' || window.innerWidth <= 700) return;
       /* A guarda precisa ser sobre a lista que o usuario ve: com um filtro que
          nao casa com nada, rows tem itens e displayRows nao, e redimensionar a
          janela lia displayRows[0] indefinido. */
@@ -714,6 +738,9 @@ Vue.component('lms-browse', {
        o icone de funil --, e com isso desaparece o roteamento que mandava tres
        conceitos pelo mesmo campo. Sem guarda aqui de proposito: LmsUi.setSort ja
        recusa chave invalida para a view corrente. */
+    openSortMenu: function () {
+      LmsUi.openSortMenu(this.$refs.sortTrigger);
+    },
     chooseSort: function (value) {
       LmsUi.setSort([{ key: value, desc: this.sortDesc }]);
     },
@@ -748,15 +775,15 @@ Vue.component('lms-browse', {
     },
     preferLabel: function (mode) {
       var labels = {
-        local: 'Preferir biblioteca local', stream: 'Preferir streaming',
-        quality: 'Preferir maior resolução'
+        local: 'Prefer local library', stream: 'Prefer streaming',
+        quality: 'Prefer highest resolution'
       };
-      return this.tr(labels[mode] || 'Sem preferência');
+      return this.tr(labels[mode] || 'No preference');
     },
     sectionFacetLabel: function (key) {
       var labels = {
-        decade: 'Década', format: 'Formato', quality: 'Resolução',
-        origin: 'Origem', stream: 'Serviço de streaming'
+        decade: 'Decade', format: 'Format', quality: 'Resolution',
+        origin: 'Source', stream: 'Streaming service'
       };
       return this.tr(labels[key] || key);
     },
@@ -767,12 +794,12 @@ Vue.component('lms-browse', {
       var key = this.sectionKey;
       if (key === 'decade') {
         var year = Number(row.year);
-        if (!year) return [{ key: 'unknown', label: this.tr('Ano desconhecido'), rank: 1 }];
+        if (!year) return [{ key: 'unknown', label: this.tr('Unknown year'), rank: 1 }];
         var decade = Math.floor(year / 10) * 10;
-        return [{ key: 'd' + decade, label: this.tr('Anos') + ' ' + decade, rank: 0 }];
+        return [{ key: 'd' + decade, label: this.tr('Years') + ' ' + decade, rank: 0 }];
       }
       var meta = this.metaFor(row.id);
-      var unknown = [{ key: 'unknown', label: this.tr('Sem informação de mídia'), rank: 1 }];
+      var unknown = [{ key: 'unknown', label: this.tr('No media information'), rank: 1 }];
       if (!meta) return unknown;
       var out = [];
       if (key === 'format') {
@@ -790,7 +817,7 @@ Vue.component('lms-browse', {
           return { key: 'p' + p, label: this.filterLabel('stream:' + p), rank: 0 };
         }, this);
         if (!out.length && meta.local) {
-          out = [{ key: 'nostream', label: this.tr('Sem serviço de streaming'), rank: 1 }];
+          out = [{ key: 'nostream', label: this.tr('No streaming service'), rank: 1 }];
         }
       }
       return out.length ? out : unknown;
@@ -839,10 +866,10 @@ Vue.component('lms-browse', {
       });
     },
     editionSource: function (meta) {
-      if (!meta) return this.tr('Sem informação de mídia');
+      if (!meta) return this.tr('No media information');
       var providers = Object.keys(meta.providers);
       var where = providers.length ? this.filterLabel('stream:' + providers[0])
-        : this.tr(meta.local ? 'Biblioteca local' : 'Remoto / streaming');
+        : this.tr(meta.local ? 'Local library' : 'Remote / streaming');
       var formats = Object.keys(meta.formats).map(function (f) {
         return this.filterLabel('format:' + f);
       }, this);
@@ -864,8 +891,8 @@ Vue.component('lms-browse', {
     historyAction: function (h) {
       if (h.albumId != null) {
         this.rootSelection = null;
-        LmsNav.reset('musica');
-        LmsNav.push('musica', {
+        LmsNav.reset('music');
+        LmsNav.push('music', {
           kind: 'album', id: h.albumId, label: h.album || h.title,
           art: LmsFmt.coverUrl(h.coverId, 50), artist: h.artist || ''
         });
@@ -942,14 +969,14 @@ Vue.component('lms-browse', {
     },
     /* Rotulo montado em tempo de execucao e colado no subtitulo da linha: nao
        passa pelo translateTemplate, entao precisa do tr() na mao. Sem ele,
-       "Biblioteca local" aparecia em portugues numa sessao em ingles -- visto
+       "Local library" aparecia em portugues numa sessao em ingles -- visto
        na tela, na propria foto do README. */
     sourceLabel: function (track) {
       var provider = this.providerFromUrl(track && track.url);
       if (provider === 'qobuz') return 'Qobuz';
       if (provider === 'youtube') return 'YouTube';
       if ((track && track.remote) || (provider && provider !== 'file')) return this.tr('Streaming');
-      return this.tr('Biblioteca local');
+      return this.tr('Local library');
     },
     disambiguateDuplicateAlbums: async function (pid, token) {
       var groups = Object.create(null);
@@ -1171,9 +1198,9 @@ Vue.component('lms-browse', {
     },
     filterLabel: function (key) {
       var labels = {
-        'quality:hires': 'Hi-Res', 'quality:standard': 'Resolução padrão',
-        'quality:lossless': 'Sem perdas', 'quality:lossy': 'Com perdas',
-        'origin:local': 'Biblioteca local', 'origin:remote': 'Remoto / streaming',
+        'quality:hires': 'Hi-Res', 'quality:standard': 'Standard resolution',
+        'quality:lossless': 'Lossless', 'quality:lossy': 'Lossy',
+        'origin:local': 'Local library', 'origin:remote': 'Remote / streaming',
         'stream:qobuz': 'Qobuz', 'stream:youtube': 'YouTube'
       };
       if (labels[key]) return this.tr(labels[key]);
@@ -1185,7 +1212,7 @@ Vue.component('lms-browse', {
         var parts = raw.split('-');
         return parts[0] === parts[1] ? parts[0] : parts[0] + '–' + parts[1];
       }
-      if (facet === 'genre') return LmsUi.genreName(raw) || this.tr('Gênero') + ' ' + raw;
+      if (facet === 'genre') return LmsUi.genreName(raw) || this.tr('Genre') + ' ' + raw;
       var format = String(key || '').split(':')[1] || '';
       var found = this.MEDIA_FORMATS.filter(function (item) { return item.key === format; })[0];
       return found ? found.label : format.toUpperCase();
@@ -1289,17 +1316,17 @@ Vue.component('lms-browse', {
 	      }
 	      }
 	      if (keepGoing) {
-	        this.limitWarning = 'A biblioteca tem mais itens do que esta tela carregou. Use o filtro para refinar a lista.';
+	        this.limitWarning = 'The library has more items than this screen loaded. Use the filter to narrow the list.';
 	      } else if (this.artistIndexTruncated) {
-	        this.limitWarning = 'O índice de artistas parou em 10.000 nomes. Álbuns de artistas além desse ponto aparecem como álbum nesta lista.';
+	        this.limitWarning = 'The artist index stopped at 10,000 names. Albums by artists beyond that point appear as albums in this list.';
 	      } else if (unattributed) {
 	        /* O numero entra por {n}, depois da traducao. Concatenar o total na
 	           frente produzia uma frase que nunca batia com uma chave do
 	           dicionario -- este aviso aparecia em portugues numa sessao em
 	           ingles. O marcador tambem deixa o tradutor mover o numero. */
 	        this.limitWarning = this.tr(unattributed === 1
-	          ? '1 álbum não pôde ser atribuído a um artista do índice e aparece como álbum nesta lista.'
-	          : '{n} álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.'
+	          ? '1 album could not be attributed to an artist in the index and appears as an album in this list.'
+	          : '{n} albums could not be attributed to an artist in the index and appear as albums in this list.'
 	        ).replace('{n}', unattributed);
 	      }
 	      if (!this.groupsAlbumsByArtist && !this.groupsAlbumsByRelatedArtist && !this.hasMediaFilter) {
@@ -1319,13 +1346,13 @@ Vue.component('lms-browse', {
       this.activeRail = '';
       if (!preserveNavigation) {
         this.rootSelection = null;
-        LmsNav.reset('musica');
+        LmsNav.reset('music');
       }
       var pid = this.store.playerId || '';
       try {
-        if (this.view === 'artistas' || this.view === 'albuns') {
+        if (this.view === 'artists' || this.view === 'albums') {
           await this.loadPagedRoot(pid, token);
-        } else if (this.view === 'recentes') {
+        } else if (this.view === 'recent') {
           if (this.needsMediaIndex) {
             await this.loadMediaIndex(pid, token);
             if (token !== this.requestToken) return;
@@ -1366,19 +1393,19 @@ Vue.component('lms-browse', {
           }, this);
 	          await this.disambiguateDuplicateAlbums(pid, token);
 	          if (recentSourceCount === 250) {
-	            this.limitWarning = 'Recentes mostra os 250 álbuns mais novos. Use o filtro para refinar.';
+	            this.limitWarning = 'Recent shows the 250 newest albums. Use the filter to narrow it down.';
 	          }
-        } else if (this.view === 'generos') {
+        } else if (this.view === 'genres') {
           var g = await LmsApi.genres(pid, 0, 2000);
           if (token !== this.requestToken) return;
-          if (g.length >= 2000) this.limitWarning = 'Esta biblioteca tem mais de 2.000 gêneros; esta tela mostra os 2.000 primeiros.';
+          if (g.length >= 2000) this.limitWarning = 'This library has more than 2,000 genres; this screen shows the first 2,000.';
           this.rows = g.map(function (x) {
             return { key: 'g' + x.id, kind: 'genre', id: x.id, label: x.name, art: null };
           });
         } else {
           var y = await LmsApi.years(pid, 0, 500);
           if (token !== this.requestToken) return;
-          if (y.length >= 500) this.limitWarning = 'Esta biblioteca tem mais de 500 anos distintos; esta tela mostra os 500 primeiros.';
+          if (y.length >= 500) this.limitWarning = 'This library has more than 500 distinct years; this screen shows the first 500.';
           this.rows = y.map(function (x) {
             return { key: 'y' + x.year, kind: 'year', id: x.year, label: String(x.year), art: null };
           });

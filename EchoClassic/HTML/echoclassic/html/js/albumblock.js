@@ -32,10 +32,10 @@ Vue.component('lms-album-block', {
       <div v-else-if="album.artist" class="aartist">{{ album.artist }}</div>
       <div class="ameta">{{ metaLine }}</div>
       <div v-if="album.originalYear || album.year" class="edition-years">
-        <span>Ano desta edição: {{ album.year || 'não informado' }}</span>
-        <span>Ano original: {{ album.originalYear || 'não informado' }}</span>
+        <span>Year of this edition: {{ album.year || 'not available' }}</span>
+        <span>Original year: {{ album.originalYear || 'not available' }}</span>
       </div>
-      <div v-if="tracks.length" class="album-facts" aria-label="Informações técnicas do álbum">
+      <div v-if="tracks.length" class="album-facts" aria-label="Album technical details">
         <span class="album-fact" :title="'Formato: ' + formatLine">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4"/></svg>
           <span>{{ formatLine }}</span>
@@ -73,13 +73,13 @@ Vue.component('lms-album-block', {
 
 	  <button type="button" class="shufflerow pointer" @click="shuffle">
 	    <svg viewBox="0 0 24 24"><path d="M16 3l4 4-4 4M4 7h16M8 21l-4-4 4-4M20 17H4"/></svg>
-	    <span>Aleatório</span>
+	    <span>Shuffle</span>
 	  </button>
 
-  <div v-if="loading" class="empty"><div class="p">Carregando faixas…</div></div>
+  <div v-if="loading" class="empty"><div class="p">Loading tracks…</div></div>
   <div v-else-if="error" class="empty">
     <div class="p">{{ error }}</div>
-    <button class="retry-command" @click="load">Tentar novamente</button>
+    <button class="retry-command" @click="load">Try again</button>
   </div>
   <template v-else>
 	    <div v-for="t in tracks" :key="t.id" class="trow"
@@ -99,8 +99,8 @@ Vue.component('lms-album-block', {
 	        <span v-if="hires(t)" class="spec">{{ shortRate(t) }}</span>
 	        <span class="dur">{{ dur(t.duration) }}</span>
 	      </button>
-	      <button v-if="!ui.selectionMode" class="more-command" title="Mais ações"
-	              :aria-label="'Mais ações para ' + t.title" @click.stop="actions(t, $event)">
+	      <button v-if="!ui.selectionMode" class="more-command" title="More actions"
+	              :aria-label="'More actions for ' + t.title" @click.stop="actions(t, $event)">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle class="more-ring" cx="12" cy="12" r="8.5"/>
           <circle class="more-dot" cx="8.5" cy="12" r="1"/>
@@ -109,7 +109,7 @@ Vue.component('lms-album-block', {
         </svg>
       </button>
     </div>
-	    <div v-if="!tracks.length" class="empty"><div class="p">Este álbum não devolveu faixas.</div></div>
+	    <div v-if="!tracks.length" class="empty"><div class="p">This album returned no tracks.</div></div>
 	    <div v-if="tracksHasMore" class="loading-more warning" role="status">
 	      Este álbum tem mais faixas do que a tela carregou.
 	    </div>
@@ -127,7 +127,7 @@ Vue.component('lms-album-block', {
       var n = this.tracks.length;
       /* A frase e montada por concatenacao, entao o texto pronto nunca bate
          com uma chave do dicionario. Traduz-se a unidade antes de juntar. */
-      var unit = (n === 1) ? 'música' : 'músicas';
+      var unit = (n === 1) ? 'song' : 'songs';
       if (window.LmsStr) unit = LmsStr.t(unit);
       return [this.album.releaseType || '', n ? n + ' ' + unit : '']
         .filter(Boolean).join(' • ');
@@ -136,7 +136,7 @@ Vue.component('lms-album-block', {
       var self = this;
       return this.unique(this.tracks.map(function (track) {
         return self.formatLabel(track.format);
-      })).join(', ') || 'Não informado';
+      })).join(', ') || 'Not available';
     },
     bitRateLine: function () {
       var rates = this.tracks.map(function (track) {
@@ -153,7 +153,7 @@ Vue.component('lms-album-block', {
         return [LmsFmt.rate(track.sampleRate), LmsFmt.depth(track.sampleSize)]
           .filter(Boolean).join(' • ');
       })).filter(Boolean).join(', ');
-      return [bitrate, resolution].filter(Boolean).join(' • ') || 'Não informado';
+      return [bitrate, resolution].filter(Boolean).join(' • ') || 'Not available';
     },
     originLine: function () {
       var self = this;
@@ -161,8 +161,8 @@ Vue.component('lms-album-block', {
         var provider = self.providerFromTrack(track);
         if (provider === 'qobuz') return 'Qobuz';
         if (provider === 'youtube') return 'YouTube';
-        return provider === 'local' ? 'Biblioteca local' : 'Remoto / streaming';
-      })).join(', ') || 'Não informado';
+        return provider === 'local' ? 'Local library' : 'Remote / streaming';
+      })).join(', ') || 'Not available';
     },
     originIsLocal: function () {
       return this.tracks.length && this.tracks.every(function (track) {
@@ -181,8 +181,8 @@ Vue.component('lms-album-block', {
     },
     sourceTitle: function () {
       return {
-        local: 'Biblioteca local', qobuz: 'Qobuz', youtube: 'YouTube',
-        remote: 'Remoto / streaming', mixed: 'Origens mistas'
+        local: 'Local library', qobuz: 'Qobuz', youtube: 'YouTube',
+        remote: 'Remote / streaming', mixed: 'Origens mistas'
       }[this.albumSource] || 'Origem sendo identificada';
     },
     displayedRelatedArtists: function () {
@@ -221,16 +221,16 @@ Vue.component('lms-album-block', {
 	    },
     openArtist: function () {
       if (!this.artist) return;
-      LmsNav.push('musica', {
+      LmsNav.push('music', {
         kind: 'artist', id: this.artist.id, ids: this.artist.ids,
         label: this.artist.name, art: null
       });
     },
     openRelatedArtist: function (artist) {
-      LmsUi.setMusicView('albuns');
+      LmsUi.setMusicView('albums');
       LmsUi.setGroup(['relatedArtist']);
       Vue.nextTick(function () {
-        LmsNav.push('musica', {
+        LmsNav.push('music', {
           kind: 'artist', id: artist.id, ids: artist.ids,
           label: artist.name, art: null
         });

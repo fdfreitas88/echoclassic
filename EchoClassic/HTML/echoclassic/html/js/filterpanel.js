@@ -9,8 +9,8 @@
 
    O painel trabalha em RASCUNHO. Cada troca de filtro recarrega a biblioteca
    (segundos), e o usuario costuma montar a pergunta em varios cliques; aplicar
-   a cada clique cobraria o preco inteiro por clique. "Aplicar" entrega tudo de
-   uma vez, "Cancelar" descarta. Fora do painel -- na fileira de pilulas -- a
+   a cada clique cobraria o preco inteiro por clique. "Apply" entrega tudo de
+   uma vez, "Cancel" descarta. Fora do painel -- na fileira de pilulas -- a
    remocao continua imediata, porque ali a acao ja e uma so.
 
    Tres formas, escolhidas pela largura disponivel e nao por nome de aparelho,
@@ -39,145 +39,141 @@
            @keydown.esc.stop.prevent="cancel" @keydown.tab="trapFocus">
     <header class="filter-head">
       <button ref="first" class="back-command" @click="cancel">
-        <span v-if="mode === 'small'" aria-hidden="true">‹ </span>Cancelar
+        <span v-if="mode === 'small'" aria-hidden="true">‹ </span>Cancel
       </button>
-      <h2 id="filter-panel-title" class="ttl">Filtros</h2>
-      <button class="back-command filter-apply" @click="apply">Aplicar</button>
+      <h2 id="filter-panel-title" class="ttl">Filters</h2>
+      <button class="back-command filter-apply" @click="apply">Apply</button>
     </header>
 
     <div class="filter-body scroller">
       <label class="filter-search">
-        <span class="visually-hidden">Buscar dentro dos filtros</span>
-        <input v-model="needle" type="search" placeholder="Buscar dentro dos filtros">
+        <span class="visually-hidden">Search within filters</span>
+        <input v-model="needle" type="search" placeholder="Search within filters">
       </label>
 
       <p v-if="!allowsFilters" class="filter-note">
-        Esta raiz não sabe filtrar por mídia. Filtros de origem, formato, resolução, gênero e ano
-        valem em Álbuns e em Recentes.
+        This root cannot filter by media. Source, format, resolution, genre and year filters apply in Albums and in Recently added.
       </p>
 
-      <fieldset v-if="allowsFilters && show('Origem')" class="filter-group">
-        <legend>Origem</legend>
+      <fieldset v-if="allowsFilters && show('Source')" class="filter-group">
+        <legend>Source</legend>
         <button v-for="o in sourceOptions" :key="o.key" type="button" class="filter-option"
                 :class="{on: has(o.key)}" :aria-pressed="String(has(o.key))"
                 @click="toggle(o.key)">{{ o.label }}</button>
       </fieldset>
 
-      <fieldset v-if="allowsFilters && show('Gênero')" class="filter-group">
-        <legend>Gênero</legend>
-        <div v-if="genresLoading" class="filter-note">Carregando gêneros…</div>
+      <fieldset v-if="allowsFilters && show('Genre')" class="filter-group">
+        <legend>Genre</legend>
+        <div v-if="genresLoading" class="filter-note">Loading genres…</div>
         <button v-for="g in visibleGenres" :key="g.id" type="button" class="filter-option"
                 :class="{on: has('genre:' + g.id)}" :aria-pressed="String(has('genre:' + g.id))"
                 @click="toggle('genre:' + g.id)">{{ g.name }}</button>
         <div v-if="genreOverflow" class="filter-note">
-          A lista de gêneros é longa. Use a busca acima para achar o resto.
+          The genre list is long. Use the search above to find the rest.
         </div>
       </fieldset>
 
-      <fieldset v-if="allowsFilters && show('Formato')" class="filter-group">
-        <legend>Formato</legend>
+      <fieldset v-if="allowsFilters && show('Format')" class="filter-group">
+        <legend>Format</legend>
         <button v-for="f in visibleFormats" :key="f.key" type="button" class="filter-option"
                 :class="{on: has('format:' + f.key)}" :aria-pressed="String(has('format:' + f.key))"
                 @click="toggle('format:' + f.key)">{{ f.label }}</button>
       </fieldset>
 
-      <fieldset v-if="allowsFilters && show('Ano')" class="filter-group filter-years">
-        <legend>Ano</legend>
+      <fieldset v-if="allowsFilters && show('Year')" class="filter-group filter-years">
+        <legend>Year</legend>
         <label class="filter-year">
-          <span>De</span>
+          <span>From</span>
           <input v-model="yearFrom" type="number" inputmode="numeric" min="1000" max="2999"
-                 aria-label="Ano inicial" @change="commitYears">
+                 aria-label="Start year" @change="commitYears">
         </label>
         <label class="filter-year">
-          <span>Até</span>
+          <span>To</span>
           <input v-model="yearTo" type="number" inputmode="numeric" min="1000" max="2999"
-                 aria-label="Ano final" @change="commitYears">
+                 aria-label="End year" @change="commitYears">
         </label>
         <button v-if="yearFrom || yearTo" type="button" class="filter-chip-clear"
-                @click="clearYears">Limpar ano</button>
+                @click="clearYears">Clear year</button>
         <p v-if="yearError" class="filter-note">{{ yearError }}</p>
       </fieldset>
 
       <details v-if="allowsFilters && show('Qualidade')" class="filter-advanced">
-        <summary>Qualidade de áudio</summary>
+        <summary>Audio quality</summary>
         <fieldset class="filter-group">
-          <legend class="visually-hidden">Qualidade de áudio</legend>
+          <legend class="visually-hidden">Audio quality</legend>
           <button v-for="q in qualityOptions" :key="q.key" type="button" class="filter-option"
                   :class="{on: has(q.key)}" :aria-pressed="String(has(q.key))"
                   @click="toggle(q.key)">{{ q.label }}</button>
         </fieldset>
         <p class="filter-note">
-          Resolução alta não é prova de masterização melhor. Estes filtros dizem o que o arquivo é,
-          não o quanto ele soa bem.
+          High resolution is not proof of better mastering. These filters describe what the file is, not how good it sounds.
         </p>
       </details>
 
-      <fieldset v-if="show('Ordenar')" class="filter-group">
-        <legend>Ordenar por</legend>
+      <fieldset v-if="show('Sort')" class="filter-group">
+        <legend>Sort by</legend>
         <button v-for="s in sortOptions" :key="s.key" type="button" class="filter-option"
                 :class="{on: draft.sort[0] && draft.sort[0].key === s.key}"
                 :aria-pressed="String(!!draft.sort[0] && draft.sort[0].key === s.key)"
                 @click="chooseSort(s.key)">{{ s.label }}</button>
         <button type="button" class="filter-option" :aria-pressed="String(sortDesc)"
                 :class="{on: sortDesc}" @click="toggleDir">
-          {{ sortDesc ? 'Ordem decrescente (Z–A)' : 'Ordem crescente (A–Z)' }}
+          {{ sortDesc ? 'Descending order (Z–A)' : 'Ascending order (A–Z)' }}
         </button>
       </fieldset>
 
       <fieldset v-if="show('Agrupar')" class="filter-group">
-        <legend>Agrupar por</legend>
+        <legend>Group by</legend>
         <button v-for="g in groupOptions" :key="g.value" type="button" class="filter-option"
                 :class="{on: groupChoice === g.value}" :aria-pressed="String(groupChoice === g.value)"
                 @click="chooseGroup(g.value)">{{ g.label }}</button>
         <p class="filter-note">
-          Agrupar organiza a lista, nunca tira item dela. Um álbum com mais de um formato aparece
-          em cada seção a que pertence.
+          Grouping organises the list and never removes anything from it. An album with more than one format appears in each section it belongs to.
         </p>
       </fieldset>
 
-      <fieldset v-if="show('Preferência')" class="filter-group">
-        <legend>Preferência de reprodução</legend>
+      <fieldset v-if="show('Preference')" class="filter-group">
+        <legend>Playback preference</legend>
         <button v-for="p in preferOptions" :key="p.key" type="button" class="filter-option"
                 :class="{on: draft.prefer === p.key}" :aria-pressed="String(draft.prefer === p.key)"
                 @click="draft.prefer = p.key">{{ p.label }}</button>
         <p class="filter-note">
-          A preferência ordena edições equivalentes e escolhe qual toca. Ela nunca esconde as
-          outras: elas continuam na lista.
+          The preference ranks equivalent editions and picks which one plays. It never hides the others: they stay in the list.
         </p>
       </fieldset>
 
-      <fieldset v-if="show('Vistas salvas')" class="filter-group filter-views">
-        <legend>Vistas salvas</legend>
+      <fieldset v-if="show('Saved views')" class="filter-group filter-views">
+        <legend>Saved views</legend>
         <div v-for="v in ui.views" :key="v.id" class="filter-view-row">
           <button type="button" class="filter-option filter-view-name"
                   :class="{on: ui.defaultView === v.id}" @click="loadView(v)">
-            {{ v.name }}<span v-if="ui.defaultView === v.id" class="filter-view-tag"> · padrão</span>
+            {{ v.name }}<span v-if="ui.defaultView === v.id" class="filter-view-tag"> · default</span>
           </button>
           <button type="button" class="filter-chip-clear"
-                  :aria-label="'Definir ' + v.name + ' como padrão'"
-                  @click="LmsUi.setDefaultView(v.id)">Padrão</button>
-          <button type="button" class="filter-chip-clear" :aria-label="'Renomear ' + v.name"
-                  @click="rename(v)">Renomear</button>
-          <button type="button" class="filter-chip-clear" :aria-label="'Duplicar ' + v.name"
-                  @click="LmsUi.duplicateView(v.id)">Duplicar</button>
+                  :aria-label="'Set ' + v.name + ' as default'"
+                  @click="LmsUi.setDefaultView(v.id)">Default</button>
+          <button type="button" class="filter-chip-clear" :aria-label="'Rename' + v.name"
+                  @click="rename(v)">Rename</button>
+          <button type="button" class="filter-chip-clear" :aria-label="'Duplicate' + v.name"
+                  @click="LmsUi.duplicateView(v.id)">Duplicate</button>
           <button type="button" class="filter-chip-clear destructive"
-                  :aria-label="'Apagar ' + v.name" @click="LmsUi.deleteView(v.id)">Apagar</button>
+                  :aria-label="'Delete' + v.name" @click="LmsUi.deleteView(v.id)">Delete</button>
         </div>
-        <div v-if="!ui.views.length" class="filter-note">Nenhuma vista salva ainda.</div>
+        <div v-if="!ui.views.length" class="filter-note">No saved views yet.</div>
         <label class="filter-search">
-          <span class="visually-hidden">Nome da vista</span>
-          <input v-model="viewName" type="text" placeholder="Nome da vista" @keydown.enter="saveView">
+          <span class="visually-hidden">View name</span>
+          <input v-model="viewName" type="text" placeholder="View name" @keydown.enter="saveView">
         </label>
         <button type="button" class="filter-option" :disabled="!viewName.trim()"
-                @click="saveView">Salvar vista</button>
+                @click="saveView">Save view</button>
       </fieldset>
     </div>
 
     <footer class="filter-actions">
-      <button type="button" class="filter-chip-clear" @click="clearAll">Limpar tudo</button>
+      <button type="button" class="filter-chip-clear" @click="clearAll">Clear all</button>
       <span class="filter-actions-spacer"></span>
       <button ref="last" type="button" class="filter-option filter-apply-main"
-              @click="apply">Aplicar</button>
+              @click="apply">Apply</button>
     </footer>
   </section>
 </div>`,
@@ -211,30 +207,30 @@
       allowsFilters: function () { return LmsUi.allowsMediaFilter(this.ui.musicView); },
       sourceOptions: function () {
         return [
-          { key: 'origin:local', label: this.tr('Biblioteca local') },
-          { key: 'origin:remote', label: this.tr('Remoto / streaming') },
+          { key: 'origin:local', label: this.tr('Local library') },
+          { key: 'origin:remote', label: this.tr('Remote / streaming') },
           { key: 'stream:qobuz', label: 'Qobuz' },
           { key: 'stream:youtube', label: 'YouTube' }
         ];
       },
       qualityOptions: function () {
         return [
-          { key: 'quality:lossless', label: this.tr('Sem perdas') },
-          { key: 'quality:lossy', label: this.tr('Com perdas') },
-          { key: 'quality:standard', label: this.tr('Resolução padrão') },
+          { key: 'quality:lossless', label: this.tr('Lossless') },
+          { key: 'quality:lossy', label: this.tr('Lossy') },
+          { key: 'quality:standard', label: this.tr('Standard resolution') },
           { key: 'quality:hires', label: this.tr('Hi-Res') }
         ];
       },
       sortOptions: function () {
         var view = this.ui.musicView;
         var all = [
-          { key: 'recent', label: this.tr('Adicionados recentemente') },
-          { key: 'name', label: view === 'anos' ? this.tr('Ano') : this.tr('Nome') },
-          { key: 'artist', label: this.tr('Artista') },
-          { key: 'year', label: this.tr('Ano') },
-          { key: 'format', label: this.tr('Formato') },
-          { key: 'source', label: this.tr('Biblioteca local primeiro') },
-          { key: 'quality', label: this.tr('Maior resolução primeiro') }
+          { key: 'recent', label: this.tr('Recently added') },
+          { key: 'name', label: view === 'years' ? this.tr('Year') : this.tr('Name') },
+          { key: 'artist', label: this.tr('Artist') },
+          { key: 'year', label: this.tr('Year') },
+          { key: 'format', label: this.tr('Format') },
+          { key: 'source', label: this.tr('Local library first') },
+          { key: 'quality', label: this.tr('Highest resolution first') }
         ];
         return all.filter(function (option) {
           return LmsUi.validSortKey(view, option.key);
@@ -242,13 +238,13 @@
       },
       groupOptions: function () {
         var view = this.ui.musicView;
-        var out = [{ value: '', label: this.tr('Sem agrupamento') }];
+        var out = [{ value: '', label: this.tr('No grouping') }];
         if (LmsUi.validGroup(view, 'artist')) {
-          out.push({ value: 'artist', label: this.tr('Artista (a lista passa a mostrar artistas)') });
-          out.push({ value: 'relatedArtist', label: this.tr('Artista relacionado') });
+          out.push({ value: 'artist', label: this.tr('Artist (the list switches to artists)') });
+          out.push({ value: 'relatedArtist', label: this.tr('Related artist') });
         }
-        [['decade', 'Década'], ['format', 'Formato'], ['quality', 'Resolução'],
-         ['origin', 'Origem'], ['stream', 'Serviço de streaming']].forEach(function (pair) {
+        [['decade', 'Decade'], ['format', 'Format'], ['quality', 'Resolution'],
+         ['origin', 'Source'], ['stream', 'Streaming service']].forEach(function (pair) {
           if (LmsUi.validSection(view, pair[0])) {
             out.push({ value: 'sec:' + pair[0], label: this.tr(pair[1]) });
           }
@@ -257,10 +253,10 @@
       },
       preferOptions: function () {
         return [
-          { key: 'none', label: this.tr('Sem preferência') },
-          { key: 'local', label: this.tr('Preferir biblioteca local') },
-          { key: 'stream', label: this.tr('Preferir streaming') },
-          { key: 'quality', label: this.tr('Preferir maior resolução') }
+          { key: 'none', label: this.tr('No preference') },
+          { key: 'local', label: this.tr('Prefer local library') },
+          { key: 'stream', label: this.tr('Prefer streaming') },
+          { key: 'quality', label: this.tr('Prefer highest resolution') }
         ];
       },
       groupChoice: function () {
@@ -314,13 +310,13 @@
         return String(label || '').toLowerCase().indexOf(needle) >= 0;
       },
       /* A busca dentro dos filtros tambem esconde secao inteira quando o nome da
-         secao nao casa e nenhuma opcao dela sobrou. Sem isso, procurar "rock"
+         secao nao casa e nonea opcao dela sobrou. Sem isso, procurar "rock"
          deixaria na tela cinco cabecalhos vazios. */
       show: function (title) {
         if (!this.needle) return true;
         if (this.matches(title)) return true;
-        if (title === 'Formato') return this.visibleFormats.length > 0;
-        if (title === 'Gênero') return this.visibleGenres.length > 0;
+        if (title === 'Format') return this.visibleFormats.length > 0;
+        if (title === 'Genre') return this.visibleGenres.length > 0;
         return false;
       },
       reset: function () {
@@ -361,11 +357,11 @@
         if (!from) from = '1000';
         if (!to) to = String(new Date().getFullYear());
         if (from.length !== 4 || to.length !== 4) {
-          this.yearError = this.tr('Use anos com quatro dígitos.');
+          this.yearError = this.tr('Use four-digit years.');
           return;
         }
         if (Number(from) > Number(to)) {
-          this.yearError = this.tr('O ano inicial precisa ser menor ou igual ao final.');
+          this.yearError = this.tr('The start year must be lower than or equal to the end year.');
           return;
         }
         this.draft.filters.push('year:' + from + '-' + to);
@@ -425,7 +421,7 @@
         var saved = LmsUi.saveCurrentView(name);
         if (saved) {
           this.viewName = '';
-          LmsUi.notify(this.tr('Vista salva.'), 'success', 2500);
+          LmsUi.notify(this.tr('View saved.'), 'success', 2500);
         }
       },
       loadView: function (view) {
@@ -437,7 +433,7 @@
         this.syncYearInputs();
       },
       rename: function (view) {
-        var name = typeof prompt === 'function' ? prompt(this.tr('Novo nome'), view.name) : null;
+        var name = typeof prompt === 'function' ? prompt(this.tr('New name'), view.name) : null;
         if (name) LmsUi.renameView(view.id, name);
       },
       loadGenres: async function () {

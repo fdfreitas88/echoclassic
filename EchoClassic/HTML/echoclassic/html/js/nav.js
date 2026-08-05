@@ -23,16 +23,16 @@
   }
 
   var stacks = Vue.observable({
-    musica: validFrames(saved.musica), playlists: validFrames(saved.playlists),
+    music: validFrames(saved.music), playlists: validFrames(saved.playlists),
     radio: validFrames(saved.radio), apps: validFrames(saved.apps),
-    favoritos: validFrames(saved.favoritos), ajustes: []
+    favourites: validFrames(saved.favourites), settings: []
   });
 
   function persist() {
     try {
       localStorage.setItem('echoclassic.nav.v1', JSON.stringify({
-        musica: stacks.musica, playlists: stacks.playlists,
-        radio: stacks.radio, apps: stacks.apps, favoritos: stacks.favoritos
+        music: stacks.music, playlists: stacks.playlists,
+        radio: stacks.radio, apps: stacks.apps, favourites: stacks.favourites
       }));
     } catch (e) {}
   }
@@ -122,7 +122,7 @@
   });
 
   if (history.replaceState) {
-    history.replaceState(historyState(global.LmsUi ? global.LmsUi.state.tab : 'musica'), '');
+    history.replaceState(historyState(global.LmsUi ? global.LmsUi.state.tab : 'music'), '');
   }
 
   global.LmsNav = {

@@ -7,16 +7,16 @@ Vue.component('lms-detail', {
   props: { frame: { type: Object, required: true } },
   template: `
 <div class="detail">
-  <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
+  <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
   <div v-else-if="error" class="empty">
-    <div class="h">Não deu para abrir</div><div class="p">{{ error }}</div>
-    <button class="retry-command" @click="load">Tentar novamente</button>
+    <div class="h">Could not open</div><div class="p">{{ error }}</div>
+    <button class="retry-command" @click="load">Try again</button>
   </div>
 
   <template v-else-if="frame.kind === 'album'">
     <lms-album-block v-for="a in visibleBlocks" :key="a.id" :album="a" :artist="artist"></lms-album-block>
-    <div v-if="discografiaTruncada" class="loading-more warning" role="status">
-      A discografia deste artista tem mais de 200 álbuns e esta tela mostra os 200 primeiros.
+    <div v-if="discographyTruncated" class="loading-more warning" role="status">
+      This artist's discography has more than 200 albums and this screen shows the first 200.
     </div>
   </template>
 
@@ -30,9 +30,9 @@ Vue.component('lms-detail', {
       <div class="name ell">{{ frame.label }}</div>
     </div>
 
-    <template v-if="ui.albumMode === 'faixas'">
+    <template v-if="ui.albumMode === 'tracks'">
       <lms-album-block v-for="a in albums" :key="'b' + a.id" :album="a"></lms-album-block>
-      <div v-if="!albums.length" class="empty"><div class="p">Nenhum álbum para este item.</div></div>
+      <div v-if="!albums.length" class="empty"><div class="p">No albums for this item.</div></div>
     </template>
 
     <template v-else>
@@ -47,10 +47,10 @@ Vue.component('lms-detail', {
 	          <span class="gsub ell">{{ editionLine(a) }}</span>
 	        </button>
       </div>
-      <div v-if="!albums.length" class="empty"><div class="p">Nenhum álbum para este item.</div></div>
+      <div v-if="!albums.length" class="empty"><div class="p">No albums for this item.</div></div>
     </template>
-    <div v-if="listaTruncada" class="loading-more warning" role="status">
-      Esta lista tem mais de 1.000 álbuns e esta tela mostra os 1.000 primeiros.
+    <div v-if="listTruncated" class="loading-more warning" role="status">
+      This list has more than 1,000 albums and this screen shows the first 1,000.
     </div>
   </template>
 </div>`,
@@ -58,7 +58,7 @@ Vue.component('lms-detail', {
     return { store: LmsStore.state, ui: LmsUi.state, albums: [], blocks: [],
              artist: null, failedArt: {}, photoFailed: false,
              loading: true, error: '', requestToken: 0,
-             discografiaTruncada: false, listaTruncada: false };
+             discographyTruncated: false, listTruncated: false };
   },
   computed: {
     initial: function () {
@@ -71,7 +71,7 @@ Vue.component('lms-detail', {
     /* No modo Albuns a pagina mostra so o album escolhido; no modo Faixas ela
        empilha a discografia inteira. */
     visibleBlocks: function () {
-      return this.ui.albumMode === 'faixas' ? this.blocks : this.blocks.slice(0, 1);
+      return this.ui.albumMode === 'tracks' ? this.blocks : this.blocks.slice(0, 1);
     }
   },
   watch: {
@@ -83,7 +83,7 @@ Vue.component('lms-detail', {
     markArtFailed: function (album) { this.$set(this.failedArt, album.id, true); },
     editionLine: function (album) {
       var parts = [];
-      if (album.editionCount > 1) parts.push('Edição ' + (album.year || 'sem ano'));
+      if (album.editionCount > 1) parts.push('Edition ' + (album.year || 'sem ano'));
       else if (album.year) parts.push(String(album.year));
       if (album.originalYear) parts.push('original ' + album.originalYear);
       if (!parts.length && album.artist) parts.push(album.artist);
@@ -116,13 +116,13 @@ Vue.component('lms-detail', {
     },
     openArtist: function () {
       if (!this.artist) return;
-      LmsNav.push('musica', {
+      LmsNav.push('music', {
         kind: 'artist', id: this.artist.id, ids: this.artist.ids,
         label: this.artist.name, art: null
       });
     },
     openAlbum: function (a) {
-      LmsNav.push('musica', {
+      LmsNav.push('music', {
         kind: 'album', id: a.id, label: a.title,
         sub: [a.artist, a.year || null].filter(Boolean).join(' • '),
         art: a.art, year: a.year, originalYear: a.originalYear
@@ -156,22 +156,22 @@ Vue.component('lms-detail', {
       this.artist = null;
       this.failedArt = {};
       this.photoFailed = false;
-      this.discografiaTruncada = false;
-      this.listaTruncada = false;
+      this.discographyTruncated = false;
+      this.listTruncated = false;
       var pid = this.store.playerId || '';
       var f = this.frame;
       try {
         if (f.kind === 'album') {
           /* O album escolhido vem primeiro e o resto da discografia abaixo, cada
              um como um bloco completo. Cada bloco busca as proprias faixas, entao
-             a tela aparece em partes em vez de esperar todos os albuns. */
-          var atual = {
+             a tela aparece em partes em vez de esperar all os albuns. */
+          var current = {
             id: f.id, title: f.label, art: f.art,
             year: f.year || ((f.sub || '').split(' • ')[1] || ''),
             originalYear: f.originalYear || 0,
             artist: (f.sub || '').split(' • ')[0] || ''
           };
-          this.blocks = [atual];
+          this.blocks = [current];
           this.loading = false;
           var quem = await LmsApi.artistOfAlbum(pid, f.id);
           if (token !== this.requestToken) return;
@@ -180,10 +180,10 @@ Vue.component('lms-detail', {
             var artistFilter = this.artist.ids && this.artist.ids.length > 1
               ? { artistIds: this.artist.ids }
               : { artistId: this.artist.id };
-            var todos = await LmsApi.albums(pid, 0, 200, artistFilter);
+            var all = await LmsApi.albums(pid, 0, 200, artistFilter);
             if (token !== this.requestToken) return;
-            this.discografiaTruncada = todos.length >= 200;
-            this.blocks = [atual].concat(todos
+            this.discographyTruncated = all.length >= 200;
+            this.blocks = [current].concat(all
               .filter(function (x) { return x.id !== f.id; })
               .map(function (x) {
                 return { id: x.id, title: x.title, year: x.year,
@@ -192,7 +192,7 @@ Vue.component('lms-detail', {
                          art: LmsFmt.coverUrl(x.artworkTrackId, 50) || null };
               }));
             var marked = this.markEditions(this.blocks);
-            var selected = marked.filter(function (album) { return album.id === f.id; })[0] || atual;
+            var selected = marked.filter(function (album) { return album.id === f.id; })[0] || current;
             this.blocks = [selected].concat(marked.filter(function (album) { return album.id !== f.id; }));
           }
           return;
@@ -206,7 +206,7 @@ Vue.component('lms-detail', {
           else if (f.kind === 'year') filter.year = f.id;
           var al = await LmsApi.albums(pid, 0, 1000, filter);
           if (token !== this.requestToken) return;
-          this.listaTruncada = al.length >= 1000;
+          this.listTruncated = al.length >= 1000;
           this.albums = this.markEditions(al.map(function (x) {
             return {
               id: x.id, title: x.title, year: x.year,
@@ -221,7 +221,7 @@ Vue.component('lms-detail', {
         /* Um erro depois de o bloco do album ja estar na tela nao pode apagar o
            que carregou certo: o pedido secundario falhou, o album nao. */
         if (this.blocks.length || this.albums.length) {
-          LmsUi.notify('Parte desta tela não pôde ser carregada. ' +
+          LmsUi.notify('Part of this screen could not be loaded. ' +
             (e && e.message ? e.message : String(e)), 'error', 6500);
         } else {
           this.error = e && e.message ? e.message : String(e);

@@ -12,26 +12,26 @@ Vue.component('lms-queue', {
 <div :class="{'queue-wrap-inline': inline}">
   <div v-if="!inline" class="queueback" @click="close"></div>
   <div ref="queue" class="queue" :class="{overfull: ui.full && !inline, inline: inline}"
-       role="dialog" :aria-modal="String(!inline)" aria-label="Fila de reprodução"
+       role="dialog" :aria-modal="String(!inline)" aria-label="Playback queue"
        :tabindex="inline ? null : -1" @keydown.esc="onEsc" @keydown.tab="trapFocus">
     <div class="qhead">
 	      <span class="ttl">{{ queueTitle }}</span>
-	      <span class="n" v-if="confirmClear">Limpar a fila inteira?</span>
+	      <span class="n" v-if="confirmClear">Clear the whole queue?</span>
 	      <span class="n" v-else-if="tracks.length">{{ countLabel }} · {{ remaining }}</span>
       <template v-if="confirmClear">
-        <button type="button" class="clear destructive pointer" @click="clear">Limpar tudo</button>
-        <button type="button" class="clear pointer" @click="confirmClear = false">Cancelar</button>
+        <button type="button" class="clear destructive pointer" @click="clear">Clear all</button>
+        <button type="button" class="clear pointer" @click="confirmClear = false">Cancel</button>
       </template>
       <template v-else>
         <button type="button" class="clear pointer" v-if="store.queueUndo.length"
-                @click="undo">Desfazer</button>
+                @click="undo">Undo</button>
         <button type="button" class="clear pointer" v-if="tracks.length > store.queueIndex + 1"
-                @click="clearUpcoming">Limpar próximas</button>
+                @click="clearUpcoming">Clear upcoming</button>
         <button type="button" class="clear destructive pointer" v-if="tracks.length"
-                @click="confirmClear = true">Limpar tudo</button>
+                @click="confirmClear = true">Clear all</button>
       </template>
       <button v-if="!inline" type="button" class="queue-dismiss pointer"
-              title="Fechar fila" aria-label="Fechar fila" @click="close">
+              title="Close queue" aria-label="Close queue" @click="close">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>
@@ -57,21 +57,21 @@ Vue.component('lms-queue', {
 	        </button>
 	        <span class="queue-reorder">
           <button type="button" :data-move="t.index + ':-1'" :disabled="t.index <= 0"
-                  :title="'Mover ' + t.title + ' para cima'" :aria-label="'Mover ' + t.title + ' para cima'"
+                  :title="'Move ' + t.title + ' up'" :aria-label="'Move ' + t.title + ' up'"
                   @click.stop="move(t, -1)">↑</button>
           <button type="button" :data-move="t.index + ':1'" :disabled="t.index >= tracks.length - 1"
-                  :title="'Mover ' + t.title + ' para baixo'" :aria-label="'Mover ' + t.title + ' para baixo'"
+                  :title="'Move ' + t.title + ' down'" :aria-label="'Move ' + t.title + ' down'"
                   @click.stop="move(t, 1)">↓</button>
         </span>
-        <button type="button" class="drag pointer" title="Remover"
-                :aria-label="'Remover ' + t.title + ' da fila'" @click.stop="remove(t)">
+        <button type="button" class="drag pointer" title="Remove"
+                :aria-label="'Remove ' + t.title + ' from the queue'" @click.stop="remove(t)">
           <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
     </div>
 
     <div class="qempty" v-else>
-      A fila está vazia. Toque um álbum ou uma playlist e as faixas seguintes
+      The queue is empty. Play an album or a playlist and the tracks that follow
       entram aqui.
     </div>
   </div>
@@ -82,7 +82,7 @@ Vue.component('lms-queue', {
   },
   computed: {
 	    tracks: function () { return this.store.queue; },
-	    queueTitle: function () { return 'Fila de reprodução'; },
+	    queueTitle: function () { return 'Playback queue'; },
     /* queueIndex cai em zero quando o servidor nao manda indice; sem faixa
        corrente de fato isso marcaria a primeira linha por engano. */
     hasCurrent: function () {
@@ -90,11 +90,11 @@ Vue.component('lms-queue', {
     },
 	    remaining: function () {
 	      var s = LmsStore.queueRemaining();
-	      return s ? LmsFmt.longDuration(s) + ' restantes' : 'ao vivo';
+	      return s ? LmsFmt.longDuration(s) + 'remaining' : 'live';
 	    },
 	    countLabel: function () {
 	      var total = this.store.queueTotal || this.tracks.length;
-	      var label = total + (total === 1 ? ' faixa' : ' faixas');
+	      var label = total + (total === 1 ? 'track' : 'tracks');
 	      return total > this.tracks.length ? this.tracks.length + ' de ' + label + ' carregadas' : label;
 	    },
 	    playStartsLabel: function () {
@@ -103,16 +103,16 @@ Vue.component('lms-queue', {
 	      var track = this.tracks.filter(function (t) { return t.index === index; })[0] || this.tracks[index];
 	      /* O rotulo e montado aqui, entao a frase pronta nunca bate com uma
 	         chave do dicionario. Traduz-se o prefixo antes de concatenar. */
-	      var prefix = (window.LmsStr ? LmsStr.t('Play iniciará: ') : 'Play iniciará: ');
+	      var prefix = (window.LmsStr ? LmsStr.t('Play will start: ') : 'Play will start: ');
 	      return track ? prefix + track.title : '';
 	    },
     shuffleLabel: function () {
-      return ['Aleatório desativado', 'Aleatório por músicas', 'Aleatório por álbuns'][this.store.shuffle] ||
-             'Aleatório desativado';
+      return ['Shuffle off', 'Shuffle songs', 'Shuffle albums'][this.store.shuffle] ||
+             'Shuffle off';
     },
     repeatLabel: function () {
-      return ['Repetição desativada', 'Repetir uma música', 'Repetir toda a fila'][this.store.repeat] ||
-             'Repetição desativada';
+      return ['Repeat off', 'Repeat one song', 'Repeat the whole queue'][this.store.repeat] ||
+             'Repeat off';
     }
   },
   methods: {

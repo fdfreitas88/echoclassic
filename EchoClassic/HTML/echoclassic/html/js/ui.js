@@ -6,40 +6,40 @@
   'use strict';
 
   var TABS = Object.freeze([
-    Object.freeze({ key: 'favoritos', label: 'Favoritos' }),
-    Object.freeze({ key: 'radio', label: 'Rádio' }),
+    Object.freeze({ key: 'favourites', label: 'Favourites' }),
+    Object.freeze({ key: 'radio', label: 'Radio' }),
     Object.freeze({ key: 'apps', label: 'Apps' }),
     Object.freeze({ key: 'playlists', label: 'Playlists' }),
-    Object.freeze({ key: 'musica', label: 'Minha Música' }),
-    Object.freeze({ key: 'ajustes', label: 'Ajustes' })
+    Object.freeze({ key: 'music', label: 'My Music' }),
+    Object.freeze({ key: 'settings', label: 'Settings' })
   ]);
 
   /* The four roots of Minha Musica, picked from the nav bar title like iOS 9. */
   var MUSIC_VIEWS = Object.freeze([
-    Object.freeze({ key: 'recentes', label: 'Recentes' }),
-    Object.freeze({ key: 'artistas', label: 'Artistas' }),
-    Object.freeze({ key: 'albuns', label: 'Álbuns' }),
-    Object.freeze({ key: 'generos', label: 'Gêneros' }),
-    Object.freeze({ key: 'anos', label: 'Anos' })
+    Object.freeze({ key: 'recent', label: 'Recent' }),
+    Object.freeze({ key: 'artists', label: 'Artists' }),
+    Object.freeze({ key: 'albums', label: 'Albums' }),
+    Object.freeze({ key: 'genres', label: 'Genres' }),
+    Object.freeze({ key: 'years', label: 'Years' })
   ]);
 
   var COLOR_SCHEMES = Object.freeze([
-    Object.freeze({ key: 'blue', label: 'Azul Sistema' }),
-    Object.freeze({ key: 'teal', label: 'Teal Atlântico' }),
-    Object.freeze({ key: 'crimson', label: 'Carmim Editorial' }),
-    Object.freeze({ key: 'indigo', label: 'Índigo Studio' }),
-    Object.freeze({ key: 'amber', label: 'Âmbar Hi-Fi' })
+    Object.freeze({ key: 'blue', label: 'System Blue' }),
+    Object.freeze({ key: 'teal', label: 'Atlantic Teal' }),
+    Object.freeze({ key: 'crimson', label: 'Editorial Crimson' }),
+    Object.freeze({ key: 'indigo', label: 'Studio Indigo' }),
+    Object.freeze({ key: 'amber', label: 'Hi-Fi Amber' })
   ]);
 
   var FONT_OPTIONS = Object.freeze([
-    Object.freeze({ key: 'system', label: 'Sistema (padrão)' }),
+    Object.freeze({ key: 'system', label: 'System (default)' }),
     Object.freeze({ key: 'helvetica', label: 'Helvetica' }),
     Object.freeze({ key: 'chicago', label: 'Chicago' })
   ]);
 
   var PLAYER_PRESENTATIONS = Object.freeze([
-    Object.freeze({ key: 'adaptive', label: 'Adaptável' }),
-    Object.freeze({ key: 'fullscreen', label: 'Tela cheia' })
+    Object.freeze({ key: 'adaptive', label: 'Adaptive' }),
+    Object.freeze({ key: 'fullscreen', label: 'Full screen' })
   ]);
 
   var PLAYER_POSITIONS = Object.freeze([
@@ -49,17 +49,17 @@
   ]);
 
   var GAUGE_STYLES = Object.freeze([
-    Object.freeze({ key: 'flat', label: 'Plano' }),
-    Object.freeze({ key: 'classic', label: 'Clássico' })
+    Object.freeze({ key: 'flat', label: 'Flat' }),
+    Object.freeze({ key: 'classic', label: 'Classic' })
   ]);
 
   var GAUGE_COLORS = Object.freeze([
-    Object.freeze({ key: 'theme', label: 'Acompanhar tema' }),
-    Object.freeze({ key: 'blue', label: 'Azul Sistema' }),
-    Object.freeze({ key: 'teal', label: 'Teal Atlântico' }),
-    Object.freeze({ key: 'crimson', label: 'Carmim Editorial' }),
-    Object.freeze({ key: 'indigo', label: 'Índigo Studio' }),
-    Object.freeze({ key: 'amber', label: 'Âmbar Hi-Fi' })
+    Object.freeze({ key: 'theme', label: 'Follow theme' }),
+    Object.freeze({ key: 'blue', label: 'System Blue' }),
+    Object.freeze({ key: 'teal', label: 'Atlantic Teal' }),
+    Object.freeze({ key: 'crimson', label: 'Editorial Crimson' }),
+    Object.freeze({ key: 'indigo', label: 'Studio Indigo' }),
+    Object.freeze({ key: 'amber', label: 'Hi-Fi Amber' })
   ]);
 
   function isColorScheme(key) {
@@ -118,7 +118,7 @@
      por data de inclusao e reordenar no cliente apagava justamente o criterio
      que da nome a pagina. */
   var DEFAULT_SORT_BY_VIEW = {
-    artistas: 'name', albuns: 'name', recentes: 'recent', generos: 'name', anos: 'year'
+    artists: 'name', albums: 'name', recent: 'recent', genres: 'name', years: 'year'
   };
 
   /* So Albuns e Recentes sabem aplicar filtro de midia: sao as duas views cujo
@@ -127,7 +127,7 @@
      aqui essa regra estava escrita em tres lugares, e o de browse.js trocava a
      view do usuario por conta propria para fazer a escolha caber. */
   function allowsMediaFilter(view) {
-    return view === 'albuns' || view === 'recentes';
+    return view === 'albums' || view === 'recent';
   }
 
   /* A chave de filtro e um par faceta:valor. Guardar uma lista plana de chaves,
@@ -166,9 +166,9 @@
   }
 
   function validSortKey(view, key) {
-    if (view === 'albuns') return /^(name|artist|year|format|source|quality)$/.test(key || '');
-    if (view === 'recentes') return /^(recent|name|artist|year|format|source|quality)$/.test(key || '');
-    if (view === 'anos') return key === 'name' || key === 'year';
+    if (view === 'albums') return /^(name|artist|year|format|source|quality)$/.test(key || '');
+    if (view === 'recent') return /^(recent|name|artist|year|format|source|quality)$/.test(key || '');
+    if (view === 'years') return key === 'name' || key === 'year';
     return key === 'name';
   }
 
@@ -177,7 +177,7 @@
      indice de artistas. Recentes desenha album sempre -- oferecer "agrupar por
      artista" la era a promessa vazia do bug C. */
   function validGroup(view, key) {
-    return view === 'albuns' && /^(artist|relatedArtist)$/.test(key || '');
+    return view === 'albums' && /^(artist|relatedArtist)$/.test(key || '');
   }
 
   /* Seccionar e o outro agrupamento: a linha continua sendo o album e ganha um
@@ -262,7 +262,7 @@
     if (view === saved.musicView && saved.sortKey) legacy = saved.sortKey;
     /* O padrao anterior de Recentes era 'name', e nada no gravado distingue
        escolha deliberada de default herdado. */
-    if (view === 'recentes' && !saved.recentSortMigrated && legacy === 'name') legacy = null;
+    if (view === 'recent' && !saved.recentSortMigrated && legacy === 'name') legacy = null;
     byView[view] = migrateSortKey(view, legacy, saved.sortDesc);
   });
 
@@ -280,18 +280,18 @@
 
   /* persist() ja gravava musicView; so o estado inicial ignorava, e a raiz
      escolhida se perdia a cada recarga. */
-  var initialMusicView = isMusicView(saved.musicView) ? saved.musicView : 'recentes';
+  var initialMusicView = isMusicView(saved.musicView) ? saved.musicView : 'recent';
 
   /* Uma vista salva e um conjunto completo -- filtros, ordem, agrupamento,
      secoes e preferencia -- amarrado a raiz em que faz sentido. Guardar a raiz
-     junto evita aplicar "FLAC + Hi-Res" dentro de Generos, onde nenhuma das
+     junto evita aplicar "FLAC + Hi-Res" dentro de Generos, onde nonea das
      duas coisas existe. Chave propria, com versao, porque o formato vai mudar
      antes do resto das preferencias. */
   var VIEWS_KEY = 'echoclassic.views.v1';
 
   function sanitizeView(entry) {
     if (!plainObject(entry)) return null;
-    var view = isMusicView(entry.view) ? entry.view : 'albuns';
+    var view = isMusicView(entry.view) ? entry.view : 'albums';
     var name = String(entry.name || '').replace(/^\s+|\s+$/g, '').slice(0, 60);
     if (!name) return null;
     var body = sanitize(view, entry);
@@ -320,9 +320,9 @@
   var savedViews = readViews();
 
   var state = Vue.observable({
-	    tab: isTab(saved.tab) ? saved.tab : 'musica',
+	    tab: isTab(saved.tab) ? saved.tab : 'music',
     musicView: initialMusicView,
-    albumMode: saved.albumMode || 'albuns',   // 'albuns' = grade de capas | 'faixas' = pilha completa
+    albumMode: saved.albumMode || 'albums',   // 'albums' = grade de capas | 'tracks' = pilha completa
     dark: !!saved.dark,
     searching: false,
     query: '',
@@ -357,6 +357,8 @@
        equivalentes e escolhe qual toca. Por isso e global, e nao por view. */
     prefer: validPrefer(saved.prefer) ? saved.prefer : 'none',
     filterPanel: false,
+    sortMenu: false,
+    sortAnchor: null,
     /* Nome de genero vem do servidor e a pilula precisa dele para nao mostrar
        "genre:12". Guardado aqui porque o painel e a lista leem o mesmo mapa. */
     genreNames: readObject('echoclassic.genrenames.v1'),
@@ -727,7 +729,7 @@
     if (!found) return false;
     var copy = sanitizeView(Object.assign({}, found, {
       id: found.id + '-copia-' + state.views.length,
-      name: (found.name + ' (cópia)').slice(0, 60)
+      name: (found.name + ' (copy)').slice(0, 60)
     }));
     if (!copy) return false;
     state.views = state.views.concat([copy]);
@@ -755,7 +757,7 @@
      Por que existe: no macOS, clicar num <button> nao lhe da foco -- e a
      convencao da plataforma, e o Chrome a segue. Entao document.activeElement
      no momento da abertura e o <body>, e devolver o foco "para quem abriu"
-     devolvia para lugar nenhum. Quem abre passa o proprio elemento. */
+     devolvia para lugar none. Quem abre passa o proprio elemento. */
   var filterTriggerEl = null;
 
   function openFilterPanel(trigger) {
@@ -765,9 +767,26 @@
   function closeFilterPanel() { state.filterPanel = false; }
   function filterTrigger() { return filterTriggerEl; }
 
+  /* Same handoff for the sort menu: it is anchored to the icon that opened it,
+     so it needs both the element's rectangle to position against and the
+     element itself to hand focus back to on close. */
+  var sortTriggerEl = null;
+
+  function openSortMenu(trigger) {
+    sortTriggerEl = trigger && trigger.focus ? trigger : null;
+    var rect = trigger && trigger.getBoundingClientRect ? trigger.getBoundingClientRect() : null;
+    state.sortAnchor = rect ? {
+      left: Number(rect.left) || 0, right: Number(rect.right) || 0,
+      top: Number(rect.top) || 0, bottom: Number(rect.bottom) || 0
+    } : null;
+    state.sortMenu = true;
+  }
+  function closeSortMenu() { state.sortMenu = false; }
+  function sortTrigger() { return sortTriggerEl; }
+
   var ALBUM_MODES = Object.freeze([
-    Object.freeze({ key: 'albuns', label: 'Álbuns' }),
-    Object.freeze({ key: 'faixas', label: 'Faixas' })
+    Object.freeze({ key: 'albums', label: 'Albums' }),
+    Object.freeze({ key: 'tracks', label: 'Tracks' })
   ]);
 
   function setAlbumMode(key) {
@@ -863,7 +882,7 @@
     if (!added) return false;
     clearSelection();
     notify(added + (added === 1 ? ' item adicionado' : ' itens adicionados') +
-      ' à fila de reprodução.', 'success', 3500);
+      ' to the playback queue.', 'success', 3500);
     return true;
   }
 
@@ -943,6 +962,7 @@
     saveCurrentView: saveCurrentView, applyView: applyView, renameView: renameView,
     duplicateView: duplicateView, deleteView: deleteView, setDefaultView: setDefaultView,
     openFilterPanel: openFilterPanel, closeFilterPanel: closeFilterPanel,
+    openSortMenu: openSortMenu, closeSortMenu: closeSortMenu, sortTrigger: sortTrigger,
     filterTrigger: filterTrigger,
     setTab: setTab, restoreTab: restoreTab, toggleTheme: toggleTheme,
     openSearch: openSearch, closeSearch: closeSearch,

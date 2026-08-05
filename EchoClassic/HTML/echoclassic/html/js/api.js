@@ -54,7 +54,7 @@
       catch (err) {
         // abort durante a leitura do corpo continua sendo timeout, nao parse
         throw new LmsError(cmd, err && err.name === 'AbortError' ? 'timeout' : 'parse',
-                           (err && err.message) || 'JSON inválido');
+                           (err && err.message) || 'invalid JSON');
       }
       if (body && body.error) throw new LmsError(cmd, 'lms', String(body.error));
       return (body && body.result) || {};
@@ -77,7 +77,7 @@
     if (!isFinite(n) || n <= 0) return 0;
     if (/kbps/i.test(String(v))) return Math.round(n);
     /* Sem unidade declarada: acima de 10.000 so pode ser bits por segundo --
-       nenhum formato de audio chega a 10 Mbps, e todo lossless passa de 300. */
+       none formato de audio chega a 10 Mbps, e todo lossless passa de 300. */
     return Math.round(n > 10000 ? n / 1000 : n);
   }
   function txt(v) { return v == null ? '' : String(v); }
@@ -233,7 +233,7 @@
 	    if (scheme === 'qobuz') return 'Qobuz';
 	    if (/^(youtube|yt|ytmusic)$/.test(scheme)) return 'YouTube';
 	    if (remote || (scheme && scheme !== 'file')) return 'Streaming';
-	    return 'Biblioteca local';
+	    return 'Local library';
 	  }
 
 	  function uniqueBy(items, keyFn) {

@@ -684,9 +684,6 @@ ECHOCLASSIC_UI_PLAYBACK_2
 	EN	playback
 	PT	reprodução
 
-ECHOCLASSIC_UI_PLAYBACK_3
-	EN	Playback
-	PT	A reprodução
 
 ECHOCLASSIC_UI_PLAYBACK_HISTORY
 	EN	Playback history
@@ -1478,3 +1475,337 @@ ECHOCLASSIC_UI_VOLUME_LMS_SHORT
 ECHOCLASSIC_UI_NO_PLAYER_SHORT
 	EN	no player
 	PT	sem player
+
+ECHOCLASSIC_UI_FAILED_SUFFIX
+	EN	failed.
+	PT	falhou.
+
+ECHOCLASSIC_UI_VOLUME_MODE_UNKNOWN
+	EN	LMS has not yet said whether this player uses software volume. Pick the player under “Active player”, or tap “Try again” in the connection bar to ask once more.
+	PT	O LMS ainda não respondeu se este player usa volume por software. Escolha o player em “Player ativo” ou toque em “Tentar novamente” na barra de conexão para consultar de novo.
+
+ECHOCLASSIC_UI_OPML_LIST_TRUNCATED
+	EN	This list has more than 200 items and this screen shows the first 200. Use search to reach the rest.
+	PT	Esta lista tem mais de 200 itens e esta tela mostra os 200 primeiros. Use a busca para chegar ao resto.
+
+ECHOCLASSIC_UI_DISCOGRAPHY_TRUNCATED
+	EN	This artist's discography has more than 200 albums and this screen shows the first 200.
+	PT	A discografia deste artista tem mais de 200 álbuns e esta tela mostra os 200 primeiros.
+
+ECHOCLASSIC_UI_PLAYER_HELP_1
+	EN	Control changes which player Echo Classic uses. Transfer moves the current playback.
+	PT	Controlar muda o player usado pelo Echo Classic. Transferir leva a reprodução atual.
+
+ECHOCLASSIC_UI_ALBUM_LIST_TRUNCATED
+	EN	This list has more than 1,000 albums and this screen shows the first 1,000.
+	PT	Esta lista tem mais de 1.000 álbuns e esta tela mostra os 1.000 primeiros.
+
+ECHOCLASSIC_UI_IMPORT_KEEPS_REST
+	EN	Anything not in the file stays as it is. A copy of the current state
+	PT	O que não estiver no arquivo continua como está. Uma cópia do estado atual
+
+ECHOCLASSIC_UI_QUEUE_EMPTY_1
+	EN	The queue is empty. Play an album or a playlist and the tracks that follow
+	PT	A fila está vazia. Toque um álbum ou uma playlist e as faixas seguintes
+
+ECHOCLASSIC_UI_PLAYER_HELP_2
+	EN	Sync makes both players play together.
+	PT	Sincronizar faz os dois players tocarem juntos.
+
+ECHOCLASSIC_UI_SCREEN_PARTIAL
+	EN	Part of this screen could not be loaded. 
+	PT	Parte desta tela não pôde ser carregada. 
+
+ECHOCLASSIC_UI_PLAY_TOGETHER
+	EN	Play together with the current player
+	PT	Reproduzir em conjunto com o player atual
+
+ECHOCLASSIC_UI_IMPORT_GROUPS
+	EN	Only these groups will be replaced:
+	PT	Serão substituídos apenas estes grupos:
+
+ECHOCLASSIC_UI_VOLUME_LMS_CONFIRMED
+	EN	LMS volume control confirmed.
+	PT	Controle de volume pelo LMS confirmado.
+
+ECHOCLASSIC_UI_VOLUME_ON_DAC
+	EN	Disabled: set the volume on the DAC
+	PT	Desativado: controle o volume pelo DAC
+
+ECHOCLASSIC_UI_CHOOSE_ROOT
+	EN	Choose a My Music root. Current: 
+	PT	Escolher raiz de Minha Música. Atual: 
+
+ECHOCLASSIC_UI_NO_PLAYER_FOUND
+	EN	No player was found on LMS.
+	PT	Nenhum player foi encontrado no LMS.
+
+ECHOCLASSIC_UI_SERVER_ERROR_CODE
+	EN	The server answered with an error (HTTP 
+	PT	O servidor respondeu com erro (HTTP 
+
+ECHOCLASSIC_UI_NOT_VALID_SCREENS
+	EN	” is not a list of valid screens
+	PT	” não é uma lista de telas válidas
+
+ECHOCLASSIC_UI_QUEUE_READ_PARTIAL
+	EN	 tracks and only this many could be read: 
+	PT	 faixas e só foi possível ler 
+
+ECHOCLASSIC_UI_SERVER_ERROR
+	EN	The server answered with an error.
+	PT	O servidor respondeu com erro.
+
+ECHOCLASSIC_UI_ITEMS_NOT_OBJECTS
+	EN	 has items that are not objects
+	PT	 tem itens que não são objetos
+
+ECHOCLASSIC_UI_QUEUE_TRANSFER_TAKES
+	EN	. The transfer takes the first 
+	PT	. A transferência leva as 
+
+ECHOCLASSIC_UI_TYPE_TO_SEARCH
+	EN	Type something to search for.
+	PT	Digite algo para buscar.
+
+ECHOCLASSIC_UI_NO_GROUP_RECOGNISED
+	EN	no recognised group
+	PT	nenhum grupo reconhecido
+
+ECHOCLASSIC_UI_SEARCH_FOUND_NOTHING
+	EN	” found nothing. 
+	PT	” não encontrou nada. 
+
+ECHOCLASSIC_UI_LOADING_MORE_ITEMS
+	EN	Loading more items…
+	PT	Carregando mais itens…
+
+ECHOCLASSIC_UI_SHOULD_BE_LIST
+	EN	 should be a list
+	PT	 deveria ser uma lista
+
+ECHOCLASSIC_UI_NAV_STACK
+	EN	the navigation stack “
+	PT	a pilha de navegação “
+
+ECHOCLASSIC_UI_TO_PLAYBACK_QUEUE
+	EN	 to the playback queue.
+	PT	 à fila de reprodução.
+
+ECHOCLASSIC_UI_COULD_NOT_PLAY
+	EN	Could not play “
+	PT	Não deu para tocar “
+
+ECHOCLASSIC_UI_IN_YOUR_LIBRARY
+	EN	” in your library.
+	PT	” na sua biblioteca.
+
+ECHOCLASSIC_UI_REPEAT_WHOLE_QUEUE
+	EN	Repeat the whole queue
+	PT	Repetir toda a fila
+
+ECHOCLASSIC_UI_LOADING_TRACKS
+	EN	Loading tracks…
+	PT	Carregando faixas…
+
+ECHOCLASSIC_UI_NOT_VALID_JSON
+	EN	 is not valid JSON
+	PT	 não é JSON válido
+
+ECHOCLASSIC_UI_WE_DID_NOT_FIND
+	EN	We did not find “
+	PT	Não encontramos “
+
+ECHOCLASSIC_UI_CLEARING_QUEUE
+	EN	Clearing the queue
+	PT	A limpeza da fila
+
+ECHOCLASSIC_UI_MOVE_DOWN
+	EN	Move down
+	PT	Mover para baixo
+
+ECHOCLASSIC_UI_DELETE_PLAYLIST
+	EN	Delete playlist
+	PT	Apagar playlist
+
+ECHOCLASSIC_UI_MOVE_UP
+	EN	Move up
+	PT	Mover para cima
+
+ECHOCLASSIC_UI_CONTENTS_OF
+	EN	the contents of 
+	PT	o conteúdo de 
+
+ECHOCLASSIC_UI_SEARCH_FOR
+	EN	The search for “
+	PT	A busca por “
+
+ECHOCLASSIC_UI_THIS_STATION
+	EN	this station
+	PT	esta estação
+
+ECHOCLASSIC_UI_BACK_TO
+	EN	Back to 
+	PT	Voltar para 
+
+ECHOCLASSIC_UI_QUEUE_HAS
+	EN	The queue has 
+	PT	A fila tem 
+
+ECHOCLASSIC_UI_NEXT_POSITION
+	EN	. Next: 
+	PT	. Próxima: 
+
+ECHOCLASSIC_UI_LOADING
+	EN	Loading…
+	PT	Carregando…
+
+
+ECHOCLASSIC_UI_SYNC
+	EN	Sync
+	PT	Sincronizar
+
+
+ECHOCLASSIC_UI_DELETE_QUOTED
+	EN	Delete “
+	PT	Apagar “
+
+ECHOCLASSIC_UI_SUFFIX_FROM_QUEUE
+	EN	 from the queue
+	PT	 da fila
+
+ECHOCLASSIC_UI_REMOVE_PREFIX
+	EN	Remove 
+	PT	Remover 
+
+ECHOCLASSIC_UI_MOVE_PREFIX
+	EN	Move 
+	PT	Mover 
+
+ECHOCLASSIC_UI_NONE_LOWER
+	EN	none
+	PT	nenhum
+
+ECHOCLASSIC_UI_PLAYLIST_NAME
+	EN	Playlist name
+	PT	Nome da playlist
+
+ECHOCLASSIC_UI_FILTER_PLAYLISTS
+	EN	Filter playlists
+	PT	Filtrar playlists
+
+ECHOCLASSIC_UI_INCOMPATIBLE_VALUE
+	EN	 has an incompatible value
+	PT	 tem valor incompatível
+
+ECHOCLASSIC_UI_COPY_SUFFIX
+	EN	 (copy)
+	PT	 (cópia)
+
+ECHOCLASSIC_UI_EDIT
+	EN	Edit
+	PT	Editar
+
+ECHOCLASSIC_UI_CREATE
+	EN	Create
+	PT	Criar
+
+ECHOCLASSIC_UI_CHANGING_TRACK
+	EN	Changing track
+	PT	A troca de faixa
+
+ECHOCLASSIC_UI_CHANGING_PLAYER
+	EN	Changing player
+	PT	A troca de player
+
+ECHOCLASSIC_UI_PREVIOUS_TRACK_LABEL
+	EN	The previous track
+	PT	A faixa anterior
+
+ECHOCLASSIC_UI_SEEKING
+	EN	Seeking
+	PT	O deslocamento na faixa
+
+ECHOCLASSIC_UI_VOLUME_CHANGE
+	EN	The volume change
+	PT	O ajuste de volume
+
+ECHOCLASSIC_UI_STOPPING
+	EN	Stopping
+	PT	A parada
+
+ECHOCLASSIC_UI_PAUSING
+	EN	Pausing
+	PT	A pausa
+
+ECHOCLASSIC_UI_ADD_TO_FAVOURITES_CAP
+	EN	Add to Favourites
+	PT	Adicionar aos Favoritos
+
+ECHOCLASSIC_UI_ADD_TO_FAVOURITES
+	EN	Add to favourites
+	PT	Adicionar aos favoritos
+
+ECHOCLASSIC_UI_FILE_SECTION
+	EN	File
+	PT	Arquivo
+
+ECHOCLASSIC_UI_DEFAULT_TAG
+	EN	 · default
+	PT	 · padrão
+
+ECHOCLASSIC_UI_REMOVE
+	EN	Remove
+	PT	Remover
+
+ECHOCLASSIC_UI_FULLSCREEN_DESC
+	EN	Always fills the whole screen
+	PT	Sempre ocupa toda a tela
+
+ECHOCLASSIC_UI_GAUGE_HELP_DARK
+	EN	The style is remembered separately for each theme. What you choose here applies to the dark theme; the other theme keeps its own.
+	PT	O estilo é lembrado separadamente para cada tema. O que você escolher aqui vale para o tema escuro; o outro tema mantém o seu.
+
+ECHOCLASSIC_UI_GAUGE_HELP_LIGHT
+	EN	The style is remembered separately for each theme. What you choose here applies to the light theme; the other theme keeps its own.
+	PT	O estilo é lembrado separadamente para cada tema. O que você escolher aqui vale para o tema claro; o outro tema mantém o seu.
+
+ECHOCLASSIC_UI_MINI_GAUGE_STYLE_DARK
+	EN	Mini player style (dark theme)
+	PT	Estilo no mini player (tema escuro)
+
+ECHOCLASSIC_UI_MINI_GAUGE_STYLE_LIGHT
+	EN	Mini player style (light theme)
+	PT	Estilo no mini player (tema claro)
+
+ECHOCLASSIC_UI_PLAYER_GAUGE_STYLE_DARK
+	EN	Full player style (dark theme)
+	PT	Estilo no player completo (tema escuro)
+
+ECHOCLASSIC_UI_PLAYER_GAUGE_STYLE_LIGHT
+	EN	Full player style (light theme)
+	PT	Estilo no player completo (tema claro)
+
+ECHOCLASSIC_UI_MINI_PLAYER_COLOUR
+	EN	Mini player colour
+	PT	Cor no mini player
+
+ECHOCLASSIC_UI_FULL_PLAYER_COLOUR
+	EN	Full player colour
+	PT	Cor no player completo
+
+ECHOCLASSIC_UI_ITEM_SELECTED
+	EN	item selected
+	PT	item selecionado
+
+ECHOCLASSIC_UI_ITEMS_SELECTED
+	EN	items selected
+	PT	itens selecionados
+
+ECHOCLASSIC_UI_ASCENDING_ORDER_LABEL
+	EN	Ascending order
+	PT	Ordem crescente
+
+ECHOCLASSIC_UI_DESCENDING_ORDER_LABEL
+	EN	Descending order
+	PT	Ordem decrescente

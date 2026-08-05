@@ -17,16 +17,16 @@ Vue.component('lms-navbar', {
   <template v-if="ui.searching">
     <div class="searchwrap">
       <svg class="ic sm-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="M16 16l5.5 5.5"/></svg>
-      <input ref="q" v-model="ui.query" placeholder="Buscar na biblioteca"
+      <input ref="q" v-model="ui.query" placeholder="Search the library"
              @keydown.esc.prevent="cancel">
     </div>
     <span class="sp"></span>
-    <span class="r"><button class="cancel pointer" @click="cancel">Cancelar</button></span>
+    <span class="r"><button class="cancel pointer" @click="cancel">Cancel</button></span>
   </template>
 
   <template v-else>
     <button v-if="back !== null" class="back pointer"
-            :aria-label="'Voltar para ' + back" :title="'Voltar para ' + back"
+            :aria-label="'Back to ' + back" :title="'Back to ' + back"
             @click="$emit('back')">
       <svg class="ic chevleft" viewBox="0 0 13 20"><path d="M10 1L2.5 10 10 19"/></svg>
       <span>{{ back }}</span>
@@ -43,7 +43,7 @@ Vue.component('lms-navbar', {
 
     <div class="center">
 	      <button v-if="pickable" class="pickttl pointer"
-	              :aria-label="'Escolher raiz de Minha Música. Atual: ' + title"
+	              :aria-label="'Choose a My Music root. Current: ' + title"
 	              @click="$emit('picker')">
         {{ title }}
         <svg class="ic sm" viewBox="0 0 12 12"><path d="M1.5 4L6 8.5 10.5 4"/></svg>
@@ -59,7 +59,7 @@ Vue.component('lms-navbar', {
 
     <span class="sp"></span>
     <span class="r">
-      <button ref="searchButton" class="search pointer" title="Buscar" aria-label="Buscar" @click="open">
+      <button ref="searchButton" class="search pointer" title="Search" aria-label="Search" @click="open">
         <svg class="ic" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="M16 16l5.5 5.5"/></svg>
       </button>
     </span>
@@ -69,7 +69,7 @@ Vue.component('lms-navbar', {
     return { ui: LmsUi.state };
   },
   computed: {
-    themeTitle: function () { return this.ui.dark ? 'Tema claro' : 'Tema escuro'; }
+    themeTitle: function () { return this.ui.dark ? 'Light theme' : 'Dark theme'; }
   },
   methods: {
     toggle: function () { LmsUi.toggleTheme(); },

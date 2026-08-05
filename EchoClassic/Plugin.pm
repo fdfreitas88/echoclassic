@@ -222,9 +222,10 @@ sub getLmsVersion {
 	return length $v ? $v : '0.0.0';
 }
 
-# O idioma da sessao do LMS, em duas letras maiusculas. E ele que decide em que
-# lingua a skin fala -- forcar pt-BR num servidor em ingles era o que impedia a
-# skin de ser publicavel fora do Brasil.
+# The LMS session language, as two uppercase letters. It is only the initial
+# guess now: a choice made in the skin's own Settings outranks it, because a
+# server running in one language is not the same thing as a person reading in
+# it.
 sub getLang {
 	my $lang = eval { Slim::Utils::Strings::getLanguage() };
 	if (!defined $lang || !length $lang) {
@@ -234,8 +235,8 @@ sub getLang {
 	return uc(substr($lang, 0, 2));
 }
 
-# Codigo BCP 47 para o atributo lang do documento. Sem isso o leitor de tela
-# pronuncia texto em ingles com fonemas portugueses, e vice-versa.
+# BCP 47 code for the document's lang attribute. Without it a screen reader
+# pronounces English text with Portuguese phonemes, and the other way round.
 sub getHtmlLang {
 	my %map = (PT => 'pt-BR', EN => 'en', ES => 'es', FR => 'fr', DE => 'de',
 	           IT => 'it', NL => 'nl', SV => 'sv', DA => 'da', FI => 'fi',
@@ -246,48 +247,98 @@ sub getHtmlLang {
 
 # Dicionario da interface, montado a partir do proprio strings.txt.
 #
-# A chave de cada entrada e a frase em portugues -- e nao um identificador --
-# porque e assim que o JavaScript a encontra: o texto ja esta escrito nos
-# templates e serve de chave de busca. Traduzir e acrescentar uma linha PT e a
-# linha do idioma novo aqui ao lado; nenhum arquivo .js precisa mudar.
+# Each entry is keyed by the ENGLISH phrase -- not by an identifier -- because
+# that is how the JavaScript finds it: the English text is already written in
+# the templates and doubles as the lookup key. Translating means adding the new
+# language's line next to it; no .js file has to change.
 #
-# Formato aceito para a linha de idioma: espaco, duas letras MAIUSCULAS, espaco,
-# texto. "pt-BR", "en_US" ou "en" nao casam e a linha e ignorada -- por isso a
-# colisao abaixo tambem e registrada no log, senao um erro de digitacao no
-# codigo do idioma some sem deixar nada.
+# English is the source: for it the map comes back empty on purpose, the whole
+# translation layer switches off, and the skin runs with no translation cost.
 #
-# Em portugues devolve um mapa vazio de proposito: a camada de traducao se
-# desliga inteira e a skin roda como rodava antes de ela existir.
+# Accepted shape for a language line: whitespace, two UPPERCASE letters,
+# whitespace, text. "pt-BR", "en_US" and "en" do not match and the line is
+# ignored -- which is also why the collision below is logged, or a typo in a
+# language code would vanish without a trace.
 #
-# Relido a cada render, com o mtime do arquivo como chave do cache: um tradutor
-# edita strings.txt e recarrega a pagina, sem reiniciar o servidor, e mesmo
-# assim o arquivo nao e reaberto e reprocessado em toda visita.
-my %stringCache;
+# Every language is sent to the page, not just the LMS session's. That is what
+# lets the language be changed inside the skin's Settings with no round trip:
+# the JavaScript picks the map. The cost is one copy of the dictionary per
+# translated language -- one today -- and it lives and dies with the document.
+#
+# Re-read per render, keyed on the file's mtime: a translator edits strings.txt
+# and reloads the page without restarting the server, and even so the file is
+# not reopened and reparsed on every visit.
+use constant SOURCE_LANG => 'EN';
 
-sub getStringMap {
-	my $lang = getLang();
-	return {} if $lang eq 'PT';
+my $stringCache;
 
+# Every strings.txt entry, indexed by key and by language.
+sub _entries {
 	my $path = eval { _pluginFile('strings.txt') };
 	my $mtime = defined $path ? (stat($path))[9] : undef;
 
-	my $hit = $stringCache{$lang};
-	return $hit->{map}
-		if $hit && defined $mtime && defined $hit->{mtime} && $hit->{mtime} == $mtime;
+	return $stringCache->{entries}
+		if $stringCache && defined $mtime && defined $stringCache->{mtime}
+			&& $stringCache->{mtime} == $mtime;
 
-	my $map = eval { _readStringMap($lang, $path) };
+	my $entries = eval { _readEntries($path) };
 
-	if (ref $map ne 'HASH') {
-		# The interface keeps working and speaks Portuguese, which beats a blank
-		# page. But an English-locale user staring at a Portuguese interface has
-		# no way to find out why, and neither did anyone reading the log.
-		$log->error("could not build the $lang dictionary; the interface will "
-			. "stay in Portuguese: " . ($@ || 'unknown error'));
-		$map = {};
+	if (ref $entries ne 'HASH') {
+		# The interface keeps working and speaks English, which is the source:
+		# better than a blank page. But someone seeing English after choosing
+		# another language has no way to find out why, and neither did anyone
+		# reading the log.
+		$log->error('could not read strings.txt; the interface will stay in '
+			. 'English only: ' . ($@ || 'unknown error'));
+		$entries = {};
 	}
 
-	$stringCache{$lang} = { mtime => $mtime, map => $map };
-	return $map;
+	$stringCache = { mtime => $mtime, entries => $entries };
+	return $entries;
+}
+
+# The languages a translation exists for, source excluded, in a stable order.
+sub getLanguages {
+	my $entries = _entries();
+	my %seen;
+	for my $val (values %$entries) {
+		for my $code (keys %$val) {
+			next if $code eq SOURCE_LANG;
+			next unless defined $val->{$code} && length $val->{$code};
+			$seen{$code} = 1;
+		}
+	}
+	return [ sort keys %seen ];
+}
+
+# Map of "English phrase" => "phrase in the requested language".
+sub getStringMap {
+	my $lang = uc($_[-1] || '');
+	return {} if !length $lang || $lang eq SOURCE_LANG;
+
+	my $entries = _entries();
+	my (%out, %origin);
+
+	for my $key (sort keys %$entries) {
+		my $val = $entries->{$key};
+		my $source = $val->{ +SOURCE_LANG };
+		next unless defined $source && length $source;
+		my $target = $val->{$lang};
+		next unless defined $target && length $target;
+		next if $target eq $source;
+
+		# The map is keyed by the English phrase, so two keys carrying the same
+		# English text collide and the later one wins in silence -- one
+		# translation simply stops appearing.
+		if (exists $out{$source} && $out{$source} ne $target) {
+			$log->warn("strings.txt: '$key' and '$origin{$source}' share the same "
+				. "$lang source text, so only '$key' will be used");
+		}
+		$out{$source}    = $target;
+		$origin{$source} = $key;
+	}
+
+	return \%out;
 }
 
 sub _pluginFile {
@@ -296,37 +347,17 @@ sub _pluginFile {
 	return catfile(dirname($me), $_[0]);
 }
 
-sub _readStringMap {
-	my ($lang, $path) = @_;
+sub _readEntries {
+	my ($path) = @_;
 	die "module path unknown\n" unless defined $path;
 
-	# Lido como bytes de proposito. strings.txt e UTF-8 e o documento que
-	# recebe o mapa tambem e: passar os bytes adiante sem decodificar evita
-	# a dupla codificacao que transforma "reproducao" em "reproduÃ§Ã£o".
+	# Read as bytes on purpose. strings.txt is UTF-8 and so is the document that
+	# receives the map: passing the bytes through undecoded avoids the double
+	# encoding that turns "reproducao" into "reproduÃ§Ã£o".
 	open(my $fh, '<', $path) or die "strings.txt unreadable: $!\n";
 
 	my %out;
-	my %origin;
-	my ($key, %val);
-	my $flush = sub {
-		return unless defined $key && $key =~ /^ECHOCLASSIC_UI_/;
-		return unless defined $val{PT} && length $val{PT};
-		my $target = $val{$lang};
-		$target = $val{EN} unless defined $target && length $target;
-		return unless defined $target && length $target;
-		return if $target eq $val{PT};
-
-		# The map is keyed by the Portuguese phrase, so two different string
-		# keys carrying the same PT text collide and the later one wins in
-		# silence -- one translation simply stops appearing.
-		if (exists $out{ $val{PT} } && $out{ $val{PT} } ne $target) {
-			$log->warn("strings.txt: '$key' and '$origin{ $val{PT} }' share the "
-				. "same PT text, so only '$key' will be used");
-		}
-		$out{ $val{PT} }    = $target;
-		$origin{ $val{PT} } = $key;
-	};
-
+	my $key;
 	my $first = 1;
 	while (my $line = <$fh>) {
 		$line =~ s/\r?\n$//;
@@ -334,24 +365,59 @@ sub _readStringMap {
 		# ECHOCLASSIC_UI_, dropping that entry without a word.
 		if ($first) { $line =~ s/^\xEF\xBB\xBF//; $first = 0; }
 		next if $line =~ /^\s*#/;
-		if ($line =~ /^(\S+)\s*$/) { $flush->(); $key = $1; %val = (); next; }
-		if ($line =~ /^\s+([A-Z]{2})\s+(.*)$/) { $val{$1} = $2; }
+		if ($line =~ /^(\S+)\s*$/) {
+			# Copied into a variable before being tested: matching $1 against
+			# another pattern is a new match, and that resets the capture
+			# groups -- $1 comes out undef and the whole entry is lost in
+			# silence.
+			my $candidate = $1;
+			$key = $candidate =~ /^ECHOCLASSIC_UI_/ ? $candidate : undef;
+			$out{$key} = {} if defined $key;
+			next;
+		}
+		if (defined $key && $line =~ /^\s+([A-Z]{2})\s+(.*)$/) { $out{$key}{$1} = $2; }
 	}
-	$flush->();
 	close($fh);
 
 	return \%out;
 }
 
-# O mapa vira literal JavaScript. Os valores vem de strings.txt, que um tradutor
-# edita -- entao sao escapados como qualquer entrada externa.
+# The map becomes a JavaScript literal. The values come from strings.txt, which
+# a translator edits -- so they are escaped like any other external input.
 sub getStringMapJson {
-	my $map = getStringMap();
+	my $map = getStringMap($_[-1]);
 	my @pairs;
-	for my $pt (sort keys %$map) {
-		push @pairs, '"' . jsLiteral($pt) . '":"' . jsLiteral($map->{$pt}) . '"';
+	for my $source (sort keys %$map) {
+		push @pairs, '"' . jsLiteral($source) . '":"' . jsLiteral($map->{$source}) . '"';
 	}
 	return '{' . join(',', @pairs) . '}';
+}
+
+# Every dictionary at once: { "PT": {...}, "ES": {...} }. This is what the page
+# receives, so changing language in Settings does not depend on the server.
+sub getStringMapsJson {
+	my @langs = @{ getLanguages() };
+	my @parts;
+	for my $lang (@langs) {
+		push @parts, '"' . jsLiteral($lang) . '":' . getStringMapJson($lang);
+	}
+	return '{' . join(',', @parts) . '}';
+}
+
+# The languages offered in the picker, each named in itself: someone who opened
+# the skin in a language they cannot read still has to recognise their own.
+sub getLanguageNamesJson {
+	my %names = (EN => 'English', PT => 'Português', ES => 'Español',
+	             FR => 'Français', DE => 'Deutsch', IT => 'Italiano',
+	             NL => 'Nederlands', SV => 'Svenska', DA => 'Dansk',
+	             FI => 'Suomi', NO => 'Norsk', CS => 'Čeština',
+	             PL => 'Polski', RU => 'Русский', HE => 'עברית');
+	my @parts;
+	for my $lang (SOURCE_LANG, @{ getLanguages() }) {
+		push @parts, '"' . jsLiteral($lang) . '":"'
+			. jsLiteral($names{$lang} || $lang) . '"';
+	}
+	return '{' . join(',', @parts) . '}';
 }
 
 # The playerid the page should prefer on load: the first connected player, so

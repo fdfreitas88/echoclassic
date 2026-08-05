@@ -8,12 +8,12 @@ Vue.component('lms-settings', {
 <div v-if="ui.advancedSettings" class="settings advanced-settings-shell">
   <div class="advanced-settings-toolbar">
     <button ref="advancedBack" type="button" class="advanced-back pointer" @click="closeAdvanced">
-      <span aria-hidden="true">‹</span> Ajustes
+      <span aria-hidden="true">‹</span> Settings
     </button>
-    <strong>Configurações do LMS</strong>
+    <strong>LMS settings</strong>
     <span aria-hidden="true"></span>
   </div>
-  <iframe class="advanced-settings-frame" title="Configurações avançadas do LMS"
+  <iframe class="advanced-settings-frame" title="Advanced LMS settings"
           src="/settings/index.html"></iframe>
 </div>
 <div v-else class="settings">
@@ -21,48 +21,48 @@ Vue.component('lms-settings', {
   <div class="sgroup">
     <button type="button" class="srow settings-command-row pointer"
             :aria-expanded="String(showPlayers)" @click="showPlayers = !showPlayers">
-      Player ativo <span class="v">{{ playerName }} ›</span>
+      Active player <span class="v">{{ playerName }} ›</span>
     </button>
     <template v-if="showPlayers">
       <div class="player-help">
-        Controlar muda o player usado pelo Echo Classic. Transferir leva a reprodução atual.
-        Sincronizar faz os dois players tocarem juntos.
+        Control changes which player Echo Classic uses. Transfer moves the current playback.
+        Sync makes both players play together.
       </div>
       <div v-for="p in store.players" :key="p.id" class="player-choice">
         <div class="player-name">
           <strong>{{ p.name }}</strong>
-          <span>{{ p.connected ? 'conectado' : 'indisponível' }}</span>
+          <span>{{ p.connected ? 'connected' : 'unavailable' }}</span>
         </div>
         <span v-if="p.id === store.playerId" class="player-current">Em uso</span>
         <template v-else-if="p.connected">
           <button title="Usar este player no Echo Classic" @click.stop="control(p)">Controlar</button>
-          <button title="Continuar a reprodução neste player" @click.stop="handoff(p)">Transferir</button>
-          <button title="Reproduzir em conjunto com o player atual" @click.stop="sync(p)">Sincronizar</button>
+          <button title="Continue playback on this player" @click.stop="handoff(p)">Transferir</button>
+          <button title="Play together with the current player" @click.stop="sync(p)">Sync</button>
         </template>
       </div>
     </template>
-    <div class="srow">Conexão <span class="v">{{ store.connected ? 'conectado' : 'sem player' }}</span></div>
+    <div class="srow">Connection <span class="v">{{ store.connected ? 'connected' : 'no player' }}</span></div>
     <label class="srow">Volume
       <input class="setting-range" type="range" min="0" max="100" step="1"
              :value="volumeValue" :disabled="!volumeAdjustable"
-             aria-label="Volume do player"
+             aria-label="Player volume"
              :title="volumeHint"
              @input="onVolumeInput($event.target.value)"
              @change="setVolumeValue($event.target.value)">
       <span class="v">{{ volumeLabel }}</span></label>
     <div v-if="store.fixedVolume" class="srow" style="min-height:34px">
-      <span style="font-size:12px;color:var(--text2)">Ganho unitário até o DAC: o LMS não toca nas amostras. Ajuste o volume no próprio DAC.</span>
+      <span style="font-size:12px;color:var(--text2)">Unity gain to the DAC: LMS does not touch the samples. Set the volume on the DAC itself.</span>
     </div>
     <div v-else-if="!store.volumeModeSynced" class="srow" style="min-height:34px">
-      <span style="font-size:12px;color:var(--text2)">O LMS ainda não respondeu se este player usa volume por software. Escolha o player em “Player ativo” ou toque em “Tentar novamente” na barra de conexão para consultar de novo.</span>
+      <span style="font-size:12px;color:var(--text2)">LMS has not yet said whether this player uses software volume. Pick the player under “Active player”, or tap “Try again” in the connection bar to ask once more.</span>
     </div>
   </div>
 
-  <div class="sgh">Reprodução</div>
+  <div class="sgh">Playback</div>
   <div class="sgroup">
-    <label class="srow">Transição
+    <label class="srow">Crossfade
       <select class="setting-select transition-select" :value="store.transitionType" @change="transition($event.target.value)">
-        <option value="0">Sem transição / gapless</option>
+        <option value="0">No crossfade / gapless</option>
         <option value="1">Crossfade</option>
       </select>
     </label>
@@ -74,21 +74,21 @@ Vue.component('lms-settings', {
       <span class="v">{{ durationValue }} segundos</span>
     </label>
     <div class="srow sleep-row">
-      Temporizador
+      Sleep timer
       <div class="inline-commands">
-        <button @click="sleepMinutes(15)">15 minutos</button>
-        <button @click="sleepMinutes(30)">30 minutos</button>
-        <button @click="sleepMinutes(60)">1 hora</button>
+        <button @click="sleepMinutes(15)">15 minutes</button>
+        <button @click="sleepMinutes(30)">30 minutes</button>
+        <button @click="sleepMinutes(60)">1 hour</button>
       </div>
     </div>
     <div class="srow sleep-row">
-      Parar ao terminar
+      Stop at end
       <div class="inline-commands">
         <button :disabled="!canSleepAtEnd" :title="sleepAtEndHint"
-                @click="sleepTrack">Esta música</button>
+                @click="sleepTrack">This song</button>
         <button :disabled="!canSleepAtEnd" :title="sleepAtEndHint"
-                @click="sleepQueue">A fila</button>
-        <button v-if="store.sleepRemaining" @click="cancelSleep">Cancelar</button>
+                @click="sleepQueue">The queue</button>
+        <button v-if="store.sleepRemaining" @click="cancelSleep">Cancel</button>
       </div>
     </div>
     <div v-if="!canSleepAtEnd" class="srow" style="min-height:34px">
@@ -99,25 +99,41 @@ Vue.component('lms-settings', {
     </div>
   </div>
 
-  <div class="sgh">Aparência</div>
+  <div class="sgh">Appearance</div>
   <div class="sgroup">
-    <div class="srow">Tema
-      <span class="v">{{ ui.dark ? 'escuro' : 'claro' }}</span>
+    <div class="srow">Theme
+      <span class="v">{{ ui.dark ? 'dark' : 'light' }}</span>
       <button type="button" class="sw" :class="{on: ui.dark}" role="switch"
-              :aria-checked="String(ui.dark)" aria-label="Tema escuro"
-              @click="toggleTheme"><span class="visually-hidden">Tema escuro</span></button></div>
-    <div class="srow">Taxa e bits na barra inferior
+              :aria-checked="String(ui.dark)" aria-label="Dark theme"
+              @click="toggleTheme"><span class="visually-hidden">Dark theme</span></button></div>
+    <div class="srow">Rate and bits in the bottom bar
       <button type="button" class="sw" :class="{on: ui.showBadges}" role="switch"
-              :aria-checked="String(ui.showBadges)" aria-label="Taxa e bits na barra inferior"
-              @click="preference('showBadges')"><span class="visually-hidden">Taxa e bits na barra inferior</span></button></div>
-    <div class="srow">Destacar hi-res
+              :aria-checked="String(ui.showBadges)" aria-label="Rate and bits in the bottom bar"
+              @click="preference('showBadges')"><span class="visually-hidden">Rate and bits in the bottom bar</span></button></div>
+    <div class="srow">Highlight hi-res
       <button type="button" class="sw" :class="{on: ui.markHires}" role="switch"
-              :aria-checked="String(ui.markHires)" aria-label="Destacar áudio de alta resolução"
-              @click="preference('markHires')"><span class="visually-hidden">Destacar áudio de alta resolução</span></button></div>
+              :aria-checked="String(ui.markHires)" aria-label="Highlight high resolution audio"
+              @click="preference('markHires')"><span class="visually-hidden">Highlight high resolution audio</span></button></div>
   </div>
 
-  <div class="sgh">Esquema de cores</div>
-  <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Esquema de cores">
+  <div class="sgh">Language</div>
+  <div class="sgroup language-group" role="radiogroup" aria-label="Language">
+    <button v-for="lang in languages" :key="lang.key" type="button"
+            class="srow language-row"
+            role="radio" :aria-checked="currentLanguage === lang.key ? 'true' : 'false'"
+            :tabindex="currentLanguage === lang.key ? 0 : -1"
+            @keydown="radioKey($event, languages, currentLanguage, language)"
+            @click="language(lang.key)">
+      <span class="language-label">{{ lang.label }}</span>
+      <span class="language-check" aria-hidden="true"></span>
+    </button>
+  </div>
+  <div class="srow language-note">
+    <span style="font-size:12px;color:var(--text2)">Choosing a language reloads the page. English is the original text; the others are translations shipped with the skin.</span>
+  </div>
+
+  <div class="sgh">Colour scheme</div>
+  <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Colour scheme">
     <button v-for="scheme in colorSchemes" :key="scheme.key" type="button"
             class="srow color-scheme-row" :class="'scheme-' + scheme.key"
             role="radio" :aria-checked="ui.colorScheme === scheme.key ? 'true' : 'false'"
@@ -133,8 +149,8 @@ Vue.component('lms-settings', {
     </button>
   </div>
 
-  <div class="sgh">Fontes</div>
-  <div class="sgroup font-option-group" role="radiogroup" aria-label="Fontes">
+  <div class="sgh">Fonts</div>
+  <div class="sgroup font-option-group" role="radiogroup" aria-label="Fonts">
     <button v-for="font in fontOptions" :key="font.key" type="button"
             class="srow font-option-row" :class="'font-' + font.key"
             role="radio" :aria-checked="ui.fontFamily === font.key ? 'true' : 'false'"
@@ -146,16 +162,15 @@ Vue.component('lms-settings', {
     </button>
   </div>
 
-  <div class="sgh">Barras de progresso</div>
+  <div class="sgh">Progress bars</div>
   <div class="sgroup gauge-settings-group">
     <div class="player-help">
-      O estilo é lembrado separadamente para cada tema. O que você escolher aqui
-      vale para o tema {{ ui.dark ? 'escuro' : 'claro' }}; o outro tema mantém o dele.
+      {{ gaugeHelp }}
     </div>
     <div class="srow gauge-style-row">
-      <span>Estilo no mini player ({{ ui.dark ? 'tema escuro' : 'tema claro' }})</span>
+      <span>{{ miniGaugeStyleLabel }}</span>
       <div class="gauge-segmented" role="radiogroup"
-           :aria-label="'Estilo da barra de progresso do mini player no tema ' + (ui.dark ? 'escuro' : 'claro')">
+           :aria-label="miniGaugeStyleLabel">
         <button v-for="style in gaugeStyles" :key="'mini-' + style.key" type="button"
                 role="radio" :aria-checked="ui.miniGaugeStyle === style.key ? 'true' : 'false'"
                 :tabindex="ui.miniGaugeStyle === style.key ? 0 : -1"
@@ -164,7 +179,7 @@ Vue.component('lms-settings', {
                 @click="miniGaugeStyle(style.key)">{{ style.label }}</button>
       </div>
     </div>
-    <label class="srow">Cor no mini player
+    <label class="srow">Mini player colour
       <select class="setting-select mini-gauge-color" :value="ui.miniGaugeColor"
               @change="gaugeColor('mini', $event.target.value)">
         <option v-for="color in gaugeColors" :key="'mini-color-' + color.key"
@@ -172,9 +187,9 @@ Vue.component('lms-settings', {
       </select>
     </label>
     <div class="srow gauge-style-row">
-      <span>Estilo no player completo ({{ ui.dark ? 'tema escuro' : 'tema claro' }})</span>
+      <span>{{ playerGaugeStyleLabel }}</span>
       <div class="gauge-segmented" role="radiogroup"
-           :aria-label="'Estilo da barra de progresso do player completo no tema ' + (ui.dark ? 'escuro' : 'claro')">
+           :aria-label="playerGaugeStyleLabel">
         <button v-for="style in gaugeStyles" :key="'player-' + style.key" type="button"
                 role="radio" :aria-checked="ui.playerGaugeStyle === style.key ? 'true' : 'false'"
                 :tabindex="ui.playerGaugeStyle === style.key ? 0 : -1"
@@ -183,7 +198,7 @@ Vue.component('lms-settings', {
                 @click="playerGaugeStyle(style.key)">{{ style.label }}</button>
       </div>
     </div>
-    <label class="srow">Cor no player completo
+    <label class="srow">Full player colour
       <select class="setting-select player-gauge-color" :value="ui.playerGaugeColor"
               @change="gaugeColor('player', $event.target.value)">
         <option v-for="color in gaugeColors" :key="'player-color-' + color.key"
@@ -192,9 +207,9 @@ Vue.component('lms-settings', {
     </label>
   </div>
 
-  <div class="sgh">Layout do player completo</div>
+  <div class="sgh">Full player layout</div>
   <div class="sgroup player-presentation-group" role="radiogroup"
-       aria-label="Layout do player completo">
+       aria-label="Full player layout">
     <button v-for="mode in playerPresentations" :key="mode.key" type="button"
             class="srow player-presentation-row"
             :class="'player-presentation-' + mode.key"
@@ -205,71 +220,74 @@ Vue.component('lms-settings', {
       <span class="player-presentation-copy">
         <span>{{ mode.label }}</span>
         <small>{{ mode.key === 'adaptive'
-          ? 'Coluna em telas largas; sobreposição nas compactas'
-          : 'Sempre ocupa toda a tela' }}</small>
+          ? 'Column on wide screens; overlay on compact ones'
+          : 'Always fills the whole screen' }}</small>
       </span>
       <span class="font-option-check" aria-hidden="true"></span>
     </button>
   </div>
 
-  <div class="sgh">Segurança e compatibilidade</div>
+  <div class="sgh">Security and compatibility</div>
   <div class="sgroup">
-    <div class="srow">Controles na tela bloqueada
-      <span class="v">{{ mediaSessionSupported ? 'disponíveis' : 'não suportados neste navegador' }}</span>
+    <div class="srow">Lock screen controls
+      <span class="v">{{ mediaSessionSupported ? 'available' : 'not supported in this browser' }}</span>
     </div>
     <div class="srow settings-actions">
-      Preferências da skin
+      Skin preferences
       <span class="inline-commands">
-        <button @click="exportSettings">Exportar</button>
-        <button @click="$refs.importFile.click()">Importar</button>
+        <button @click="exportSettings">Export</button>
+        <button @click="$refs.importFile.click()">Import</button>
       </span>
       <input ref="importFile" class="visually-hidden" type="file" accept="application/json"
              tabindex="-1" aria-hidden="true"
              @change="importSettings">
     </div>
     <div v-if="pendingImport" class="import-confirm" role="alert">
-      <strong>Importar preferências deste arquivo?</strong>
-      <span>Serão substituídos apenas estes grupos: {{ pendingImportGroups.join(', ') }}.
-        O que não estiver no arquivo continua como está. Uma cópia do estado atual
+      <strong>Import preferences from this file?</strong>
+      <span>Only these groups will be replaced: {{ pendingImportGroups.join(', ') }}.
+        Anything not in the file stays as it is. A copy of the current state
         fica guardada no navegador antes da gravação. A página recarrega em seguida.</span>
       <div class="inline-commands">
-        <button @click="confirmImport">Importar e recarregar</button>
-        <button @click="cancelImport">Cancelar</button>
+        <button @click="confirmImport">Import and reload</button>
+        <button @click="cancelImport">Cancel</button>
       </div>
     </div>
   </div>
 
-  <div class="sgh">Biblioteca</div>
+  <div class="sgh">Library</div>
   <div class="sgroup">
     <div v-if="loading" class="srow"><span style="color:var(--text2)">Consultando o servidor…</span></div>
     <template v-else-if="info">
-      <div class="srow">Artistas <span class="v">{{ n(info.artists) }}</span></div>
-      <div class="srow">Álbuns <span class="v">{{ n(info.albums) }}</span></div>
-      <div class="srow">Músicas <span class="v">{{ n(info.songs) }}</span></div>
-      <div class="srow">Gêneros <span class="v">{{ n(info.genres) }}</span></div>
+      <div class="srow">Artists <span class="v">{{ n(info.artists) }}</span></div>
+      <div class="srow">Albums <span class="v">{{ n(info.albums) }}</span></div>
+      <div class="srow">Songs <span class="v">{{ n(info.songs) }}</span></div>
+      <div class="srow">Genres <span class="v">{{ n(info.genres) }}</span></div>
     </template>
     <div v-else class="srow"><span style="color:var(--text2)">{{ error }}</span></div>
   </div>
 
-  <div class="sgh">Servidor</div>
+  <div class="sgh">Server</div>
   <div class="sgroup">
     <button type="button" class="srow settings-command-row pointer"
             :aria-expanded="String(ui.advancedSettings)" @click="openAdvanced">
-      Configurações avançadas do LMS <span class="v">›</span>
+      Advanced LMS settings <span class="v">›</span>
     </button>
-    <div class="srow">Versão do servidor <span class="v">LMS {{ info ? info.version : '—' }}</span></div>
-    <div class="srow">Versão da skin <span class="v">{{ skinVersion }}</span></div>
+    <div class="srow">Server version <span class="v">LMS {{ info ? info.version : '—' }}</span></div>
+    <div class="srow">Skin version <span class="v">{{ skinVersion }}</span></div>
   </div>
 
   <div class="sgh" style="text-transform:none">
-    As páginas nativas do LMS abrem dentro dos Ajustes, preservando a navegação
-    do Echo Classic.
+    Native LMS pages open inside Settings, keeping Echo Classic navigation.
   </div>
 </div>
 </div>`,
   data: function () {
     return {
       ui: LmsUi.state, store: LmsStore.state,
+      /* LmsStr existe sempre; a lista traz pelo menos o ingles, mesmo num
+         servidor onde o strings.txt nao pode ser lido. */
+      languages: (window.LmsStr && LmsStr.languages) ? LmsStr.languages() : [{ key: 'EN', label: 'English' }],
+      currentLanguage: (window.LmsStr && LmsStr.lang) || 'EN',
       colorSchemes: LmsUi.COLOR_SCHEMES,
       fontOptions: LmsUi.FONT_OPTIONS,
       playerPresentations: LmsUi.PLAYER_PRESENTATIONS,
@@ -286,7 +304,7 @@ Vue.component('lms-settings', {
     playerName: function () {
       var id = this.store.playerId;
       var found = (this.store.players || []).filter(function (p) { return p.id === id; })[0];
-      return found ? found.name : 'nenhum';
+      return found ? found.name : 'none';
     },
     skinVersion: function () {
       return typeof LMS_SKIN_VERSION === 'string' && LMS_SKIN_VERSION ? LMS_SKIN_VERSION : '—';
@@ -304,17 +322,32 @@ Vue.component('lms-settings', {
       return this.volumeDraft === null ? (this.store.volume || 0) : this.volumeDraft;
     },
     volumeLabel: function () {
-      if (this.store.fixedVolume) return 'fixo — escala cheia';
-      if (!this.store.volumeModeSynced) return 'não confirmado';
+      if (this.store.fixedVolume) return 'fixed — full scale';
+      if (!this.store.volumeModeSynced) return 'not confirmed';
       return this.volumeValue + '%';
     },
-    volumeHint: function () {
-      if (this.store.fixedVolume) return 'Saída fixa: o volume é ajustado no DAC.';
-      if (!this.store.connected) return 'Nenhum player conectado.';
-      if (!this.store.volumeModeSynced) return 'O LMS ainda não confirmou o modo de volume deste player.';
-      return 'Volume do player';
+    /* Built whole rather than glued around an interpolation: translateTemplate
+       matches a text node against the dictionary, and a sentence split by
+       {{ }} can never match. That is exactly how these three stayed Portuguese
+       in an English session. */
+    gaugeHelp: function () {
+      return this.tr(this.ui.dark
+        ? 'The style is remembered separately for each theme. What you choose here applies to the dark theme; the other theme keeps its own.'
+        : 'The style is remembered separately for each theme. What you choose here applies to the light theme; the other theme keeps its own.');
     },
-    /* "Esta música" com nada tocando vira `sleep 1` no store (Math.max(1, 0-0))
+    miniGaugeStyleLabel: function () {
+      return this.tr(this.ui.dark ? 'Mini player style (dark theme)' : 'Mini player style (light theme)');
+    },
+    playerGaugeStyleLabel: function () {
+      return this.tr(this.ui.dark ? 'Full player style (dark theme)' : 'Full player style (light theme)');
+    },
+    volumeHint: function () {
+      if (this.store.fixedVolume) return 'Fixed output: volume is set on the DAC.';
+      if (!this.store.connected) return 'No player connected.';
+      if (!this.store.volumeModeSynced) return 'LMS has not confirmed this player\'s volume mode yet.';
+      return 'Player volume';
+    },
+    /* "This song" com nada tocando vira `sleep 1` no store (Math.max(1, 0-0))
        e desliga o player em um segundo. Sem reproducao nao ha "terminar". */
     canSleepAtEnd: function () {
       return this.store.connected && this.store.mode !== 'stop';
@@ -322,8 +355,8 @@ Vue.component('lms-settings', {
     /* Vai para um :title, que e binding dinamico e portanto nao passa pela
        reescrita de template. A traducao acontece aqui. */
     sleepAtEndHint: function () {
-      var text = this.canSleepAtEnd ? 'Desligar quando esta reprodução terminar'
-        : 'Disponível durante a reprodução: sem nada tocando não há fim para esperar.';
+      var text = this.canSleepAtEnd ? 'Stop when this playback ends'
+        : 'Available during playback: with nothing playing there is no end to wait for.';
       return window.LmsStr ? LmsStr.t(text) : text;
     },
     /* Contar chaves de localStorage dizia "5 preferencias" para uma skin
@@ -338,7 +371,7 @@ Vue.component('lms-settings', {
           names.push(labels[canonical]);
         }
       }, this);
-      return names.length ? names : ['nenhum grupo reconhecido'];
+      return names.length ? names : ['no recognised group'];
     }
   },
   watch: {
@@ -353,6 +386,15 @@ Vue.component('lms-settings', {
   methods: {
     n: function (v) { return LmsFmt.count(v); },
     toggleTheme: function () { LmsUi.toggleTheme(); },
+    /* setLanguage guarda a escolha e recarrega: os templates ja foram
+       reescritos no registro dos componentes, entao nao ha como trocar o
+       idioma da tela em pe. */
+    tr: function (text) {
+      return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
+    },
+    language: function (key) {
+      if (window.LmsStr && LmsStr.setLanguage) LmsStr.setLanguage(key);
+    },
     colorScheme: function (key) { LmsUi.setColorScheme(key); },
     fontFamily: function (key) { LmsUi.setFontFamily(key); },
     playerPresentation: function (key) { LmsUi.setPlayerPresentation(key); },
@@ -425,7 +467,7 @@ Vue.component('lms-settings', {
       link.download = 'echo-classic-preferencias.json';
       link.click();
       setTimeout(function () { URL.revokeObjectURL(url); }, 0);
-      LmsUi.notify('Preferências exportadas.');
+      LmsUi.notify('Preferences exported.');
     },
     importKeys: function () {
       return ['echoclassic.ui.v2', 'echoclassic.pins.v1', 'echoclassic.nav.v1',
@@ -433,11 +475,11 @@ Vue.component('lms-settings', {
     },
     importGroupLabels: function () {
       return {
-        'echoclassic.ui.v2': 'Aparência e preferências',
-        'echoclassic.pins.v1': 'Itens fixados',
-        'echoclassic.nav.v1': 'Navegação',
-        'echoclassic.session.v2': 'Sessão do player',
-        'echoclassic.history.v1': 'Histórico de reprodução'
+        'echoclassic.ui.v2': 'Appearance and preferences',
+        'echoclassic.pins.v1': 'Pinned items',
+        'echoclassic.nav.v1': 'Navigation',
+        'echoclassic.session.v2': 'Player session',
+        'echoclassic.history.v1': 'Playback history'
       };
     },
     canonicalImportKey: function (key) {
@@ -459,7 +501,7 @@ Vue.component('lms-settings', {
 	    validateImportValue: function (canonical, raw) {
 	      var parsed;
 	      try { parsed = JSON.parse(String(raw)); }
-	      catch (e) { return 'o conteúdo de ' + canonical + ' não é JSON válido'; }
+	      catch (e) { return 'the contents of ' + canonical + ' is not valid JSON'; }
 	      if (canonical === 'echoclassic.ui.v2') {
 	        if (!this.isPlainObject(parsed)) return canonical + ' deveria ser um objeto';
 	        /* Estas duas listas eram literais duplicados de ui.js. Acrescentar uma
@@ -470,7 +512,7 @@ Vue.component('lms-settings', {
 	        };
 	        var tabs = keysOf(LmsUi.TABS);
 	        var views = keysOf(LmsUi.MUSIC_VIEWS);
-	        var albumModes = ['albuns', 'faixas'];
+	        var albumModes = ['albums', 'tracks'];
 	        var playerPresentations = ['adaptive', 'fullscreen'];
 	        var playerPositions = ['right', 'left', 'center'];
 	        var gaugeStyles = ['flat', 'classic'];
@@ -489,7 +531,7 @@ Vue.component('lms-settings', {
 	        for (var e = 0; e < enums.length; e++) {
 	          var key = enums[e][0];
 	          if (parsed[key] !== undefined && enums[e][1].indexOf(parsed[key]) < 0) {
-	            return key + ' tem valor incompatível';
+	            return key + ' has an incompatible value';
 	          }
 	        }
 	        if (parsed.byView !== undefined && !this.isPlainObject(parsed.byView)) {
@@ -498,19 +540,19 @@ Vue.component('lms-settings', {
 	        return null;
 	      }
 	      if (canonical === 'echoclassic.pins.v1' || canonical === 'echoclassic.history.v1') {
-        if (!Array.isArray(parsed)) return canonical + ' deveria ser uma lista';
+        if (!Array.isArray(parsed)) return canonical + ' should be a list';
         var bad = parsed.some(function (item) { return !this.isPlainObject(item); }, this);
-        if (bad) return canonical + ' tem itens que não são objetos';
+        if (bad) return canonical + ' has items that are not objects';
         return null;
       }
       if (canonical === 'echoclassic.nav.v1') {
         if (!this.isPlainObject(parsed)) return 'echoclassic.nav.v1 deveria ser um objeto';
-        var stacks = ['musica', 'playlists', 'radio', 'favoritos'];
+        var stacks = ['music', 'playlists', 'radio', 'favourites'];
         for (var i = 0; i < stacks.length; i++) {
           var stack = parsed[stacks[i]];
           if (stack === undefined) continue;
           if (!this.isFrameList(stack)) {
-            return 'a pilha de navegação “' + stacks[i] + '” não é uma lista de telas válidas';
+            return 'the navigation stack “' + stacks[i] + '” is not a list of valid screens';
           }
         }
         return null;
@@ -528,15 +570,15 @@ Vue.component('lms-settings', {
         /* Limpar o value em TODOS os caminhos: sem isso, corrigir o arquivo no
            disco e escolher o mesmo nome de novo nao disparava change. */
         input.value = '';
-        LmsUi.notify('Não foi possível importar: ' + message, 'error', 6500);
+        LmsUi.notify('Could not import: ' + message, 'error', 6500);
       }
-      reader.onerror = function () { fail('o arquivo não pôde ser lido'); };
+      reader.onerror = function () { fail('the file could not be read'); };
       reader.onload = function () {
         var data;
         try { data = JSON.parse(String(reader.result || '')); }
-        catch (e) { return fail('o arquivo não é JSON válido'); }
+        catch (e) { return fail('the file is not valid JSON'); }
         if (!data || data.version !== 1 || !self.isPlainObject(data.values)) {
-          return fail('arquivo incompatível com esta versão da skin');
+          return fail('file incompatible with this version of the skin');
         }
         var accepted = {};
         var keys = Object.keys(data.values);
@@ -548,7 +590,7 @@ Vue.component('lms-settings', {
           accepted[canonical] = String(data.values[keys[i]]);
         }
         if (!Object.keys(accepted).length) {
-          return fail('o arquivo não traz nenhuma preferência do Echo Classic');
+          return fail('the file has no Echo Classic preferences');
         }
         self.pendingImport = { version: 1, values: accepted };
         input.value = '';
@@ -556,7 +598,7 @@ Vue.component('lms-settings', {
       reader.readAsText(file);
     },
     /* Guardar o estado atual antes de gravar: a confirmacao promete um caminho
-       de volta e ate aqui nao havia nenhum. */
+       de volta e ate aqui nao havia none. */
     backupCurrentSettings: function () {
       var snapshot = { version: 1, savedAt: new Date().toISOString(), values: {} };
       this.importKeys().forEach(function (key) {
@@ -582,7 +624,7 @@ Vue.component('lms-settings', {
       try {
         this.info = await LmsApi.serverInfo();
       } catch (e) {
-        this.error = 'Não deu para ler o servidor: ' + (e && e.message ? e.message : e);
+        this.error = 'Could not read the server: ' + (e && e.message ? e.message : e);
       }
       this.loading = false;
     }

@@ -93,7 +93,7 @@ the CSS tokens. All four must pass.
 
 ## Status
 
-Current version: **3.2.4**.
+Current version: **3.2.5**.
 
 Filtering, sorting, grouping and playback preference are four separate states,
 reachable from one adaptive panel. Filters combine, grouping adds section headers

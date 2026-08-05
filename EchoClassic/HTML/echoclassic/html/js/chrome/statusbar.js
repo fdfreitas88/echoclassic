@@ -7,7 +7,7 @@ Vue.component('lms-statusbar', {
 <div class="statusbar" aria-hidden="true">
   <b class="brand">Echo Classic</b>
   <span class="mid">{{ clock }}</span>
-  <span class="srv">Servidor LMS {{ version }}</span>
+  <span class="srv">LMS Server {{ version }}</span>
 </div>`,
   data: function () {
     return { clock: '', timer: null };

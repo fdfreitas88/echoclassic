@@ -20,7 +20,7 @@
 <div v-if="item" class="sheet-stage" :class="{anchored: !!anchor}">
   <div class="sheet-back" @click="close"></div>
   <div ref="sheet" class="action-sheet" :class="{anchored: !!anchor}" :style="sheetStyle"
-       role="dialog" :aria-label="'Ações para ' + (item.title || item.label || item.name)"
+       role="dialog" :aria-label="'Actions for ' + (item.title || item.label || item.name)"
        :aria-modal="String(!anchor)" tabindex="-1"
        @keydown.esc.stop.prevent="close" @keydown.tab="trapFocus">
     <div class="sheet-title">
@@ -29,23 +29,22 @@
     </div>
     <div v-if="item.editions && item.editions.length > 1" class="sheet-note">
       <span>{{ item.editions.length }}</span>
-      <span>edições desta obra na biblioteca. A preferência escolhe a primeira e as outras
-        continuam visíveis na lista.</span>
+      <span>editions of this work in the library. The preference picks the first one and the others stay visible in the list.</span>
     </div>
     <button v-if="ctl" @click="playNow">Reproduzir agora</button>
     <button v-if="ctl" @click="next">Reproduzir a seguir</button>
-    <button v-if="ctl" @click="later">Adicionar ao final da fila</button>
-    <button v-if="item.url" @click="showPlaylists = !showPlaylists">Adicionar à playlist…</button>
+    <button v-if="ctl" @click="later">Add to end of queue</button>
+    <button v-if="item.url" @click="showPlaylists = !showPlaylists">Add to playlist…</button>
     <div v-if="showPlaylists" class="sheet-choices">
       <button v-for="p in playlists" :key="p.id" @click="addToPlaylist(p)">{{ p.name }}</button>
-      <div v-if="!playlists.length" class="sheet-note">Nenhuma playlist editável.</div>
+      <div v-if="!playlists.length" class="sheet-note">No editable playlists.</div>
     </div>
     <button v-if="item.url" @click="favorite">
-      {{ favoriteExists ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos' }}
+      {{ favoriteExists ? 'Remove from Favourites' : 'Add to Favourites' }}
     </button>
-    <button @click="pin">{{ pinned ? 'Remover dos itens fixados' : 'Fixar no Echo Classic' }}</button>
-    <button v-if="item.kind === 'track' || item.type === 'track'" @click="info">Créditos e informações</button>
-    <button v-if="!anchor" class="cancel" @click="close">Cancelar</button>
+    <button @click="pin">{{ pinned ? 'Remove from pinned items' : 'Fixar no Echo Classic' }}</button>
+    <button v-if="item.kind === 'track' || item.type === 'track'" @click="info">Credits and information</button>
+    <button v-if="!anchor" class="cancel" @click="close">Cancel</button>
   </div>
 </div>`,
     data: function () {
@@ -134,7 +133,7 @@
          declarou uma preferencia, quem toca e a primeira da lista ja ranqueada
          por browse.js. A tela DIZ qual foi escolhida -- trocar o que toca sem
          avisar seria a pior forma de errar aqui, porque o sintoma chega pelo
-         ouvido e sem pista nenhuma na interface. As outras edicoes continuam
+         ouvido e sem pista nonea na interface. As outras edicoes continuam
          visiveis na lista; nada e escondido. */
       chosenEdition: function () {
         var item = this.item;
@@ -152,10 +151,10 @@
           if (ok === false) return;
           if (chosen) {
             /* O texto entra no dicionario inteiro, com marcador: concatenar a
-               origem na frente produziria uma frase que nenhuma chave casa --
+               origem na frente produziria uma frase que nonea chave casa --
                foi assim que os avisos de truncamento apareceram em portugues
                numa sessao em ingles. */
-            var frase = 'Tocando a edição preferida: {edition}.';
+            var frase = 'Playing the preferred edition: {edition}.';
             if (window.LmsStr && LmsStr.t) frase = LmsStr.t(frase);
             LmsUi.notify(frase.replace('{edition}', chosen.source), 'info', 4000);
           }
@@ -200,7 +199,7 @@
           }
           this.close();
         } catch (e) {
-          LmsUi.notify('Não foi possível atualizar os favoritos. ' + e.message, 'error', 6500);
+          LmsUi.notify('Could not update favourites. ' + e.message, 'error', 6500);
         } finally {
           this.busy = false;
           LmsUi.setBusy('');
@@ -218,7 +217,7 @@
       addToPlaylist: async function (playlist) {
         if (!this.item || !this.item.url || this.busy) return;
         this.busy = true;
-        LmsUi.setBusy('Adicionando à playlist…');
+        LmsUi.setBusy('Adding to playlist…');
         try {
           await LmsApi.editPlaylist(playlist.id, 'add', {
             title: this.item.title || this.item.label,
@@ -226,7 +225,7 @@
           });
           this.close();
         } catch (e) {
-          LmsUi.notify('Não foi possível adicionar à playlist. ' + e.message, 'error', 6500);
+          LmsUi.notify('Could not add to the playlist. ' + e.message, 'error', 6500);
         } finally {
           this.busy = false;
           LmsUi.setBusy('');
@@ -242,45 +241,45 @@
 <div v-if="item" class="sheet-stage info-stage">
   <div class="sheet-back" @click="close"></div>
   <section ref="infoDialog" class="info-sheet" role="dialog" aria-modal="true"
-           aria-label="Informações da faixa" tabindex="-1"
+           aria-label="Track information" tabindex="-1"
            @keydown.esc.stop.prevent="close" @keydown.tab="trapFocus">
     <div class="info-head">
-      <button class="back-command" @click="close">Concluído</button>
-      <div class="ttl">Informações</div>
+      <button class="back-command" @click="close">Done</button>
+      <div class="ttl">Information</div>
     </div>
-    <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
+    <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
     <div v-else-if="error" class="empty">
       <div class="p">{{ error }}</div>
-      <button class="retry-command" @click="load(item)">Tentar novamente</button>
+      <button class="retry-command" @click="load(item)">Try again</button>
     </div>
     <div v-else-if="info" class="info-content scroller">
       <div class="info-title">{{ info.title || item.title }}</div>
       <div class="info-sub">{{ [info.artist, info.album].filter(Boolean).join(' — ') }}</div>
-      <div class="sgh">Lançamento</div>
+      <div class="sgh">Release</div>
       <div class="sgroup">
-        <div class="srow">Ano desta edição <span class="v">{{ info.year || 'Não informado' }}</span></div>
-        <div class="srow">Ano original <span class="v">{{ info.originalYear || 'Não informado' }}</span></div>
+        <div class="srow">Year of this edition <span class="v">{{ info.year || 'Not available' }}</span></div>
+        <div class="srow">Original year <span class="v">{{ info.originalYear || 'Not available' }}</span></div>
         <div v-if="info.releaseType" class="srow">Tipo <span class="v">{{ info.releaseType }}</span></div>
       </div>
-      <div class="sgh">Créditos</div>
+      <div class="sgh">Credits</div>
       <div class="sgroup">
-        <div v-if="info.albumArtist" class="srow">Artista do álbum <span class="v">{{ info.albumArtist }}</span></div>
-        <div v-if="info.composer" class="srow">Composição <span class="v">{{ info.composer }}</span></div>
-        <div v-if="info.conductor" class="srow">Regência <span class="v">{{ info.conductor }}</span></div>
+        <div v-if="info.albumArtist" class="srow">Album artist <span class="v">{{ info.albumArtist }}</span></div>
+        <div v-if="info.composer" class="srow">Composition <span class="v">{{ info.composer }}</span></div>
+        <div v-if="info.conductor" class="srow">Conductor <span class="v">{{ info.conductor }}</span></div>
         <div v-if="info.band" class="srow">Conjunto <span class="v">{{ info.band }}</span></div>
         <div v-if="!info.albumArtist && !info.composer && !info.conductor && !info.band"
-             class="srow"><span class="muted">Créditos não informados nos metadados.</span></div>
+             class="srow"><span class="muted">No credits in the metadata.</span></div>
       </div>
-      <div class="sgh">Biblioteca</div>
+      <div class="sgh">Library</div>
       <div class="sgroup">
-        <div class="srow">Avaliação <span class="v">{{ stars }}</span></div>
-        <div class="srow">Reproduções <span class="v">{{ info.playCount || 0 }}</span></div>
-        <div v-if="info.genre" class="srow">Gênero <span class="v">{{ info.genre }}</span></div>
+        <div class="srow">Rating <span class="v">{{ stars }}</span></div>
+        <div class="srow">Plays <span class="v">{{ info.playCount || 0 }}</span></div>
+        <div v-if="info.genre" class="srow">Genre <span class="v">{{ info.genre }}</span></div>
       </div>
-      <div class="sgh">Arquivo</div>
+      <div class="sgh">File</div>
       <div class="sgroup">
-        <div class="srow">Formato <span class="v">{{ info.format || '—' }}</span></div>
-        <div class="srow">Resolução <span class="v">{{ resolution }}</span></div>
+        <div class="srow">Format <span class="v">{{ info.format || '—' }}</span></div>
+        <div class="srow">Resolution <span class="v">{{ resolution }}</span></div>
         <div v-if="info.bitrate" class="srow">Bitrate <span class="v">{{ Math.round(info.bitrate) }} kbps</span></div>
       </div>
     </div>
@@ -359,7 +358,7 @@
   Vue.component('lms-selection-bar', {
     template: `
 <div v-if="ui.selectionMode" class="selection-bar">
-  <button @click="cancel">Cancelar</button>
+  <button @click="cancel">Cancel</button>
   <strong>{{ count }} selecionado{{ count === 1 ? '' : 's' }}</strong>
 </div>`,
     data: function () { return { ui: LmsUi.state }; },
