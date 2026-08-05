@@ -120,7 +120,7 @@
     state.connected = !!chosen;
     if (!chosen) {
       state.lastError = ps.length
-        ? 'Nenhum player está conectado.'
+        ? 'No player is connected.'
         : 'Nenhum player foi encontrado no LMS.';
       return false;
     }
@@ -130,7 +130,7 @@
 
   async function loadVolumeMode(playerId) {
     var dvc = await api.playerPref(playerId, 'digitalVolumeControl');
-    if (dvc == null) throw new Error('O LMS não confirmou o modo de volume.');
+    if (dvc == null) throw new Error('LMS did not confirm the volume mode.');
     if (state.playerId !== playerId) return false;
     state.fixedVolume = String(dvc) === '0';
     state.volumeModeSynced = true;
@@ -161,7 +161,7 @@
       var found = await discoverPlayer();
     } catch (e) {
       state.connected = false;
-      state.lastError = friendlyError(e, 'Não foi possível localizar o servidor.');
+      state.lastError = friendlyError(e, 'Could not find the server.');
       state.initialized = true;
       return;
     }
@@ -185,7 +185,7 @@
         await loadPlayerSettings();
       } catch (e) {
         state.connected = false;
-        state.lastError = friendlyError(e, 'Não foi possível localizar o servidor.');
+        state.lastError = friendlyError(e, 'Could not find the server.');
         state.initialized = true;
         return;
       }
@@ -200,7 +200,7 @@
       if (state.playerId !== playerId) return;
       // keep the last screen; only the connection indicator changes
       state.connected = false;
-      state.lastError = friendlyError(e, 'A conexão com o player foi interrompida.');
+      state.lastError = friendlyError(e, 'The connection to the player was lost.');
       state.initialized = true;
       return;
     }
@@ -257,16 +257,16 @@
     if (error.kind && global.console && console.debug) {
       console.debug('LMS ' + error.kind + ':', error.message);
     }
-    if (error.kind === 'timeout') return 'O servidor demorou demais para responder.';
-    if (error.kind === 'network') return 'Não foi possível alcançar o servidor.';
+    if (error.kind === 'timeout') return 'The server took too long to answer.';
+    if (error.kind === 'network') return 'Could not reach the server.';
     if (error.kind === 'http') {
       var code = error.status || parseInt(String(error.detail || '').replace(/[^0-9]/g, ''), 10);
       return code
         ? 'O servidor respondeu com erro (HTTP ' + code + ').'
         : 'O servidor respondeu com erro.';
     }
-    if (error.kind === 'lms') return 'O servidor não aceitou este comando.';
-    if (error.kind === 'parse') return 'A resposta do servidor veio incompleta ou ilegível.';
+    if (error.kind === 'lms') return 'The server rejected this command.';
+    if (error.kind === 'parse') return 'The server response was incomplete or unreadable.';
     return (error.kind ? fallback : (error.message || fallback)) || fallback;
   }
 
@@ -279,7 +279,7 @@
       await refresh();
       await loadQueue();
       if (state.connected) {
-        global.LmsUi.notify('Conexão restaurada.');
+        global.LmsUi.notify('Connection restored.');
         startPolling();
       }
     } finally {
@@ -462,7 +462,7 @@
   async function playContainer(key, id, index) {
     if (!state.playerId || !state.connected) {
       var found = await discoverPlayer();
-      if (!found) throw new Error(state.lastError || 'Nenhum player está disponível.');
+      if (!found) throw new Error(state.lastError || 'No player is available.');
       await loadPlayerSettings();
     }
     var playerId = state.playerId;
@@ -488,7 +488,7 @@
 
   /* O desfazer so pode ser oferecido depois de a remocao ter dado certo. Antes,
      ele era gravado ANTES da chamada: se ela falhasse, guarded() engolia o erro,
-     a faixa continuava na fila e "Desfazer" a inseria de novo - duplicando. */
+     a faixa continuava na fila e "Undo" a inseria de novo - duplicando. */
   async function removeFromQueue(index) {
     if (!state.playerId) return;
     if (index < 0 || index >= state.queue.length) return;
@@ -507,7 +507,7 @@
   async function queueItem(action, key, id) {
     if (!state.playerId || !state.connected) {
       var found = await discoverPlayer();
-      if (!found) throw new Error(state.lastError || 'Nenhum player está disponível.');
+      if (!found) throw new Error(state.lastError || 'No player is available.');
       await loadPlayerSettings();
     }
     await api.queueControl(state.playerId, action, key, id);
@@ -535,7 +535,7 @@
        NOVO, que o usuario nunca pediu para mexer. undoQueue ja fazia assim.
      - o desfazer passa a conter so o que foi realmente removido. Gravar a lista
        inteira antes do laco significava que uma falha na metade deixava um
-       "Desfazer" que reinseria tudo, duplicando o que tinha sobrado. */
+       "Undo" que reinseria tudo, duplicando o que tinha sobrado. */
   async function clearUpcoming() {
     var playerId = state.playerId;
     if (!playerId) return;
@@ -718,7 +718,7 @@
     if (state.volumeModeBusy) return false;
     if (!state.playerId || !state.connected) {
       var found = await discoverPlayer();
-      if (!found) throw new Error(state.lastError || 'Nenhum player está disponível.');
+      if (!found) throw new Error(state.lastError || 'No player is available.');
       await loadPlayerSettings();
     }
     var playerId = state.playerId;
@@ -728,7 +728,7 @@
       if (requestedFixed) await api.setVolume(playerId, 100);
       await api.setPlayerPref(playerId, 'digitalVolumeControl', requestedFixed ? '0' : '1');
       var confirmed = await api.playerPref(playerId, 'digitalVolumeControl');
-      if (confirmed == null) throw new Error('O LMS não confirmou o modo de volume.');
+      if (confirmed == null) throw new Error('LMS did not confirm the volume mode.');
       if (state.playerId !== playerId) return false;
 
       state.fixedVolume = String(confirmed) === '0';
@@ -745,12 +745,12 @@
            que nenhuma chave casa, e o aviso saia em portugues numa sessao em
            ingles -- a mesma armadilha dos avisos de truncamento. */
         global.LmsUi.notify(state.fixedVolume
-          ? 'O LMS manteve a saída fixa.'
-          : 'O LMS manteve o volume por software.', 'error', 6500);
+          ? 'LMS kept fixed output.'
+          : 'LMS kept software volume.', 'error', 6500);
         return false;
       }
       global.LmsUi.notify(requestedFixed
-        ? 'Saída fixa confirmada. Ajuste o volume no DAC.'
+        ? 'Fixed output confirmed. Set the volume on the DAC.'
         : 'Controle de volume pelo LMS confirmado.', 'success', 4500);
       return true;
     } catch (e) {
@@ -783,9 +783,15 @@
       } catch (e) {
         if (e && (e.kind === 'network' || e.kind === 'timeout')) {
           state.connected = false;
-          state.lastError = friendlyError(e, 'A operação não foi concluída.');
+          state.lastError = friendlyError(e, 'The operation did not complete.');
         }
-        global.LmsUi.notify(label + ' não foi concluído. ' + friendlyError(e, ''), 'error', 6500);
+        /* Montada por concatenacao, entao o envelope do notify nunca casaria a
+           frase inteira no dicionario: cada pedaco passa pelo t() sozinho.
+           "failed." tambem foi escolhido por concordar com qualquer sujeito --
+           "nao foi concluido" obrigaria a saber o genero do rotulo. */
+        var tr = (global.LmsStr && global.LmsStr.t) || function (s) { return s; };
+        global.LmsUi.notify(tr(label) + ' ' + tr('failed.') + ' ' + friendlyError(e, ''),
+          'error', 6500);
         return false;
       } finally {
         if (showBusy) global.LmsUi.setBusy('');
@@ -801,34 +807,34 @@
     loadQueue: loadQueue,
     playContainer: guarded('A reprodução', playContainer, true),
     jumpTo: guarded('A troca de faixa', jumpTo, false),
-    removeFromQueue: guarded('A remoção da fila', removeFromQueue, false),
-    moveInQueue: guarded('A reordenação da fila', moveInQueue, false),
-    playNext: guarded('A inclusão na fila', playNext, false),
-    addToQueue: guarded('A inclusão na fila', addToQueue, false),
+    removeFromQueue: guarded('Removing from the queue', removeFromQueue, false),
+    moveInQueue: guarded('Reordering the queue', moveInQueue, false),
+    playNext: guarded('Adding to the queue', playNext, false),
+    addToQueue: guarded('Adding to the queue', addToQueue, false),
     clearQueue: guarded('A limpeza da fila', clearQueue, true),
-    clearUpcoming: guarded('A limpeza das próximas faixas', clearUpcoming, true),
-    undoQueue: guarded('A restauração da fila', undoQueue, true),
+    clearUpcoming: guarded('Clearing the upcoming tracks', clearUpcoming, true),
+    undoQueue: guarded('Restoring the queue', undoQueue, true),
     queueRemaining: queueRemaining,
-    cycleShuffle: guarded('A alteração do modo aleatório', cycleShuffle, false),
-    cycleRepeat: guarded('A alteração da repetição', cycleRepeat, false),
+    cycleShuffle: guarded('Changing shuffle', cycleShuffle, false),
+    cycleRepeat: guarded('Changing repeat', cycleRepeat, false),
     selectPlayer: guarded('A troca de player', selectPlayer, true),
-    handoffTo: guarded('A transferência da reprodução', handoffTo, true),
-    syncWith: guarded('A sincronização dos players', syncWith, true),
-    setTransition: guarded('A configuração da transição', setTransition, false),
-    setSleep: guarded('A configuração do temporizador', setSleep, false),
-    sleepAfterTrack: guarded('A configuração do temporizador', sleepAfterTrack, false),
-    sleepAfterQueue: guarded('A configuração do temporizador', sleepAfterQueue, false),
-    setRating: guarded('A avaliação', setRating, false),
+    handoffTo: guarded('Transferring playback', handoffTo, true),
+    syncWith: guarded('Player synchronisation', syncWith, true),
+    setTransition: guarded('The crossfade setting', setTransition, false),
+    setSleep: guarded('The sleep timer setting', setSleep, false),
+    sleepAfterTrack: guarded('The sleep timer setting', sleepAfterTrack, false),
+    sleepAfterQueue: guarded('The sleep timer setting', sleepAfterQueue, false),
+    setRating: guarded('The rating', setRating, false),
     play: guarded('A reprodução', play, false),
     pause: guarded('A pausa', pause, false),
     stop: guarded('A parada', stop, false),
-    next: guarded('A próxima faixa', next, false),
+    next: guarded('The next track', next, false),
     prev: guarded('A faixa anterior', prev, false),
     seek: guarded('O deslocamento na faixa', seek, false),
     setVolume: guarded('O ajuste de volume', setVolume, false),
     setVolumeDragging: setVolumeDragging,
-    setFixedVolume: guarded('A alteração do modo de volume', setFixedVolume, false),
-    toggleFavorite: guarded('A alteração dos favoritos', toggleFavorite, false),
+    setFixedVolume: guarded('Changing the volume mode', setFixedVolume, false),
+    toggleFavorite: guarded('Changing favourites', toggleFavorite, false),
     refreshFavorite: refreshFavorite,
     // publicos para os Ajustes forcarem revalidacao e para outros componentes
     // traduzirem erros sem repetir a string tecnica do protocolo

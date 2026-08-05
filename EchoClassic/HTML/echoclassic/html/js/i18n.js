@@ -1,26 +1,75 @@
 /* Camada de idioma da skin.
 
-   O texto da interface nasceu embutido em portugues dentro dos templates. Em
-   vez de reescrever 357 pontos de chamada -- cada um deles uma chance de
+   O texto da interface esta embutido em INGLES dentro dos templates. Em vez de
+   trocar 357 pontos de chamada por chaves -- cada um deles uma chance de
    quebrar um template em producao -- a traducao acontece num unico lugar: o
    template de cada componente e reescrito uma vez, no registro, antes de o Vue
    compila-lo.
 
-   A chave do dicionario e a propria frase em portugues. Isso da a propriedade
-   que importa aqui: se uma frase nao estiver no dicionario, ou se o idioma da
-   sessao for portugues, o texto original continua valendo. Nao existe estado
+   A chave do dicionario e a propria frase em ingles. Isso da a propriedade que
+   importa aqui: se uma frase nao estiver no dicionario, ou se o idioma
+   escolhido for o ingles, o texto original continua valendo. Nao existe estado
    em que a tela apareca vazia ou com uma chave crua. Traduzir passa a ser
    acrescentar linhas em strings.txt, sem tocar em JavaScript.
 
-   O dicionario chega pronto do servidor em LMS_STRINGS, montado pelo Perl a
-   partir de strings.txt no idioma da sessao do LMS. */
+   Os dicionarios chegam prontos do servidor em LMS_STRINGS_BY_LANG -- todos
+   eles, e nao so o do idioma da sessao do LMS. Quem escolhe e este arquivo,
+   porque a escolha vive nos Ajustes da skin e nao no servidor. */
 (function (global) {
   'use strict';
 
-  var MAP = (typeof LMS_STRINGS === 'object' && LMS_STRINGS) ? LMS_STRINGS : {};
-  var LANG = (typeof LMS_LANG === 'string' && LMS_LANG) ? LMS_LANG : 'PT';
+  var SOURCE = 'EN';
+  var STORE_KEY = 'echoclassic.lang.v1';
+
+  var BY_LANG = (typeof LMS_STRINGS_BY_LANG === 'object' && LMS_STRINGS_BY_LANG)
+    ? LMS_STRINGS_BY_LANG : {};
+  var NAMES = (typeof LMS_LANG_NAMES === 'object' && LMS_LANG_NAMES)
+    ? LMS_LANG_NAMES : {};
+  /* O idioma da sessao do LMS e so o palpite inicial. A escolha feita nos
+     Ajustes da skin vale mais: quem roda o servidor em portugues e quer a
+     interface em ingles nao tinha, ate aqui, nenhuma forma de dizer isso. */
+  var SESSION = (typeof LMS_LANG === 'string' && LMS_LANG) ? LMS_LANG : SOURCE;
+
+  function available(code) {
+    return code === SOURCE || Object.prototype.hasOwnProperty.call(BY_LANG, code);
+  }
+
+  function stored() {
+    try {
+      var v = global.localStorage && global.localStorage.getItem(STORE_KEY);
+      return v && available(v) ? v : null;
+    } catch (e) { return null; }
+  }
+
+  var LANG = stored() || (available(SESSION) ? SESSION : SOURCE);
+  var MAP = (LANG !== SOURCE && BY_LANG[LANG]) ? BY_LANG[LANG] : {};
   var ACTIVE = false;
   for (var k in MAP) { if (Object.prototype.hasOwnProperty.call(MAP, k)) { ACTIVE = true; break; } }
+
+  /* Os templates sao reescritos uma unica vez, no registro dos componentes.
+     Trocar de idioma no lugar deixaria em tela os componentes ja compilados com
+     o texto antigo, entao a troca guarda a escolha e recarrega -- que e o que
+     alguem espera de um seletor de idioma. */
+  function setLanguage(code) {
+    if (!available(code) || code === LANG) return false;
+    try { global.localStorage.setItem(STORE_KEY, code); }
+    catch (e) { return false; }
+    global.location.reload();
+    return true;
+  }
+
+  function languages() {
+    var codes = [];
+    for (var c in BY_LANG) {
+      if (Object.prototype.hasOwnProperty.call(BY_LANG, c)) codes.push(c);
+    }
+    codes.sort();
+    var out = [{ key: SOURCE, label: NAMES[SOURCE] || SOURCE }];
+    for (var i = 0; i < codes.length; i++) {
+      out.push({ key: codes[i], label: NAMES[codes[i]] || codes[i] });
+    }
+    return out;
+  }
 
   /* O texto no template quase nunca chega igual ao que esta em strings.txt:
      frase longa vem quebrada em varias linhas com recuo, e prefixo de frase
@@ -156,7 +205,10 @@
   global.LmsStr = {
     t: t,
     lang: LANG,
+    source: SOURCE,
     active: ACTIVE,
+    languages: languages,
+    setLanguage: setLanguage,
     translateTemplate: translateTemplate
   };
 }(window));

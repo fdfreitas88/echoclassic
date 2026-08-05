@@ -9,8 +9,8 @@ Vue.component('lms-detail', {
 <div class="detail">
   <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
   <div v-else-if="error" class="empty">
-    <div class="h">Não deu para abrir</div><div class="p">{{ error }}</div>
-    <button class="retry-command" @click="load">Tentar novamente</button>
+    <div class="h">Could not open</div><div class="p">{{ error }}</div>
+    <button class="retry-command" @click="load">Try again</button>
   </div>
 
   <template v-else-if="frame.kind === 'album'">
@@ -30,9 +30,9 @@ Vue.component('lms-detail', {
       <div class="name ell">{{ frame.label }}</div>
     </div>
 
-    <template v-if="ui.albumMode === 'faixas'">
+    <template v-if="ui.albumMode === 'tracks'">
       <lms-album-block v-for="a in albums" :key="'b' + a.id" :album="a"></lms-album-block>
-      <div v-if="!albums.length" class="empty"><div class="p">Nenhum álbum para este item.</div></div>
+      <div v-if="!albums.length" class="empty"><div class="p">No albums for this item.</div></div>
     </template>
 
     <template v-else>
@@ -47,7 +47,7 @@ Vue.component('lms-detail', {
 	          <span class="gsub ell">{{ editionLine(a) }}</span>
 	        </button>
       </div>
-      <div v-if="!albums.length" class="empty"><div class="p">Nenhum álbum para este item.</div></div>
+      <div v-if="!albums.length" class="empty"><div class="p">No albums for this item.</div></div>
     </template>
     <div v-if="listaTruncada" class="loading-more warning" role="status">
       Esta lista tem mais de 1.000 álbuns e esta tela mostra os 1.000 primeiros.
@@ -71,7 +71,7 @@ Vue.component('lms-detail', {
     /* No modo Albuns a pagina mostra so o album escolhido; no modo Faixas ela
        empilha a discografia inteira. */
     visibleBlocks: function () {
-      return this.ui.albumMode === 'faixas' ? this.blocks : this.blocks.slice(0, 1);
+      return this.ui.albumMode === 'tracks' ? this.blocks : this.blocks.slice(0, 1);
     }
   },
   watch: {
@@ -83,7 +83,7 @@ Vue.component('lms-detail', {
     markArtFailed: function (album) { this.$set(this.failedArt, album.id, true); },
     editionLine: function (album) {
       var parts = [];
-      if (album.editionCount > 1) parts.push('Edição ' + (album.year || 'sem ano'));
+      if (album.editionCount > 1) parts.push('Edition ' + (album.year || 'sem ano'));
       else if (album.year) parts.push(String(album.year));
       if (album.originalYear) parts.push('original ' + album.originalYear);
       if (!parts.length && album.artist) parts.push(album.artist);

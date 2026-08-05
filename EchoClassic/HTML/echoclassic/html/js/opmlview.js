@@ -12,8 +12,8 @@ Vue.component('lms-opml', {
 <div class="scroller">
   <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
   <div v-else-if="error" class="empty">
-    <div class="h">Não deu para abrir</div><div class="p">{{ error }}</div>
-    <button class="retry-command" @click="load">Tentar novamente</button>
+    <div class="h">Could not open</div><div class="p">{{ error }}</div>
+    <button class="retry-command" @click="load">Try again</button>
   </div>
   <template v-else-if="hasContent">
     <template v-for="(it, i) in items">
@@ -54,7 +54,7 @@ Vue.component('lms-opml', {
     <div class="h">{{ emptyTitle }}</div>
     <div class="p">{{ emptyMessage }}</div>
     <button v-if="root === 'favorites' && !frame" type="button" class="retry-command" @click="openMusic">
-      Abrir Minha Música
+      Open My Music
     </button>
   </div>
   <div v-if="truncated" class="loading-more warning" role="status">
@@ -68,9 +68,9 @@ Vue.component('lms-opml', {
   computed: {
     frame: function () { return LmsNav.top(this.tab); },
     rootLabel: function () {
-      if (this.root === 'radio') return 'Rádio';
+      if (this.root === 'radio') return 'Radio';
       if (this.root === 'apps') return 'Apps';
-      return 'Favoritos';
+      return 'Favourites';
     },
     /* O LMS devolve um placeholder do tipo `text` no lugar de uma lista vazia.
        Com items.length === 1 o ramo vazio nunca rodava e a tela mostrava o
@@ -83,7 +83,7 @@ Vue.component('lms-opml', {
       return f && f.term ? String(f.term) : '';
     },
     emptyTitle: function () {
-      if (this.searchTerm) return 'Nenhum resultado';
+      if (this.searchTerm) return 'No results';
       return this.frame ? this.frame.label : this.rootLabel;
     },
     emptyMessage: function () {
@@ -93,17 +93,17 @@ Vue.component('lms-opml', {
         return 'A busca por “' + this.searchTerm + '” não encontrou nada. ' +
           'Confira a grafia ou tente um termo mais curto.';
       }
-      if (this.frame) return 'Esta lista não tem itens no momento.';
+      if (this.frame) return 'This list has no items right now.';
       if (this.root === 'radio') {
-        return 'Nenhuma fonte de rádio está disponível. Ative um serviço de rádio nas configurações avançadas do LMS.';
+        return 'No radio source is available. Enable a radio service in the advanced LMS settings.';
       }
       /* O estado vazio de Apps tem de apontar para onde a solucao esta: os
          servicos aparecem aqui porque sao plugins do servidor, e quem nunca
          instalou nenhum nao tem como adivinhar isso. */
       if (this.root === 'apps') {
-        return 'Nenhum serviço está instalado. Instale um plugin de serviço, como o Qobuz, em Ajustes do servidor › Plugins.';
+        return 'No service is installed. Install a service plugin, such as Qobuz, in Server Settings > Plugins.';
       }
-      return 'Você ainda não adicionou favoritos. Use “Adicionar aos Favoritos” no menu de uma faixa ou estação.';
+      return 'You have not added any favourites yet. Use “Add to Favourites” in the menu of a track or station.';
     }
   },
   watch: {
@@ -122,11 +122,11 @@ Vue.component('lms-opml', {
     },
     searchTitle: function (it) {
       return this.isTuneUrl(it)
-        ? 'Informe o endereço completo do stream, incluindo http:// ou https://'
+        ? 'Enter the full stream address, including http:// or https://'
         : 'Buscar em ' + it.title;
     },
     searchAction: function (it) {
-      return this.isTuneUrl(it) ? 'Sintonizar' : 'Buscar';
+      return this.isTuneUrl(it) ? 'Sintonizar' : 'Search';
     },
     openMusic: function () {
       LmsUi.setTab('musica');
@@ -177,7 +177,7 @@ Vue.component('lms-opml', {
         return;
       }
       if (this.isTuneUrl(it) && !/^[a-z][a-z0-9+.-]*:\/\//i.test(term)) {
-        this.setFieldError(i, 'Informe um endereço completo, começando por http:// ou https://.');
+        this.setFieldError(i, 'Enter a full address starting with http:// or https://.');
         return;
       }
       this.clearFieldError(i);

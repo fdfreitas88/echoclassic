@@ -54,7 +54,7 @@
       catch (err) {
         // abort durante a leitura do corpo continua sendo timeout, nao parse
         throw new LmsError(cmd, err && err.name === 'AbortError' ? 'timeout' : 'parse',
-                           (err && err.message) || 'JSON inválido');
+                           (err && err.message) || 'invalid JSON');
       }
       if (body && body.error) throw new LmsError(cmd, 'lms', String(body.error));
       return (body && body.result) || {};
@@ -233,7 +233,7 @@
 	    if (scheme === 'qobuz') return 'Qobuz';
 	    if (/^(youtube|yt|ytmusic)$/.test(scheme)) return 'YouTube';
 	    if (remote || (scheme && scheme !== 'file')) return 'Streaming';
-	    return 'Biblioteca local';
+	    return 'Local library';
 	  }
 
 	  function uniqueBy(items, keyFn) {

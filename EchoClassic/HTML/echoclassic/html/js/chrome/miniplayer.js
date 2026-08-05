@@ -7,20 +7,20 @@ Vue.component('lms-miniplayer', {
   template: `
 <div class="mini" :class="{empty: !hasTrack, inactive: ui.full}">
   <div v-if="!ui.full && hasTrack" class="transport">
-	    <button type="button" class="mini-action mini-prev pointer" title="Anterior"
-	            aria-label="Faixa anterior" @click="prev">
+	    <button type="button" class="mini-action mini-prev pointer" title="Previous"
+	            aria-label="Previous track" @click="prev">
       <svg class="ic fill" viewBox="0 0 24 24"><path d="M11 12L20 6v12zM2 12l9-6v12z"/></svg>
     </button>
-	    <button type="button" class="mini-action pointer" :title="playing ? 'Pausar' : 'Tocar'"
-	            :aria-label="playing ? 'Pausar' : 'Tocar'"
+	    <button type="button" class="mini-action pointer" :title="playing ? 'Pause' : 'Play'"
+	            :aria-label="playing ? 'Pause' : 'Play'"
 	            @click="playing ? pause() : play()">
       <svg v-if="playing" class="ic fill" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
       <svg v-else class="ic fill" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg>
     </button>
-	    <button type="button" class="mini-action pointer" title="Parar" aria-label="Parar" @click="stop">
+	    <button type="button" class="mini-action pointer" title="Stop" aria-label="Stop" @click="stop">
       <svg class="ic fill" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
     </button>
-	    <button type="button" class="mini-action pointer" title="Próxima" aria-label="Próxima faixa" @click="next">
+	    <button type="button" class="mini-action pointer" title="Next" aria-label="Next track" @click="next">
       <svg class="ic fill" viewBox="0 0 24 24"><path d="M13 12L4 18V6zM22 12l-9 6V6z"/></svg>
     </button>
   </div>
@@ -31,24 +31,24 @@ Vue.component('lms-miniplayer', {
       <span v-else aria-hidden="true">♫</span>
     </span>
     <span class="mini-copy">
-      <span class="t ell">{{ hasTrack ? np.title : 'Nada tocando' }}</span>
+      <span class="t ell">{{ hasTrack ? np.title : 'Nothing playing' }}</span>
       <span class="s ell" v-if="hasTrack && (np.artist || np.album)">{{ subtitle }}</span>
       <span v-if="hasTrack && !np.live" class="mini-progress">
         <span class="mini-time">{{ elapsed }}</span>
         <span class="mini-gauge"><i :style="{width: progress + '%'}"></i></span>
         <span class="mini-time">-{{ remaining }}</span>
       </span>
-      <span v-else-if="hasTrack" class="mini-live">AO VIVO</span>
+      <span v-else-if="hasTrack" class="mini-live">LIVE</span>
       <span class="badges mini-badges" v-if="hasTrack && ui.showBadges && badges.length">
         <span v-for="b in badges" :key="b.text" class="badge" :class="{hi: b.hi}">{{ b.text }}</span>
       </span>
     </span>
   </button>
   <div v-if="!ui.full" class="r">
-    <button type="button" class="mini-action queuebtn pointer" title="Fila de reprodução"
-            aria-label="Fila de reprodução" @click="$emit('queue')">
+    <button type="button" class="mini-action queuebtn pointer" title="Playback queue"
+            aria-label="Playback queue" @click="$emit('queue')">
       <svg class="ic" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-      <span class="queue-label">Fila de reprodução</span>
+      <span class="queue-label">Playback queue</span>
     </button>
   </div>
 </div>`,
@@ -67,7 +67,7 @@ Vue.component('lms-miniplayer', {
       return this.hasTrack && this.store.mode !== 'stop';
     },
     openLabel: function () {
-      if (!this.hasTrack) return 'Nada tocando';
+      if (!this.hasTrack) return 'Nothing playing';
       return 'Abrir o player' + (this.np.title ? ': ' + this.np.title : '');
     },
     playing: function () { return this.store.mode === 'play'; },

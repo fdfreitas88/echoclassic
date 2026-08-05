@@ -7,8 +7,8 @@ Vue.component('lms-playlists', {
 <div class="scroller">
   <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
   <div v-else-if="error" class="empty">
-    <div class="h">Não deu para ler as playlists</div><div class="p">{{ error }}</div>
-    <button class="retry-command" @click="retry">Tentar novamente</button>
+    <div class="h">Could not read the playlists</div><div class="p">{{ error }}</div>
+    <button class="retry-command" @click="retry">Try again</button>
   </div>
 
   <template v-else-if="frame">
@@ -19,12 +19,12 @@ Vue.component('lms-playlists', {
                  aria-label="Nome da playlist" @keyup.enter="rename">
           <div v-else class="big ell">{{ frame.label }}</div>
         </div>
-        <div class="albsub">{{ tracks.length }} {{ tracks.length === 1 ? 'música' : 'músicas' }}<span v-if="total"> • {{ total }}</span></div>
+        <div class="albsub">{{ tracks.length }} {{ tracks.length === 1 ? 'song' : 'songs' }}<span v-if="total"> • {{ total }}</span></div>
         <div class="acts-row">
-          <button class="playlist-command pointer" @click="playAll">Tocar</button>
-          <button class="playlist-command pointer" @click="shuffle">Aleatório</button>
+          <button class="playlist-command pointer" @click="playAll">Play</button>
+          <button class="playlist-command pointer" @click="shuffle">Shuffle</button>
           <button class="playlist-command pointer"
-                  @click="toggleEdit">{{ editing ? 'Concluído' : 'Editar' }}</button>
+                  @click="toggleEdit">{{ editing ? 'Done' : 'Editar' }}</button>
           <button v-if="editing && selectedCount" class="playlist-command pointer"
                   @click="removeSelected">Remover {{ selectedCount }}</button>
 	          <button v-if="editing" class="playlist-command destructive pointer"
@@ -50,8 +50,8 @@ Vue.component('lms-playlists', {
 	            <button class="reorder-command" title="Mover para baixo"
 	                    :aria-label="'Mover ' + t.title + ' para baixo'" @click.stop="move(t, 1)">↓</button>
 	          </template>
-	          <button v-else class="more-command" title="Mais ações"
-	                  :aria-label="'Mais ações para ' + t.title"
+	          <button v-else class="more-command" title="More actions"
+	                  :aria-label="'More actions for ' + t.title"
 	                  @click.stop="actions(t, $event)">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle class="more-ring" cx="12" cy="12" r="8.5"/>
@@ -63,9 +63,9 @@ Vue.component('lms-playlists', {
         </div>
         <button v-if="tracksHasMore" class="load-more-command" :disabled="tracksLoadingMore"
                 @click="loadMoreTracks">
-          {{ tracksLoadingMore ? 'Carregando…' : 'Carregar mais músicas' }}
+          {{ tracksLoadingMore ? 'Carregando…' : 'Load more songs' }}
         </button>
-        <div v-if="!tracks.length" class="empty"><div class="p">Esta playlist ainda não tem músicas.</div></div>
+        <div v-if="!tracks.length" class="empty"><div class="p">This playlist has no songs yet.</div></div>
       </div>
     </div>
   </template>
@@ -76,13 +76,13 @@ Vue.component('lms-playlists', {
 	      <span class="favicon">
 	        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
 	      </span>
-	      <span class="ell"><span class="t ell">Nova playlist…</span></span>
+	      <span class="ell"><span class="t ell">New playlist…</span></span>
 	    </button>
     <div v-else class="opsearch">
       <input ref="newname" v-model="newName" placeholder="Nome da playlist"
              @keyup.enter="doCreate" @keyup.esc="creating = false">
       <button class="opsearch-action pointer" @click="doCreate">Criar</button>
-      <button class="opsearch-action secondary pointer" @click="creating = false">Cancelar</button>
+      <button class="opsearch-action secondary pointer" @click="creating = false">Cancel</button>
     </div>
 	    <div v-if="notice" class="optext">{{ notice }}</div>
 	    <div v-if="lists.length > 30" class="opsearch">
@@ -93,11 +93,11 @@ Vue.component('lms-playlists', {
 	    <button v-for="p in filteredLists" :key="p.id" type="button" class="row noart pointer"
 	            @click="open(p)">
 	      <span class="ell"><span class="t ell">{{ p.name }}</span></span>
-	      <span v-if="p.source && p.source !== 'Biblioteca local'" class="playlist-source">{{ p.source }}</span>
+	      <span v-if="p.source && p.source !== 'Local library'" class="playlist-source">{{ p.source }}</span>
 	      <svg class="ic chev" style="width:9px;height:15px" viewBox="0 0 9 15"><path d="M1 1l6.5 6.5L1 14"/></svg>
 	    </button>
 	    <div v-if="!filteredLists.length" class="optext">
-	      {{ lists.length ? 'Nenhuma playlist encontrada com esse filtro.' : 'Nenhuma playlist salva. Toque em “Nova playlist…” para criar a primeira.' }}
+	      {{ lists.length ? 'No playlist matches this filter.' : 'No saved playlists. Tap “New playlist…” to create the first one.' }}
 	    </div>
   </template>
 
@@ -106,9 +106,9 @@ Vue.component('lms-playlists', {
     <div class="confirm-back" @click="confirmDelete = false"></div>
     <div class="confirm-panel">
       <strong id="delete-playlist-title">Apagar “{{ frame.label }}”?</strong>
-      <span>Esta ação remove a playlist do LMS.</span>
+      <span>This removes the playlist from LMS.</span>
       <button class="destructive" @click="remove">Apagar playlist</button>
-      <button @click="confirmDelete = false">Cancelar</button>
+      <button @click="confirmDelete = false">Cancel</button>
     </div>
   </div>
 </div>`,
@@ -165,7 +165,10 @@ Vue.component('lms-playlists', {
       } catch (e) {
         var message = e && e.message ? e.message : String(e);
         this.error = message;
-        LmsUi.notify(label + ' não foi concluído. ' + message, 'error', 6500);
+        /* Mesma regra do store.js: frase montada por concatenacao nunca casa
+           inteira no dicionario, entao cada pedaco e traduzido sozinho. */
+        var tr = (window.LmsStr && LmsStr.t) || function (s) { return s; };
+        LmsUi.notify(tr(label) + ' ' + tr('failed.') + ' ' + message, 'error', 6500);
         return false;
       } finally {
         LmsUi.setBusy('');
@@ -178,7 +181,7 @@ Vue.component('lms-playlists', {
       await this.runOperation('Criando playlist…', async function () {
         var r = await LmsApi.createPlaylist(name);
         self.notice = r.existed
-          ? 'Já existia uma playlist com esse nome; ela foi reaproveitada.'
+          ? 'A playlist with that name already existed; it was reused.'
           : '';
         self.creating = false;
         self.newName = '';
@@ -233,7 +236,7 @@ Vue.component('lms-playlists', {
     removeSelected: async function () {
       var indices = Object.keys(this.selected).map(Number).sort(function (a, b) { return b - a; });
       var self = this;
-      await this.runOperation('Removendo músicas…', async function () {
+      await this.runOperation('Removing songs…', async function () {
         for (var i = 0; i < indices.length; i++) {
           await LmsApi.editPlaylist(self.frame.id, 'delete', { index: indices[i] });
         }

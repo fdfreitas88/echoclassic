@@ -32,9 +32,9 @@
   </main>
 
   <div v-if="store.initialized && !store.connected" class="connection-banner" role="alert">
-    <span>{{ store.lastError || 'Sem conexão com o player.' }}</span>
+    <span>{{ store.lastError || 'No connection to the player.' }}</span>
     <button :disabled="store.reconnecting" @click="reconnect">
-      {{ store.reconnecting ? 'Reconectando…' : 'Tentar novamente' }}
+      {{ store.reconnecting ? 'Reconectando…' : 'Try again' }}
     </button>
   </div>
   <div v-if="ui.busyMessage" class="operation-banner" role="status">{{ ui.busyMessage }}</div>

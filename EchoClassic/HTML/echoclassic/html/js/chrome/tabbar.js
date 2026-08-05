@@ -3,7 +3,7 @@
    to ship, and an icon font would drag in a dependency the skin does not need. */
 Vue.component('lms-tabbar', {
   template: `
-<div class="tabbar" role="tablist" aria-label="Navegação principal">
+<div class="tabbar" role="tablist" aria-label="Main navigation">
 	  <button v-for="t in tabs" :key="t.key" class="tab pointer" role="tab"
 	       :aria-selected="String(!ui.searching && ui.tab === t.key)"
 	       :class="{on: !ui.searching && ui.tab === t.key}" @click="pick(t.key)">

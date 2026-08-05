@@ -28,7 +28,10 @@ print('const LMS_SKIN_VERSION="'   . Plugins::EchoClassic::Plugin::jsLiteral($sk
 print('const LMS_PLAYER_HINT="'    . Plugins::EchoClassic::Plugin::jsLiteral($hint) . "\";\n");
 print('const LMS_ASSET_REVISION="' . Plugins::EchoClassic::Plugin::jsLiteral($rev)  . "\";\n");
 print('const LMS_LANG="' . Plugins::EchoClassic::Plugin->getLang() . "\";\n");
-print('const LMS_STRINGS=' . Plugins::EchoClassic::Plugin->getStringMapJson() . ";\n");
+# Todos os dicionarios, e nao so o da sessao do LMS: e o que permite trocar de
+# idioma dentro dos Ajustes da skin sem uma volta ao servidor.
+print('const LMS_STRINGS_BY_LANG=' . Plugins::EchoClassic::Plugin->getStringMapsJson() . ";\n");
+print('const LMS_LANG_NAMES=' . Plugins::EchoClassic::Plugin->getLanguageNamesJson() . ";\n");
 print("</script>\n");
 
 # Load order is dependency order: libraries, then the data layer, then the

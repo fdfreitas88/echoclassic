@@ -5,23 +5,23 @@ Vue.component('lms-search', {
   template: `
 <div class="search-body scroller">
   <div v-if="!query.trim()" class="empty">
-    <div class="h">Buscar na biblioteca</div>
-    <div class="p">Digite um artista, álbum ou faixa.</div>
+    <div class="h">Search the library</div>
+    <div class="p">Type an artist, album or track.</div>
   </div>
   <div v-else-if="loading && !total" class="empty"><div class="p">Buscando…</div></div>
   <div v-else-if="error" class="empty">
-    <div class="h">Não deu para buscar</div>
+    <div class="h">Search failed</div>
     <div class="p">{{ error }}</div>
-    <button class="retry-command" @click="run">Tentar novamente</button>
+    <button class="retry-command" @click="run">Try again</button>
   </div>
   <div v-else-if="!total" class="empty">
-    <div class="h">Nenhum resultado</div>
+    <div class="h">No results</div>
     <div class="p">Não encontramos “{{ query.trim() }}” na sua biblioteca.</div>
   </div>
   <template v-else>
     <div v-if="loading" class="search-refreshing" role="status" aria-live="polite">Buscando…</div>
 	    <section v-if="results.artists.length" class="search-group">
-	      <h2 class="search-heading">Artistas <span>{{ results.artists.length }}</span></h2>
+	      <h2 class="search-heading">Artists <span>{{ results.artists.length }}</span></h2>
 	      <button v-for="a in results.artists" :key="'ar' + a.id"
 	              type="button" class="row noart pointer search-result"
 	              @click="openArtist(a)">
@@ -32,7 +32,7 @@ Vue.component('lms-search', {
 	    </section>
 
 	    <section v-if="results.albums.length" class="search-group">
-	      <h2 class="search-heading">Álbuns <span>{{ results.albums.length }}</span></h2>
+	      <h2 class="search-heading">Albums <span>{{ results.albums.length }}</span></h2>
 	      <button v-for="a in results.albums" :key="'al' + a.id"
 	              type="button" class="row pointer search-result"
 	              @click="openAlbum(a)">
@@ -46,7 +46,7 @@ Vue.component('lms-search', {
 	    </section>
 
 	    <section v-if="results.tracks.length" class="search-group">
-	      <h2 class="search-heading">Faixas <span>{{ results.tracks.length }}</span></h2>
+	      <h2 class="search-heading">Tracks <span>{{ results.tracks.length }}</span></h2>
 	      <div v-for="t in results.tracks" :key="'tr' + t.id"
 	           class="row search-result" role="group" :aria-label="trackLabel(t)">
 	        <button type="button" class="row-main pointer" :aria-label="trackLabel(t)"
@@ -57,8 +57,8 @@ Vue.component('lms-search', {
 	            <span class="s ell">{{ trackSubtitle(t) }}</span>
 	          </span>
 	        </button>
-	        <button class="more-command" title="Mais ações"
-	                :aria-label="'Mais ações para ' + t.title"
+	        <button class="more-command" title="More actions"
+	                :aria-label="'More actions for ' + t.title"
 	                @click.stop="trackActions(t, $event)">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle class="more-ring" cx="12" cy="12" r="8.5"/>
@@ -150,7 +150,7 @@ Vue.component('lms-search', {
       } catch (e) {
         // texto em portugues; a string do protocolo fica no console (friendlyError)
         if (token === this.request) {
-          this.error = LmsStore.friendlyError(e, 'A busca não foi concluída.');
+          this.error = LmsStore.friendlyError(e, 'The search did not complete.');
         }
       }
       if (token === this.request) this.loading = false;
@@ -185,7 +185,7 @@ Vue.component('lms-search', {
     openTrack: function (t, event) {
       if (t.albumId == null) {
         this.trackActions(t, event);
-        LmsUi.notify('Esta faixa não pertence a um álbum. Use as ações para reproduzir ou adicionar à fila.');
+        LmsUi.notify('This track does not belong to an album. Use the actions to play it or add it to the queue.');
         return;
       }
       this.enterMusic('albuns', {

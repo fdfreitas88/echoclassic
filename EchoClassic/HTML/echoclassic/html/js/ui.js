@@ -6,40 +6,40 @@
   'use strict';
 
   var TABS = Object.freeze([
-    Object.freeze({ key: 'favoritos', label: 'Favoritos' }),
-    Object.freeze({ key: 'radio', label: 'Rádio' }),
+    Object.freeze({ key: 'favoritos', label: 'Favourites' }),
+    Object.freeze({ key: 'radio', label: 'Radio' }),
     Object.freeze({ key: 'apps', label: 'Apps' }),
     Object.freeze({ key: 'playlists', label: 'Playlists' }),
-    Object.freeze({ key: 'musica', label: 'Minha Música' }),
-    Object.freeze({ key: 'ajustes', label: 'Ajustes' })
+    Object.freeze({ key: 'musica', label: 'My Music' }),
+    Object.freeze({ key: 'ajustes', label: 'Settings' })
   ]);
 
   /* The four roots of Minha Musica, picked from the nav bar title like iOS 9. */
   var MUSIC_VIEWS = Object.freeze([
-    Object.freeze({ key: 'recentes', label: 'Recentes' }),
-    Object.freeze({ key: 'artistas', label: 'Artistas' }),
-    Object.freeze({ key: 'albuns', label: 'Álbuns' }),
-    Object.freeze({ key: 'generos', label: 'Gêneros' }),
-    Object.freeze({ key: 'anos', label: 'Anos' })
+    Object.freeze({ key: 'recentes', label: 'Recent' }),
+    Object.freeze({ key: 'artistas', label: 'Artists' }),
+    Object.freeze({ key: 'albuns', label: 'Albums' }),
+    Object.freeze({ key: 'generos', label: 'Genres' }),
+    Object.freeze({ key: 'anos', label: 'Years' })
   ]);
 
   var COLOR_SCHEMES = Object.freeze([
-    Object.freeze({ key: 'blue', label: 'Azul Sistema' }),
-    Object.freeze({ key: 'teal', label: 'Teal Atlântico' }),
-    Object.freeze({ key: 'crimson', label: 'Carmim Editorial' }),
-    Object.freeze({ key: 'indigo', label: 'Índigo Studio' }),
-    Object.freeze({ key: 'amber', label: 'Âmbar Hi-Fi' })
+    Object.freeze({ key: 'blue', label: 'System Blue' }),
+    Object.freeze({ key: 'teal', label: 'Atlantic Teal' }),
+    Object.freeze({ key: 'crimson', label: 'Editorial Crimson' }),
+    Object.freeze({ key: 'indigo', label: 'Studio Indigo' }),
+    Object.freeze({ key: 'amber', label: 'Hi-Fi Amber' })
   ]);
 
   var FONT_OPTIONS = Object.freeze([
-    Object.freeze({ key: 'system', label: 'Sistema (padrão)' }),
+    Object.freeze({ key: 'system', label: 'System (default)' }),
     Object.freeze({ key: 'helvetica', label: 'Helvetica' }),
     Object.freeze({ key: 'chicago', label: 'Chicago' })
   ]);
 
   var PLAYER_PRESENTATIONS = Object.freeze([
-    Object.freeze({ key: 'adaptive', label: 'Adaptável' }),
-    Object.freeze({ key: 'fullscreen', label: 'Tela cheia' })
+    Object.freeze({ key: 'adaptive', label: 'Adaptive' }),
+    Object.freeze({ key: 'fullscreen', label: 'Full screen' })
   ]);
 
   var PLAYER_POSITIONS = Object.freeze([
@@ -49,17 +49,17 @@
   ]);
 
   var GAUGE_STYLES = Object.freeze([
-    Object.freeze({ key: 'flat', label: 'Plano' }),
-    Object.freeze({ key: 'classic', label: 'Clássico' })
+    Object.freeze({ key: 'flat', label: 'Flat' }),
+    Object.freeze({ key: 'classic', label: 'Classic' })
   ]);
 
   var GAUGE_COLORS = Object.freeze([
-    Object.freeze({ key: 'theme', label: 'Acompanhar tema' }),
-    Object.freeze({ key: 'blue', label: 'Azul Sistema' }),
-    Object.freeze({ key: 'teal', label: 'Teal Atlântico' }),
-    Object.freeze({ key: 'crimson', label: 'Carmim Editorial' }),
-    Object.freeze({ key: 'indigo', label: 'Índigo Studio' }),
-    Object.freeze({ key: 'amber', label: 'Âmbar Hi-Fi' })
+    Object.freeze({ key: 'theme', label: 'Follow theme' }),
+    Object.freeze({ key: 'blue', label: 'System Blue' }),
+    Object.freeze({ key: 'teal', label: 'Atlantic Teal' }),
+    Object.freeze({ key: 'crimson', label: 'Editorial Crimson' }),
+    Object.freeze({ key: 'indigo', label: 'Studio Indigo' }),
+    Object.freeze({ key: 'amber', label: 'Hi-Fi Amber' })
   ]);
 
   function isColorScheme(key) {
@@ -322,7 +322,7 @@
   var state = Vue.observable({
 	    tab: isTab(saved.tab) ? saved.tab : 'musica',
     musicView: initialMusicView,
-    albumMode: saved.albumMode || 'albuns',   // 'albuns' = grade de capas | 'faixas' = pilha completa
+    albumMode: saved.albumMode || 'albuns',   // 'albuns' = grade de capas | 'tracks' = pilha completa
     dark: !!saved.dark,
     searching: false,
     query: '',
@@ -766,8 +766,8 @@
   function filterTrigger() { return filterTriggerEl; }
 
   var ALBUM_MODES = Object.freeze([
-    Object.freeze({ key: 'albuns', label: 'Álbuns' }),
-    Object.freeze({ key: 'faixas', label: 'Faixas' })
+    Object.freeze({ key: 'albuns', label: 'Albums' }),
+    Object.freeze({ key: 'tracks', label: 'Tracks' })
   ]);
 
   function setAlbumMode(key) {
