@@ -8,6 +8,32 @@ acontecendo na interface rodando; **[código]** significa que a cadeia foi lida 
 fonte mas o estado não foi reproduzido na tela. A distinção importa para quem for
 decidir, daqui a seis meses, se pode confiar na correção.
 
+## [3.2.3] — 2026-08-04
+
+Code review on the submission to the official LMS plugin repository
+([LMS-Community/lms-plugin-repository#80](https://github.com/LMS-Community/lms-plugin-repository/pull/80))
+pointed at a guard in `initPlugin` written against a constant that does not
+exist. Nothing in the interface changes.
+
+### Fixed
+
+- **`initPlugin` guarded the settings page with `main::WEBPAGES`, which is not a
+  thing.** There is no such constant anywhere in slimserver — the only near match
+  in the source is the `webPages` method name. The condition read
+  `!defined &main::WEBPAGES || main::WEBPAGES()`, whose left half was therefore
+  always true, so the guard never decided anything, and the comment above it
+  claimed a failure mode that was never observed. Replaced with `main::WEBUI`,
+  the real compile-time constant (`slimserver.pl`: 0 when the server is started
+  with `--noweb`; 0 in the scanner process). **[code]**
+- **With no web server, the plugin now stops instead of registering into one.**
+  Everything it registers is a web page — the skin route and the settings page —
+  so `initPlugin` returns early when `main::WEBUI` is false rather than reaching
+  `Slim::Web::Pages->addPageFunction`. Same shape `Slim::Plugin::Base` already
+  uses around `webPages`. Verified by compiling `Plugin.pm` against stubs with
+  the constant forced both ways: at 1 the settings page registers and
+  `initPlugin` returns 1; at 0 it returns without touching `Slim::Web::*`.
+  `Slim::Utils::PluginManager` discards the return value either way. **[code]**
+
 ## [3.2.2] — 2026-08-04
 
 Prepares the plugin for the official LMS repository, and closes what the README

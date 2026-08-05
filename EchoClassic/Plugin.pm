@@ -21,6 +21,14 @@ my $URL_RE = qr/^echoclassic(\/.*)?$/;
 sub initPlugin {
 	my $class = shift;
 
+	# main::WEBUI is a compile-time constant: 0 when the server is started with
+	# --noweb, and 0 in the scanner process. Everything this plugin registers is
+	# a web page -- the skin itself and its settings page -- so with no web
+	# server there is nothing to register and nothing to register it with. Stop
+	# before touching Slim::Web::*. Slim::Utils::PluginManager ignores the
+	# return value; it is written out for the reader.
+	return 0 unless main::WEBUI;
+
 	$class->SUPER::initPlugin(@_);
 
 	my $serve = sub {
@@ -30,14 +38,8 @@ sub initPlugin {
 
 	Slim::Web::Pages->addPageFunction($URL_RE, $serve);
 
-	# main::WEBPAGES is a compile-time constant in some LMS builds and simply
-	# absent in others -- 9.1.1 does not define it, and calling it unguarded
-	# killed initPlugin before the settings page could register. Absent means
-	# "no opinion", and a web skin always wants its settings page.
-	if (!defined &main::WEBPAGES || main::WEBPAGES()) {
-		require Plugins::EchoClassic::Settings;
-		Plugins::EchoClassic::Settings->new();
-	}
+	require Plugins::EchoClassic::Settings;
+	Plugins::EchoClassic::Settings->new();
 
 	return 1;
 }
