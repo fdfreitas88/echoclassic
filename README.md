@@ -6,6 +6,7 @@ Echo Classic shows the **native sample rate and bit depth of what actually reach
 
 - Vue 2, no build step — the skin is plain files the server serves directly
 - Light and dark themes, five accent schemes, three type choices
+- English and Portuguese, switchable in the skin's own settings
 - Split view on wide screens, single column on phones
 - WCAG 2.1 AA contrast, visible keyboard focus, no motion when the system asks for none
 
@@ -65,7 +66,7 @@ EchoClassic/            the plugin, exactly as it is installed
   HTML/EN/plugins/...   the server-side settings page
   Plugin.pm             page registration, asset revision, player hint
   Settings.pm           server-side preferences
-docs/                   UX audit and remediation plan (Portuguese)
+docs/                   notes on getting listed in the official repository
 tools/                  validation and local install scripts
 ```
 
@@ -97,9 +98,12 @@ Current version: **3.2.5**.
 
 Filtering, sorting, grouping and playback preference are four separate states,
 reachable from one adaptive panel. Filters combine, grouping adds section headers
-without dropping rows, and the media index survives a page reload. Interface
-strings are translated through `strings.txt`, so the skin follows the language of
-the LMS session.
+without dropping rows, and the media index survives a page reload.
+
+The interface is written in English; other languages come from `strings.txt`,
+keyed by the English phrase. Pick one under *Settings → Language*. The LMS
+session language is the initial guess, and the choice you make there outranks
+it — so a server running in one language can still show the skin in another.
 
 See [CHANGELOG.md](CHANGELOG.md) for what was verified on a real server, what was
 only read in the code, and what is still untested.
