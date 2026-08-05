@@ -1,20 +1,19 @@
-/* Camada de idioma da skin.
+/* The skin's language layer.
 
-   O texto da interface esta embutido em INGLES dentro dos templates. Em vez de
-   trocar 357 pontos de chamada por chaves -- cada um deles uma chance de
-   quebrar um template em producao -- a traducao acontece num unico lugar: o
-   template de cada componente e reescrito uma vez, no registro, antes de o Vue
-   compila-lo.
+   The interface text is embedded in ENGLISH inside the templates. Rather than
+   replace 357 call sites with keys -- each one a chance to break a template in
+   production -- translation happens in a single place: every component's
+   template is rewritten once, at registration, before Vue compiles it.
 
-   A chave do dicionario e a propria frase em ingles. Isso da a propriedade que
-   importa aqui: se uma frase nao estiver no dicionario, ou se o idioma
-   escolhido for o ingles, o texto original continua valendo. Nao existe estado
-   em que a tela apareca vazia ou com uma chave crua. Traduzir passa a ser
-   acrescentar linhas em strings.txt, sem tocar em JavaScript.
+   The dictionary is keyed by the English phrase itself. That gives the property
+   which matters here: if a phrase is missing from the dictionary, or the chosen
+   language is English, the original text still stands. There is no state in
+   which the screen renders empty or shows a raw key. Translating becomes adding
+   lines to strings.txt, without touching any JavaScript.
 
-   Os dicionarios chegam prontos do servidor em LMS_STRINGS_BY_LANG -- todos
-   eles, e nao so o do idioma da sessao do LMS. Quem escolhe e este arquivo,
-   porque a escolha vive nos Ajustes da skin e nao no servidor. */
+   The dictionaries arrive ready-made from the server in LMS_STRINGS_BY_LANG --
+   all of them, not just the LMS session's. This file does the choosing, because
+   the choice lives in the skin's Settings and not on the server. */
 (function (global) {
   'use strict';
 
@@ -25,9 +24,9 @@
     ? LMS_STRINGS_BY_LANG : {};
   var NAMES = (typeof LMS_LANG_NAMES === 'object' && LMS_LANG_NAMES)
     ? LMS_LANG_NAMES : {};
-  /* O idioma da sessao do LMS e so o palpite inicial. A escolha feita nos
-     Ajustes da skin vale mais: quem roda o servidor em portugues e quer a
-     interface em ingles nao tinha, ate aqui, nenhuma forma de dizer isso. */
+  /* The LMS session language is only the opening guess. A choice made in the
+     skin's Settings outranks it: someone running the server in Portuguese who
+     wants the interface in English had, until now, no way to say so. */
   var SESSION = (typeof LMS_LANG === 'string' && LMS_LANG) ? LMS_LANG : SOURCE;
 
   function available(code) {
@@ -46,10 +45,10 @@
   var ACTIVE = false;
   for (var k in MAP) { if (Object.prototype.hasOwnProperty.call(MAP, k)) { ACTIVE = true; break; } }
 
-  /* Os templates sao reescritos uma unica vez, no registro dos componentes.
-     Trocar de idioma no lugar deixaria em tela os componentes ja compilados com
-     o texto antigo, entao a troca guarda a escolha e recarrega -- que e o que
-     alguem espera de um seletor de idioma. */
+  /* Templates are rewritten exactly once, when the components register.
+     Switching language in place would leave the already-compiled components on
+     screen with the old text, so the switch stores the choice and reloads --
+     which is what anyone expects from a language picker. */
   function setLanguage(code) {
     if (!available(code) || code === LANG) return false;
     try { global.localStorage.setItem(STORE_KEY, code); }
@@ -71,11 +70,11 @@
     return out;
   }
 
-  /* O texto no template quase nunca chega igual ao que esta em strings.txt:
-     frase longa vem quebrada em varias linhas com recuo, e prefixo de frase
-     composta vem colado num dois-pontos ("Ano desta edicao: {{ ano }}"). Um
-     indice com o espacamento normalizado resolve os dois casos sem obrigar o
-     tradutor a reproduzir a indentacao do codigo. */
+  /* Template text almost never arrives identical to what is in strings.txt: a
+     long phrase comes wrapped across several indented lines, and the prefix of
+     a composed phrase comes glued to a colon ("Year of this edition: {{ y }}").
+     An index with normalised whitespace handles both cases without forcing the
+     translator to reproduce the code's indentation. */
   function norm(s) { return s.replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, ''); }
 
   var NORM = {};
@@ -87,42 +86,43 @@
     if (MAP[raw]) return MAP[raw];
     var s = norm(raw);
     if (NORM[s]) return NORM[s];
-    /* "Ano desta edicao:" acha "Ano desta edicao" e devolve o dois-pontos. */
+    /* "Year of this edition:" finds "Year of this edition" and puts the colon
+       back. */
     var m = s.match(/^(.+?)\s*:$/);
     if (m && NORM[m[1]]) return NORM[m[1]] + ':';
     return null;
   }
 
-  /* Devolve o valor original -- nao uma copia em texto -- quando nao ha o que
-     traduzir. Isso importa porque t() passa a envolver toda interpolacao dos
-     templates, e por ali circulam numeros, nulos e objetos que nao podem virar
-     string no caminho. */
+  /* Returns the original value -- not a stringified copy -- when there is
+     nothing to translate. That matters because t() now wraps every template
+     interpolation, and numbers, nulls and objects travel through there and must
+     not be turned into strings on the way. */
   function t(text) {
     if (!ACTIVE || typeof text !== 'string' || !text) return text;
     var hit = lookup(text);
     if (!hit) return text;
-    /* Espaco nas pontas e comum em fragmentos concatenados ("Acoes para ").
-       Traduz o miolo e devolve o espacamento intacto. */
+    /* Leading and trailing space is common in concatenated fragments ("More
+       actions for "). Translate the core and hand the spacing back intact. */
     var trimmed = text.replace(/^\s+|\s+$/g, '');
     if (trimmed !== text) return text.replace(trimmed, hit);
     return hit;
   }
 
-  /* Atributos cujo valor e texto lido por pessoa. `title` e `placeholder`
-     aparecem na tela; `aria-label` vai para o leitor de tela. Os tres precisam
-     acompanhar o idioma. */
+  /* Attributes whose value is text a person reads. `title` and `placeholder`
+     show on screen; `aria-label` goes to the screen reader. All three have to
+     follow the language. */
   var ATTRS = /\s(aria-label|title|placeholder|aria-valuetext|aria-description)="([^"]*)"/g;
 
   function translateTemplate(tpl) {
     if (!ACTIVE || typeof tpl !== 'string') return tpl;
 
-    /* Texto entre tags. Um mesmo no costuma misturar texto fixo e interpolacao
-       ("Servidor LMS {{ version }}"), entao ele e quebrado nas chaves duplas: os
-       pedacos fixos passam pelo dicionario e cada expressao e envolvida em
-       $t(), que resolve em tempo de execucao o que so existe no JavaScript --
-       rotulos de aba, mensagens montadas por concatenacao, rotulos calculados.
-       Expressao com filtro do Vue ({{ x | f }}) fica intacta: envolve-la
-       mudaria a ordem de aplicacao do filtro. */
+    /* Text between tags. One node often mixes fixed text and interpolation
+       ("LMS Server {{ version }}"), so it is split on the double braces: the
+       fixed pieces go through the dictionary and each expression is wrapped in
+       $t(), which resolves at runtime what only exists in JavaScript -- tab
+       labels, messages built by concatenation, computed labels. An expression
+       carrying a Vue filter ({{ x | f }}) is left alone: wrapping it would
+       change the order the filter applies in. */
     tpl = tpl.replace(/>([^<>]+)</g, function (all, inner) {
       if (!/[A-Za-zÀ-ÿ]/.test(inner)) return all;
 
@@ -137,10 +137,10 @@
         function (piece, expr, literal) {
           if (expr !== undefined) {
             var e = expr.replace(/^\s+|\s+$/g, '');
-            /* Filtro do Vue e um | isolado. O teste anterior tratava o
-               segundo cano de um || como filtro, e por isso toda expressao do
-               tipo `x || 'texto padrao'` escapava da traducao -- justamente o
-               padrao usado nos campos que caem em "nao informado". */
+            /* A Vue filter is a lone |. The previous test treated the second
+               pipe of a || as a filter, so every expression shaped like
+               `x || 'default text'` escaped translation -- exactly the pattern
+               used by the fields that fall back to "not available". */
             if (!e || /(^|[^|])\|([^|]|$)/.test(e) || e.indexOf('$t(') === 0) return piece;
             return '{{ $t(' + e + ') }}';
           }
@@ -153,8 +153,8 @@
       return '>' + out + '<';
     });
 
-    /* Atributos estaticos. Os dinamicos (:title, :aria-label) carregam
-       expressao JavaScript e sao resolvidos em tempo de execucao pelo t(). */
+    /* Static attributes. The dynamic ones (:title, :aria-label) carry a
+       JavaScript expression and are resolved at runtime by t(). */
     tpl = tpl.replace(ATTRS, function (all, attr, value) {
       var hit = lookup(value);
       return hit ? ' ' + attr + '="' + hit.replace(/"/g, '&quot;') + '"' : all;
@@ -163,11 +163,11 @@
     return tpl;
   }
 
-  /* O envelope so existe se houver traducao a fazer. Em portugues a skin roda
-     exatamente como rodava antes desta camada existir. */
+  /* The wrapper only exists when there is translating to do. In English the
+     skin runs exactly as it did before this layer existed. */
   if (ACTIVE && global.Vue && typeof global.Vue.component === 'function') {
-    /* $t precisa existir antes do primeiro render: e ele que os templates
-       reescritos chamam em cada interpolacao. */
+    /* $t has to exist before the first render: it is what the rewritten
+       templates call on every interpolation. */
     global.Vue.prototype.$t = t;
     var original = global.Vue.component.bind(global.Vue);
     global.Vue.component = function (name, definition) {
@@ -178,10 +178,10 @@
     };
   }
 
-  /* As notificacoes nao passam por template: sao montadas em JavaScript e
-     entregues ao LmsUi.notify. Envolver a funcao uma vez cobre todas elas sem
-     tocar em nenhum ponto de chamada. O envelope so e instalado depois que
-     ui.js registrou a funcao, por isso o adiamento. */
+  /* Notifications do not go through a template: they are built in JavaScript
+     and handed to LmsUi.notify. Wrapping that function once covers all of them
+     without touching a single call site. The wrapper is only installed after
+     ui.js has registered the function, hence the deferral. */
   function wrapNotify() {
     if (!ACTIVE || !global.LmsUi || typeof global.LmsUi.notify !== 'function') return;
     if (global.LmsUi.notify.__i18n) return;
