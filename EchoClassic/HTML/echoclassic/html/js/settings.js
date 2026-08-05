@@ -221,7 +221,7 @@ Vue.component('lms-settings', {
         <span>{{ mode.label }}</span>
         <small>{{ mode.key === 'adaptive'
           ? 'Column on wide screens; overlay on compact ones'
-          : 'Sempre ocupa toda a tela' }}</small>
+          : 'Always fills the whole screen' }}</small>
       </span>
       <span class="font-option-check" aria-hidden="true"></span>
     </button>

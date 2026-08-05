@@ -1719,3 +1719,55 @@ ECHOCLASSIC_UI_EDIT
 ECHOCLASSIC_UI_CREATE
 	EN	Create
 	PT	Criar
+
+ECHOCLASSIC_UI_CHANGING_TRACK
+	EN	Changing track
+	PT	A troca de faixa
+
+ECHOCLASSIC_UI_CHANGING_PLAYER
+	EN	Changing player
+	PT	A troca de player
+
+ECHOCLASSIC_UI_PREVIOUS_TRACK_LABEL
+	EN	The previous track
+	PT	A faixa anterior
+
+ECHOCLASSIC_UI_SEEKING
+	EN	Seeking
+	PT	O deslocamento na faixa
+
+ECHOCLASSIC_UI_VOLUME_CHANGE
+	EN	The volume change
+	PT	O ajuste de volume
+
+ECHOCLASSIC_UI_STOPPING
+	EN	Stopping
+	PT	A parada
+
+ECHOCLASSIC_UI_PAUSING
+	EN	Pausing
+	PT	A pausa
+
+ECHOCLASSIC_UI_ADD_TO_FAVOURITES_CAP
+	EN	Add to Favourites
+	PT	Adicionar aos Favoritos
+
+ECHOCLASSIC_UI_ADD_TO_FAVOURITES
+	EN	Add to favourites
+	PT	Adicionar aos favoritos
+
+ECHOCLASSIC_UI_FILE_SECTION
+	EN	File
+	PT	Arquivo
+
+ECHOCLASSIC_UI_DEFAULT_TAG
+	EN	 · default
+	PT	 · padrão
+
+ECHOCLASSIC_UI_REMOVE
+	EN	Remove
+	PT	Remover
+
+ECHOCLASSIC_UI_FULLSCREEN_DESC
+	EN	Always fills the whole screen
+	PT	Sempre ocupa toda a tela

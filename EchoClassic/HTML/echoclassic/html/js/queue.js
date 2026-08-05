@@ -63,7 +63,7 @@ Vue.component('lms-queue', {
                   :title="'Move ' + t.title + ' down'" :aria-label="'Move ' + t.title + ' down'"
                   @click.stop="move(t, 1)">↓</button>
         </span>
-        <button type="button" class="drag pointer" title="Remover"
+        <button type="button" class="drag pointer" title="Remove"
                 :aria-label="'Remove ' + t.title + ' from the queue'" @click.stop="remove(t)">
           <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>

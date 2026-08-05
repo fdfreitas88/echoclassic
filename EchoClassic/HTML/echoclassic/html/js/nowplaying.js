@@ -215,7 +215,7 @@ Vue.component('lms-nowplaying', {
       return this.store.trackInfo ? this.store.trackInfo.playCount || 0 : 0;
     },
     favoriteLabel: function () {
-      return this.store.npFavorite ? 'Remove from favourites' : 'Adicionar aos favoritos';
+      return this.store.npFavorite ? 'Remove from favourites' : 'Add to favourites';
     },
     /* Um valor fora de 0..2 vindo do servidor deixaria o botao sem texto. */
     shuffleLabel: function () {

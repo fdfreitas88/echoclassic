@@ -147,7 +147,7 @@
         <div v-for="v in ui.views" :key="v.id" class="filter-view-row">
           <button type="button" class="filter-option filter-view-name"
                   :class="{on: ui.defaultView === v.id}" @click="loadView(v)">
-            {{ v.name }}<span v-if="ui.defaultView === v.id" class="filter-view-tag"> · padrão</span>
+            {{ v.name }}<span v-if="ui.defaultView === v.id" class="filter-view-tag"> · default</span>
           </button>
           <button type="button" class="filter-chip-clear"
                   :aria-label="'Set ' + v.name + ' as default'"

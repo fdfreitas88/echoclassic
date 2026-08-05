@@ -40,7 +40,7 @@
       <div v-if="!playlists.length" class="sheet-note">No editable playlists.</div>
     </div>
     <button v-if="item.url" @click="favorite">
-      {{ favoriteExists ? 'Remove from Favourites' : 'Adicionar aos Favoritos' }}
+      {{ favoriteExists ? 'Remove from Favourites' : 'Add to Favourites' }}
     </button>
     <button @click="pin">{{ pinned ? 'Remove from pinned items' : 'Fixar no Echo Classic' }}</button>
     <button v-if="item.kind === 'track' || item.type === 'track'" @click="info">Credits and information</button>
@@ -276,7 +276,7 @@
         <div class="srow">Plays <span class="v">{{ info.playCount || 0 }}</span></div>
         <div v-if="info.genre" class="srow">Genre <span class="v">{{ info.genre }}</span></div>
       </div>
-      <div class="sgh">Arquivo</div>
+      <div class="sgh">File</div>
       <div class="sgroup">
         <div class="srow">Format <span class="v">{{ info.format || '—' }}</span></div>
         <div class="srow">Resolution <span class="v">{{ resolution }}</span></div>
