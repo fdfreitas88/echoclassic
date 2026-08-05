@@ -8,6 +8,78 @@ acontecendo na interface rodando; **[código]** significa que a cadeia foi lida 
 fonte mas o estado não foi reproduzido na tela. A distinção importa para quem for
 decidir, daqui a seis meses, se pode confiar na correção.
 
+## [3.2.4] — 2026-08-05
+
+An audit of `Plugin.pm` after the 3.2.3 review. The failure policy of the file
+was already right — nothing that runs during a page render may die, because a
+die inside `[% PERL %]` renders an empty page with HTTP 200 — but every one of
+those fallbacks was taken in silence, and `Slim::Utils::Log` was imported and
+never used. Nothing in the interface changes.
+
+### Added
+
+- **A log category, `plugin.echoclassic`**, and a message on every fallback path.
+  The two failures a user actually reports — "the interface is in Portuguese on
+  an English server" and "my browser still runs last week's JavaScript" — were
+  the two that left no trace anywhere. **[code]**
+- **`use warnings`**, absent since the file was written. **[code]**
+
+### Fixed
+
+- **`jsLiteral` did not escape U+2028 or U+2029.** They terminate a string
+  literal in ES5-era parsers exactly as a newline does, so one of them in
+  `strings.txt` turns the injected dictionary into a syntax error and the page
+  renders blank. The byte-level read of `strings.txt` did not protect against
+  it: the UTF-8 bytes went out and the browser decoded them back. Escaped at
+  both byte and character level. `<!--` is escaped too, for the same reason `</`
+  already was. Not switched to `JSON::XS`, though LMS ships it — the map holds
+  raw bytes on purpose, and `encode_json` would encode them a second time.
+  **[code]**
+- **`getLmsVersion` returned an empty string from the branch meant to prevent
+  that.** `$::VERSION` of `v9.1.1` or `unknown` was stripped to nothing by the
+  substitution and the `0.0.0` fallback never applied, because it only covered
+  falsy input. Now: `v9.1.1` → `0.0.0`. **[code]**
+- **`getAssetRevision` could not tell "walked the tree and found nothing" from
+  "could not read the tree".** An unreadable directory fell back to the version
+  string, so asset URLs stopped changing between deploys — reinstating exactly
+  the week-long `Cache-Control: max-age=604800` this function exists to defeat,
+  with no signal anywhere. The two cases are now distinct and the second one
+  logs. `(stat)[9] || 0` also conflated a failed stat with a genuine mtime of 0;
+  now tested with `defined`. **[code]**
+- **The asset walk had no visited set**, so a directory symlinked back to an
+  ancestor was walked repeatedly — bounded only by the OS symlink-depth limit,
+  and not bounded at all by a cycle that does not involve a symlink. Now keyed
+  on device and inode. **[code]**
+- **`filltemplatefile` was the one render path with no `eval`**, in a file whose
+  every other render path carries a comment explaining why dying there is fatal.
+  A template error escaped into the HTTP handler; it now logs and returns an
+  empty scalar ref, the same shape `filltemplatefile` returns. **[code]**
+- **A broken `Settings.pm` took the whole plugin down** after the skin route was
+  already registered, leaving it half-initialized. The settings registration is
+  now isolated: the skin serves either way and the failure is logged. **[code]**
+- **`getPlayerHint` was nondeterministic with more than one player connected.**
+  `clients()` returns them in hash order, so reloading the page could hand the
+  interface a different player each time. Sorted by id. **[code]**
+- **A UTF-8 BOM on the first line of `strings.txt`** rode along on the first key,
+  stopped it matching `ECHOCLASSIC_UI_`, and dropped that entry without a word.
+  Stripped. **[code]**
+- **Two string keys sharing the same Portuguese text collided silently** — the
+  map is keyed by the PT phrase, so the later one won and one translation simply
+  stopped appearing. It now warns, naming both keys. **[code]**
+
+### Changed
+
+- **`getAssetRevision` is memoised for 5 seconds** and **`getStringMap` caches on
+  the mtime of `strings.txt`**. `index.html` calls `getAssetRevision` twice per
+  render, so every page load walked the asset tree twice and reparsed 350
+  dictionary entries — blocking I/O inside the LMS event loop, which on a plugin
+  directory living on a network share is a network round trip per file. The
+  mtime key preserves the property that a translator edits `strings.txt` and
+  reloads the page without restarting the server. **[code]**
+- `Slim::Web::Pages` and `Slim::Web::HTTP` are now `require`d in the branch that
+  uses them instead of being assumed loaded, and the unused `qw(string)` import
+  is gone. **[code]**
+
 ## [3.2.3] — 2026-08-04
 
 Code review on the submission to the official LMS plugin repository
