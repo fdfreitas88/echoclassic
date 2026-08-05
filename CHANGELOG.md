@@ -13,6 +13,62 @@ language at the time. They are left as they were: they describe releases that
 were already published under those notes, and rewriting them would misreport
 what was announced.
 
+## [3.2.5] — 2026-08-05
+
+English becomes the language the interface is written in, Portuguese becomes a
+choice, and the sort control stops cutting its own labels in half.
+
+### Added
+
+- **A language picker, in the skin's own Settings.** There was none: the
+  language came only from the LMS session, so a server set to Portuguese meant
+  a Portuguese interface and nothing inside Echo Classic could change it. The
+  choice is stored per browser and outranks the server; the server language is
+  now only the opening guess. Every dictionary is sent to the page, so
+  switching needs no round trip. Verified on LMS 9.1.1: 428 Portuguese entries,
+  `{"EN":"English","PT":"Português"}`, empty map for English. **[live]**
+- **The sort control is an icon that opens a suspended menu.** Arrow keys move
+  between options and wrap, Escape closes, focus starts on the current choice
+  and returns to the icon, and the menu carries `role="menu"` semantics — all
+  of which the native `<select>` provided for free and a popover has to earn.
+  **[live]**
+- **`tools/check-ui-language.js`**, a gate over what a user can actually read:
+  template text, human-readable attributes, and prose string literals. It
+  checks against the dictionary itself rather than a word list, so a phrase is
+  caught whether or not it carries an accent. **[code]**
+
+### Changed
+
+- **English is the source language.** `strings.txt` is keyed by the English
+  phrase; Portuguese sits beside it like any other translation. The translation
+  layer never cared which language was embedded in the templates — only the
+  choice of key tied the skin to Portuguese. Around 700 interface strings moved
+  across, with the Portuguese preserved as entries. **[live]**
+- **Portuguese identifiers and persisted state keys are English**: `'ajustes'`,
+  `'favoritos'`, `'musica'` and the browse roots. Nothing was in production, so
+  they moved without a migration. **[code]**
+- **The toolbar fits one row again.** Two layout rules had been built around the
+  105px select: a two-row treatment that triggered below 430px, and a container
+  query that made the bar a three-column grid with a fixed 92px column for it.
+  With the select gone that column stood empty and the icons queued into the
+  next one — the bar grew to three rows, taller than the layout it replaced.
+  Measured on the server afterwards: 56px, one row, and the Select command
+  keeps its label at the default split. **[live]**
+
+### Fixed
+
+- **`sortLabel` and the selection count spoke Portuguese to screen readers.**
+  Both were glued together from literals, so no dictionary lookup could reach
+  them — a blind user on an English server heard Portuguese. **[code]**
+- **The progress-bar labels and their help sentence** interpolated the theme
+  word into the middle of the phrase, which no lookup can match. That is also
+  where "lighttheme" lost its space. Computed whole now. **[live]**
+- **"Ano original:" on every album.** A fixed fragment sitting beside an
+  interpolation, which the first sweep skipped entirely. **[live]**
+- **A dictionary entry keyed by `"."`** would have translated any lone period
+  into " primeiras.". Introduced during the move and removed before release.
+  **[code]**
+
 ## [3.2.4] — 2026-08-05
 
 An audit of `Plugin.pm` after the 3.2.3 review. The failure policy of the file
