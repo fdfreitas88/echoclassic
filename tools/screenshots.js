@@ -53,6 +53,24 @@ const SHOTS = {
       await api.sleep(1500);
     }
   },
+  /* A metade de baixo do mesmo painel. O painel e mais alto que os 80% de
+     viewport que ele aceita ocupar, entao numa janela de 900px a foto de cima
+     corta justamente Ordenar, Agrupar, Preferencia e Vistas salvas -- que sao
+     as quatro coisas que distinguem este painel de um filtro comum. Aqui a
+     janela e mais alta e o corpo do painel comeca rolado ate o fim. */
+  preferences: {
+    width: 1440, height: 1150, wait: 45000,
+    setup: async function (api) {
+      await api.ready();
+      api.reset();
+      await api.rows();
+      api.browse().openFilters();
+      await api.sleep(1500);
+      const body = document.querySelector('.filter-body');
+      if (body) body.scrollTop = body.scrollHeight;
+      await api.sleep(800);
+    }
+  },
   sections: {
     width: 1440, height: 900, wait: 50000,
     setup: async function (api) {
@@ -63,6 +81,28 @@ const SHOTS = {
       window.LmsUi.setSections(['format']);
       window.LmsUi.setPrefer('local');
       await api.rows();
+      /* rows() so espera a lista; a capa grande do painel direito e uma imagem
+         que ainda esta a caminho quando ela resolve, e a foto saia com o
+         retangulo cinza de espera no maior espaco da tela. */
+      await api.until(() => {
+        const art = document.querySelector('.pane-right img');
+        return art && art.complete && art.naturalWidth > 0;
+      });
+      await api.sleep(800);
+    }
+  },
+  /* A aba Playlists, onde vive a gestao: criar, renomear, reordenar, remover
+     faixas e filtrar uma lista longa pelo nome. Mesma sequencia dos Ajustes --
+     o reset acontece enquanto Minha Musica ainda esta na tela, porque e de la
+     que api.browse() encontra o .split-body. */
+  playlists: {
+    width: 1440, height: 900, wait: 40000,
+    setup: async function (api) {
+      await api.ready();
+      api.reset();
+      await api.rows();
+      window.LmsUi.setTab('playlists');
+      await api.sleep(3000);
     }
   },
   /* Sem nada tocando, o player cheio mostra "Nothing playing" e nao serve de
@@ -78,6 +118,48 @@ const SHOTS = {
       await api.sleep(2500);
     }
   },
+  /* A metade de baixo dos Ajustes. A pagina e mais alta que a janela, e a foto
+     de cima para justamente no primeiro esquema de cor -- ou seja, corta os
+     cinco esquemas, as tres tipografias e a posicao do player, que sao os itens
+     que a apresentacao promete. */
+  /* Igual ao appearance, so que a janela termina antes da secao das barras de
+     progresso. Nao e capricho de enquadramento: aquela secao ainda tem rotulo
+     em portugues numa sessao em ingles (montado por interpolacao, entao o
+     dicionario nao alcanca), e esta e a foto que vai para um forum
+     internacional. Volta a ser uma foto so quando as strings forem corrigidas. */
+  themes: {
+    width: 1440, height: 600, wait: 35000,
+    setup: async function (api) {
+      await api.ready();
+      api.reset();
+      window.LmsUi.setTab('ajustes');
+      await api.sleep(2500);
+      const head = Array.prototype.find.call(
+        document.querySelectorAll('.settings-scroller *'),
+        (el) => el.children.length === 0 && /colou?r scheme|esquema de cor/i.test(el.textContent || ''));
+      if (head) head.scrollIntoView(true);
+      await api.sleep(900);
+    }
+  },
+  appearance: {
+    width: 1440, height: 1250, wait: 35000,
+    setup: async function (api) {
+      await api.ready();
+      api.reset();
+      window.LmsUi.setTab('ajustes');
+      await api.sleep(2500);
+      const box = document.querySelector('.settings-scroller') ||
+        document.querySelector('.tab-body .scroller') || document.querySelector('.scroller');
+      /* Ancorar no cabecalho da secao em vez de num scrollTop fixo: a altura das
+         secoes acima muda com o player conectado e com o idioma da sessao. */
+      const head = Array.prototype.find.call(
+        document.querySelectorAll('.settings-scroller *'),
+        (el) => el.children.length === 0 && /colou?r scheme|esquema de cor/i.test(el.textContent || ''));
+      if (head) head.scrollIntoView(true);
+      else if (box) box.scrollTop = Math.round(box.scrollHeight * 0.45);
+      await api.sleep(900);
+    }
+  },
   dark: {
     width: 1440, height: 900, wait: 45000,
     setup: async function (api) {
@@ -89,36 +171,20 @@ const SHOTS = {
       await api.sleep(1200);
     }
   },
-  /* A folha de celular e fotografada dentro de um iframe de 390x844 e a imagem
-     e recortada depois. Motivo: com a janela do Chrome headless em 390px, o
-     `width=device-width` resolve para uma largura maior que a janela e a folha
-     sai cortada na direita -- o mesmo layout dentro de um iframe de 390px
-     renderiza certo, e foi assim que ele foi conferido no navegador. */
+  /* Janela de 390x844 de verdade, e nao um iframe recortado depois.
+     O truque do iframe existia porque, com --force-device-scale-factor=2, o
+     `width=device-width` resolve para 780 numa janela de 390 e a folha saia
+     cortada na direita. A causa era a escala, entao a correcao e a escala: aqui
+     ela e 1, device-width volta a valer 390, e o layout de celular renderiza no
+     tamanho em que ele foi desenhado. Sem crop, sem iframe -- as duas coisas que
+     falhavam em silencio (o app do pai aparecia em volta da moldura, e o sips
+     nao chegava a recortar). */
   mobile: {
-    width: 1100, height: 1000, wait: 50000, crop: { w: 390, h: 844 },
+    width: 390, height: 844, scale: 1, wait: 50000,
     setup: async function (api) {
-      if (window.top !== window) {          // dentro do iframe: so abre o painel
-        await api.ready();
-        await api.rows();
-        api.browse().openFilters();
-        await api.sleep(1200);
-        return;
-      }
-      document.body.style.margin = '0';
-      document.body.style.background = '#fff';
-      const frame = document.createElement('iframe');
-      /* Centralizado de proposito: o recorte do sips e centralizado, entao a
-         moldura centrada cai exatamente sobre a folha. */
-      frame.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);' +
-        'border:0;z-index:2147483647;background:#fff';
-      frame.width = 390; frame.height = 844;
-      frame.src = '/echoclassic/?mobile=1';
-      document.body.appendChild(frame);
-      await new Promise(function (r) { frame.onload = r; });
-      await api.until(function () {
-        try { return !!frame.contentDocument.querySelector('.filter-panel'); }
-        catch (e) { return false; }
-      });
+      await api.ready();
+      await api.rows();
+      api.browse().openFilters();
       await api.sleep(1500);
     }
   }
@@ -232,8 +298,8 @@ function capture(name) {
         '--headless=new', '--disable-gpu', '--no-sandbox', '--hide-scrollbars',
         /* Escala 2x so nas fotos largas. Em 390px o --force-device-scale-factor
            faz o meta viewport resolver device-width em pixels de dispositivo, e
-           a folha sai cortada na direita. */
-        '--force-device-scale-factor=2',
+           a folha sai cortada na direita -- por isso o preset de celular pede 1. */
+        '--force-device-scale-factor=' + (shot.scale || 2),
         '--window-size=' + shot.width + ',' + shot.height,
         '--virtual-time-budget=' + shot.wait,
         '--user-data-dir=' + profile,
