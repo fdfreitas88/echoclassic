@@ -7,7 +7,7 @@ Vue.component('lms-detail', {
   props: { frame: { type: Object, required: true } },
   template: `
 <div class="detail">
-  <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
+  <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
   <div v-else-if="error" class="empty">
     <div class="h">Could not open</div><div class="p">{{ error }}</div>
     <button class="retry-command" @click="load">Try again</button>
@@ -16,7 +16,7 @@ Vue.component('lms-detail', {
   <template v-else-if="frame.kind === 'album'">
     <lms-album-block v-for="a in visibleBlocks" :key="a.id" :album="a" :artist="artist"></lms-album-block>
     <div v-if="discografiaTruncada" class="loading-more warning" role="status">
-      A discografia deste artista tem mais de 200 álbuns e esta tela mostra os 200 primeiros.
+      This artist's discography has more than 200 albums and this screen shows the first 200.
     </div>
   </template>
 
@@ -50,7 +50,7 @@ Vue.component('lms-detail', {
       <div v-if="!albums.length" class="empty"><div class="p">No albums for this item.</div></div>
     </template>
     <div v-if="listaTruncada" class="loading-more warning" role="status">
-      Esta lista tem mais de 1.000 álbuns e esta tela mostra os 1.000 primeiros.
+      This list has more than 1,000 albums and this screen shows the first 1,000.
     </div>
   </template>
 </div>`,
@@ -221,7 +221,7 @@ Vue.component('lms-detail', {
         /* Um erro depois de o bloco do album ja estar na tela nao pode apagar o
            que carregou certo: o pedido secundario falhou, o album nao. */
         if (this.blocks.length || this.albums.length) {
-          LmsUi.notify('Parte desta tela não pôde ser carregada. ' +
+          LmsUi.notify('Part of this screen could not be loaded. ' +
             (e && e.message ? e.message : String(e)), 'error', 6500);
         } else {
           this.error = e && e.message ? e.message : String(e);

@@ -25,8 +25,8 @@ Vue.component('lms-settings', {
     </button>
     <template v-if="showPlayers">
       <div class="player-help">
-        Controlar muda o player usado pelo Echo Classic. Transferir leva a reprodução atual.
-        Sincronizar faz os dois players tocarem juntos.
+        Control changes which player Echo Classic uses. Transfer moves the current playback.
+        Sync makes both players play together.
       </div>
       <div v-for="p in store.players" :key="p.id" class="player-choice">
         <div class="player-name">
@@ -37,7 +37,7 @@ Vue.component('lms-settings', {
         <template v-else-if="p.connected">
           <button title="Usar este player no Echo Classic" @click.stop="control(p)">Controlar</button>
           <button title="Continue playback on this player" @click.stop="handoff(p)">Transferir</button>
-          <button title="Reproduzir em conjunto com o player atual" @click.stop="sync(p)">Sincronizar</button>
+          <button title="Play together with the current player" @click.stop="sync(p)">Sync</button>
         </template>
       </div>
     </template>
@@ -54,7 +54,7 @@ Vue.component('lms-settings', {
       <span style="font-size:12px;color:var(--text2)">Unity gain to the DAC: LMS does not touch the samples. Set the volume on the DAC itself.</span>
     </div>
     <div v-else-if="!store.volumeModeSynced" class="srow" style="min-height:34px">
-      <span style="font-size:12px;color:var(--text2)">O LMS ainda não respondeu se este player usa volume por software. Escolha o player em “Player ativo” ou toque em “Tentar novamente” na barra de conexão para consultar de novo.</span>
+      <span style="font-size:12px;color:var(--text2)">LMS has not yet said whether this player uses software volume. Pick the player under “Active player”, or tap “Try again” in the connection bar to ask once more.</span>
     </div>
   </div>
 
@@ -244,8 +244,8 @@ Vue.component('lms-settings', {
     </div>
     <div v-if="pendingImport" class="import-confirm" role="alert">
       <strong>Import preferences from this file?</strong>
-      <span>Serão substituídos apenas estes grupos: {{ pendingImportGroups.join(', ') }}.
-        O que não estiver no arquivo continua como está. Uma cópia do estado atual
+      <span>Only these groups will be replaced: {{ pendingImportGroups.join(', ') }}.
+        Anything not in the file stays as it is. A copy of the current state
         fica guardada no navegador antes da gravação. A página recarrega em seguida.</span>
       <div class="inline-commands">
         <button @click="confirmImport">Import and reload</button>
@@ -304,7 +304,7 @@ Vue.component('lms-settings', {
     playerName: function () {
       var id = this.store.playerId;
       var found = (this.store.players || []).filter(function (p) { return p.id === id; })[0];
-      return found ? found.name : 'nenhum';
+      return found ? found.name : 'none';
     },
     skinVersion: function () {
       return typeof LMS_SKIN_VERSION === 'string' && LMS_SKIN_VERSION ? LMS_SKIN_VERSION : '—';
@@ -356,7 +356,7 @@ Vue.component('lms-settings', {
           names.push(labels[canonical]);
         }
       }, this);
-      return names.length ? names : ['nenhum grupo reconhecido'];
+      return names.length ? names : ['no recognised group'];
     }
   },
   watch: {
@@ -483,7 +483,7 @@ Vue.component('lms-settings', {
 	    validateImportValue: function (canonical, raw) {
 	      var parsed;
 	      try { parsed = JSON.parse(String(raw)); }
-	      catch (e) { return 'o conteúdo de ' + canonical + ' não é JSON válido'; }
+	      catch (e) { return 'the contents of ' + canonical + ' is not valid JSON'; }
 	      if (canonical === 'echoclassic.ui.v2') {
 	        if (!this.isPlainObject(parsed)) return canonical + ' deveria ser um objeto';
 	        /* Estas duas listas eram literais duplicados de ui.js. Acrescentar uma
@@ -522,9 +522,9 @@ Vue.component('lms-settings', {
 	        return null;
 	      }
 	      if (canonical === 'echoclassic.pins.v1' || canonical === 'echoclassic.history.v1') {
-        if (!Array.isArray(parsed)) return canonical + ' deveria ser uma lista';
+        if (!Array.isArray(parsed)) return canonical + ' should be a list';
         var bad = parsed.some(function (item) { return !this.isPlainObject(item); }, this);
-        if (bad) return canonical + ' tem itens que não são objetos';
+        if (bad) return canonical + ' has items that are not objects';
         return null;
       }
       if (canonical === 'echoclassic.nav.v1') {
@@ -534,7 +534,7 @@ Vue.component('lms-settings', {
           var stack = parsed[stacks[i]];
           if (stack === undefined) continue;
           if (!this.isFrameList(stack)) {
-            return 'a pilha de navegação “' + stacks[i] + '” não é uma lista de telas válidas';
+            return 'the navigation stack “' + stacks[i] + '” is not a list of valid screens';
           }
         }
         return null;
@@ -580,7 +580,7 @@ Vue.component('lms-settings', {
       reader.readAsText(file);
     },
     /* Guardar o estado atual antes de gravar: a confirmacao promete um caminho
-       de volta e ate aqui nao havia nenhum. */
+       de volta e ate aqui nao havia none. */
     backupCurrentSettings: function () {
       var snapshot = { version: 1, savedAt: new Date().toISOString(), values: {} };
       this.importKeys().forEach(function (key) {

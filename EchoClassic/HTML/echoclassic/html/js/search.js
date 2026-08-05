@@ -1,5 +1,5 @@
 
-/* Busca global da biblioteca. O componente recebe apenas dados normalizados de
+/* Search global da biblioteca. O componente recebe apenas dados normalizados de
    api.js e leva cada resultado para a mesma pilha usada por Minha Musica. */
 Vue.component('lms-search', {
   template: `
@@ -8,7 +8,7 @@ Vue.component('lms-search', {
     <div class="h">Search the library</div>
     <div class="p">Type an artist, album or track.</div>
   </div>
-  <div v-else-if="loading && !total" class="empty"><div class="p">Buscando…</div></div>
+  <div v-else-if="loading && !total" class="empty"><div class="p">Searchndo…</div></div>
   <div v-else-if="error" class="empty">
     <div class="h">Search failed</div>
     <div class="p">{{ error }}</div>
@@ -16,10 +16,10 @@ Vue.component('lms-search', {
   </div>
   <div v-else-if="!total" class="empty">
     <div class="h">No results</div>
-    <div class="p">Não encontramos “{{ query.trim() }}” na sua biblioteca.</div>
+    <div class="p">We did not find “{{ query.trim() }}” in your library.</div>
   </div>
   <template v-else>
-    <div v-if="loading" class="search-refreshing" role="status" aria-live="polite">Buscando…</div>
+    <div v-if="loading" class="search-refreshing" role="status" aria-live="polite">Searchndo…</div>
 	    <section v-if="results.artists.length" class="search-group">
 	      <h2 class="search-heading">Artists <span>{{ results.artists.length }}</span></h2>
 	      <button v-for="a in results.artists" :key="'ar' + a.id"
@@ -81,7 +81,7 @@ Vue.component('lms-search', {
 	      </button>
 	    </section>
     <button v-if="hasMore" class="load-more-command" :disabled="loading" @click="loadMore">
-      {{ loading ? 'Buscando…' : 'Mostrar mais resultados' }}
+      {{ loading ? 'Searchndo…' : 'Mostrar mais resultados' }}
     </button>
   </template>
 </div>`,

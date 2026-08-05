@@ -284,7 +284,7 @@
 
   /* Uma vista salva e um conjunto completo -- filtros, ordem, agrupamento,
      secoes e preferencia -- amarrado a raiz em que faz sentido. Guardar a raiz
-     junto evita aplicar "FLAC + Hi-Res" dentro de Generos, onde nenhuma das
+     junto evita aplicar "FLAC + Hi-Res" dentro de Generos, onde nonea das
      duas coisas existe. Chave propria, com versao, porque o formato vai mudar
      antes do resto das preferencias. */
   var VIEWS_KEY = 'echoclassic.views.v1';
@@ -755,7 +755,7 @@
      Por que existe: no macOS, clicar num <button> nao lhe da foco -- e a
      convencao da plataforma, e o Chrome a segue. Entao document.activeElement
      no momento da abertura e o <body>, e devolver o foco "para quem abriu"
-     devolvia para lugar nenhum. Quem abre passa o proprio elemento. */
+     devolvia para lugar none. Quem abre passa o proprio elemento. */
   var filterTriggerEl = null;
 
   function openFilterPanel(trigger) {
@@ -863,7 +863,7 @@
     if (!added) return false;
     clearSelection();
     notify(added + (added === 1 ? ' item adicionado' : ' itens adicionados') +
-      ' à fila de reprodução.', 'success', 3500);
+      ' to the playback queue.', 'success', 3500);
     return true;
   }
 

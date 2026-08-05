@@ -133,7 +133,7 @@
          declarou uma preferencia, quem toca e a primeira da lista ja ranqueada
          por browse.js. A tela DIZ qual foi escolhida -- trocar o que toca sem
          avisar seria a pior forma de errar aqui, porque o sintoma chega pelo
-         ouvido e sem pista nenhuma na interface. As outras edicoes continuam
+         ouvido e sem pista nonea na interface. As outras edicoes continuam
          visiveis na lista; nada e escondido. */
       chosenEdition: function () {
         var item = this.item;
@@ -151,7 +151,7 @@
           if (ok === false) return;
           if (chosen) {
             /* O texto entra no dicionario inteiro, com marcador: concatenar a
-               origem na frente produziria uma frase que nenhuma chave casa --
+               origem na frente produziria uma frase que nonea chave casa --
                foi assim que os avisos de truncamento apareceram em portugues
                numa sessao em ingles. */
             var frase = 'Playing the preferred edition: {edition}.';
@@ -247,7 +247,7 @@
       <button class="back-command" @click="close">Done</button>
       <div class="ttl">Information</div>
     </div>
-    <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
+    <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
     <div v-else-if="error" class="empty">
       <div class="p">{{ error }}</div>
       <button class="retry-command" @click="load(item)">Try again</button>

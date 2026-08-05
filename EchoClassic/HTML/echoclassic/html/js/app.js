@@ -72,7 +72,7 @@
 	        return '';
 	      },
 	      pageHeading: function () {
-	        if (this.ui.searching) return 'Busca';
+	        if (this.ui.searching) return 'Search';
 	        return this.title || this.tabLabel || 'Echo Classic';
 	      },
       depth: function () { return (this.nav[this.ui.tab] || []).length; },

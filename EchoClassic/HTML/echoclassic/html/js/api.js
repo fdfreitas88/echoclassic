@@ -77,7 +77,7 @@
     if (!isFinite(n) || n <= 0) return 0;
     if (/kbps/i.test(String(v))) return Math.round(n);
     /* Sem unidade declarada: acima de 10.000 so pode ser bits por segundo --
-       nenhum formato de audio chega a 10 Mbps, e todo lossless passa de 300. */
+       none formato de audio chega a 10 Mbps, e todo lossless passa de 300. */
     return Math.round(n > 10000 ? n / 1000 : n);
   }
   function txt(v) { return v == null ? '' : String(v); }

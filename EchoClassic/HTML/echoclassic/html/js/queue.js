@@ -57,21 +57,21 @@ Vue.component('lms-queue', {
 	        </button>
 	        <span class="queue-reorder">
           <button type="button" :data-move="t.index + ':-1'" :disabled="t.index <= 0"
-                  :title="'Mover ' + t.title + ' para cima'" :aria-label="'Mover ' + t.title + ' para cima'"
+                  :title="'Move ' + t.title + ' up'" :aria-label="'Move ' + t.title + ' up'"
                   @click.stop="move(t, -1)">↑</button>
           <button type="button" :data-move="t.index + ':1'" :disabled="t.index >= tracks.length - 1"
-                  :title="'Mover ' + t.title + ' para baixo'" :aria-label="'Mover ' + t.title + ' para baixo'"
+                  :title="'Move ' + t.title + ' down'" :aria-label="'Move ' + t.title + ' down'"
                   @click.stop="move(t, 1)">↓</button>
         </span>
         <button type="button" class="drag pointer" title="Remover"
-                :aria-label="'Remover ' + t.title + ' da fila'" @click.stop="remove(t)">
+                :aria-label="'Remove ' + t.title + ' from the queue'" @click.stop="remove(t)">
           <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
     </div>
 
     <div class="qempty" v-else>
-      A fila está vazia. Toque um álbum ou uma playlist e as faixas seguintes
+      The queue is empty. Play an album or a playlist and the tracks that follow
       entram aqui.
     </div>
   </div>
@@ -111,7 +111,7 @@ Vue.component('lms-queue', {
              'Shuffle off';
     },
     repeatLabel: function () {
-      return ['Repeat off', 'Repeat one song', 'Repetir toda a fila'][this.store.repeat] ||
+      return ['Repeat off', 'Repeat one song', 'Repeat the whole queue'][this.store.repeat] ||
              'Repeat off';
     }
   },

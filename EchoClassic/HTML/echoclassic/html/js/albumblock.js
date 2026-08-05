@@ -32,7 +32,7 @@ Vue.component('lms-album-block', {
       <div v-else-if="album.artist" class="aartist">{{ album.artist }}</div>
       <div class="ameta">{{ metaLine }}</div>
       <div v-if="album.originalYear || album.year" class="edition-years">
-        <span>Ano desta edição: {{ album.year || 'not available' }}</span>
+        <span>Year of this edition: {{ album.year || 'not available' }}</span>
         <span>Ano original: {{ album.originalYear || 'not available' }}</span>
       </div>
       <div v-if="tracks.length" class="album-facts" aria-label="Album technical details">
@@ -76,7 +76,7 @@ Vue.component('lms-album-block', {
 	    <span>Shuffle</span>
 	  </button>
 
-  <div v-if="loading" class="empty"><div class="p">Carregando faixas…</div></div>
+  <div v-if="loading" class="empty"><div class="p">Loading tracks…</div></div>
   <div v-else-if="error" class="empty">
     <div class="p">{{ error }}</div>
     <button class="retry-command" @click="load">Try again</button>

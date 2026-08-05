@@ -121,7 +121,7 @@
     if (!chosen) {
       state.lastError = ps.length
         ? 'No player is connected.'
-        : 'Nenhum player foi encontrado no LMS.';
+        : 'No player was found on LMS.';
       return false;
     }
     state.lastError = '';
@@ -262,8 +262,8 @@
     if (error.kind === 'http') {
       var code = error.status || parseInt(String(error.detail || '').replace(/[^0-9]/g, ''), 10);
       return code
-        ? 'O servidor respondeu com erro (HTTP ' + code + ').'
-        : 'O servidor respondeu com erro.';
+        ? 'The server answered with an error (HTTP ' + code + ').'
+        : 'The server answered with an error.';
     }
     if (error.kind === 'lms') return 'The server rejected this command.';
     if (error.kind === 'parse') return 'The server response was incomplete or unreadable.';
@@ -604,8 +604,8 @@
      usuario e avisado em vez de perder faixas sem saber. */
   function notifyTruncated(got, total) {
     if (global.LmsUi && global.LmsUi.notify) {
-      global.LmsUi.notify('A fila tem ' + total + ' faixas e só foi possível ler ' +
-        got + '. A transferência leva as ' + got + ' primeiras.', 'error', 7000);
+      global.LmsUi.notify('The queue has ' + total + ' tracks and only this many could be read: ' +
+        got + '. The transfer takes the first ' + got + '.', 'error', 7000);
     }
   }
 
@@ -742,7 +742,7 @@
 
       if (state.fixedVolume !== requestedFixed) {
         /* Frase inteira no dicionario: concatenar o final produzia um texto
-           que nenhuma chave casa, e o aviso saia em portugues numa sessao em
+           que nonea chave casa, e o aviso saia em portugues numa sessao em
            ingles -- a mesma armadilha dos avisos de truncamento. */
         global.LmsUi.notify(state.fixedVolume
           ? 'LMS kept fixed output.'
@@ -751,7 +751,7 @@
       }
       global.LmsUi.notify(requestedFixed
         ? 'Fixed output confirmed. Set the volume on the DAC.'
-        : 'Controle de volume pelo LMS confirmado.', 'success', 4500);
+        : 'LMS volume control confirmed.', 'success', 4500);
       return true;
     } catch (e) {
       if (state.playerId === playerId) state.volumeModeSynced = false;
@@ -763,7 +763,7 @@
 
   /* Fatia por t.index, nao por posicao no array: a janela carregada pode nao
      comecar no zero. Desconta o que ja tocou da faixa corrente, senao o
-     cabecalho da fila anuncia mais tempo do que resta de fato. */
+     cabecalho from the queue anuncia mais tempo do que resta de fato. */
   function queueRemaining() {
     var current = state.queueIndex;
     var elapsed = state.time || 0;
@@ -805,13 +805,13 @@
     pollDelay: pollDelay, isPolling: isPolling,
     POLL_PLAYING: POLL_PLAYING, POLL_IDLE: POLL_IDLE,
     loadQueue: loadQueue,
-    playContainer: guarded('A reprodução', playContainer, true),
+    playContainer: guarded('Playback', playContainer, true),
     jumpTo: guarded('A troca de faixa', jumpTo, false),
     removeFromQueue: guarded('Removing from the queue', removeFromQueue, false),
     moveInQueue: guarded('Reordering the queue', moveInQueue, false),
     playNext: guarded('Adding to the queue', playNext, false),
     addToQueue: guarded('Adding to the queue', addToQueue, false),
-    clearQueue: guarded('A limpeza da fila', clearQueue, true),
+    clearQueue: guarded('Clearing the queue', clearQueue, true),
     clearUpcoming: guarded('Clearing the upcoming tracks', clearUpcoming, true),
     undoQueue: guarded('Restoring the queue', undoQueue, true),
     queueRemaining: queueRemaining,
@@ -825,7 +825,7 @@
     sleepAfterTrack: guarded('The sleep timer setting', sleepAfterTrack, false),
     sleepAfterQueue: guarded('The sleep timer setting', sleepAfterQueue, false),
     setRating: guarded('The rating', setRating, false),
-    play: guarded('A reprodução', play, false),
+    play: guarded('Playback', play, false),
     pause: guarded('A pausa', pause, false),
     stop: guarded('A parada', stop, false),
     next: guarded('The next track', next, false),

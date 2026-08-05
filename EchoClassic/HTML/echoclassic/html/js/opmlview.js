@@ -10,7 +10,7 @@ Vue.component('lms-opml', {
   },
   template: `
 <div class="scroller">
-  <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
+  <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
   <div v-else-if="error" class="empty">
     <div class="h">Could not open</div><div class="p">{{ error }}</div>
     <button class="retry-command" @click="load">Try again</button>
@@ -58,7 +58,7 @@ Vue.component('lms-opml', {
     </button>
   </div>
   <div v-if="truncated" class="loading-more warning" role="status">
-    Esta lista tem mais de 200 itens e esta tela mostra os 200 primeiros. Use a busca para chegar ao resto.
+    This list has more than 200 items and this screen shows the first 200. Use search to reach the rest.
   </div>
 </div>`,
   data: function () {
@@ -90,7 +90,7 @@ Vue.component('lms-opml', {
       /* Uma busca sem resultado nao e um servico ausente: mandar "ative um
          serviço de rádio" com o TuneIn funcionando e conselho errado. */
       if (this.searchTerm) {
-        return 'A busca por “' + this.searchTerm + '” não encontrou nada. ' +
+        return 'The search for “' + this.searchTerm + '” found nothing. ' +
           'Confira a grafia ou tente um termo mais curto.';
       }
       if (this.frame) return 'This list has no items right now.';
@@ -99,7 +99,7 @@ Vue.component('lms-opml', {
       }
       /* O estado vazio de Apps tem de apontar para onde a solucao esta: os
          servicos aparecem aqui porque sao plugins do servidor, e quem nunca
-         instalou nenhum nao tem como adivinhar isso. */
+         instalou none nao tem como adivinhar isso. */
       if (this.root === 'apps') {
         return 'No service is installed. Install a service plugin, such as Qobuz, in Server Settings > Plugins.';
       }
@@ -123,7 +123,7 @@ Vue.component('lms-opml', {
     searchTitle: function (it) {
       return this.isTuneUrl(it)
         ? 'Enter the full stream address, including http:// or https://'
-        : 'Buscar em ' + it.title;
+        : 'Searchr em ' + it.title;
     },
     searchAction: function (it) {
       return this.isTuneUrl(it) ? 'Sintonizar' : 'Search';
@@ -166,14 +166,14 @@ Vue.component('lms-opml', {
       } catch (e) {
         /* Falhar ao tocar UMA estacao nao pode apagar a lista inteira: isso e
            recado de notificacao, nao erro fatal de carregamento. */
-        LmsUi.notify('Não deu para tocar “' + (it.title || 'esta estação') + '”. ' +
+        LmsUi.notify('Could not play “' + (it.title || 'this station') + '”. ' +
           (e && e.message ? e.message : String(e)), 'error', 6500);
       }
     },
     search: async function (it, i) {
       var term = (this.terms[i] || '').trim();
       if (!term) {
-        this.setFieldError(i, 'Digite algo para buscar.');
+        this.setFieldError(i, 'Type something to search for.');
         return;
       }
       if (this.isTuneUrl(it) && !/^[a-z][a-z0-9+.-]*:\/\//i.test(term)) {

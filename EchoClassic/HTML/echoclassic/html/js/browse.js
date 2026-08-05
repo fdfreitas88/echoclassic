@@ -135,7 +135,7 @@ Vue.component('lms-browse', {
     </div>
     <p aria-live="polite" class="visually-hidden">{{ liveSummary }}</p>
     <div class="scroller" ref="scroller" @scroll="onScroll">
-      <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
+      <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
       <div v-else-if="error" class="empty">
         <div class="h">Could not read the library</div>
         <div class="p">{{ error }}</div>
@@ -181,7 +181,7 @@ Vue.component('lms-browse', {
 	          </div>
 	        </template>
 	        <div :style="{height: botPad + 'px'}"></div>
-	        <div v-if="loadingMore" class="loading-more" role="status">Carregando mais itens…</div>
+	        <div v-if="loadingMore" class="loading-more" role="status">Loading more items…</div>
 	        <div v-if="limitWarning" class="loading-more warning" role="status">{{ limitWarning }}</div>
 	      </template>
     </div>
@@ -415,7 +415,7 @@ Vue.component('lms-browse', {
     },
     hasRail: function () {
       /* O indice alfabetico so faz sentido sobre uma lista alfabetica; em
-         'recent' as letras nao sobem e saltar levaria a lugar nenhum. Com
+         'recent' as letras nao sobem e saltar levaria a lugar none. Com
          secoes a lista tambem deixa de ser monotonica: a letra M aparece uma
          vez por secao, e o salto escolheria uma delas sem criterio. */
       return !this.loading && this.rows.length > 30 && this.sortKey !== 'recent' &&
@@ -623,7 +623,7 @@ Vue.component('lms-browse', {
       var c = ((row && row.label) || '').trim().charAt(0).toUpperCase();
       return /[A-Z]/.test(c) ? c : '#';
     },
-    /* Busca binaria sobre a soma de prefixos: qual item ocupa esta altura de
+    /* Search binaria sobre a soma de prefixos: qual item ocupa esta altura de
        rolagem. Substitui a divisao por altura fixa, que so valia enquanto todos
        os itens da lista tinham o mesmo tamanho. */
     indexAtOffset: function (offset) {

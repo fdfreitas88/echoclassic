@@ -92,7 +92,7 @@ Vue.component('lms-nowplaying', {
           <b :style="{left: 'calc(' + volPct + '% - 12px)'}"></b>
           <input class="range-hit" type="range" min="0" max="100" step="1"
                  :value="volumeValue" :disabled="store.fixedVolume"
-                 :title="store.fixedVolume ? 'Desativado: controle o volume pelo DAC' : 'Volume'"
+                 :title="store.fixedVolume ? 'Disabled: set the volume on the DAC' : 'Volume'"
                  aria-label="Volume" @pointerdown="beginVolume"
                  @pointercancel="cancelVolume" @pointerup="releaseVolume"
                  @lostpointercapture="releaseVolume"
@@ -223,13 +223,13 @@ Vue.component('lms-nowplaying', {
              'Shuffle off';
     },
     repeatLabel: function () {
-      return ['Repeat off', 'Repeat one song', 'Repetir toda a fila'][this.store.repeat] ||
+      return ['Repeat off', 'Repeat one song', 'Repeat the whole queue'][this.store.repeat] ||
              'Repeat off';
     },
     positionTitle: function () {
       var labels = { right: 'direita', left: 'esquerda', center: 'centro' };
       var next = { right: 'left', left: 'center', center: 'right' }[this.ui.playerPosition];
-      return 'Current position: ' + labels[this.ui.playerPosition] + '. Próxima: ' + labels[next];
+      return 'Current position: ' + labels[this.ui.playerPosition] + '. Next: ' + labels[next];
     }
   },
   watch: {

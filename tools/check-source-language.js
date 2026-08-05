@@ -21,7 +21,7 @@ const JS_DIR = path.join(ROOT, 'EchoClassic', 'HTML', 'echoclassic', 'html', 'js
 /* Marcas de portugues que praticamente nao aparecem em ingles. Palavras curtas
    e ambiguas ("da", "do", "no") ficam de fora de proposito: elas existem em
    ingles e so gerariam ruido. */
-const PT_WORDS = /\b(n[ãa]o|voc[êe]|para|com|uma|dos|das|pela|pelo|est[áa]|s[ãa]o|foi|ser[áa]|nenhum[a]?|todos|tocar|fila|busca|ajustes|idioma|reprodu[çc][ãa]o|biblioteca|configura[çc][ãa]o|erro|aviso|carregando|salvar|apagar|renomear)\b/i;
+const PT_WORDS = /\b(n[ãa]o|voc[êe]|para|com|uma|dos|das|pela|pelo|est[áa]|s[ãa]o|foi|ser[áa]|nenhum[a]?|todos|tocar|fila|busca|ajustes|idioma|reprodu[çc][ãa]o|biblioteca|configura[çc][ãa]o|erro|aviso|carregando|salvar|apagar|renomear|nome|editar|criar|filtrar|limpar|adicionar|remover|mover|escolher|tentar|novamente|conte[úu]do|arquivo|tela|telas|faixa|faixas|[áa]lbum|[áa]lbuns|m[úu]sica|estat[íi]stica|pilha|grupo|grupos|lista|listas)\b/i;
 const PT_CHARS = /[ãõçáéíóúâêôàÃÕÇÁÉÍÓÚÂÊÔÀ]/;
 
 function stripComments(src) {

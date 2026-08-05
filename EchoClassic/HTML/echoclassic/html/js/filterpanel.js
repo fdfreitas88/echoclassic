@@ -310,7 +310,7 @@
         return String(label || '').toLowerCase().indexOf(needle) >= 0;
       },
       /* A busca dentro dos filtros tambem esconde secao inteira quando o nome da
-         secao nao casa e nenhuma opcao dela sobrou. Sem isso, procurar "rock"
+         secao nao casa e nonea opcao dela sobrou. Sem isso, procurar "rock"
          deixaria na tela cinco cabecalhos vazios. */
       show: function (title) {
         if (!this.needle) return true;

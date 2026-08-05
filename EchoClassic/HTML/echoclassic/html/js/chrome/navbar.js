@@ -26,7 +26,7 @@ Vue.component('lms-navbar', {
 
   <template v-else>
     <button v-if="back !== null" class="back pointer"
-            :aria-label="'Voltar para ' + back" :title="'Voltar para ' + back"
+            :aria-label="'Back to ' + back" :title="'Back to ' + back"
             @click="$emit('back')">
       <svg class="ic chevleft" viewBox="0 0 13 20"><path d="M10 1L2.5 10 10 19"/></svg>
       <span>{{ back }}</span>
@@ -43,7 +43,7 @@ Vue.component('lms-navbar', {
 
     <div class="center">
 	      <button v-if="pickable" class="pickttl pointer"
-	              :aria-label="'Escolher raiz de Minha Música. Atual: ' + title"
+	              :aria-label="'Choose a My Music root. Current: ' + title"
 	              @click="$emit('picker')">
         {{ title }}
         <svg class="ic sm" viewBox="0 0 12 12"><path d="M1.5 4L6 8.5 10.5 4"/></svg>

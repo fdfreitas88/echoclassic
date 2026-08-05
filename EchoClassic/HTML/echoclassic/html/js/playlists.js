@@ -5,7 +5,7 @@
 Vue.component('lms-playlists', {
   template: `
 <div class="scroller">
-  <div v-if="loading" class="empty"><div class="p">Carregando…</div></div>
+  <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
   <div v-else-if="error" class="empty">
     <div class="h">Could not read the playlists</div><div class="p">{{ error }}</div>
     <button class="retry-command" @click="retry">Try again</button>
@@ -26,9 +26,9 @@ Vue.component('lms-playlists', {
           <button class="playlist-command pointer"
                   @click="toggleEdit">{{ editing ? 'Done' : 'Editar' }}</button>
           <button v-if="editing && selectedCount" class="playlist-command pointer"
-                  @click="removeSelected">Remover {{ selectedCount }}</button>
+                  @click="removeSelected">Remove {{ selectedCount }}</button>
 	          <button v-if="editing" class="playlist-command destructive pointer"
-	                  @click="confirmDelete = true">Apagar playlist</button>
+	                  @click="confirmDelete = true">Delete playlist</button>
         </div>
 	        <div v-for="t in tracks" :key="t.id" class="trow"
 	             :class="{playing: store.np.id === t.id, chosen: isSelected(t)}"
@@ -45,10 +45,10 @@ Vue.component('lms-playlists', {
 	            <span class="dur">{{ dur(t.duration) }}</span>
 	          </button>
 	          <template v-if="editing">
-	            <button class="reorder-command" title="Mover para cima"
-	                    :aria-label="'Mover ' + t.title + ' para cima'" @click.stop="move(t, -1)">↑</button>
-	            <button class="reorder-command" title="Mover para baixo"
-	                    :aria-label="'Mover ' + t.title + ' para baixo'" @click.stop="move(t, 1)">↓</button>
+	            <button class="reorder-command" title="Move up"
+	                    :aria-label="'Move ' + t.title + ' up'" @click.stop="move(t, -1)">↑</button>
+	            <button class="reorder-command" title="Move down"
+	                    :aria-label="'Move ' + t.title + ' down'" @click.stop="move(t, 1)">↓</button>
 	          </template>
 	          <button v-else class="more-command" title="More actions"
 	                  :aria-label="'More actions for ' + t.title"
@@ -63,7 +63,7 @@ Vue.component('lms-playlists', {
         </div>
         <button v-if="tracksHasMore" class="load-more-command" :disabled="tracksLoadingMore"
                 @click="loadMoreTracks">
-          {{ tracksLoadingMore ? 'Carregando…' : 'Load more songs' }}
+          {{ tracksLoadingMore ? 'Loading…' : 'Load more songs' }}
         </button>
         <div v-if="!tracks.length" class="empty"><div class="p">This playlist has no songs yet.</div></div>
       </div>
@@ -105,9 +105,9 @@ Vue.component('lms-playlists', {
        aria-labelledby="delete-playlist-title">
     <div class="confirm-back" @click="confirmDelete = false"></div>
     <div class="confirm-panel">
-      <strong id="delete-playlist-title">Apagar “{{ frame.label }}”?</strong>
+      <strong id="delete-playlist-title">Delete “{{ frame.label }}”?</strong>
       <span>This removes the playlist from LMS.</span>
-      <button class="destructive" @click="remove">Apagar playlist</button>
+      <button class="destructive" @click="remove">Delete playlist</button>
       <button @click="confirmDelete = false">Cancel</button>
     </div>
   </div>
