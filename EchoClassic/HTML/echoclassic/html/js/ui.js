@@ -357,6 +357,8 @@
        equivalentes e escolhe qual toca. Por isso e global, e nao por view. */
     prefer: validPrefer(saved.prefer) ? saved.prefer : 'none',
     filterPanel: false,
+    sortMenu: false,
+    sortAnchor: null,
     /* Nome de genero vem do servidor e a pilula precisa dele para nao mostrar
        "genre:12". Guardado aqui porque o painel e a lista leem o mesmo mapa. */
     genreNames: readObject('echoclassic.genrenames.v1'),
@@ -765,6 +767,23 @@
   function closeFilterPanel() { state.filterPanel = false; }
   function filterTrigger() { return filterTriggerEl; }
 
+  /* Same handoff for the sort menu: it is anchored to the icon that opened it,
+     so it needs both the element's rectangle to position against and the
+     element itself to hand focus back to on close. */
+  var sortTriggerEl = null;
+
+  function openSortMenu(trigger) {
+    sortTriggerEl = trigger && trigger.focus ? trigger : null;
+    var rect = trigger && trigger.getBoundingClientRect ? trigger.getBoundingClientRect() : null;
+    state.sortAnchor = rect ? {
+      left: Number(rect.left) || 0, right: Number(rect.right) || 0,
+      top: Number(rect.top) || 0, bottom: Number(rect.bottom) || 0
+    } : null;
+    state.sortMenu = true;
+  }
+  function closeSortMenu() { state.sortMenu = false; }
+  function sortTrigger() { return sortTriggerEl; }
+
   var ALBUM_MODES = Object.freeze([
     Object.freeze({ key: 'albums', label: 'Albums' }),
     Object.freeze({ key: 'tracks', label: 'Tracks' })
@@ -943,6 +962,7 @@
     saveCurrentView: saveCurrentView, applyView: applyView, renameView: renameView,
     duplicateView: duplicateView, deleteView: deleteView, setDefaultView: setDefaultView,
     openFilterPanel: openFilterPanel, closeFilterPanel: closeFilterPanel,
+    openSortMenu: openSortMenu, closeSortMenu: closeSortMenu, sortTrigger: sortTrigger,
     filterTrigger: filterTrigger,
     setTab: setTab, restoreTab: restoreTab, toggleTheme: toggleTheme,
     openSearch: openSearch, closeSearch: closeSearch,

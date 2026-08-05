@@ -1793,3 +1793,19 @@ ECHOCLASSIC_UI_MINI_PLAYER_COLOUR
 ECHOCLASSIC_UI_FULL_PLAYER_COLOUR
 	EN	Full player colour
 	PT	Cor no player completo
+
+ECHOCLASSIC_UI_ITEM_SELECTED
+	EN	item selected
+	PT	item selecionado
+
+ECHOCLASSIC_UI_ITEMS_SELECTED
+	EN	items selected
+	PT	itens selecionados
+
+ECHOCLASSIC_UI_ASCENDING_ORDER_LABEL
+	EN	Ascending order
+	PT	Ordem crescente
+
+ECHOCLASSIC_UI_DESCENDING_ORDER_LABEL
+	EN	Descending order
+	PT	Ordem decrescente

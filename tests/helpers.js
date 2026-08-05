@@ -178,6 +178,43 @@ function panelInstance(extra) {
   return { self: self, def: def, ctx: captured.ctx };
 }
 
+/* The sort menu, instantiated the same way the filter panel is: no Vue, data
+   bound, computeds resolved on demand, methods given a real `this`. */
+function sortMenuInstance(extra, props) {
+  let definition = null;
+  const ctx = uiContext(Object.assign({
+    Vue: {
+      observable: function (o) { return o; },
+      component: function (name, def) { definition = def; },
+      nextTick: function (f) { if (f) f(); }
+    },
+    innerWidth: 1280,
+    innerHeight: 900,
+    addEventListener: function () {},
+    removeEventListener: function () {}
+  }, extra || {}));
+  runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/sortmenu.js');
+  /* The component reads document.activeElement to decide where focus goes.
+     uiContext already installs a document with the listeners ui.js needs, so
+     this adds the property rather than replacing the object. */
+  if (ctx.document && !('activeElement' in ctx.document)) ctx.document.activeElement = null;
+  const def = definition;
+  const self = Object.assign(def.data(), {
+    options: [], value: '', desc: false
+  }, props || {});
+  self.$nextTick = function (f) { if (f) f.call(self); };
+  self.$refs = {};
+  self.$emit = function (name, payload) { self.emitted.push([name, payload]); };
+  self.emitted = [];
+  Object.keys(def.methods).forEach(function (name) {
+    self[name] = def.methods[name].bind(self);
+  });
+  Object.keys(def.computed).forEach(function (name) {
+    Object.defineProperty(self, name, { get: def.computed[name].bind(self) });
+  });
+  return { self: self, def: def, ctx: ctx };
+}
+
 module.exports = {
   root,
   skin,
@@ -189,5 +226,6 @@ module.exports = {
   uiContext,
   browseComponent,
   filterPanelComponent,
-  panelInstance
+  panelInstance,
+  sortMenuInstance
 };

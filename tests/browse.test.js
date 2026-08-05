@@ -120,11 +120,16 @@ test('o funil substitui o select como controle de filtros', function () {
   assert.match(src, /class="filter-badge"/, 'a contagem de filtros ativos');
   assert.match(src, /@click="openFilters"/);
 
-  /* As opcoes de ordenacao que leem o indice de midia so aparecem onde esse
-     indice existe -- oferece-las em Artistas seria a promessa vazia de novo. */
+  /* Sort options that read the media index only exist where that index does --
+     offering them in Artists would be the empty promise again. Asserted on the
+     option list rather than on markup, so it survives the control changing
+     shape. */
+  const withMedia = computedsFor('albums', 'name');
+  const withoutMedia = computedsFor('artists', 'name');
+  const keysOf = (c) => c.def.computed.sortOptions.call(c.self).map((o) => o.key);
   ['format', 'source', 'quality'].forEach(function (key) {
-    const re = new RegExp('v-if="allowsMediaFilter" value="' + key + '"');
-    assert.match(src, re, key + ' precisa depender de allowsMediaFilter');
+    assert.ok(keysOf(withMedia).includes(key), key + ' belongs in Albums');
+    assert.ok(!keysOf(withoutMedia).includes(key), key + ' must not appear in Artists');
   });
 });
 
@@ -296,10 +301,14 @@ test('o select faz uma coisa so, e o rotulo diz qual', function () {
   const artistas = computedsFor('artists', 'name');
   assert.equal(artistas.def.computed.sortSelectLabel.call(artistas.self), 'Sort by');
 
+  /* The native select is gone: it was capped at 105px to fit the toolbar and
+     cut labels mid-word. An icon opens a menu that sizes to its own content. */
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
-  assert.match(src, /<select :value="sortKey" :aria-label="sortSelectLabel"/,
-    'o select passa a espelhar a ordenacao, e nao um valor de tres conceitos');
-  assert.match(src, /@change="chooseSort\(\$event\.target\.value\)"/);
+  assert.doesNotMatch(src, /<select :value="sortKey"/, 'the clipped select must not come back');
+  assert.match(src, /aria-haspopup="menu"/, 'the trigger announces that it opens a menu');
+  assert.match(src, /@click="openSortMenu"/);
+  assert.match(src, /<lms-sort-menu v-if="ui\.sortMenu"/, 'the menu is rendered only while open');
+  assert.match(src, /@choose="chooseSort"/);
 });
 
 /* Atributo dinamico nao passa pelo translateTemplate -- a lista ATTRS do i18n so
@@ -985,15 +994,21 @@ test('a contagem de resultados nao disputa espaco com a fileira de pilulas', fun
    seis controles. Sem encolher nada, ela quebrava em tres linhas e comia a
    lista. O que encolhe e o rotulo do comando secundario -- a busca e o funil
    ficam, porque sao os dois que a barra existe para oferecer. */
-test('a barra cabe em uma linha na divisao padrao', function () {
+test('the toolbar fits one row at the default split', function () {
   const captured = helpers.browseComponent();
   const def = captured.def;
   assert.equal(def.data().paneWidth > 0, true);
 
+  /* 360px is the default split. The five controls measure 294px there, so the
+     Select command keeps its text -- it only becomes an icon below 320, which
+     is where they stop fitting. Before the sort select became an icon this
+     tripped at 430 and the bar took two rows at the default width. */
   const self = { paneWidth: 360 };
-  assert.equal(def.computed.toolbarTight.call(self), true, '360px e a largura padrao');
-  self.paneWidth = 553;
-  assert.equal(def.computed.toolbarTight.call(self), false, 'com folga o rotulo volta');
+  assert.equal(def.computed.toolbarTight.call(self), false,
+    'at the default 360px split everything fits one row with its label');
+  self.paneWidth = 300;
+  assert.equal(def.computed.toolbarTight.call(self), true,
+    'below 320 the Select command gives up its text');
 
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
   assert.match(src, /class="text-command select-command"/);
@@ -1006,10 +1021,11 @@ test('a barra cabe em uma linha na divisao padrao', function () {
   const regra = css.match(/\.library-tools \.select-command\.tight\{([^}]*)\}/)[1];
   assert.match(regra, /width:44px/, 'o alvo de toque continua com 44px');
 
-  /* Duas fileiras previsiveis em vez de tres imprevisiveis: a busca ocupa a
-     primeira inteira e os comandos ficam na segunda. */
-  const busca = css.match(/\.library-tools\.tight input\{([^}]*)\}/)[1];
-  assert.match(busca, /flex:1 1 100%/);
+  /* The search field no longer takes a row of its own: that rule existed to
+     make room for a 105px select, and forcing it now pushed the icons onto a
+     third row -- taller than what it replaced. */
+  assert.doesNotMatch(css, /\.library-tools\.tight input\{[^}]*flex:1 1 100%/,
+    'the forced row break must not come back');
   assert.match(src, /class="library-tools" :class="\{tight: toolbarTight\}"/);
 });
 

@@ -43,19 +43,13 @@ Vue.component('lms-browse', {
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h17l-6.5 7.6v5.6l-4 2.3v-7.9z"/></svg>
         <span v-if="filterCount" class="filter-badge" aria-hidden="true">{{ filterCount }}</span>
       </button>
-      <select :value="sortKey" :aria-label="sortSelectLabel" @change="chooseSort($event.target.value)">
-        <option v-if="view === 'recent'" value="recent">Recently added</option>
-        <option :value="primaryOptionValue">{{ primaryOptionLabel }}</option>
-        <option v-if="view === 'albums' || view === 'recent'" value="artist">Artist</option>
-        <option v-if="view === 'albums' || view === 'recent'" value="year">Year</option>
-        <option v-if="allowsMediaFilter" value="format">Format</option>
-        <option v-if="allowsMediaFilter" value="source">Local library first</option>
-        <option v-if="allowsMediaFilter" value="quality">Highest resolution first</option>
-      </select>
-	      <button class="icon-command" :title="sortTitle" :aria-label="sortLabel"
-	              :aria-pressed="String(sortDesc)"
-	              @click="LmsUi.toggleSortDir()">
-        <span aria-hidden="true">{{ sortDesc ? '↓' : '↑' }}</span>
+      <button ref="sortTrigger" class="icon-command sort-command" :class="{on: ui.sortMenu}"
+              :title="sortTriggerTitle" :aria-label="sortTriggerLabel" aria-haspopup="menu"
+              :aria-expanded="String(ui.sortMenu)" @click="openSortMenu">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 6.5h11M4 12h7M4 17.5h4"/>
+          <path d="M17.5 9.5v10M14.5 16.5l3 3 3-3"/>
+        </svg>
       </button>
       <button v-if="!ui.selectionMode" class="text-command select-command"
               :class="{tight: toolbarTight}" :title="toolbarTight ? 'Select' : null"
@@ -215,6 +209,9 @@ Vue.component('lms-browse', {
       <div class="p">Choose an item from the list on the left.</div>
     </div>
   </div>
+
+  <lms-sort-menu v-if="ui.sortMenu" :options="sortOptions" :value="sortKey" :desc="sortDesc"
+                 @choose="chooseSort" @direction="LmsUi.toggleSortDir()"></lms-sort-menu>
 </div>`,
   data: function () {
     var split = LmsSplitPane.load();
@@ -254,6 +251,36 @@ Vue.component('lms-browse', {
       }[this.view] || 'Name';
     },
     primaryOptionValue: function () { return this.view === 'years' ? 'year' : 'name'; },
+    /* The list the menu renders. It used to live as seven <option> tags with
+       v-if conditions between them; as data it can be read, and tested, in one
+       place. */
+    sortOptions: function () {
+      var out = [];
+      if (this.view === 'recent') out.push({ key: 'recent', label: this.tr('Recently added') });
+      out.push({ key: this.primaryOptionValue, label: this.tr(this.primaryOptionLabel) });
+      if (this.view === 'albums' || this.view === 'recent') {
+        out.push({ key: 'artist', label: this.tr('Artist') });
+        out.push({ key: 'year', label: this.tr('Year') });
+      }
+      if (this.allowsMediaFilter) {
+        out.push({ key: 'format', label: this.tr('Format') });
+        out.push({ key: 'source', label: this.tr('Local library first') });
+        out.push({ key: 'quality', label: this.tr('Highest resolution first') });
+      }
+      return out;
+    },
+    sortTriggerTitle: function () {
+      var current = this.sortOptions.filter(function (o) { return o.key === this.sortKey; }, this)[0];
+      return this.tr('Sort by') + (current ? ': ' + current.label : '');
+    },
+    /* Spoken by a screen reader, so it says the current state as well as what
+       the control does. It was Portuguese, glued together from three literals
+       -- which is also why no dictionary lookup could ever reach it. */
+    sortTriggerLabel: function () {
+      var current = this.sortOptions.filter(function (o) { return o.key === this.sortKey; }, this)[0];
+      return this.tr('Sort by') + (current ? ': ' + current.label : '') + '. ' +
+        (this.sortDesc ? this.tr('Descending order') : this.tr('Ascending order'));
+    },
     /* Em Albuns, "Artist" produz linhas de artista -- agrupa. Em Recentes a
        mesma opcao apenas reordena albuns, porque Recentes nao passa por
        loadPagedRoot e sempre desenha album. Chamar os dois de "Exibicao" era o
@@ -279,14 +306,9 @@ Vue.component('lms-browse', {
 	    selectionCountLabel: function () {
 	      var n = this.selectionCount;
 	      if (!n) return 'No item selected';
-	      return n + (n === 1 ? ' item selecionado' : ' itens selecionados');
-	    },
-	    sortLabel: function () {
-	      return 'Ordem atual: ' + (this.sortDesc ? 'decrescente' : 'crescente') +
-	        '. Alternar ordem';
-	    },
-	    sortTitle: function () {
-	      return this.sortDesc ? 'Switch to ascending order' : 'Switch to descending order';
+	      /* Each half is looked up on its own: a number glued to a phrase can
+	         never match a dictionary key as a whole. */
+	      return n + ' ' + this.tr(n === 1 ? 'item selected' : 'items selected');
 	    },
     allowsMediaFilter: function () { return LmsUi.allowsMediaFilter(this.view); },
     /* Uma leitura so do modo, com padrao explicito: 'none' e o estado em que
@@ -372,7 +394,10 @@ Vue.component('lms-browse', {
        encolher nada, ela quebrava em tres linhas e comia a lista logo na
        primeira abertura. O que encolhe e o rotulo do comando secundario -- a
        busca e o funil ficam, do tamanho que estavam. */
-    toolbarTight: function () { return this.paneWidth < 430; },
+    /* 294px is what the five controls measure with gaps and padding; below that
+       the Select command drops its text and becomes an icon. It used to trip at
+       430 because the sort select was 105px wide on its own. */
+    toolbarTight: function () { return this.paneWidth < 320; },
     /* Dois numeros que existiam so na memoria do componente. Contar sem dizer e
        a mesma familia do bug B: o dado sumia e nada na tela explicava. */
     listNotes: function () {
@@ -713,6 +738,9 @@ Vue.component('lms-browse', {
        o icone de funil --, e com isso desaparece o roteamento que mandava tres
        conceitos pelo mesmo campo. Sem guarda aqui de proposito: LmsUi.setSort ja
        recusa chave invalida para a view corrente. */
+    openSortMenu: function () {
+      LmsUi.openSortMenu(this.$refs.sortTrigger);
+    },
     chooseSort: function (value) {
       LmsUi.setSort([{ key: value, desc: this.sortDesc }]);
     },
