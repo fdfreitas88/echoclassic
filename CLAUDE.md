@@ -69,6 +69,16 @@ still worth merging; it is just not worth describing as verified.
 `npm install`, `git fetch/push`, `curl`, `ssh`, `scp`, `tools/deploy.sh`,
 `tools/rollback.sh`: propose the exact command and stop. Do not run it.
 
+## Plugin dependencies — decided, do not re-litigate
+
+Any feature whose backend is another plugin follows
+`docs/prompts/plugin-dependency-policy.md`: **detect and degrade, never
+install, never bundle, never enable DSP silently.** An absent third-party
+plugin collapses its whole feature to one line with an Install… action — never
+a dead control. Detection probes the JSON-RPC verb, not a plugin list, and is
+player-scoped where the verb needs a player. Read that file before designing
+anything on SqueezeDSP, Group Players, MusicArtistInfo, RandomPlay or DSTM.
+
 ## Agent efficiency — hard rules
 
 - Grep first, always. Never read a file >300 lines whole; read hit ±40 lines.
