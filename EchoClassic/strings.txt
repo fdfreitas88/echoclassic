@@ -448,6 +448,14 @@ ECHOCLASSIC_UI_HOME
 	EN	Home
 	PT	Início
 
+ECHOCLASSIC_UI_HOURS_H
+	EN	{{hours}} h
+	PT	{{hours}} h
+
+ECHOCLASSIC_UI_HOURS_MINUTES
+	EN	{{hours}} h {{minutes}} min
+	PT	{{hours}} h {{minutes}} min
+
 ECHOCLASSIC_UI_IMPORT
 	EN	Import
 	PT	Importar
@@ -467,6 +475,10 @@ ECHOCLASSIC_UI_INFORMATION
 ECHOCLASSIC_UI_INVALID_JSON
 	EN	invalid JSON
 	PT	JSON inválido
+
+ECHOCLASSIC_UI_LESS_THAN_ONE_MINUTE
+	EN	less than 1 minute
+	PT	menos de 1 minuto
 
 ECHOCLASSIC_UI_LIBRARY
 	EN	Library
@@ -536,6 +548,10 @@ ECHOCLASSIC_UI_LOAD_MORE_SONGS
 	EN	Load more songs
 	PT	Carregar mais músicas
 
+ECHOCLASSIC_UI_LOADED_OF_TOTAL
+	EN	{{loaded}} of {{total}} loaded
+	PT	{{loaded}} de {{total}} carregadas
+
 ECHOCLASSIC_UI_LOCAL
 	EN	Local
 	PT	Local
@@ -559,6 +575,10 @@ ECHOCLASSIC_UI_MAIN_NAVIGATION
 ECHOCLASSIC_UI_MINI_PLAYER
 	EN	Mini player
 	PT	Mini player
+
+ECHOCLASSIC_UI_MINUTES_MIN
+	EN	{{minutes}} min
+	PT	{{minutes}} min
 
 ECHOCLASSIC_UI_MORE_ACTIONS
 	EN	More actions
@@ -730,8 +750,8 @@ ECHOCLASSIC_UI_PLAYS_2
 	PT	reproduções
 
 ECHOCLASSIC_UI_PLAY_WILL_START
-	EN	Play will start: 
-	PT	Play iniciará: 
+	EN	Play will start:
+	PT	Play iniciará:
 
 ECHOCLASSIC_UI_PREFERENCES_EXPORTED
 	EN	Preferences exported.

@@ -168,3 +168,314 @@ test('RESP-03: o slot de capa colapsado nao ocupa largura', function () {
   assert.doesNotMatch(collapsed, /background-color/,
     'RESP-03 foi decidido como colapso, nao cor -- nenhum token novo neste commit');
 });
+
+/* RESP-05, RESP-06, RESP-07, RESP-08: formataçao de duracao, contador e prefixo
+   de reproducao montados em JavaScript viram texto inglês puro, sem espaçamento,
+   e nunca batem com uma chave de dicionario. A correçao passa por tr() e espaços.
+
+   Os testes verificam o resultado RENDERIZADO, nao apenas o padrão no código,
+   porque padrões fracos deixam bugs passarem: a traducao de placeholders estava
+   quebrada mas os testes antigos passavam. Garante-se aqui que nenhuma string
+   visível ao usuário contém {{ em nenhuma linguagem. */
+
+test('RESP-08: playStartsLabel() em inglês tem EXATAMENTE UM dois-pontos', function () {
+  const q = helpers.queueInstance({
+    LmsStr: {
+      t: function (key) { return key; }
+    }
+  });
+  q.self.store.queueIndex = 0;
+  q.self.store.queue = [{ index: 0, title: 'Enter Sandman' }];
+  q.self.store.mode = 'stop';
+  const rendered = q.self.playStartsLabel;
+  assert.equal((rendered.match(/:/g) || []).length, 1,
+    'renderizado em inglês: ' + rendered);
+  assert.equal(rendered, 'Play will start: Enter Sandman');
+});
+
+test('RESP-08: playStartsLabel() em português tem EXATAMENTE UM dois-pontos (nenhum duplicado)', function () {
+  const q = helpers.queueInstance({
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: {
+      PT: { 'Play will start:': 'Play iniciará:' }
+    },
+    LmsStr: {
+      t: function (key) {
+        const dict = { 'Play will start:': 'Play iniciará:' };
+        return dict[key] || key;
+      }
+    }
+  });
+  q.self.store.queueIndex = 0;
+  q.self.store.queue = [{ index: 0, title: 'Enter Sandman' }];
+  q.self.store.mode = 'stop';
+  const rendered = q.self.playStartsLabel;
+  assert.equal((rendered.match(/:/g) || []).length, 1,
+    'renderizado em português: ' + rendered);
+  assert.equal(rendered, 'Play iniciará: Enter Sandman');
+});
+
+test('RESP-06: countLabel() com cargas parciais renderiza sem {{ em inglês', function () {
+  const q = helpers.queueInstance({
+    LmsStr: {
+      t: function (key) { return key; }
+    }
+  });
+  q.self.store.queueTotal = 100;
+  q.self.store.queue = new Array(10);
+  const rendered = q.self.countLabel;
+  assert.doesNotMatch(rendered, /{{/,
+    'nenhum placeholder fica no resultado em inglês: ' + rendered);
+  assert.match(rendered, /10 of 100/);
+});
+
+test('RESP-06: countLabel() com cargas parciais renderiza sem {{ em português', function () {
+  const q = helpers.queueInstance({
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: {
+      PT: {
+        'track': 'faixa',
+        'tracks': 'faixas',
+        '{{loaded}} of {{total}} loaded': '{{loaded}} de {{total}} carregadas'
+      }
+    },
+    LmsStr: {
+      t: function (key) {
+        const dict = {
+          'track': 'faixa',
+          'tracks': 'faixas',
+          '{{loaded}} of {{total}} loaded': '{{loaded}} de {{total}} carregadas'
+        };
+        return dict[key] || key;
+      }
+    }
+  });
+  q.self.store.queueTotal = 100;
+  q.self.store.queue = new Array(10);
+  const rendered = q.self.countLabel;
+  assert.doesNotMatch(rendered, /{{/,
+    'nenhum placeholder fica no resultado em português: ' + rendered);
+  assert.match(rendered, /10 de 100 faixas carregadas/);
+});
+
+test('RESP-07: longDuration() sem tr() fornecido renderiza em inglês e sem {{', function () {
+  const ctx = helpers.runBrowserFile('EchoClassic/HTML/echoclassic/html/js/format.js');
+  const fmt = ctx.LmsFmt;
+
+  const under1 = fmt.longDuration(30);
+  assert.doesNotMatch(under1, /{{/, 'menos de 1 min: ' + under1);
+  assert.equal(under1, 'less than 1 minute');
+
+  const mins = fmt.longDuration(5 * 60);
+  assert.doesNotMatch(mins, /{{/, '5 minutos: ' + mins);
+  assert.equal(mins, '5 min');
+
+  const hourMins = fmt.longDuration(1 * 3600 + 31 * 60);
+  assert.doesNotMatch(hourMins, /{{/, '1h31m: ' + hourMins);
+  assert.equal(hourMins, '1 h 31 min');
+
+  const hour = fmt.longDuration(2 * 3600);
+  assert.doesNotMatch(hour, /{{/, '2 horas: ' + hour);
+  assert.equal(hour, '2 h');
+});
+
+test('RESP-07: longDuration() com dicionário português renderiza em português e sem {{', function () {
+  const ctx = helpers.runBrowserFile('EchoClassic/HTML/echoclassic/html/js/format.js', {
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: {
+      PT: {
+        'less than 1 minute': 'menos de 1 minuto',
+        '{{minutes}} min': '{{minutes}} min',
+        '{{hours}} h {{minutes}} min': '{{hours}} h {{minutes}} min',
+        '{{hours}} h': '{{hours}} h'
+      }
+    },
+    LmsStr: {
+      t: function (key) {
+        const dict = {
+          'less than 1 minute': 'menos de 1 minuto',
+          '{{minutes}} min': '{{minutes}} min',
+          '{{hours}} h {{minutes}} min': '{{hours}} h {{minutes}} min',
+          '{{hours}} h': '{{hours}} h'
+        };
+        return dict[key] || key;
+      }
+    }
+  });
+  const fmt = ctx.LmsFmt;
+
+  const under1 = fmt.longDuration(30);
+  assert.doesNotMatch(under1, /{{/, 'menos de 1 minuto: ' + under1);
+  assert.equal(under1, 'menos de 1 minuto');
+
+  const mins = fmt.longDuration(5 * 60);
+  assert.doesNotMatch(mins, /{{/, '5 minutos: ' + mins);
+  assert.equal(mins, '5 min');
+
+  const hourMins = fmt.longDuration(1 * 3600 + 31 * 60);
+  assert.doesNotMatch(hourMins, /{{/, '1h31m: ' + hourMins);
+  assert.equal(hourMins, '1 h 31 min');
+
+  const hour = fmt.longDuration(2 * 3600);
+  assert.doesNotMatch(hour, /{{/, '2 horas: ' + hour);
+  assert.equal(hour, '2 h');
+});
+
+/* Testes do defeito original D2: as strings que o usuário fotografou.
+   7440 segundos = 2 h 4 min. Cada caso falha se um espaço for removido. */
+
+test('D2 screenshot: remaining() renderiza "2 h 4 min remaining" em inglês', function () {
+  const q = helpers.queueInstance({
+    LmsStr: {
+      t: function (key) { return key; }
+    },
+    LmsStore: {
+      state: {
+        queue: [{ index: 0, id: 1 }], queueIndex: 0, queueTotal: 21,
+        mode: 'play', shuffle: 0, repeat: 0, queueUndo: [], np: { id: 1 }
+      },
+      queueRemaining: function () { return 7440; }
+    }
+  });
+  const rendered = q.self.remaining;
+  assert.equal(rendered, '2 h 4 min remaining',
+    'renderizado exatamente (falha se espaço for removido)');
+});
+
+test('D2 screenshot: remaining() renderiza "2 h 4 min restantes" em português', function () {
+  const q = helpers.queueInstance({
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: {
+      PT: {
+        'remaining': 'restantes',
+        '{{hours}} h {{minutes}} min': '{{hours}} h {{minutes}} min'
+      }
+    },
+    LmsStr: {
+      t: function (key) {
+        const dict = {
+          'remaining': 'restantes',
+          '{{hours}} h {{minutes}} min': '{{hours}} h {{minutes}} min'
+        };
+        return dict[key] || key;
+      }
+    },
+    LmsStore: {
+      state: {
+        queue: [{ index: 0, id: 1 }], queueIndex: 0, queueTotal: 21,
+        mode: 'play', shuffle: 0, repeat: 0, queueUndo: [], np: { id: 1 }
+      },
+      queueRemaining: function () { return 7440; }
+    }
+  });
+  const rendered = q.self.remaining;
+  assert.equal(rendered, '2 h 4 min restantes',
+    'renderizado exatamente (falha se espaço for removido)');
+});
+
+test('D2 screenshot: countLabel() renderiza "21 tracks" em inglês (caminho simples)', function () {
+  const q = helpers.queueInstance({
+    LmsStr: {
+      t: function (key) { return key; }
+    }
+  });
+  q.self.store.queueTotal = 21;
+  q.self.store.queue = new Array(21);
+  const rendered = q.self.countLabel;
+  assert.equal(rendered, '21 tracks',
+    'renderizado exatamente (falha se espaço for removido: "21tracks")');
+});
+
+test('D2 screenshot: countLabel() renderiza "21 faixas" em português (caminho simples)', function () {
+  const q = helpers.queueInstance({
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: {
+      PT: {
+        'tracks': 'faixas'
+      }
+    },
+    LmsStr: {
+      t: function (key) {
+        const dict = { 'tracks': 'faixas' };
+        return dict[key] || key;
+      }
+    }
+  });
+  q.self.store.queueTotal = 21;
+  q.self.store.queue = new Array(21);
+  const rendered = q.self.countLabel;
+  assert.equal(rendered, '21 faixas',
+    'renderizado exatamente (falha se espaço for removido)');
+});
+
+test('remaining() renderiza "live" quando sem duração em inglês', function () {
+  const q = helpers.queueInstance({
+    LmsStr: {
+      t: function (key) { return key; }
+    },
+    LmsStore: {
+      state: {
+        queue: [], queueIndex: 0, queueTotal: 0,
+        mode: 'play', shuffle: 0, repeat: 0, queueUndo: [], np: { id: null }
+      },
+      queueRemaining: function () { return 0; }
+    }
+  });
+  const rendered = q.self.remaining;
+  assert.equal(rendered, 'live');
+});
+
+test('remaining() renderiza "ao vivo" quando sem duração em português', function () {
+  const q = helpers.queueInstance({
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: {
+      PT: { 'live': 'ao vivo' }
+    },
+    LmsStr: {
+      t: function (key) {
+        const dict = { 'live': 'ao vivo' };
+        return dict[key] || key;
+      }
+    },
+    LmsStore: {
+      state: {
+        queue: [], queueIndex: 0, queueTotal: 0,
+        mode: 'play', shuffle: 0, repeat: 0, queueUndo: [], np: { id: null }
+      },
+      queueRemaining: function () { return 0; }
+    }
+  });
+  const rendered = q.self.remaining;
+  assert.equal(rendered, 'ao vivo');
+});
+
+test('countLabel() renderiza "1 track" no singular em inglês', function () {
+  const q = helpers.queueInstance({
+    LmsStr: {
+      t: function (key) { return key; }
+    }
+  });
+  q.self.store.queueTotal = 1;
+  q.self.store.queue = [{ index: 0, id: 1 }];
+  const rendered = q.self.countLabel;
+  assert.equal(rendered, '1 track');
+});
+
+test('countLabel() renderiza "1 faixa" no singular em português', function () {
+  const q = helpers.queueInstance({
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: {
+      PT: { 'track': 'faixa' }
+    },
+    LmsStr: {
+      t: function (key) {
+        const dict = { 'track': 'faixa' };
+        return dict[key] || key;
+      }
+    }
+  });
+  q.self.store.queueTotal = 1;
+  q.self.store.queue = [{ index: 0, id: 1 }];
+  const rendered = q.self.countLabel;
+  assert.equal(rendered, '1 faixa');
+});

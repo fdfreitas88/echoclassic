@@ -30,18 +30,23 @@
     return m + ':' + pad(rest);
   }
 
+  function tr(key) {
+    return (typeof LmsStr !== 'undefined' && LmsStr.t) ? LmsStr.t(key) : key;
+  }
+
   function longDuration(seconds) {
     var s = Math.round(finite(seconds));
     if (s < 0) s = 0;
     /* Abaixo de um minuto nao ha o que arredondar: "0 min" nao diz nada. */
-    if (s < 60) return 'menos de 1 min';
+    if (s < 60) return tr('less than 1 minute');
     /* Arredonda uma vez, em minutos, e so depois separa horas: arredondar hora e
        minuto em paralelo produzia "60 min" e "1 h 60 min". */
     var total = Math.round(s / 60);
     var h = Math.floor(total / 60);
     var m = total % 60;
-    if (!h) return m + ' min';
-    return m ? h + ' h ' + m + ' min' : h + ' h';
+    if (!h) return tr('{{minutes}} min').replace('{{minutes}}', m);
+    if (m) return tr('{{hours}} h {{minutes}} min').replace('{{hours}}', h).replace('{{minutes}}', m);
+    return tr('{{hours}} h').replace('{{hours}}', h);
   }
 
   function rate(sampleRate) {

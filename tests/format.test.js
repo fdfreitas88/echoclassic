@@ -8,7 +8,7 @@ test('format helpers cover duration, long duration, depth and cover sizes', func
 
   assert.equal(fmt.duration(75 * 60 + 4), '1:15:04');
   assert.equal(fmt.duration(-2), '0:00');
-  assert.equal(fmt.longDuration(59), 'menos de 1 min');
+  assert.equal(fmt.longDuration(59), 'less than 1 minute');
   assert.equal(fmt.longDuration(59 * 60 + 40), '1 h');
   assert.equal(fmt.longDuration(2 * 3600 + 31 * 60), '2 h 31 min');
   assert.notEqual(fmt.longDuration(59 * 60 + 40), '60 min');
