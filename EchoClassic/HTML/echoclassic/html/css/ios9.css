@@ -734,7 +734,6 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
   border-radius:3px;padding:2px 5px;white-space:nowrap}
 .opsearch-action.secondary{color:var(--text2)}
 .setting-select{margin-left:auto;max-width:210px}
-.transition-select{width:min(260px,62vw);max-width:none}
 .setting-range{margin-left:auto;min-width:100px}
 .sleep-row{align-items:flex-start;padding-top:8px;padding-bottom:8px}
 .inline-commands{margin-left:auto;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}

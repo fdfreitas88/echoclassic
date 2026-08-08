@@ -1965,3 +1965,19 @@ ECHOCLASSIC_UI_THIS_ALBUM_HAS_MORE_TRACKS
 ECHOCLASSIC_UI_POSITION
 	EN	Position
 	PT	Posição
+
+ECHOCLASSIC_UI_DURATION
+	EN	Duration
+	PT	Duração
+
+ECHOCLASSIC_UI_SECONDS
+	EN	seconds
+	PT	segundos
+
+ECHOCLASSIC_UI_CROSSFADE_OFF_HINT
+	EN	Off: gapless playback — songs join with no gap and no blend
+	PT	Desligado: reprodução sem intervalo — as faixas se sucedem sem espaço e sem mistura
+
+ECHOCLASSIC_UI_CROSSFADE_ON_HINT
+	EN	On: crossfade — the end of one song blends into the start of the next
+	PT	Ligado: transição — o final de uma faixa se mistura ao início da próxima
