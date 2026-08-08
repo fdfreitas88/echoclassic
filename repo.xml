@@ -18,7 +18,7 @@
     <title lang="PT">Echo Classic</title>
   </details>
   <plugins>
-    <plugin name="EchoClassic" version="3.2.5" minTarget="8.0" maxTarget="*">
+    <plugin name="EchoClassic" version="3.2.6c" minTarget="8.0" maxTarget="*">
       <title lang="EN">Echo Classic</title>
       <title lang="PT">Echo Classic</title>
       <desc lang="EN">The iPad Music look of iOS 9, over your own library. Shows the native sample rate and bit depth of what actually reaches the DAC.</desc>

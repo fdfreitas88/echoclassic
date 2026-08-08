@@ -13,6 +13,86 @@ language at the time. They are left as they were: they describe releases that
 were already published under those notes, and rewriting them would misreport
 what was announced.
 
+## [3.2.6c] — 2026-08-08
+
+Settings stops being a tree of subscreens, the queue stops painting over
+itself, and six layouts stop reserving space with numbers measured against
+text that changes length when you change language.
+
+This is the first published release since 3.2.5. The 3.2.6, 3.2.6a and 3.2.6b
+work was never packaged, so it is described here.
+
+### The queue and the players
+
+- A single-album queue no longer clips its group header, paints artwork over
+  the rows beneath it, or ragged-edges the duration column. Four separate
+  causes: `.qcaption` carried `text-overflow:ellipsis` on a flex container
+  instead of on the leaf that holds the text; `.qcaption` and `.qrow` were
+  fixed heights with nothing containing the overflow, so content that outgrew
+  its box painted over the next row; the art gutter was emitted even on rows
+  that have no art, leaving an invisible 34px hole; and the row hairline was an
+  adjacent-sibling rule that a group header broke. [live]
+- The queue counter reads as a sentence again — "21 tracks · 2 h 4 min
+  remaining" rather than "21tracks · 2 h 4 minremaining". The missing spaces
+  were the visible half. The other half is that all of these labels were
+  assembled in JavaScript, so no dictionary could reach them and they were
+  permanently English whatever language you chose. They now route through the
+  string table; the four keys they need already existed and were orphaned.
+  [live]
+- The fullscreen player uses the width it has instead of the width it assumed.
+  [live]
+- Six more layouts stop reserving fixed pixel widths inside a flex row for a
+  sibling that is free to outgrow them: the mini player's now-playing box, the
+  queue header, the search field, three families of row hairline. The mini
+  player's reserve was 330px chosen for the English word "Playback queue";
+  "Fila de reprodução" is longer, and the mini now carries its own typeface, so
+  the number was wrong in two directions at once. All of it is real flex now.
+  [code] — the mechanism was read in source and proved by a regex suite over
+  the stylesheet; the rendered geometry was not measured [unverified]
+
+### Settings
+
+The whole section below is read in source and covered by tests. None of it has
+been seen in a browser. [code] [unverified]
+
+- Settings is one scrollable screen. The four gauge-style subscreens, the
+  separate Theme, Colour Scheme and Fonts screens are gone; Appearance is
+  inline. Queue, General, Language, Backup and About take their final shape.
+- Volume and the crossfade `<select>` leave Settings — volume belongs to the
+  player, not to a preferences screen. Crossfade becomes a switch with a
+  duration beside it and a sentence explaining what each state does.
+- One Player layout screen covers all three players — mini, small and full —
+  with one grammar instead of three. Each surface can follow the app's
+  appearance or carry its own; choosing "match app" clears the surface's
+  overrides, and turning it off snapshots what the app looks like at that
+  moment rather than pinning a value that later drifts.
+- Per-player fonts actually change the typeface. The feature shipped inert:
+  `--app-font` is inherited, and `font-family` was resolved from it in exactly
+  one place, on `body`, so a surface inherited the already-resolved family and
+  its own choice changed nothing. One rule re-resolves it on the surface.
+- What that does not deliver: Podium Sans and Espy Sans still render through
+  the Geneva/Verdana fallback, because the two `.woff2` files are not in the
+  tree. Bundling them waits on a licence decision. Chicago renders only where
+  it is installed locally. The options are not equally available and the
+  release does not claim they are.
+
+### Language
+
+- The player row in Settings stops being half Portuguese. "Em uso",
+  "Controlar" and "Transferir" sat beside "connected", "unavailable" and
+  "Sync"; the sleep line read "Desligamento programado". These were not missing
+  translations but source-language violations — the dictionary is keyed by the
+  English phrase, so a Portuguese literal in a template matches nothing and
+  shows in Portuguese to everyone, in every language. [code]
+- Eleven string-table entries stranded by the Settings rewrite are removed.
+  Each was checked by its English phrase across the whole tree, which is the
+  question that matters: a key-name grep answers a different one and would have
+  called every entry unused. Nine more that an earlier audit listed as stranded
+  are kept — they still match live text. [measured]
+- `strings.txt` is append-ordered. It has not been alphabetical since 3.2.6b,
+  and treating order as a convention has been flagged and regressed three
+  times. It is not one. [code]
+
 ## [3.2.5] — 2026-08-05
 
 English becomes the language the interface is written in, Portuguese becomes a
