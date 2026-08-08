@@ -281,10 +281,10 @@ Vue.component('lms-settings', {
           <strong>{{ p.name }}</strong>
           <span>{{ p.connected ? 'connected' : 'unavailable' }}</span>
         </div>
-        <span v-if="p.id === store.playerId" class="player-current">Em uso</span>
+        <span v-if="p.id === store.playerId" class="player-current">In use</span>
         <template v-else-if="p.connected">
-          <button title="Usar este player no Echo Classic" @click.stop="control(p)">Controlar</button>
-          <button title="Continue playback on this player" @click.stop="handoff(p)">Transferir</button>
+          <button title="Use this player in Echo Classic" @click.stop="control(p)">Control</button>
+          <button title="Continue playback on this player" @click.stop="handoff(p)">Transfer</button>
           <button title="Play together with the current player" @click.stop="sync(p)">Sync</button>
         </template>
       </div>
@@ -356,7 +356,7 @@ Vue.component('lms-settings', {
       <span style="font-size:12px;color:var(--text2)">{{ sleepAtEndHint }}</span>
     </div>
     <div v-if="store.sleepRemaining" class="srow">
-      Desligamento programado <span class="v">{{ sleepLabel }}</span>
+      Sleep timer <span class="v">{{ sleepLabel }}</span>
     </div>
   </div>
 

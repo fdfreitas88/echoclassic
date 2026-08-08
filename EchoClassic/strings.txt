@@ -1939,3 +1939,19 @@ ECHOCLASSIC_UI_ALSO_APPLIES_TO_THE_SMALL_PLAYER
 ECHOCLASSIC_UI_BAR_STYLE_REMEMBERED_PER_THEME
 	EN	Bar style is remembered per theme.
 	PT	O estilo da barra é lembrado por tema.
+
+ECHOCLASSIC_UI_IN_USE
+	EN	In use
+	PT	Em uso
+
+ECHOCLASSIC_UI_USE_THIS_PLAYER_IN_ECHO_CLASSIC
+	EN	Use this player in Echo Classic
+	PT	Usar este player no Echo Classic
+
+ECHOCLASSIC_UI_CONTROL
+	EN	Control
+	PT	Controlar
+
+ECHOCLASSIC_UI_TRANSFER
+	EN	Transfer
+	PT	Transferir
