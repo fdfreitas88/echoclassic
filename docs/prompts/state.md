@@ -16,10 +16,12 @@ Anything before this file existed is in `git log`. The settings redesign
 - 1871550 · eleven stranded strings.txt entries removed, Volume kept · [measured]
 - dd6948a · active-player row and sleep line stop being Portuguese · [code]
 - 6039d19 · 3.2.6c manifests and CHANGELOG · [measured]
+- e421376 · state.md through 3.2.6c · [measured]
+- 07f31b1 · AUDIT-20 recon on SqueezeDSP, from source · [code]
+- 7977e27 · SqueezeDSP not installed on the server · [measured]
+- d11c6c9 · plugin dependency policy · [code]
 
 Gates at 6039d19, run once by verify: 237 tests · 4/4 · contrast 125/125 ·
 check-version 3.2.6c. [measured]
 Everything from c87816c onward is still [unverified] — not deployed, not seen
 in a browser. The acceptance walkthrough is what converts it.
-- 07f31b1 · AUDIT-20 recon on SqueezeDSP, from source · [code]
-- 7977e27 · SqueezeDSP not installed on the server · [measured]
