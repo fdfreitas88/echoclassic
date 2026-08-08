@@ -156,9 +156,17 @@ ECHOCLASSIC_UI_A_PLAYLIST_WITH_THAT_NAME_ALREADY_EXISTED_IT
 	EN	A playlist with that name already existed; it was reused.
 	PT	Já existia uma playlist com esse nome; ela foi reaproveitada.
 
+ECHOCLASSIC_UI_ABOUT
+	EN	About
+	PT	Sobre
+
 ECHOCLASSIC_UI_BACK
 	EN	Back
 	PT	Voltar
+
+ECHOCLASSIC_UI_BACKUP
+	EN	Backup
+	PT	Backup
 
 ECHOCLASSIC_UI_BACK_TO_ADAPTIVE_MODE
 	EN	Back to adaptive mode
@@ -877,17 +885,9 @@ ECHOCLASSIC_UI_SEARCH_THE_LIBRARY
 	EN	Search the library
 	PT	Buscar na biblioteca
 
-ECHOCLASSIC_UI_SECURITY_AND_COMPATIBILITY
-	EN	Security and compatibility
-	PT	Segurança e compatibilidade
-
 ECHOCLASSIC_UI_SELECT
 	EN	Select
 	PT	Selecionar
-
-ECHOCLASSIC_UI_SERVER
-	EN	Server
-	PT	Servidor
 
 ECHOCLASSIC_UI_SERVER_VERSION
 	EN	Server version
@@ -1529,8 +1529,8 @@ ECHOCLASSIC_UI_ALBUM_LIST_TRUNCATED
 	PT	Esta lista tem mais de 1.000 álbuns e esta tela mostra os 1.000 primeiros.
 
 ECHOCLASSIC_UI_IMPORT_KEEPS_REST
-	EN	Anything not in the file stays as it is. A copy of the current state
-	PT	O que não estiver no arquivo continua como está. Uma cópia do estado atual
+	EN	Anything not in the file stays as it is. A copy of the current state is kept in the browser before the write happens. The page reloads afterwards.
+	PT	O que não estiver no arquivo continua como está. Uma cópia do estado atual fica guardada no navegador antes da gravação. A página recarrega em seguida.
 
 ECHOCLASSIC_UI_QUEUE_EMPTY_1
 	EN	The queue is empty. Play an album or a playlist and the tracks that follow appear here.
@@ -1599,6 +1599,10 @@ ECHOCLASSIC_UI_QUEUE_ARTWORK
 ECHOCLASSIC_UI_QUEUE_ARTWORK_HELP
 	EN	Choose how often album art repeats in the playback queue.
 	PT	Escolha com que frequência a capa do álbum se repete na fila de reprodução.
+
+ECHOCLASSIC_UI_QUERYING_SERVER
+	EN	Querying the server…
+	PT	Consultando o servidor…
 
 ECHOCLASSIC_UI_SLEEPING
 	EN	Sleeping
