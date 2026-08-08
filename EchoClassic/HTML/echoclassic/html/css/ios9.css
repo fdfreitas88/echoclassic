@@ -767,6 +767,20 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .scheme-crimson{--scheme-light:#C51F4A;--scheme-dark:#FF5A7F}
 .scheme-indigo{--scheme-light:#4B50B8;--scheme-dark:#9B91FF}
 .scheme-amber{--scheme-light:#9A5500;--scheme-dark:#FFB52E}
+/* Appearance (app level, C5): a solid dot per scheme instead of the
+   light/dark split circle above -- reuses the same --scheme-light/
+   --scheme-dark custom properties the .scheme-<key> classes already set on
+   this same element via :class="'scheme-' + scheme.key", so a sixth scheme
+   only ever needs one new colour pair, not two. The ring on the selected dot
+   is --accent against the row's own --group-bg (the swatch row lives inside
+   .sgroup, never directly on --group-page) -- see tools/check-contrast.py's
+   'anel do swatch selecionado' pair. */
+.swatch-row{display:flex;gap:14px;flex:none;margin-left:auto}
+.swatch-dot{width:28px;height:28px;border-radius:50%;border:2.5px solid transparent;
+  padding:0;cursor:pointer;flex:0 0 28px;background:var(--scheme-light)}
+body.dark .swatch-dot{background:var(--scheme-dark)}
+.swatch-dot:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.swatch-dot[aria-checked="true"]{border-color:var(--accent)}
 .font-option-row{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}
 .font-option-row:active{background:var(--selected)}
 .font-option-row:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}

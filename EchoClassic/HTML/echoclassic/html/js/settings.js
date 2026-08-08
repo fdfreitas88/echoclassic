@@ -17,99 +17,7 @@ Vue.component('lms-settings', {
           src="/settings/index.html"></iframe>
 </div>
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
-  <template v-if="ui.appearanceScreen === 'theme'">
-    <div class="sgroup theme-option-group" role="radiogroup" aria-label="Theme">
-      <button v-for="option in themeOptions" :key="option.key" type="button"
-              class="srow theme-option-row"
-              role="radio" :aria-checked="(ui.dark ? 'dark' : 'light') === option.key ? 'true' : 'false'"
-              :tabindex="(ui.dark ? 'dark' : 'light') === option.key ? 0 : -1"
-              @keydown="radioKey($event, themeOptions, ui.dark ? 'dark' : 'light', selectTheme)"
-              @click="selectTheme(option.key)">
-        <span class="theme-option-label">{{ option.label }}</span>
-        <span class="font-option-check" aria-hidden="true"></span>
-      </button>
-    </div>
-  </template>
-
-  <template v-else-if="ui.appearanceScreen === 'colorScheme'">
-    <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Colour scheme">
-      <button v-for="scheme in colorSchemes" :key="scheme.key" type="button"
-              class="srow color-scheme-row" :class="'scheme-' + scheme.key"
-              role="radio" :aria-checked="ui.colorScheme === scheme.key ? 'true' : 'false'"
-              :tabindex="ui.colorScheme === scheme.key ? 0 : -1"
-              @keydown="radioKey($event, colorSchemes, ui.colorScheme, colorScheme)"
-              @click="colorScheme(scheme.key)">
-        <span class="scheme-swatches" aria-hidden="true">
-          <span class="scheme-swatch scheme-swatch-light"></span>
-          <span class="scheme-swatch scheme-swatch-dark"></span>
-        </span>
-        <span class="scheme-label">{{ scheme.label }}</span>
-        <span class="color-scheme-check" aria-hidden="true"></span>
-      </button>
-    </div>
-  </template>
-
-  <template v-else-if="ui.appearanceScreen === 'font'">
-    <div class="sgroup font-option-group" role="radiogroup" aria-label="Font">
-      <button v-for="font in fontOptions" :key="font.key" type="button"
-              class="srow font-option-row" :class="'font-' + font.key"
-              role="radio" :aria-checked="ui.fontFamily === font.key ? 'true' : 'false'"
-              :tabindex="ui.fontFamily === font.key ? 0 : -1"
-              @keydown="radioKey($event, fontOptions, ui.fontFamily, fontFamily)"
-              @click="fontFamily(font.key)">
-        <span class="font-option-label">{{ font.label }}</span>
-        <span class="font-option-check" aria-hidden="true"></span>
-      </button>
-    </div>
-  </template>
-
-  <template v-else-if="ui.appearanceScreen === 'progress'">
-    <div class="sgroup gauge-settings-group">
-      <div class="player-help">
-        {{ gaugeHelp }}
-      </div>
-      <div class="srow gauge-style-row">
-        <span>{{ miniGaugeStyleLabel }}</span>
-        <div class="gauge-segmented" role="radiogroup"
-             :aria-label="miniGaugeStyleLabel">
-          <button v-for="style in gaugeStyles" :key="'mini-' + style.key" type="button"
-                  role="radio" :aria-checked="ui.miniGaugeStyle === style.key ? 'true' : 'false'"
-                  :tabindex="ui.miniGaugeStyle === style.key ? 0 : -1"
-                  :class="{on: ui.miniGaugeStyle === style.key}"
-                  @keydown="radioKey($event, gaugeStyles, ui.miniGaugeStyle, miniGaugeStyle)"
-                  @click="miniGaugeStyle(style.key)">{{ style.label }}</button>
-        </div>
-      </div>
-      <label class="srow">Mini player colour
-        <select class="setting-select mini-gauge-color" :value="ui.miniGaugeColor"
-                @change="gaugeColor('mini', $event.target.value)">
-          <option v-for="color in gaugeColors" :key="'mini-color-' + color.key"
-                  :value="color.key">{{ color.label }}</option>
-        </select>
-      </label>
-      <div class="srow gauge-style-row">
-        <span>{{ playerGaugeStyleLabel }}</span>
-        <div class="gauge-segmented" role="radiogroup"
-             :aria-label="playerGaugeStyleLabel">
-          <button v-for="style in gaugeStyles" :key="'player-' + style.key" type="button"
-                  role="radio" :aria-checked="ui.playerGaugeStyle === style.key ? 'true' : 'false'"
-                  :tabindex="ui.playerGaugeStyle === style.key ? 0 : -1"
-                  :class="{on: ui.playerGaugeStyle === style.key}"
-                  @keydown="radioKey($event, gaugeStyles, ui.playerGaugeStyle, playerGaugeStyle)"
-                  @click="playerGaugeStyle(style.key)">{{ style.label }}</button>
-        </div>
-      </div>
-      <label class="srow">Full player colour
-        <select class="setting-select player-gauge-color" :value="ui.playerGaugeColor"
-                @change="gaugeColor('player', $event.target.value)">
-          <option v-for="color in gaugeColors" :key="'player-color-' + color.key"
-                  :value="color.key">{{ color.label }}</option>
-        </select>
-      </label>
-    </div>
-  </template>
-
-  <template v-else-if="ui.appearanceScreen === 'players'">
+  <template v-if="ui.appearanceScreen === 'players'">
     <div class="sgroup">
       <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('full')">
         Full player <span class="v">{{ surfaceStatusLabel('full') }} ›</span>
@@ -441,6 +349,42 @@ Vue.component('lms-settings', {
     </div>
   </div>
 
+  <div class="sgh">Appearance</div>
+  <div class="sgroup">
+    <div class="srow">Dark theme
+      <button type="button" class="sw" :class="{on: ui.dark}" role="switch"
+              :aria-checked="String(ui.dark)" aria-label="Dark theme"
+              @click="toggleTheme"><span class="visually-hidden">Dark theme</span></button>
+    </div>
+    <div class="srow">Accent colour
+      <div class="swatch-row" role="radiogroup" aria-label="Accent colour">
+        <button v-for="scheme in colorSchemes" :key="scheme.key" type="button"
+                class="swatch-dot" :class="'scheme-' + scheme.key"
+                role="radio" :aria-checked="ui.colorScheme === scheme.key ? 'true' : 'false'"
+                :aria-label="tr(scheme.label)"
+                :tabindex="ui.colorScheme === scheme.key ? 0 : -1"
+                @keydown="radioKey($event, colorSchemes, ui.colorScheme, colorScheme)"
+                @click="colorScheme(scheme.key)"></button>
+      </div>
+    </div>
+  </div>
+  <div class="sgroup font-option-group" role="radiogroup" aria-label="Font">
+    <button v-for="font in fontOptions" :key="font.key" type="button"
+            class="srow font-option-row" :class="'font-' + font.key"
+            role="radio" :aria-checked="ui.fontFamily === font.key ? 'true' : 'false'"
+            :tabindex="ui.fontFamily === font.key ? 0 : -1"
+            @keydown="radioKey($event, fontOptions, ui.fontFamily, fontFamily)"
+            @click="fontFamily(font.key)">
+      <span class="font-option-label">{{ font.label }}</span>
+      <span class="font-option-check" aria-hidden="true"></span>
+    </button>
+  </div>
+  <div class="sgroup">
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('players')">
+      Player layout <span class="v">›</span>
+    </button>
+  </div>
+
   <div class="sgh">Queue</div>
   <div class="sgroup">
     <div class="player-help">
@@ -488,25 +432,6 @@ Vue.component('lms-settings', {
   </div>
   <div class="srow language-note">
     <span style="font-size:12px;color:var(--text2)">Choosing a language reloads the page. English is the original text; the others are translations shipped with the skin.</span>
-  </div>
-
-  <div class="sgh">Appearance</div>
-  <div class="sgroup">
-    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('theme')">
-      Theme <span class="v">{{ themeSummary }} ›</span>
-    </button>
-    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('colorScheme')">
-      Colour scheme <span class="v">{{ colorSchemeSummary }} ›</span>
-    </button>
-    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('font')">
-      Font <span class="v">{{ fontSummary }} ›</span>
-    </button>
-    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('progress')">
-      Progress bars <span class="v">›</span>
-    </button>
-    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('players')">
-      Player layout <span class="v">›</span>
-    </button>
   </div>
 
   <div class="sgh">Backup</div>
@@ -635,13 +560,15 @@ Vue.component('lms-settings', {
     },
     /* Built whole rather than glued around an interpolation: translateTemplate
        matches a text node against the dictionary, and a sentence split by
-       {{ }} can never match. That is exactly how these three stayed Portuguese
-       in an English session. */
-    gaugeHelp: function () {
-      return this.tr(this.ui.dark
-        ? 'The style is remembered separately for each theme. What you choose here applies to the dark theme; the other theme keeps its own.'
-        : 'The style is remembered separately for each theme. What you choose here applies to the light theme; the other theme keeps its own.');
-    },
+       {{ }} can never match. That is exactly how these two stayed Portuguese
+       in an English session.
+       gaugeHelp (the explanatory sentence itself) died with the Progress bars
+       screen in C5 -- ui.playerGaugeStyle/playerGaugeColor and
+       ui.miniGaugeStyle/miniGaugeColor stay reachable through the Full and
+       Mini branches below, which already carry their own Progress bar rows
+       and never depended on gaugeHelp; only the explanatory copy is missing
+       for one commit, until C6 lands it as a footer under those same rows
+       (phase2-decisions.md, D-2). */
     miniGaugeStyleLabel: function () {
       return this.tr(this.ui.dark ? 'Mini player style (dark theme)' : 'Mini player style (light theme)');
     },
@@ -678,18 +605,6 @@ Vue.component('lms-settings', {
         }
       }, this);
       return names.length ? names : ['no recognised group'];
-    },
-    /* Resolved values shown on the three app-level Appearance rows -- text
-       nodes inside {{ }}, so translateTemplate wraps them in $t() and a
-       literal English match in strings.txt is all a translation needs. */
-    themeSummary: function () { return this.ui.dark ? 'Dark' : 'Light'; },
-    colorSchemeSummary: function () {
-      var found = this.colorSchemes.filter(function (s) { return s.key === this.ui.colorScheme; }, this)[0];
-      return found ? found.label : '';
-    },
-    fontSummary: function () {
-      var found = this.fontOptions.filter(function (f) { return f.key === this.ui.fontFamily; }, this)[0];
-      return found ? found.label : '';
     },
     /* Per-surface Theme/Colour scheme/Font rows offer "Follow app" first,
        then the same list the app level uses. */
@@ -810,8 +725,7 @@ Vue.component('lms-settings', {
        needs nothing extra to make Back work, hardware or on-screen. */
     appearanceScreenLabel: function (screen) {
       var labels = {
-        theme: 'Theme', colorScheme: 'Colour scheme', font: 'Font',
-        progress: 'Progress bars', players: 'Player layout',
+        players: 'Player layout',
         full: 'Full player', small: 'Small player', mini: 'Mini player'
       };
       return labels[screen] || '';
@@ -835,9 +749,13 @@ Vue.component('lms-settings', {
     /* Hard constraint: the app-level Theme control must go through
        LmsUi.toggleTheme() and never assign state.dark directly -- toggleTheme
        also swaps in the gauge style remembered for the theme being entered.
-       A two-option radiogroup calls apply() on every arrow press even when
-       the value does not change, so this only actually toggles when the
-       chosen option differs from the current theme. */
+       C5 replaced the Theme radiogroup with the inline Dark theme switch in
+       the Appearance group (@click="toggleTheme" directly there, since a
+       two-state switch never needs the key-to-boolean translation this
+       method exists for), but the method stays: appearance-ui.test.js's
+       toggleTheme regression net calls it directly, and it is the one place
+       that guarantees "select the same theme again" is a no-op rather than a
+       spurious toggle. */
     selectTheme: function (key) {
       var wantDark = key === 'dark';
       if (wantDark !== this.ui.dark) LmsUi.toggleTheme();

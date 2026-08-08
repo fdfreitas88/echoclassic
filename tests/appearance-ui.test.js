@@ -39,22 +39,29 @@ test('exactly one sgh "Appearance", and the old sub-headings are gone', function
   assert.doesNotMatch(src, /<div class="sgh">Colour scheme<\/div>/);
 });
 
-test('the General group no longer contains the dark-theme switch', function () {
+test('the General group does not contain the dark-theme switch; Appearance does, as a single inline toggle', function () {
   const src = settingsSrc();
-  assert.doesNotMatch(src, /aria-label="Dark theme"/);
-  assert.match(src, /<div class="sgh">General<\/div>/);
-  /* The two switches that used to share the old "Appearance" heading with the
-     dark switch are still there, just under the renamed heading. */
   const generalBlock = src.split('<div class="sgh">General</div>')[1].split('<div class="sgh">')[0];
+  assert.doesNotMatch(generalBlock, /aria-label="Dark theme"/);
   assert.match(generalBlock, /Rate and bits in the bottom bar/);
   assert.match(generalBlock, /Highlight hi-res/);
+
+  /* C5: Appearance is inline now -- one role="switch" driving toggleTheme,
+     not a drill-in row into a Theme subscreen. */
+  const appearanceBlock = src.split('<div class="sgh">Appearance</div>')[1].split('<div class="sgh">')[0];
+  const darkSwitches = appearanceBlock.match(/aria-label="Dark theme"/g) || [];
+  assert.equal(darkSwitches.length, 1);
+  assert.match(appearanceBlock, /role="switch"[\s\S]{0,200}@click="toggleTheme"/);
 });
 
 test('every Appearance drill-in row is a type="button" with a name for its destination', function () {
   const src = settingsSrc();
+  /* C5 (3.2.6c): theme/colorScheme/font/progress died as drill-ins -- they
+     are inline controls now (a switch, a swatch row, five checkmark rows).
+     "players" (Player layout) is the one that survives at the app level;
+     full/small/mini are its own three drill-ins one level down. */
   const expected = {
-    theme: 'Theme', colorScheme: 'Colour scheme', font: 'Font',
-    progress: 'Progress bars', players: 'Player layout',
+    players: 'Player layout',
     full: 'Full player', small: 'Small player', mini: 'Mini player'
   };
   const re = /<button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen\('([a-zA-Z]+)'\)">\s*([^<{]+)/g;
@@ -92,30 +99,49 @@ function screenBranch(key) {
   return m[0];
 }
 
-test('each of the five top-level Appearance subscreens renders its expected controls', function () {
-  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
-  const self = inst.self;
-
-  ['theme', 'colorScheme', 'font', 'progress', 'players'].forEach(function (key) {
-    self.ui.appearanceScreen = key;
-    assert.equal(self.ui.appearanceScreen, key);
+/* C5 (3.2.6c): the four app-level subscreens (theme, colorScheme, font,
+   progress) died. Their controls are inline in the main Settings screen now
+   -- this replaces the old test that drove ui.appearanceScreen through all
+   five and asserted a v-if/v-else-if branch for each. 'players' is the only
+   appearanceScreen value the app-level Appearance group still routes to. */
+test('theme/colorScheme/font/progress no longer exist as appearanceScreen branches', function () {
+  const src = settingsSrc();
+  ['theme', 'colorScheme', 'font', 'progress'].forEach(function (key) {
+    const marker = new RegExp('ui\\.appearanceScreen === \'' + key + '\'');
+    assert.doesNotMatch(src, marker, key + ': branch should have been deleted in C5');
   });
 
-  assert.match(screenBranch('theme'), /v-for="option in themeOptions"/);
-  assert.match(screenBranch('theme'), /role="radio"/);
-
-  assert.match(screenBranch('colorScheme'), /v-for="scheme in colorSchemes"/);
-
-  assert.match(screenBranch('font'), /v-for="font in fontOptions"/);
-
-  const progress = screenBranch('progress');
-  assert.match(progress, /ui\.miniGaugeStyle/);
-  assert.match(progress, /ui\.playerGaugeStyle/);
+  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
+  const self = inst.self;
+  self.ui.appearanceScreen = 'players';
+  assert.equal(self.ui.appearanceScreen, 'players');
 
   const players = screenBranch('players');
   assert.match(players, /openAppearanceScreen\('full'\)/);
   assert.match(players, /openAppearanceScreen\('small'\)/);
   assert.match(players, /openAppearanceScreen\('mini'\)/);
+});
+
+test('the inline Appearance group renders the Dark theme switch, the Accent colour swatch row and the Font checkmark rows', function () {
+  const src = settingsSrc();
+  const appearanceBlock = src.split('<div class="sgh">Appearance</div>')[1].split('<div class="sgh">')[0];
+
+  // Dark theme: a real switch, not a two-option radiogroup.
+  assert.match(appearanceBlock, /role="switch"[\s\S]{0,200}@click="toggleTheme"/);
+
+  // Accent colour: 5 dots in their own radiogroup, aria-label per swatch.
+  assert.match(appearanceBlock, /role="radiogroup" aria-label="Accent colour"/);
+  assert.match(appearanceBlock, /v-for="scheme in colorSchemes"/);
+  assert.match(appearanceBlock, /class="swatch-dot"/);
+  assert.match(appearanceBlock, /:aria-label="tr\(scheme\.label\)"/);
+
+  // Font: the five-option checkmark radiogroup, same pattern as before,
+  // just no longer behind a drill-in.
+  assert.match(appearanceBlock, /role="radiogroup" aria-label="Font"/);
+  assert.match(appearanceBlock, /v-for="font in fontOptions"/);
+
+  // Player layout is the one drill-in left.
+  assert.match(appearanceBlock, /openAppearanceScreen\('players'\)/);
 });
 
 test('the Full/Small/Mini player subscreens render Appearance controls for their own surface', function () {
@@ -183,10 +209,15 @@ test('a Player layout row reads "Follow app" when a surface\'s three keys are "a
 
 test('no Appearance label is assembled by concatenating a translated fragment', function () {
   const src = settingsSrc();
+  /* appearanceScreenLabel MUST SURVIVE C5 even though it shrank to four
+     entries (players/full/small/mini) -- this split-on-name technique is the
+     regression net i18n-ui relies on to know the method is still there and
+     still returns a whole literal. themeSummary/colorSchemeSummary/fontSummary
+     died in C5 (the rows they used to label are inline controls now, not
+     drill-ins with a collapsed-state caption), so their concatenation guards
+     go with them. */
   const body = src.split('appearanceScreenLabel: function')[1].split('},')[0];
   assert.doesNotMatch(body, /\+/, 'appearanceScreenLabel concatenates instead of returning a whole literal');
-  const themeSummaryBody = src.split('themeSummary: function')[1].split(',\n')[0];
-  assert.doesNotMatch(themeSummaryBody, /\+/);
   const statusBody = src.split('surfaceStatusLabel: function')[1].split('},')[0];
   assert.doesNotMatch(statusBody, /\+/);
 });
