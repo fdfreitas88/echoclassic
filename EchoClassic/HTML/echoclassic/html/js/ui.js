@@ -44,10 +44,17 @@
     Object.freeze({ key: 'fullscreen', label: 'Full screen' })
   ]);
 
+  /* 3.2.6c (C6): reordered left/center/right so the Player layout segmented
+     control reads in visual order and radioKey's arrow navigation follows it.
+     Stored values are the keys themselves, never an index, so this reorder
+     does not touch persisted state -- only the display and cycling order
+     change (cyclePlayerPosition below, and its one caller in
+     nowplaying.js's position button, now cycle left -> center -> right
+     instead of right -> left -> center; accepted, not a regression). */
   var PLAYER_POSITIONS = Object.freeze([
-    Object.freeze({ key: 'right', label: 'Right' }),
     Object.freeze({ key: 'left', label: 'Left' }),
-    Object.freeze({ key: 'center', label: 'Center' })
+    Object.freeze({ key: 'center', label: 'Center' }),
+    Object.freeze({ key: 'right', label: 'Right' })
   ]);
 
   /* AUDIT-09: como a fila mostra capa. 'every' e o comportamento antigo.
@@ -571,7 +578,8 @@
   }
 
   /* true only when none of the surface's three overrides diverge from the
-     app -- used by the WP5 summary row ("Follow app" vs "Custom"). Unknown
+     app -- drives the Player layout screen's "Match app appearance" toggle
+     and setSurfaceFollowsApp's own ON/OFF branch below. Unknown
      surface -> false. */
   function surfaceFollowsApp(surface) {
     var map = SURFACE_KEYS[surface];
@@ -597,6 +605,32 @@
     var map = SURFACE_KEYS[surface];
     if (!map || !isSurfaceFont(key)) return;
     state[map.font] = key;
+    persist();
+  }
+
+  /* The Player layout screen's single "Match app appearance" toggle per
+     surface (3.2.6c C6), replacing the nine "Follow app" option rows. ON
+     writes 'app' to all three of that surface's keys -- the existing 3.2.5
+     behaviour (uistate.test.js:436), kept exactly: there is no memory of a
+     prior custom value anywhere, so turning it back OFF has nothing to
+     restore. OFF therefore seeds the three keys from the app's own currently
+     RESOLVED values (state.dark/colorScheme/fontFamily), never a hard-coded
+     default -- otherwise flipping the toggle off would visibly repaint the
+     player the instant it was flipped, even though nothing about the app
+     changed. This makes OFF -> ON -> OFF idempotent without adding a
+     persisted key: the seed is derived, not stored anywhere new. */
+  function setSurfaceFollowsApp(surface, on) {
+    var map = SURFACE_KEYS[surface];
+    if (!map) return;
+    if (on) {
+      state[map.theme] = 'app';
+      state[map.scheme] = 'app';
+      state[map.font] = 'app';
+    } else {
+      state[map.theme] = state.dark ? 'dark' : 'light';
+      state[map.scheme] = state.colorScheme;
+      state[map.font] = state.fontFamily;
+    }
     persist();
   }
 
@@ -1085,7 +1119,7 @@
     FONT_OPTIONS: FONT_OPTIONS, setFontFamily: setFontFamily,
     surfaceAttrs: surfaceAttrs, surfaceFollowsApp: surfaceFollowsApp,
     setSurfaceTheme: setSurfaceTheme, setSurfaceScheme: setSurfaceScheme,
-    setSurfaceFont: setSurfaceFont,
+    setSurfaceFont: setSurfaceFont, setSurfaceFollowsApp: setSurfaceFollowsApp,
     PLAYER_PRESENTATIONS: PLAYER_PRESENTATIONS,
     setPlayerPresentation: setPlayerPresentation,
     PLAYER_POSITIONS: PLAYER_POSITIONS,

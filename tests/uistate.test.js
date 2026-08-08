@@ -438,6 +438,63 @@ test('surfaceFollowsApp e verdadeiro so quando as tres chaves daquela superficie
   assert.equal(u.surfaceFollowsApp('players'), false, 'superficie desconhecida nunca "segue o app"');
 });
 
+/* N4 / C6 (3.2.6c): setSurfaceFollowsApp is the primitive behind the Player
+   layout screen's "Match app appearance" toggle. ON keeps 3.2.5's own
+   behaviour exactly -- 'app' into all three keys, no memory of a prior
+   custom value (this is what makes 'setSurfaceScheme(surface, app)' round
+   trip cleanly two tests above). OFF is new in C6: it seeds the three keys
+   from the app's OWN resolved state at that moment, never a literal
+   default, so flipping the toggle never repaints the player by itself. */
+test('setSurfaceFollowsApp(surface, false) semeia dos valores resolvidos do app; (surface, true) volta a "app" nas tres', function () {
+  const u = ui();
+  u.state.dark = true;
+  u.state.colorScheme = 'amber';
+  u.state.fontFamily = 'chicago';
+
+  u.setSurfaceFollowsApp('full', false);
+  assert.equal(u.state.fullTheme, 'dark');
+  assert.equal(u.state.fullColorScheme, 'amber');
+  assert.equal(u.state.fullFont, 'chicago');
+  assert.equal(u.surfaceFollowsApp('full'), false);
+  /* Only 'full' moved. */
+  assert.equal(u.surfaceFollowsApp('small'), true);
+  assert.equal(u.surfaceFollowsApp('mini'), true);
+
+  /* The app changing afterwards does not retroactively touch the seeded
+     custom values -- OFF is a snapshot, not a live link. */
+  u.state.dark = false;
+  u.state.colorScheme = 'teal';
+  assert.equal(u.state.fullTheme, 'dark');
+  assert.equal(u.state.fullColorScheme, 'amber');
+
+  u.setSurfaceFollowsApp('full', true);
+  assert.equal(u.state.fullTheme, 'app');
+  assert.equal(u.state.fullColorScheme, 'app');
+  assert.equal(u.state.fullFont, 'app');
+  assert.equal(u.surfaceFollowsApp('full'), true);
+
+  /* Re-seeding after ON reflects the app's CURRENT values, not the ones from
+     the first OFF -- confirms OFF -> ON -> OFF is idempotent, not sticky. */
+  u.setSurfaceFollowsApp('full', false);
+  assert.equal(u.state.fullTheme, 'light');
+  assert.equal(u.state.fullColorScheme, 'teal');
+
+  /* Unknown surface: no key anywhere is touched, and it does not throw. */
+  assert.doesNotThrow(function () { u.setSurfaceFollowsApp('players', false); });
+  assert.doesNotThrow(function () { u.setSurfaceFollowsApp('players', true); });
+});
+
+/* Phase 2 decision (3.2.6c C6): PLAYER_POSITIONS reorders to left/center/
+   right so the Player layout segmented control reads in visual order.
+   Stored values are the keys themselves, never an index, so this is purely
+   a display/iteration-order change -- setPlayerPosition/cyclePlayerPosition
+   still accept and persist the same three keys. */
+test('PLAYER_POSITIONS lista na ordem left, center, right', function () {
+  const u = ui();
+  assert.deepEqual(plain(u.PLAYER_POSITIONS.map(function (p) { return p.key; })),
+    ['left', 'center', 'right']);
+});
+
 /* WP5 (3.2.6b): appearanceScreen e o campo que lms-settings usa para escolher
    qual subtela de Aparencia mostrar. E navegacao, nao preferencia -- igual a
    advancedSettings/picker/queueOpen, que tambem nascem falsos/null e nunca

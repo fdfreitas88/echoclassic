@@ -232,14 +232,6 @@ ECHOCLASSIC_UI_CLOSE_QUEUE
 	EN	Close queue
 	PT	Fechar fila
 
-ECHOCLASSIC_UI_COLOUR_SCHEME
-	EN	Colour scheme
-	PT	Esquema de cores
-
-ECHOCLASSIC_UI_COLUMN_ON_WIDE_SCREENS_OVERLAY_ON_COMPACT_ON
-	EN	Column on wide screens; overlay on compact ones
-	PT	Coluna em telas largas; sobreposição nas compactas
-
 ECHOCLASSIC_UI_COMPOSER
 	EN	Composer
 	PT	Compositor
@@ -315,10 +307,6 @@ ECHOCLASSIC_UI_CREDITS_AND_INFORMATION
 ECHOCLASSIC_UI_CROSSFADE
 	EN	Crossfade
 	PT	Transição
-
-ECHOCLASSIC_UI_CUSTOM
-	EN	Custom
-	PT	Personalizado
 
 ECHOCLASSIC_UI_CURRENT_POSITION
 	EN	Current position: 
@@ -399,10 +387,6 @@ ECHOCLASSIC_UI_FLAT
 ECHOCLASSIC_UI_FOLLOW_THEME
 	EN	Follow theme
 	PT	Acompanhar tema
-
-ECHOCLASSIC_UI_FOLLOW_APP
-	EN	Follow app
-	PT	Acompanhar app
 
 ECHOCLASSIC_UI_FONTS
 	EN	Fonts
@@ -720,7 +704,6 @@ ECHOCLASSIC_UI_PLAYBACK_2
 	EN	playback
 	PT	reprodução
 
-
 ECHOCLASSIC_UI_PLAYBACK_HISTORY
 	EN	Playback history
 	PT	Histórico de reprodução
@@ -776,10 +759,6 @@ ECHOCLASSIC_UI_PREVIOUS
 ECHOCLASSIC_UI_PREVIOUS_TRACK
 	EN	Previous track
 	PT	Faixa anterior
-
-ECHOCLASSIC_UI_PROGRESS_BARS
-	EN	Progress bars
-	PT	Barras de progresso
 
 ECHOCLASSIC_UI_APPS
 	EN	Apps
@@ -1217,11 +1196,9 @@ ECHOCLASSIC_UI_VIEW_FILTERS
 	EN	View filters
 	PT	Ver filtros
 
-
 ECHOCLASSIC_UI_FILTERS_IGNORED_RELATED
 	EN	Related artist builds the list from the server's artists, so media filters do not apply here.
 	PT	Artista relacionado monta a lista a partir dos artistas do servidor, então os filtros de mídia não se aplicam aqui.
-
 
 ECHOCLASSIC_UI_SORT_FORMAT
 	EN	Format
@@ -1286,7 +1263,6 @@ ECHOCLASSIC_UI_QUALITY_LOSSLESS
 ECHOCLASSIC_UI_QUALITY_LOSSY
 	EN	Lossy
 	PT	Com perdas
-
 
 ECHOCLASSIC_UI_PANEL_APPLY
 	EN	Apply
@@ -1768,11 +1744,9 @@ ECHOCLASSIC_UI_LOADING
 	EN	Loading…
 	PT	Carregando…
 
-
 ECHOCLASSIC_UI_SYNC
 	EN	Sync
 	PT	Sincronizar
-
 
 ECHOCLASSIC_UI_DELETE_QUOTED
 	EN	Delete “
@@ -1865,10 +1839,6 @@ ECHOCLASSIC_UI_DEFAULT_TAG
 ECHOCLASSIC_UI_REMOVE
 	EN	Remove
 	PT	Remover
-
-ECHOCLASSIC_UI_FULLSCREEN_DESC
-	EN	Always fills the whole screen
-	PT	Sempre ocupa toda a tela
 
 ECHOCLASSIC_UI_GAUGE_HELP_DARK
 	EN	The style is remembered separately for each theme. What you choose here applies to the dark theme; the other theme keeps its own.
@@ -1989,3 +1959,27 @@ ECHOCLASSIC_UI_CROSSFADE_OFF_HINT
 ECHOCLASSIC_UI_CROSSFADE_ON_HINT
 	EN	On: crossfade — the end of one song blends into the start of the next
 	PT	Ligado: transição — o final de uma faixa se mistura ao início da próxima
+
+ECHOCLASSIC_UI_ACCENT
+	EN	Accent
+	PT	Destaque
+
+ECHOCLASSIC_UI_BAR_COLOUR
+	EN	Bar colour
+	PT	Cor da barra
+
+ECHOCLASSIC_UI_MATCH_APP_APPEARANCE
+	EN	Match app appearance
+	PT	Acompanhar a aparência do app
+
+ECHOCLASSIC_UI_SHOW_PREVIEWS
+	EN	Show previews
+	PT	Mostrar prévias
+
+ECHOCLASSIC_UI_ALSO_APPLIES_TO_THE_SMALL_PLAYER
+	EN	Also applies to the small player.
+	PT	Também vale para o player pequeno.
+
+ECHOCLASSIC_UI_BAR_STYLE_REMEMBERED_PER_THEME
+	EN	Bar style is remembered per theme.
+	PT	O estilo da barra é lembrado por tema.
