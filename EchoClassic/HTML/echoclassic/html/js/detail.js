@@ -83,7 +83,7 @@ Vue.component('lms-detail', {
     markArtFailed: function (album) { this.$set(this.failedArt, album.id, true); },
     editionLine: function (album) {
       var parts = [];
-      if (album.editionCount > 1) parts.push('Edition ' + (album.year || 'sem ano'));
+      if (album.editionCount > 1) parts.push('Edition ' + (album.year || 'Not specified'));
       else if (album.year) parts.push(String(album.year));
       if (album.originalYear) parts.push('original ' + album.originalYear);
       if (!parts.length && album.artist) parts.push(album.artist);

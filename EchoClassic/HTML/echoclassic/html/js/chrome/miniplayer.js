@@ -5,7 +5,7 @@
    skin exists is to show what actually reaches the DAC. */
 Vue.component('lms-miniplayer', {
   template: `
-<div class="mini" :class="{empty: !hasTrack, inactive: ui.full}">
+<div class="mini" :class="{empty: !hasTrack, inactive: ui.full}" v-bind="surfaceAttrs">
   <div v-if="!ui.full && hasTrack" class="transport">
 	    <button type="button" class="mini-action mini-prev pointer" title="Previous"
 	            aria-label="Previous track" @click="prev">
@@ -56,6 +56,8 @@ Vue.component('lms-miniplayer', {
     return { store: LmsStore.state, ui: LmsUi.state, coverFailed: false };
   },
   computed: {
+    /* Mini is always the 'mini' surface -- there is only one on screen. */
+    surfaceAttrs: function () { return LmsUi.surfaceAttrs('mini'); },
     np: function () { return this.store.np; },
     hasTrack: function () {
       return this.np.id != null || !!this.np.title || !!this.np.url;

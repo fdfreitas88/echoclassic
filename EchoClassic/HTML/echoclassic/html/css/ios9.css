@@ -34,7 +34,8 @@
 
 /* iOS 9 nao tinha tema escuro: este e um desvio deliberado, pedido pelo dono.
    Mesma geometria, mesmo acento; so os neutros invertem. */
-body.dark{
+body.dark,
+[data-surface-theme="dark"]{
   color-scheme:dark;
   /* padrao do tema escuro quando ainda nao ha data-color-scheme no body: o azul
      claro nao alcanca 4,5:1 sobre preto, entao o escuro cai no azul do esquema */
@@ -57,6 +58,37 @@ body.dark{
   --gauge-track:linear-gradient(to bottom,#111114 0%,#48484D 22%,#242427 52%,#09090B 100%);
   --mini-control:#FFFFFF;
 }
+
+/* :root e a unica fonte clara hoje, e :root nao se reaplica dentro de
+   body.dark -- uma superficie clara dentro de um app escuro nao teria o que
+   ler. Este bloco existe so para isso: reafirma, sobre o proprio elemento da
+   superficie, o mesmo conjunto claro que :root da ao app inteiro. Como um
+   valor declarado no proprio elemento sempre vence um valor herdado do
+   ancestral (independente da especificidade daquele ancestral), isto basta
+   para isolar a superficie do body.dark que a envolve. */
+[data-surface-theme="light"]{
+  color-scheme:light;
+  --accent:#0077B0; --chrome:#F6F6F6; --content:#FFFFFF;
+  --selected:#D9D9D9; --text:#000; --text2:#5D5D61; --hair:#87878C;
+  --selection-accent:#0077B0; --selection-highlight:none;
+  --gauge-border:#828D99;
+  --gauge-track:linear-gradient(to bottom,#D2D8DD 0%,#F7F8F9 22%,#E5E8EA 52%,#FAFAFA 100%);
+  --mini-control:#000000;
+  --chev:#757580; --raildim:#75757E; --field:#E4E4E6;
+  --art-placeholder:#65656C; --accent-ink:#FFFFFF;
+  --group-page:#EFEFF4; --group-bg:#FFFFFF; --group-head:#6B6B70;
+  --sw-off:#8E8E93; --sw-on:#24A83A; --knob:#FFFFFF;
+  --destructive:#D70015;
+  --tabicon:#68686E; --badge-bg:rgba(255,255,255,.55);
+  --picker-bg:rgba(252,252,252,.98); --empty-h:#6D6D72;
+  --np-sub:#5C5C60; --np-times:#6E6E73; --np-track:rgba(0,0,0,.16);
+  --np-fill:#4A4A4E; --np-ink:#2B2B2E; --np-mono:#3A3A3D;
+  --np-backdrop:rgba(0,0,0,.3); --picker-backdrop:rgba(0,0,0,.12);
+  --queue-backdrop:rgba(0,0,0,.18); --knob-shadow:rgba(0,0,0,.3);
+  --dismiss-bg:rgba(40,40,45,.85); --dismiss-ink:#FFFFFF;
+  --playbtn-bg:rgba(255,255,255,.82); --shadow:rgba(0,0,0,.18);
+  --np-l1:92%; --np-l2:84%; --np-s1:18%; --np-s2:14%;
+}
 body[data-color-scheme="blue"]{--accent:#0077B0;--accent-ink:#FFFFFF;--selection-accent:#0077B0;
   --selection-highlight:linear-gradient(to bottom,#0074A8 0%,#006B9E 48%,#00527E 100%)}
 body.dark[data-color-scheme="blue"]{--accent:#33B5FF;--accent-ink:#000000;--selection-accent:#006B9E;
@@ -78,10 +110,84 @@ body[data-color-scheme="amber"]{--accent:#9A5500;--accent-ink:#FFFFFF;--selectio
 body.dark[data-color-scheme="amber"]{--accent:#FFB52E;--accent-ink:#000000;--selection-accent:#945304;
   --selection-highlight:linear-gradient(to bottom,#A76514 0%,#945304 48%,#6F3D00 100%)}
 
+/* Mesmos dez pares acima, agora por superficie -- mas [data-surface-scheme]
+   sozinho NAO diz qual chao usar: se a superficie nao declara o proprio tema
+   (data-surface-theme continua em 'app', logo o atributo esta ausente do
+   elemento), o chao efetivo e o do app ambiente (body vs body.dark). So
+   quando a propria superficie declara data-surface-theme e que ela pode
+   ignorar o ambiente -- por isso cada metade (clara/escura) e uma regra em
+   DOIS seletores: "ambiente correspondente E a superficie nao pede o
+   oposto" (cobre "sem override" e "override igual ao ambiente"), OU "a
+   propria superficie pede este chao" (cobre os dois casos que discordam do
+   ambiente). Os quatro casos --
+     1) sem override, app claro   2) sem override, app escuro
+     3) override="light", qualquer app   4) override="dark", qualquer app
+   -- sao mutuamente exclusivos (um elemento nunca tem os dois valores do
+   mesmo atributo ao mesmo tempo), entao a regra clara e a escura nunca casam
+   no mesmo elemento e nao ha disputa de especificidade entre elas. */
+body:not(.dark) [data-surface-scheme="blue"]:not([data-surface-theme="dark"]),
+[data-surface-theme="light"][data-surface-scheme="blue"]
+  {--accent:#0077B0;--accent-ink:#FFFFFF;--selection-accent:#0077B0;
+  --selection-highlight:linear-gradient(to bottom,#0074A8 0%,#006B9E 48%,#00527E 100%)}
+body.dark [data-surface-scheme="blue"]:not([data-surface-theme="light"]),
+[data-surface-theme="dark"][data-surface-scheme="blue"]
+  {--accent:#33B5FF;--accent-ink:#000000;--selection-accent:#006B9E;
+  --selection-highlight:linear-gradient(to bottom,#087FAF 0%,#006B9E 48%,#00527E 100%)}
+body:not(.dark) [data-surface-scheme="teal"]:not([data-surface-theme="dark"]),
+[data-surface-theme="light"][data-surface-scheme="teal"]
+  {--accent:#007F73;--accent-ink:#FFFFFF;--selection-accent:#007F73;
+  --selection-highlight:linear-gradient(to bottom,#007064 0%,#00675D 48%,#005149 100%)}
+body.dark [data-surface-scheme="teal"]:not([data-surface-theme="light"]),
+[data-surface-theme="dark"][data-surface-scheme="teal"]
+  {--accent:#3BD6C1;--accent-ink:#000000;--selection-accent:#087269;
+  --selection-highlight:linear-gradient(to bottom,#128378 0%,#087269 48%,#00564F 100%)}
+body:not(.dark) [data-surface-scheme="crimson"]:not([data-surface-theme="dark"]),
+[data-surface-theme="light"][data-surface-scheme="crimson"]
+  {--accent:#C51F4A;--accent-ink:#FFFFFF;--selection-accent:#C51F4A;
+  --selection-highlight:linear-gradient(to bottom,#DD2B55 0%,#CB2954 48%,#A9163D 100%)}
+body.dark [data-surface-scheme="crimson"]:not([data-surface-theme="light"]),
+[data-surface-theme="dark"][data-surface-scheme="crimson"]
+  {--accent:#FF5A7F;--accent-ink:#000000;--selection-accent:#A72245;
+  --selection-highlight:linear-gradient(to bottom,#C6385C 0%,#A72245 48%,#7E1433 100%)}
+body:not(.dark) [data-surface-scheme="indigo"]:not([data-surface-theme="dark"]),
+[data-surface-theme="light"][data-surface-scheme="indigo"]
+  {--accent:#4B50B8;--accent-ink:#FFFFFF;--selection-accent:#4B50B8;
+  --selection-highlight:linear-gradient(to bottom,#666AD1 0%,#565BC1 48%,#3E439D 100%)}
+body.dark [data-surface-scheme="indigo"]:not([data-surface-theme="light"]),
+[data-surface-theme="dark"][data-surface-scheme="indigo"]
+  {--accent:#9B91FF;--accent-ink:#000000;--selection-accent:#5155AA;
+  --selection-highlight:linear-gradient(to bottom,#666AC4 0%,#5155AA 48%,#393D86 100%)}
+body:not(.dark) [data-surface-scheme="amber"]:not([data-surface-theme="dark"]),
+[data-surface-theme="light"][data-surface-scheme="amber"]
+  {--accent:#9A5500;--accent-ink:#FFFFFF;--selection-accent:#9A5500;
+  --selection-highlight:linear-gradient(to bottom,#A56714 0%,#A45C05 48%,#7F4500 100%)}
+body.dark [data-surface-scheme="amber"]:not([data-surface-theme="light"]),
+[data-surface-theme="dark"][data-surface-scheme="amber"]
+  {--accent:#FFB52E;--accent-ink:#000000;--selection-accent:#945304;
+  --selection-highlight:linear-gradient(to bottom,#A76514 0%,#945304 48%,#6F3D00 100%)}
+
+/* N2, corrigido: os quatro aliases do gauge tem que reagir a QUALQUER forma
+   de override de --accent na superficie -- so tema (acima) nao bastava,
+   so esquema tambem tem que mexer no gauge. Escopados a
+   body[data-*-gauge-color="theme"] de proposito: applyAppearance() (ui.js)
+   sempre grava esse atributo, entao "theme" so casa quando o usuario NAO
+   escolheu uma cor explicita para o gauge -- nesse outro caso, o alias tem
+   que continuar herdando o valor fixo que body[data-mini-gauge-color="X"]
+   ja gravou, independente do esquema da superficie, por desenho. */
+body[data-mini-gauge-color="theme"] [data-surface-theme],
+body[data-mini-gauge-color="theme"] [data-surface-scheme]
+  {--mini-gauge-accent:var(--accent);--mini-gauge-highlight:var(--selection-highlight)}
+body[data-player-gauge-color="theme"] [data-surface-theme],
+body[data-player-gauge-color="theme"] [data-surface-scheme]
+  {--player-gauge-accent:var(--accent);--player-gauge-highlight:var(--selection-highlight)}
+
 body[data-mini-gauge-color="blue"]{--mini-gauge-accent:#0077B0;--mini-gauge-highlight:linear-gradient(to bottom,#00A2D7 0%,#008CC7 48%,#0073AD 100%)}
 body[data-mini-gauge-color="teal"]{--mini-gauge-accent:#007F73;--mini-gauge-highlight:linear-gradient(to bottom,#1CA998 0%,#078B7E 48%,#006C63 100%)}
 body[data-mini-gauge-color="crimson"]{--mini-gauge-accent:#C51F4A;--mini-gauge-highlight:linear-gradient(to bottom,#E2486C 0%,#CB2954 48%,#A9163D 100%)}
 body[data-mini-gauge-color="indigo"]{--mini-gauge-accent:#4B50B8;--mini-gauge-highlight:linear-gradient(to bottom,#7478D5 0%,#565BC1 48%,#3E439D 100%)}
+/* N5: faltava o par claro de ambar aqui -- o par escuro (linha ~160) e o par
+   claro do player (abaixo) sempre existiram; so este ficou de fora. */
+body[data-mini-gauge-color="amber"]{--mini-gauge-accent:#9A5500;--mini-gauge-highlight:linear-gradient(to bottom,#C47A18 0%,#A45C05 48%,#7F4500 100%)}
 body[data-player-gauge-color="blue"]{--player-gauge-accent:#0077B0;--player-gauge-highlight:linear-gradient(to bottom,#00A2D7 0%,#008CC7 48%,#0073AD 100%)}
 body[data-player-gauge-color="teal"]{--player-gauge-accent:#007F73;--player-gauge-highlight:linear-gradient(to bottom,#1CA998 0%,#078B7E 48%,#006C63 100%)}
 body[data-player-gauge-color="crimson"]{--player-gauge-accent:#C51F4A;--player-gauge-highlight:linear-gradient(to bottom,#E2486C 0%,#CB2954 48%,#A9163D 100%)}
@@ -97,9 +203,23 @@ body.dark[data-player-gauge-color="teal"]{--player-gauge-accent:#3BD6C1;--player
 body.dark[data-player-gauge-color="crimson"]{--player-gauge-accent:#FF5A7F;--player-gauge-highlight:linear-gradient(to bottom,#FF7896 0%,#E3476E 48%,#B92750 100%)}
 body.dark[data-player-gauge-color="indigo"]{--player-gauge-accent:#9B91FF;--player-gauge-highlight:linear-gradient(to bottom,#B0A9FF 0%,#8178E4 48%,#5C55B8 100%)}
 body.dark[data-player-gauge-color="amber"]{--player-gauge-accent:#FFB52E;--player-gauge-highlight:linear-gradient(to bottom,#FFC85C 0%,#E69A22 48%,#B96B08 100%)}
+/* O dono fornece os dois arquivos depois; ate la a pilha cai em Geneva/Verdana
+   -- ver html/fonts/README.md. font-display:swap evita texto invisivel
+   enquanto o arquivo nao existe: o fallback aparece de imediato. */
+@font-face{font-family:"Podium Sans";font-display:swap;
+  src:url("../fonts/PodiumSans.woff2") format("woff2")}
+@font-face{font-family:"Espy Sans";font-display:swap;
+  src:url("../fonts/EspySans.woff2") format("woff2")}
 body[data-font="system"]{--app-font:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif}
 body[data-font="helvetica"]{--app-font:Helvetica,"Helvetica Neue",Arial,sans-serif}
 body[data-font="chicago"]{--app-font:"Chicago","Charcoal","Geneva",sans-serif}
+body[data-font="podium"]{--app-font:"Podium Sans","Espy Sans",Geneva,Verdana,sans-serif}
+body[data-font="espy"]{--app-font:"Espy Sans","Podium Sans",Geneva,Verdana,sans-serif}
+[data-surface-font="system"]{--app-font:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif}
+[data-surface-font="helvetica"]{--app-font:Helvetica,"Helvetica Neue",Arial,sans-serif}
+[data-surface-font="chicago"]{--app-font:"Chicago","Charcoal","Geneva",sans-serif}
+[data-surface-font="podium"]{--app-font:"Podium Sans","Espy Sans",Geneva,Verdana,sans-serif}
+[data-surface-font="espy"]{--app-font:"Espy Sans","Podium Sans",Geneva,Verdana,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 *{scrollbar-width:thin;scrollbar-color:var(--chev) transparent}
 *::-webkit-scrollbar{width:4px;height:4px}
@@ -621,6 +741,8 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .font-system .font-option-label{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif}
 .font-helvetica .font-option-label{font-family:Helvetica,"Helvetica Neue",Arial,sans-serif}
 .font-chicago .font-option-label{font-family:"Chicago","Charcoal","Geneva",sans-serif}
+.font-podium .font-option-label{font-family:"Podium Sans","Espy Sans",Geneva,Verdana,sans-serif}
+.font-espy .font-option-label{font-family:"Espy Sans","Podium Sans",Geneva,Verdana,sans-serif}
 .font-option-check{width:10px;height:18px;margin:0 4px 3px 8px;flex:0 0 10px;
   border:solid var(--accent);border-width:0 2px 2px 0;transform:rotate(45deg);opacity:0}
 .font-option-row[aria-checked="true"] .font-option-check{opacity:1}
@@ -642,6 +764,24 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .player-presentation-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
 .player-presentation-copy small{color:var(--text2);font-size:11px;line-height:14px}
 .player-presentation-row[aria-checked="true"] .font-option-check{opacity:1}
+/* theme-option-* mirrors font-option-* exactly, same row geometry and the
+   same reused checkmark (.font-option-check, per the template). There is
+   deliberately no .theme-option-group rule here: like .font-option-group and
+   .color-scheme-group above, the box comes entirely from .sgroup, and
+   .player-position-group (WP2/WP3's small-player position radiogroup) follows
+   the same convention -- its three rows already reuse .player-presentation-row. */
+.theme-option-row{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}
+.theme-option-row:active{background:var(--selected)}
+.theme-option-row:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.theme-option-label{min-width:0;flex:1}
+.theme-option-row[aria-checked="true"] .font-option-check{opacity:1}
+/* "Follow app" leads each per-surface theme/scheme/font list. Same row, same
+   checkmark as its siblings (so the list doesn't jitter when the selection
+   moves) -- the template already withholds the swatch pair for scheme.key
+   === 'app', so the only thing left to mark it as inheriting rather than a
+   sixth colour or font is the secondary ink on the label. */
+.color-scheme-row.scheme-app .scheme-label{color:var(--text2)}
+.font-option-row.font-app .font-option-label{color:var(--text2)}
 .gauge-style-row{justify-content:space-between}
 .gauge-segmented{margin-left:auto;display:flex;border:1px solid var(--accent);border-radius:5px;
   overflow:hidden;flex:0 0 auto}
@@ -649,6 +789,19 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .gauge-segmented button+button{border-left:1px solid var(--accent)}
 .gauge-segmented button.on{background:var(--accent);color:var(--accent-ink)}
 .gauge-settings-group .setting-select{width:min(180px,48vw);min-width:0}
+/* .surface-preview is the aria-hidden strip at the foot of each player
+   subscreen (v-bind="fullPreviewAttrs" etc., settings.js) -- the element
+   itself carries data-surface-theme/-scheme/-font when that surface
+   overrides the app, so every value in this scope must come from that
+   surface's own tokens (never a literal hex), or the strip would paint the
+   wrong scheme/theme pairing the moment someone chose something other than
+   the default blue. Sized like a slice of a player bar, not a 44px row. */
+.surface-preview{background:var(--chrome);min-height:64px}
+.surface-preview-swatch{width:34px;height:34px;flex:0 0 34px;border-radius:50%;
+  background:var(--accent);box-shadow:inset 0 0 0 1px var(--content)}
+.surface-preview-copy{flex:1;min-width:0;color:var(--text);font-size:13px}
+.surface-preview::after{content:'';flex:0 0 32px;height:2px;border-radius:1px;
+  background:var(--text2);align-self:center}
 
 /* ====== mini player ==================================================== */
 .mini{height:var(--mini);flex:0 0 auto;background:var(--chrome);border-top:.5px solid var(--hair);
@@ -764,6 +917,15 @@ body[data-player-gauge-style="flat"] .npfull .times span:first-child,
 body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:auto;grid-row:auto;text-align:initial}
 .npfull .head{width:var(--player-column);margin-top:14px}
 .npfull .head .t{font-size:24px;line-height:29px;font-weight:600}
+/* AUDIT-11: --np-sub em vez de --text2 ou --accent -- precisa ficar discreta
+   entre o titulo e o subtitulo de 18px colorido, nunca competir com nenhum
+   dos dois. min-height:44px porque e alvo de toque, nao rotulo. */
+.npfull .head .np-player-row{display:flex;align-items:center;gap:6px;min-height:44px;
+  width:100%;color:var(--np-sub);font-size:13px;font-weight:600;margin-top:2px}
+.npfull .head .np-player-row svg{width:16px;height:16px;flex:0 0 16px;fill:none;
+  stroke:var(--np-sub);stroke-width:1.7}
+.npfull .head .np-player-row .chevron{width:9px;height:14px;flex:0 0 9px;margin-left:auto}
+.npfull .head .np-player-row span.ell{flex:1;min-width:0;text-align:left}
 .npfull .head .s{font-size:18px;line-height:23px;color:var(--accent);margin-top:6px}
 .npfull .transport{display:flex;align-items:center;justify-content:center;gap:42px;margin-top:26px}
 .npfull .np-action{width:56px;height:56px;display:flex;align-items:center;justify-content:center}
@@ -999,6 +1161,10 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .queue-start{min-height:34px;display:flex;align-items:center;padding:0 14px;
   border-bottom:.5px solid var(--hair);color:var(--text2);font-size:12px}
 .queue .qbody{overflow-y:auto;flex:1}
+/* AUDIT-09, modo 'headings': legenda propria de 22px, nunca uma .qrow mais
+   alta -- a linha continua valendo 52px em qualquer modo de capa. */
+.qcaption{height:22px;display:flex;align-items:center;padding:0 14px;
+  font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase}
 .qrow{height:52px;display:flex;align-items:center;gap:11px;padding:0 14px;position:relative}
 .qrow+.qrow::before{content:'';position:absolute;top:0;left:59px;right:14px;height:.5px;background:var(--hair)}
 .qrow .cover{width:34px;height:34px;flex:0 0 34px;border-radius:2px}
@@ -1080,6 +1246,13 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .sheet-choices{max-height:190px;overflow-y:auto}
 .sheet-choices button{font-size:15px;border-top:.5px solid var(--hair)}
 .sheet-note{padding:14px;text-align:center;color:var(--text2);font-size:13px}
+/* AUDIT-11: linhas de player dentro da folha reaproveitada de acoes. Nome em
+   --text, nao --accent -- o azul aqui e reservado a comandos de reproducao,
+   e uma lista de players nao e uma lista de comandos. */
+.player-picker-row{display:flex;align-items:center;gap:8px;text-align:left;color:var(--text)}
+.player-picker-row.on{color:var(--accent);font-weight:600}
+.player-picker-row.unavailable{color:var(--text2)}
+.player-picker-row .v{margin-left:auto;color:var(--text2);font-size:13px}
 .action-sheet>.cancel{margin-top:8px;border-radius:8px;font-weight:600;border-bottom:0}
 .action-sheet.anchored{right:auto;bottom:auto;transform:none;overflow-y:auto;
   border:.5px solid var(--hair);border-radius:8px;background:var(--picker-bg);

@@ -42,13 +42,15 @@ Vue.component('lms-queue', {
 	    <div v-if="playStartsLabel" class="queue-start" role="status">{{ playStartsLabel }}</div>
 
 	    <div class="qbody" v-if="tracks.length">
-	      <div v-for="t in tracks" :key="t.index + '-' + t.id" class="qrow"
+	      <template v-for="(t, i) in tracks">
+	      <div v-if="showCaption(t, i)" :key="'cap-' + t.index" class="qcaption ell">{{ t.album }}</div>
+	      <div :key="t.index + '-' + t.id" class="qrow"
 	           :class="{now: isNow(t)}" :aria-current="isNow(t) ? 'true' : null"
 	           role="group" :aria-label="trackLabel(t)">
 	        <button type="button" class="qrow-main pointer" :aria-label="trackLabel(t)"
 	                @click="jump(t)">
 	          <span v-if="isNow(t)" class="nowmark" aria-hidden="true">▶</span>
-	          <span class="cover" :style="coverStyle(t)"></span>
+	          <span class="cover" :style="showCover(t, i) ? coverStyle(t) : {}"></span>
 	          <span class="ell">
 	            <span class="t ell">{{ t.title }}</span>
 	            <span class="s ell">{{ sub(t) }}</span>
@@ -68,11 +70,11 @@ Vue.component('lms-queue', {
           <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
+      </template>
     </div>
 
     <div class="qempty" v-else>
-      The queue is empty. Play an album or a playlist and the tracks that follow
-      entram aqui.
+      The queue is empty. Play an album or a playlist and the tracks that follow appear here.
     </div>
   </div>
 </div>`,
@@ -113,12 +115,32 @@ Vue.component('lms-queue', {
     repeatLabel: function () {
       return ['Repeat off', 'Repeat one song', 'Repeat the whole queue'][this.store.repeat] ||
              'Repeat off';
-    }
+    },
+    artMode: function () { return this.ui.queueArtMode; }
   },
   methods: {
     dur: function (s) { return s ? LmsFmt.duration(s) : '—'; },
     isNow: function (t) {
       return this.hasCurrent && t.index === this.store.queueIndex;
+    },
+    /* AUDIT-09: agrupa SO pelo albumId estavel de 2a -- nunca pelo nome do
+       album (duas obras homonimas nao podem virar uma) nem pelo coverid (que
+       e por faixa: uma compilacao com capa propria por faixa quebraria a
+       sequencia, e uma faixa sem coverid colapsaria com qualquer outra sem
+       capa). Uma linha sem albumId nunca agrupa com a vizinha, nem com outra
+       linha tambem sem albumId -- cada uma mostra a propria capa. */
+    showCover: function (t, i) {
+      if (this.artMode === 'every') return true;
+      if (t.albumId == null) return true;
+      var prev = this.tracks[i - 1];
+      return !prev || prev.albumId == null || prev.albumId !== t.albumId;
+    },
+    /* Legenda e um elemento separado, nao uma linha mais alta: .qrow continua
+       com 52px em qualquer modo. */
+    showCaption: function (t, i) {
+      if (this.artMode !== 'headings') return false;
+      if (!this.showCover(t, i)) return false;
+      return !!t.album;
     },
 	    sub: function (t) {
 	      var parts = [];

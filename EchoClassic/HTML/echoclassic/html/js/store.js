@@ -25,6 +25,11 @@
     queueUndo: [], queueUndoPlayerId: null,
     sleepRemaining: 0, transitionType: 0, transitionDuration: 0,
     history: [], trackInfo: null, canRate: false,
+    /* Mapa de capacidades, resolvido uma vez no init(): quem precisa saber se
+       um comando existe no servidor le daqui em vez de escrever a propria
+       sonda `can`. Ausencia significa "nao mostrar", nunca "mostrar
+       desabilitado" -- por isso comeca vazio, e nao com chaves em false. */
+    capabilities: {},
     npFavorite: false, npFavoriteIndex: null,
     np: {
       id: null, title: '', artist: '', album: '', coverId: null,
@@ -36,6 +41,14 @@
   var ticking = false;   // refresh do polling em voo
   var polling = false;   // o polling deveria estar rodando
 
+  /* A preferencia do usuario e o player ativo sao coisas diferentes desde que
+     um so refresh, tomado com o player preferido dormindo ou desligado, podia
+     apagar essa preferencia: discoverPlayer() escrevia o substituto de volta
+     em state.playerId, e o proximo saveSession() persistia o substituto. Esta
+     variavel guarda so a escolha explicita -- selectPlayer() e a volta de
+     handoffTo() -- e nunca e tocada por um fallback automatico. */
+  var preferredPlayerId = null;
+
   function readJson(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key) || '') || fallback; }
     catch (e) { return fallback; }
@@ -44,7 +57,7 @@
   function saveSession() {
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify({
-        playerId: state.playerId, trackId: state.np.id, time: state.time
+        playerId: preferredPlayerId, trackId: state.np.id, time: state.time
       }));
     } catch (e) {}
   }
@@ -100,22 +113,57 @@
     return ps;
   }
 
-  async function discoverPlayer() {
-    var preferred = state.playerId;
-    lastPlayersCheck = Date.now();
-    var ps = await api.players(state.playerId);
-    state.players = ps;
-    var chosen = ps.find(function (p) { return p.id === state.playerId && p.connected; }) ||
-                 ps.find(function (p) { return p.connected; }) || null;
-    if (!chosen && preferred) {
-      try {
-        await api.status(preferred);
-        chosen = { id: preferred, name: 'Player LMS', connected: true, power: true };
-        state.players = [chosen].concat(ps.filter(function (p) { return p.id !== preferred; }));
-      } catch (e) {
-        /* O hint pode estar obsoleto; nesse caso a mensagem normal de descoberta prevalece. */
-      }
+  /* Preferencia configurada em Ajustes ("Default player"). null quando o
+     sentinela 'last' esta em vigor -- o comportamento de sempre, seguir a
+     ultima selecao explicita. LmsUi pode nao ter carregado ainda em algum
+     arreio de teste; a ausencia conta como "sem preferencia configurada",
+     nunca lanca. */
+  function configuredPlayerId() {
+    var ui = global.LmsUi;
+    var value = ui && ui.state ? ui.state.defaultPlayer : null;
+    return value && value !== 'last' ? value : null;
+  }
+
+  /* O hint pode ter saido do serverstatus (um player fora do ar nao aparece
+     la), mas ainda responder sondado direto -- e assim que um player
+     preferido, so dormindo ou desligado, volta a ser reconhecido sem que o
+     usuario precise escolher de novo. */
+  async function resurrectHint(id, ps) {
+    if (!id) return null;
+    try {
+      await api.status(id);
+      var chosen = { id: id, name: 'Player LMS', connected: true, power: true };
+      state.players = [chosen].concat(ps.filter(function (p) { return p.id !== id; }));
+      return chosen;
+    } catch (e) {
+      /* O hint pode estar obsoleto; nesse caso a mensagem normal de descoberta prevalece. */
+      return null;
     }
+  }
+
+  async function discoverPlayer() {
+    lastPlayersCheck = Date.now();
+    var configured = configuredPlayerId();
+    var hint = configured || preferredPlayerId || state.playerId;
+    var ps = await api.players(hint);
+    state.players = ps;
+
+    function connectedMatch(id) {
+      return id ? ps.find(function (p) { return p.id === id && p.connected; }) || null : null;
+    }
+
+    // 1) preferencia configurada nos Ajustes; 2) ultimo player usado nesta
+    // sessao; 3) qualquer um conectado. Um fallback tomado aqui NUNCA escreve
+    // de volta em configured ou preferredPlayerId -- so em state.playerId,
+    // que e o player ativo, nao a preferencia guardada.
+    var chosen = connectedMatch(configured) || connectedMatch(preferredPlayerId) ||
+                 ps.find(function (p) { return p.connected; }) || null;
+
+    if (!chosen && configured) chosen = await resurrectHint(configured, ps);
+    if (!chosen && preferredPlayerId && preferredPlayerId !== configured) {
+      chosen = await resurrectHint(preferredPlayerId, ps);
+    }
+
     state.playerId = chosen ? chosen.id : null;
     state.connected = !!chosen;
     if (!chosen) {
@@ -148,15 +196,40 @@
       state.transitionType = Number(await api.playerPref(playerId, 'transitionType')) || 0;
       state.transitionDuration = Number(await api.playerPref(playerId, 'transitionDuration')) || 0;
       state.sleepRemaining = await api.sleepRemaining(playerId);
-      state.canRate = await api.canCommand(['trackstat', 'setrating']);
     } catch (e) {}
+  }
+
+  /* `can <cmd> ?` nao depende de player, entao a resposta vale para o servidor
+     inteiro -- nao precisa ser refeita a cada troca de player, so uma vez por
+     carregamento da pagina. randomplay e dontstopthemusicsetting nao tem
+     consumidor ainda; a proxima leva usa o que ja estiver aqui sem escrever
+     uma sonda propria. */
+  var CAPABILITY_PROBES = {
+    rating: ['rating'],
+    randomplay: ['randomplay'],
+    dontstopthemusicsetting: ['dontstopthemusicsetting']
+  };
+  var capabilitiesRequested = false;
+
+  async function loadCapabilities() {
+    if (capabilitiesRequested) return;
+    capabilitiesRequested = true;
+    try {
+      state.capabilities = await api.canCommands(CAPABILITY_PROBES);
+    } catch (e) {
+      state.capabilities = {};
+    }
+    // ausencia de player-tie: sempre expoe como false quando a sonda falha,
+    // nunca deixa o controle visivel e desabilitado
+    state.canRate = !!state.capabilities.rating;
   }
 
   async function init() {
     var saved = readJson(SESSION_KEY, {});
     state.history = uniqueHistory(readJson(HISTORY_KEY, []));
     saveHistory();
-    if (!state.playerId && saved.playerId) state.playerId = saved.playerId;
+    preferredPlayerId = saved.playerId || null;
+    if (!state.playerId && preferredPlayerId) state.playerId = preferredPlayerId;
     try {
       var found = await discoverPlayer();
     } catch (e) {
@@ -170,6 +243,7 @@
       return;
     }
     await loadPlayerSettings();
+    await loadCapabilities();
     state.initialized = true;
     installMediaSession();
   }
@@ -183,6 +257,10 @@
           return;
         }
         await loadPlayerSettings();
+        // cobre a sessao que comecou sem player: init() nunca chegou a pedir
+        // as capacidades, e capabilitiesRequested torna a chamada de novo aqui
+        // gratis quando ja tiver sido resolvida
+        await loadCapabilities();
       } catch (e) {
         state.connected = false;
         state.lastError = friendlyError(e, 'Could not find the server.');
@@ -590,6 +668,8 @@
     // o desfazer pertence ao player anterior; segui-lo injetaria a fila errada
     if (playerId !== state.playerId) clearQueueUndo();
     state.playerId = playerId;
+    // escolha explicita: e a unica coisa que muda a preferencia guardada
+    preferredPlayerId = playerId;
     state.connected = !!found.connected;
     state.volumeModeSynced = false;
     saveSession();

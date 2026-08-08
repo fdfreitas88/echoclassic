@@ -23,3 +23,7 @@ _to_delete/
 
 # restos que o macOS deixa ao substituir arquivo em compartilhamento SMB
 .smbdelete*
+
+# caches Python das ferramentas
+__pycache__/
+*.pyc

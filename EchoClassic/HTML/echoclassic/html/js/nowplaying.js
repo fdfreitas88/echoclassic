@@ -10,7 +10,7 @@ Vue.component('lms-nowplaying', {
     fullscreen: { type: Boolean, default: false }
   },
   template: `
-<div class="npstage" :class="fullscreen ? 'mode-fullscreen' : 'mode-adaptive'">
+<div class="npstage" :class="fullscreen ? 'mode-fullscreen' : 'mode-adaptive'" v-bind="surfaceAttrs">
   <div class="npback" @click="close"></div>
   <section ref="dialog" class="npfull" :class="{'with-queue': ui.queueInline}"
            role="dialog" :aria-modal="String(isModal)" aria-label="Reproduzindo agora"
@@ -48,6 +48,12 @@ Vue.component('lms-nowplaying', {
 
     <div class="head">
       <div class="t ell">{{ np.title || 'Nothing playing' }}</div>
+      <button type="button" class="np-player-row pointer" :aria-label="playerPickerLabel"
+              @click="openPlayerPicker">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h3l5 4V5L7 9z"/></svg>
+        <span class="ell">{{ activePlayerName }}</span>
+        <svg class="chevron" viewBox="0 0 12 20" aria-hidden="true"><path d="M2 2l8 8-8 8"/></svg>
+      </button>
       <div class="s ell">{{ subtitle }}</div>
     </div>
 
@@ -154,6 +160,12 @@ Vue.component('lms-nowplaying', {
     };
   },
   computed: {
+    /* This one component serves both the 'small' (adaptive/inline) and
+       'full' (fullscreen) surfaces -- the fullscreen prop already carries
+       that distinction, so it also picks the surface name. */
+    surfaceAttrs: function () {
+      return LmsUi.surfaceAttrs(this.fullscreen ? 'full' : 'small');
+    },
     np: function () { return this.store.np; },
     hasTrack: function () {
       return this.np.id != null || !!this.np.title || !!this.np.url;
@@ -167,6 +179,19 @@ Vue.component('lms-nowplaying', {
       if (this.np.artist) parts.push(this.np.artist);
       if (this.np.album) parts.push(this.np.album);
       return parts.join(' — ');
+    },
+    /* Nome do servidor, nunca traduzido -- so o texto fixo da linha e que
+       precisa do dicionario. */
+    activePlayerName: function () {
+      var id = this.store.playerId;
+      var found = (this.store.players || []).filter(function (p) { return p.id === id; })[0];
+      return found ? found.name : 'No player';
+    },
+    /* Vai para um :aria-label, que e binding dinamico e portanto nao passa
+       pela reescrita de template -- a traducao acontece aqui, na mao. */
+    playerPickerLabel: function () {
+      var text = 'Change player';
+      return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
     },
     seekValue: function () {
       return this.dragTime === null ? this.store.time : this.dragTime;
@@ -245,6 +270,10 @@ Vue.component('lms-nowplaying', {
   methods: {
     close: function () {
       LmsUi.closePlayer();
+    },
+    openPlayerPicker: function (event) {
+      LmsUi.openActions({ kind: 'player-picker', title: 'Player' },
+                         event && event.currentTarget);
     },
     toggleFullscreen: function () { LmsUi.togglePlayerFullscreen(); },
     cyclePosition: function () { LmsUi.cyclePlayerPosition(); },

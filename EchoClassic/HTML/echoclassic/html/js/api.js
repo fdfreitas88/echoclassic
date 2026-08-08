@@ -571,7 +571,9 @@
   /* A fila e a playlist do proprio servidor, nao uma copia no cliente. Ler dali
      e o que faz a skin concordar com o que o LMS realmente vai tocar. */
   async function queue(playerId, start, count) {
-    var r = await rpc(playerId, ['status', start | 0, count | 0, 'tags:aldKNcgltTIo']);
+    // tag 'e' adiciona album_id: sem ele a fila nao tem como agrupar por album
+    // sem depender do nome (que colide) ou do coverid (que e por faixa).
+    var r = await rpc(playerId, ['status', start | 0, count | 0, 'tags:aldeKNcgltTIo']);
     return {
       total: num(r.playlist_tracks),
       index: num(r.playlist_cur_index),
@@ -581,6 +583,7 @@
         return {
           index: num(t['playlist index']), id: t.id,
           title: txt(t.title), artist: canonicalArtist(t.artist), album: txt(t.album),
+          albumId: t.album_id != null ? t.album_id : null,
           duration: num(t.duration), coverId: t.coverid || null,
           url: txt(t.url), rating: num(t.rating), playCount: num(t.playcount)
         };
@@ -648,9 +651,31 @@
     return values.some(function (v) { return String(v) === '1'; });
   }
 
+  /* Same probe as canCommand, for several commands at once. Each `can` is its
+     own request -- the wire format has no batch envelope for slim.request --
+     so "batched" here means fired together with Promise.all instead of one
+     await at a time, which is what makes resolving a whole capability map
+     cost one round trip's worth of latency instead of N. `probes` maps a name
+     the caller cares about ({rating: true}) to the command parts to ask LMS
+     about (['rating']). */
+  async function canCommands(probes) {
+    var names = Object.keys(probes || {});
+    var results = await Promise.all(names.map(function (name) {
+      return canCommand(probes[name]).catch(function () { return false; });
+    }));
+    var out = {};
+    names.forEach(function (name, i) { out[name] = results[i]; });
+    return out;
+  }
+
+  /* Core LMS 'rating' (Slim/Control/Request.pm dispatches
+     ['rating','_item','_rating'] to Commands.pm ratingCommand) uses a 0-100
+     scale, 100 being 5 stars in units of 20 -- the same scale songinfo hands
+     back in trackInfo.rating. The UI only ever deals in 0-5 stars, so the
+     conversion belongs here, at the one module that knows the wire format. */
   function setRating(playerId, trackId, stars) {
-    return rpc(playerId, ['trackstat', 'setrating', String(trackId),
-                          Math.max(0, Math.min(5, stars | 0))]);
+    var value = Math.max(0, Math.min(5, stars | 0)) * 20;
+    return rpc(playerId, ['rating', trackId, value]);
   }
 
   /* Radio, Favorites and Apps are the same thing in LMS: an OPML tree where
@@ -853,7 +878,8 @@
     players: players, status: status, songInfo: songInfo,
     forgetSongInfo: forgetSongInfo, playerPref: playerPref,
     setPlayerPref: setPlayerPref, sleep: sleep, sleepRemaining: sleepRemaining,
-    syncPlayer: syncPlayer, canCommand: canCommand, setRating: setRating,
+    syncPlayer: syncPlayer, canCommand: canCommand, canCommands: canCommands,
+    setRating: setRating,
     OPML_ROOTS: OPML_ROOTS, opmlRoot: opmlRoot,
     opmlBrowse: opmlBrowse, opmlSearch: opmlSearch, opmlPlay: opmlPlay,
     loadTrack: loadTrack, transport: transport,

@@ -34,7 +34,9 @@
   var FONT_OPTIONS = Object.freeze([
     Object.freeze({ key: 'system', label: 'System (default)' }),
     Object.freeze({ key: 'helvetica', label: 'Helvetica' }),
-    Object.freeze({ key: 'chicago', label: 'Chicago' })
+    Object.freeze({ key: 'chicago', label: 'Chicago' }),
+    Object.freeze({ key: 'podium', label: 'Podium Sans' }),
+    Object.freeze({ key: 'espy', label: 'Espy Sans' })
   ]);
 
   var PLAYER_PRESENTATIONS = Object.freeze([
@@ -43,10 +45,37 @@
   ]);
 
   var PLAYER_POSITIONS = Object.freeze([
-    Object.freeze({ key: 'right', label: 'Direita' }),
-    Object.freeze({ key: 'left', label: 'Esquerda' }),
-    Object.freeze({ key: 'center', label: 'Centro' })
+    Object.freeze({ key: 'right', label: 'Right' }),
+    Object.freeze({ key: 'left', label: 'Left' }),
+    Object.freeze({ key: 'center', label: 'Center' })
   ]);
+
+  /* AUDIT-09: como a fila mostra capa. 'every' e o comportamento antigo.
+     'album' e o padrao -- capa uma vez por sequencia do mesmo albumId, nunca
+     por nome (colide) nem por coverid (e por faixa, nao por album). 'headings'
+     acrescenta uma legenda de 22px por cima de cada sequencia, sem alterar a
+     altura da linha. */
+  var QUEUE_ART_MODES = Object.freeze([
+    Object.freeze({ key: 'every', label: 'Every track' }),
+    Object.freeze({ key: 'album', label: 'Once per album' }),
+    Object.freeze({ key: 'headings', label: 'Once per album, with headings' })
+  ]);
+
+  function isQueueArtMode(key) {
+    return QUEUE_ART_MODES.some(function (mode) { return mode.key === key; });
+  }
+
+  /* Preferencia de player padrao: 'last' (sentinela, o comportamento de sempre
+     -- segue a ultima selecao explicita) ou o id de um player especifico,
+     escolhido nos Ajustes. O id nao vem de uma lista fechada -- e o que o
+     servidor atribui a cada player -- entao a validacao aqui so garante a
+     forma (string nao vazia); quem confere se aquele id ainda existe e
+     LmsStore, ao resolver o player ativo. */
+  var DEFAULT_PLAYER_LAST = 'last';
+
+  function isDefaultPlayer(value) {
+    return typeof value === 'string' && value.length > 0;
+  }
 
   var GAUGE_STYLES = Object.freeze([
     Object.freeze({ key: 'flat', label: 'Flat' }),
@@ -69,6 +98,33 @@
   function isFontOption(key) {
     return FONT_OPTIONS.some(function (font) { return font.key === key; });
   }
+
+  /* Per-surface (mini/small/full) overrides add a third value the app-level
+     settings never accept: the sentinel 'app', meaning "follow the app-wide
+     choice". isColorScheme/isFontOption above must keep rejecting it -- widening
+     them would let the app-level colorScheme/fontFamily themselves be set to
+     'app', which is meaningless. These three predicates are the only place
+     'app' is a legal value. */
+  function isSurfaceTheme(key) {
+    return key === 'app' || key === 'light' || key === 'dark';
+  }
+
+  function isSurfaceScheme(key) {
+    return key === 'app' || isColorScheme(key);
+  }
+
+  function isSurfaceFont(key) {
+    return key === 'app' || isFontOption(key);
+  }
+
+  /* The three surfaces a theme/scheme/font override can target, and the state
+     keys each owns. Shared by surfaceAttrs, surfaceFollowsApp and the three
+     setSurface* setters so the mapping is written once. */
+  var SURFACE_KEYS = {
+    mini: { theme: 'miniTheme', scheme: 'miniColorScheme', font: 'miniFont' },
+    small: { theme: 'smallTheme', scheme: 'smallColorScheme', font: 'smallFont' },
+    full: { theme: 'fullTheme', scheme: 'fullColorScheme', font: 'fullFont' }
+  };
 
   function isPlayerPresentation(key) {
     return PLAYER_PRESENTATIONS.some(function (mode) { return mode.key === key; });
@@ -323,6 +379,13 @@
 	    tab: isTab(saved.tab) ? saved.tab : 'music',
     musicView: initialMusicView,
     albumMode: saved.albumMode || 'albums',   // 'albums' = grade de capas | 'tracks' = pilha completa
+    /* Um valor gravado por uma versao futura (ou corrompido) nao pode zerar a
+       capa da fila inteira -- cai no padrao em vez de travar num estado vazio. */
+    queueArtMode: isQueueArtMode(saved.queueArtMode) ? saved.queueArtMode : 'album',
+    /* Como queueArtMode acima: um valor gravado por versao futura, ou
+       corrompido, cai no sentinela 'last' em vez de travar a escolha de
+       player num id que nao existe mais. */
+    defaultPlayer: isDefaultPlayer(saved.defaultPlayer) ? saved.defaultPlayer : DEFAULT_PLAYER_LAST,
     dark: !!saved.dark,
     searching: false,
     query: '',
@@ -370,6 +433,23 @@
     pins: savedPins,
     colorScheme: isColorScheme(saved.colorScheme) ? saved.colorScheme : 'blue',
     fontFamily: isFontOption(saved.fontFamily) ? saved.fontFamily : 'system',
+    /* Per-surface appearance overrides: 'app' is the sentinel meaning "follow
+       the app-wide choice" and is the only default that survives a corrupted
+       or future-versioned payload -- see isSurfaceTheme/isSurfaceScheme/
+       isSurfaceFont above for why the ordinary predicates cannot validate
+       these. */
+    miniTheme: isSurfaceTheme(saved.miniTheme) ? saved.miniTheme : 'app',
+    miniColorScheme: isSurfaceScheme(saved.miniColorScheme) ? saved.miniColorScheme : 'app',
+    miniFont: isSurfaceFont(saved.miniFont) ? saved.miniFont : 'app',
+    smallTheme: isSurfaceTheme(saved.smallTheme) ? saved.smallTheme : 'app',
+    smallColorScheme: isSurfaceScheme(saved.smallColorScheme) ? saved.smallColorScheme : 'app',
+    smallFont: isSurfaceFont(saved.smallFont) ? saved.smallFont : 'app',
+    fullTheme: isSurfaceTheme(saved.fullTheme) ? saved.fullTheme : 'app',
+    fullColorScheme: isSurfaceScheme(saved.fullColorScheme) ? saved.fullColorScheme : 'app',
+    fullFont: isSurfaceFont(saved.fullFont) ? saved.fullFont : 'app',
+    /* Which Appearance screen (if any) is open. Not persisted: it is
+       navigation state, not a preference, and always starts closed. */
+    appearanceScreen: null,
     showBadges: saved.showBadges !== false,
     markHires: saved.markHires !== false,
     busyMessage: '',
@@ -398,7 +478,9 @@
       localStorage.setItem('echoclassic.ui.v2', JSON.stringify({
         tab: state.tab, musicView: state.musicView, dark: state.dark,
         byView: byView,
-        albumMode: state.albumMode, showBadges: state.showBadges,
+        albumMode: state.albumMode, queueArtMode: state.queueArtMode,
+        defaultPlayer: state.defaultPlayer,
+        showBadges: state.showBadges,
         markHires: state.markHires, colorScheme: state.colorScheme,
         fontFamily: state.fontFamily, playerPresentation: state.playerPresentation,
         playerPosition: state.playerPosition,
@@ -408,7 +490,10 @@
         darkMiniGaugeStyle: state.darkMiniGaugeStyle,
         darkPlayerGaugeStyle: state.darkPlayerGaugeStyle,
         miniGaugeColor: state.miniGaugeColor, playerGaugeColor: state.playerGaugeColor,
-        prefer: state.prefer
+        prefer: state.prefer,
+        miniTheme: state.miniTheme, miniColorScheme: state.miniColorScheme, miniFont: state.miniFont,
+        smallTheme: state.smallTheme, smallColorScheme: state.smallColorScheme, smallFont: state.smallFont,
+        fullTheme: state.fullTheme, fullColorScheme: state.fullColorScheme, fullFont: state.fullFont
       }));
     } catch (e) {}
   }
@@ -466,6 +551,52 @@
     if (!isFontOption(key)) return;
     state.fontFamily = key;
     applyAppearance();
+    persist();
+  }
+
+  /* Resolver used by every surface root binding (mini player, small/full now
+     playing). Omits a key entirely when its value is 'app' -- Vue 2 removes an
+     attribute bound to null, but never write the literal string "app": a CSS
+     selector matching [data-surface-theme="app"] would otherwise exist and
+     nothing defines it. Unknown surface -> {}, so a template can always
+     v-bind the result unconditionally. */
+  function surfaceAttrs(surface) {
+    var map = SURFACE_KEYS[surface];
+    if (!map) return {};
+    var out = {};
+    if (state[map.theme] !== 'app') out['data-surface-theme'] = state[map.theme];
+    if (state[map.scheme] !== 'app') out['data-surface-scheme'] = state[map.scheme];
+    if (state[map.font] !== 'app') out['data-surface-font'] = state[map.font];
+    return out;
+  }
+
+  /* true only when none of the surface's three overrides diverge from the
+     app -- used by the WP5 summary row ("Follow app" vs "Custom"). Unknown
+     surface -> false. */
+  function surfaceFollowsApp(surface) {
+    var map = SURFACE_KEYS[surface];
+    if (!map) return false;
+    return state[map.theme] === 'app' && state[map.scheme] === 'app' && state[map.font] === 'app';
+  }
+
+  function setSurfaceTheme(surface, key) {
+    var map = SURFACE_KEYS[surface];
+    if (!map || !isSurfaceTheme(key)) return;
+    state[map.theme] = key;
+    persist();
+  }
+
+  function setSurfaceScheme(surface, key) {
+    var map = SURFACE_KEYS[surface];
+    if (!map || !isSurfaceScheme(key)) return;
+    state[map.scheme] = key;
+    persist();
+  }
+
+  function setSurfaceFont(surface, key) {
+    var map = SURFACE_KEYS[surface];
+    if (!map || !isSurfaceFont(key)) return;
+    state[map.font] = key;
     persist();
   }
 
@@ -795,6 +926,23 @@
     }
   }
 
+  function setQueueArtMode(key) {
+    if (!isQueueArtMode(key)) return;
+    state.queueArtMode = key;
+    persist();
+  }
+
+  /* Guardado aqui, e nao em LmsStore, porque e uma preferencia do cliente --
+     sobrevive a troca de servidor e nao depende de sessao. LmsStore le este
+     valor ao resolver qual player fica ativo; escreve-lo aqui nunca aciona
+     essa resolucao sozinho -- so a proxima descoberta (recarregar, reconectar)
+     honra a mudanca. */
+  function setDefaultPlayer(id) {
+    if (!isDefaultPlayer(id)) return;
+    state.defaultPlayer = id;
+    persist();
+  }
+
   function setPreference(key, value) {
     if (key !== 'showBadges' && key !== 'markHires') return;
     state[key] = !!value;
@@ -935,6 +1083,9 @@
     state: state, TABS: TABS, MUSIC_VIEWS: MUSIC_VIEWS,
     COLOR_SCHEMES: COLOR_SCHEMES, setColorScheme: setColorScheme,
     FONT_OPTIONS: FONT_OPTIONS, setFontFamily: setFontFamily,
+    surfaceAttrs: surfaceAttrs, surfaceFollowsApp: surfaceFollowsApp,
+    setSurfaceTheme: setSurfaceTheme, setSurfaceScheme: setSurfaceScheme,
+    setSurfaceFont: setSurfaceFont,
     PLAYER_PRESENTATIONS: PLAYER_PRESENTATIONS,
     setPlayerPresentation: setPlayerPresentation,
     PLAYER_POSITIONS: PLAYER_POSITIONS,
@@ -945,6 +1096,8 @@
     togglePlayerFullscreen: togglePlayerFullscreen,
     toggleQueueInline: toggleQueueInline,
     ALBUM_MODES: ALBUM_MODES, setAlbumMode: setAlbumMode,
+    QUEUE_ART_MODES: QUEUE_ART_MODES, setQueueArtMode: setQueueArtMode,
+    DEFAULT_PLAYER_LAST: DEFAULT_PLAYER_LAST, setDefaultPlayer: setDefaultPlayer,
     setPreference: setPreference,
     viewLabel: viewLabel, setMusicView: setMusicView,
     allowsMediaFilter: allowsMediaFilter,

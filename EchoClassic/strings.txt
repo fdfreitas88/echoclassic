@@ -304,6 +304,10 @@ ECHOCLASSIC_UI_CROSSFADE
 	EN	Crossfade
 	PT	Transição
 
+ECHOCLASSIC_UI_CUSTOM
+	EN	Custom
+	PT	Personalizado
+
 ECHOCLASSIC_UI_CURRENT_POSITION
 	EN	Current position: 
 	PT	Posição atual: 
@@ -384,6 +388,10 @@ ECHOCLASSIC_UI_FOLLOW_THEME
 	EN	Follow theme
 	PT	Acompanhar tema
 
+ECHOCLASSIC_UI_FOLLOW_APP
+	EN	Follow app
+	PT	Acompanhar app
+
 ECHOCLASSIC_UI_FONTS
 	EN	Fonts
 	PT	Fontes
@@ -395,10 +403,6 @@ ECHOCLASSIC_UI_FORMAT
 ECHOCLASSIC_UI_FULL_PLAYER
 	EN	Full player
 	PT	Player completo
-
-ECHOCLASSIC_UI_FULL_PLAYER_LAYOUT
-	EN	Full player layout
-	PT	Layout do player completo
 
 ECHOCLASSIC_UI_FULL_SCREEN
 	EN	Full screen
@@ -708,6 +712,10 @@ ECHOCLASSIC_UI_PLAYER_SYNCHRONISATION
 ECHOCLASSIC_UI_PLAYER_VOLUME
 	EN	Player volume
 	PT	Volume do player
+
+ECHOCLASSIC_UI_PLAYER_LAYOUT
+	EN	Player layout
+	PT	Layout do player
 
 ECHOCLASSIC_UI_PLAYLISTS
 	EN	Playlists
@@ -1505,8 +1513,80 @@ ECHOCLASSIC_UI_IMPORT_KEEPS_REST
 	PT	O que não estiver no arquivo continua como está. Uma cópia do estado atual
 
 ECHOCLASSIC_UI_QUEUE_EMPTY_1
-	EN	The queue is empty. Play an album or a playlist and the tracks that follow
-	PT	A fila está vazia. Toque um álbum ou uma playlist e as faixas seguintes
+	EN	The queue is empty. Play an album or a playlist and the tracks that follow appear here.
+	PT	A fila está vazia. Toque um álbum ou uma playlist e as faixas seguintes aparecerão aqui.
+
+ECHOCLASSIC_UI_CHANGE_PLAYER
+	EN	Change player
+	PT	Trocar de player
+
+ECHOCLASSIC_UI_COVER_ART_ON_EVERY_TRACK
+	EN	Cover art on every track
+	PT	Capa em cada faixa
+
+ECHOCLASSIC_UI_COVER_ART_ONCE_PER_ALBUM
+	EN	Cover art once per run of the same album
+	PT	Capa uma vez por sequência do mesmo álbum
+
+ECHOCLASSIC_UI_COVER_ART_ONCE_PER_ALBUM_WITH_CAPTION
+	EN	Cover art once per album, with a caption above the group
+	PT	Capa uma vez por álbum, com uma legenda acima do grupo
+
+ECHOCLASSIC_UI_DEFAULT_PLAYER
+	EN	Default player
+	PT	Player padrão
+
+ECHOCLASSIC_UI_DEFAULT_PLAYER_HELP
+	EN	Choose which player Echo Classic connects to when it starts. “Last used” follows whichever player you pick, even after a refresh.
+	PT	Escolha o player ao qual o Echo Classic se conecta ao iniciar. "Último usado" segue qualquer player que você escolher, mesmo após atualizar.
+
+ECHOCLASSIC_UI_DISCONNECTED
+	EN	Disconnected
+	PT	Desconectado
+
+ECHOCLASSIC_UI_EVERY_TRACK
+	EN	Every track
+	PT	Cada faixa
+
+ECHOCLASSIC_UI_LAST_USED
+	EN	Last used
+	PT	Último usado
+
+ECHOCLASSIC_UI_NO_PLAYER
+	EN	No player
+	PT	Sem player
+
+ECHOCLASSIC_UI_NO_PLAYERS_FOUND
+	EN	No players found.
+	PT	Nenhum player encontrado.
+
+ECHOCLASSIC_UI_ONCE_PER_ALBUM
+	EN	Once per album
+	PT	Uma vez por álbum
+
+ECHOCLASSIC_UI_ONCE_PER_ALBUM_WITH_HEADINGS
+	EN	Once per album, with headings
+	PT	Uma vez por álbum, com legendas
+
+ECHOCLASSIC_UI_QUEUE
+	EN	Queue
+	PT	Fila
+
+ECHOCLASSIC_UI_QUEUE_ARTWORK
+	EN	Queue artwork
+	PT	Capas da fila
+
+ECHOCLASSIC_UI_QUEUE_ARTWORK_HELP
+	EN	Choose how often album art repeats in the playback queue.
+	PT	Escolha com que frequência a capa do álbum se repete na fila de reprodução.
+
+ECHOCLASSIC_UI_SLEEPING
+	EN	Sleeping
+	PT	Dormindo
+
+ECHOCLASSIC_UI_UNKNOWN_PLAYER
+	EN	Unknown player
+	PT	Player desconhecido
 
 ECHOCLASSIC_UI_PLAYER_HELP_2
 	EN	Sync makes both players play together.
@@ -1809,3 +1889,59 @@ ECHOCLASSIC_UI_ASCENDING_ORDER_LABEL
 ECHOCLASSIC_UI_DESCENDING_ORDER_LABEL
 	EN	Descending order
 	PT	Ordem decrescente
+
+ECHOCLASSIC_UI_CENTER
+	EN	Center
+	PT	Centro
+
+ECHOCLASSIC_UI_DARK_OPTION
+	EN	Dark
+	PT	Escuro
+
+ECHOCLASSIC_UI_FONT
+	EN	Font
+	PT	Fonte
+
+ECHOCLASSIC_UI_GENERAL
+	EN	General
+	PT	Geral
+
+ECHOCLASSIC_UI_LEFT
+	EN	Left
+	PT	Esquerda
+
+ECHOCLASSIC_UI_LIGHT_OPTION
+	EN	Light
+	PT	Claro
+
+ECHOCLASSIC_UI_NOT_SPECIFIED
+	EN	Not specified
+	PT	Não especificado
+
+ECHOCLASSIC_UI_PREVIEW
+	EN	Preview
+	PT	Visualização
+
+ECHOCLASSIC_UI_PRESENTATION
+	EN	Presentation
+	PT	Apresentação
+
+ECHOCLASSIC_UI_PROGRESS_BAR
+	EN	Progress bar
+	PT	Barra de progresso
+
+ECHOCLASSIC_UI_RIGHT
+	EN	Right
+	PT	Direita
+
+ECHOCLASSIC_UI_SMALL_PLAYER
+	EN	Small player
+	PT	Player pequeno
+
+ECHOCLASSIC_UI_THIS_ALBUM_HAS_MORE_TRACKS
+	EN	This album has more tracks than the screen loaded.
+	PT	Este álbum tem mais faixas do que a tela carregou.
+
+ECHOCLASSIC_UI_POSITION
+	EN	Position
+	PT	Posição

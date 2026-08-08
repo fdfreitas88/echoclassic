@@ -111,7 +111,7 @@ Vue.component('lms-album-block', {
     </div>
 	    <div v-if="!tracks.length" class="empty"><div class="p">This album returned no tracks.</div></div>
 	    <div v-if="tracksHasMore" class="loading-more warning" role="status">
-	      Este álbum tem mais faixas do que a tela carregou.
+	      This album has more tracks than the screen loaded.
 	    </div>
 	  </template>
 	</div>`,

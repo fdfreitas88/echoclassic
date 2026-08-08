@@ -16,6 +16,335 @@ Vue.component('lms-settings', {
   <iframe class="advanced-settings-frame" title="Advanced LMS settings"
           src="/settings/index.html"></iframe>
 </div>
+<div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
+  <template v-if="ui.appearanceScreen === 'theme'">
+    <div class="sgroup theme-option-group" role="radiogroup" aria-label="Theme">
+      <button v-for="option in themeOptions" :key="option.key" type="button"
+              class="srow theme-option-row"
+              role="radio" :aria-checked="(ui.dark ? 'dark' : 'light') === option.key ? 'true' : 'false'"
+              :tabindex="(ui.dark ? 'dark' : 'light') === option.key ? 0 : -1"
+              @keydown="radioKey($event, themeOptions, ui.dark ? 'dark' : 'light', selectTheme)"
+              @click="selectTheme(option.key)">
+        <span class="theme-option-label">{{ option.label }}</span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </div>
+  </template>
+
+  <template v-else-if="ui.appearanceScreen === 'colorScheme'">
+    <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Colour scheme">
+      <button v-for="scheme in colorSchemes" :key="scheme.key" type="button"
+              class="srow color-scheme-row" :class="'scheme-' + scheme.key"
+              role="radio" :aria-checked="ui.colorScheme === scheme.key ? 'true' : 'false'"
+              :tabindex="ui.colorScheme === scheme.key ? 0 : -1"
+              @keydown="radioKey($event, colorSchemes, ui.colorScheme, colorScheme)"
+              @click="colorScheme(scheme.key)">
+        <span class="scheme-swatches" aria-hidden="true">
+          <span class="scheme-swatch scheme-swatch-light"></span>
+          <span class="scheme-swatch scheme-swatch-dark"></span>
+        </span>
+        <span class="scheme-label">{{ scheme.label }}</span>
+        <span class="color-scheme-check" aria-hidden="true"></span>
+      </button>
+    </div>
+  </template>
+
+  <template v-else-if="ui.appearanceScreen === 'font'">
+    <div class="sgroup font-option-group" role="radiogroup" aria-label="Font">
+      <button v-for="font in fontOptions" :key="font.key" type="button"
+              class="srow font-option-row" :class="'font-' + font.key"
+              role="radio" :aria-checked="ui.fontFamily === font.key ? 'true' : 'false'"
+              :tabindex="ui.fontFamily === font.key ? 0 : -1"
+              @keydown="radioKey($event, fontOptions, ui.fontFamily, fontFamily)"
+              @click="fontFamily(font.key)">
+        <span class="font-option-label">{{ font.label }}</span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </div>
+  </template>
+
+  <template v-else-if="ui.appearanceScreen === 'progress'">
+    <div class="sgroup gauge-settings-group">
+      <div class="player-help">
+        {{ gaugeHelp }}
+      </div>
+      <div class="srow gauge-style-row">
+        <span>{{ miniGaugeStyleLabel }}</span>
+        <div class="gauge-segmented" role="radiogroup"
+             :aria-label="miniGaugeStyleLabel">
+          <button v-for="style in gaugeStyles" :key="'mini-' + style.key" type="button"
+                  role="radio" :aria-checked="ui.miniGaugeStyle === style.key ? 'true' : 'false'"
+                  :tabindex="ui.miniGaugeStyle === style.key ? 0 : -1"
+                  :class="{on: ui.miniGaugeStyle === style.key}"
+                  @keydown="radioKey($event, gaugeStyles, ui.miniGaugeStyle, miniGaugeStyle)"
+                  @click="miniGaugeStyle(style.key)">{{ style.label }}</button>
+        </div>
+      </div>
+      <label class="srow">Mini player colour
+        <select class="setting-select mini-gauge-color" :value="ui.miniGaugeColor"
+                @change="gaugeColor('mini', $event.target.value)">
+          <option v-for="color in gaugeColors" :key="'mini-color-' + color.key"
+                  :value="color.key">{{ color.label }}</option>
+        </select>
+      </label>
+      <div class="srow gauge-style-row">
+        <span>{{ playerGaugeStyleLabel }}</span>
+        <div class="gauge-segmented" role="radiogroup"
+             :aria-label="playerGaugeStyleLabel">
+          <button v-for="style in gaugeStyles" :key="'player-' + style.key" type="button"
+                  role="radio" :aria-checked="ui.playerGaugeStyle === style.key ? 'true' : 'false'"
+                  :tabindex="ui.playerGaugeStyle === style.key ? 0 : -1"
+                  :class="{on: ui.playerGaugeStyle === style.key}"
+                  @keydown="radioKey($event, gaugeStyles, ui.playerGaugeStyle, playerGaugeStyle)"
+                  @click="playerGaugeStyle(style.key)">{{ style.label }}</button>
+        </div>
+      </div>
+      <label class="srow">Full player colour
+        <select class="setting-select player-gauge-color" :value="ui.playerGaugeColor"
+                @change="gaugeColor('player', $event.target.value)">
+          <option v-for="color in gaugeColors" :key="'player-color-' + color.key"
+                  :value="color.key">{{ color.label }}</option>
+        </select>
+      </label>
+    </div>
+  </template>
+
+  <template v-else-if="ui.appearanceScreen === 'players'">
+    <div class="sgroup">
+      <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('full')">
+        Full player <span class="v">{{ surfaceStatusLabel('full') }} ›</span>
+      </button>
+      <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('small')">
+        Small player <span class="v">{{ surfaceStatusLabel('small') }} ›</span>
+      </button>
+      <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('mini')">
+        Mini player <span class="v">{{ surfaceStatusLabel('mini') }} ›</span>
+      </button>
+    </div>
+  </template>
+
+  <template v-else-if="ui.appearanceScreen === 'full'">
+    <div class="sgh">Presentation</div>
+    <div class="sgroup player-presentation-group" role="radiogroup" aria-label="Presentation">
+      <button v-for="mode in playerPresentations" :key="mode.key" type="button"
+              class="srow player-presentation-row"
+              :class="'player-presentation-' + mode.key"
+              role="radio" :aria-checked="ui.playerPresentation === mode.key ? 'true' : 'false'"
+              :tabindex="ui.playerPresentation === mode.key ? 0 : -1"
+              @keydown="radioKey($event, playerPresentations, ui.playerPresentation, playerPresentation)"
+              @click="playerPresentation(mode.key)">
+        <span class="player-presentation-copy">
+          <span>{{ mode.label }}</span>
+          <small>{{ mode.key === 'adaptive'
+            ? 'Column on wide screens; overlay on compact ones'
+            : 'Always fills the whole screen' }}</small>
+        </span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="sgroup theme-option-group" role="radiogroup" aria-label="Theme">
+      <button v-for="option in themeOptionsWithApp" :key="'full-theme-' + option.key" type="button"
+              class="srow theme-option-row"
+              role="radio" :aria-checked="ui.fullTheme === option.key ? 'true' : 'false'"
+              :tabindex="ui.fullTheme === option.key ? 0 : -1"
+              @keydown="radioKey($event, themeOptionsWithApp, ui.fullTheme, setFullTheme)"
+              @click="setFullTheme(option.key)">
+        <span class="theme-option-label">{{ option.label }}</span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Colour scheme">
+      <button v-for="scheme in colorSchemeOptionsWithApp" :key="'full-scheme-' + scheme.key" type="button"
+              class="srow color-scheme-row" :class="scheme.key === 'app' ? 'scheme-app' : ('scheme-' + scheme.key)"
+              role="radio" :aria-checked="ui.fullColorScheme === scheme.key ? 'true' : 'false'"
+              :tabindex="ui.fullColorScheme === scheme.key ? 0 : -1"
+              @keydown="radioKey($event, colorSchemeOptionsWithApp, ui.fullColorScheme, setFullScheme)"
+              @click="setFullScheme(scheme.key)">
+        <span v-if="scheme.key !== 'app'" class="scheme-swatches" aria-hidden="true">
+          <span class="scheme-swatch scheme-swatch-light"></span>
+          <span class="scheme-swatch scheme-swatch-dark"></span>
+        </span>
+        <span class="scheme-label">{{ scheme.label }}</span>
+        <span class="color-scheme-check" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="sgroup font-option-group" role="radiogroup" aria-label="Font">
+      <button v-for="font in fontOptionsWithApp" :key="'full-font-' + font.key" type="button"
+              class="srow font-option-row" :class="font.key === 'app' ? 'font-app' : ('font-' + font.key)"
+              role="radio" :aria-checked="ui.fullFont === font.key ? 'true' : 'false'"
+              :tabindex="ui.fullFont === font.key ? 0 : -1"
+              @keydown="radioKey($event, fontOptionsWithApp, ui.fullFont, setFullFont)"
+              @click="setFullFont(font.key)">
+        <span class="font-option-label">{{ font.label }}</span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="sgh">Progress bar</div>
+    <div class="sgroup gauge-settings-group">
+      <div class="srow gauge-style-row">
+        <span>{{ playerGaugeStyleLabel }}</span>
+        <div class="gauge-segmented" role="radiogroup"
+             :aria-label="playerGaugeStyleLabel">
+          <button v-for="style in gaugeStyles" :key="'full-player-' + style.key" type="button"
+                  role="radio" :aria-checked="ui.playerGaugeStyle === style.key ? 'true' : 'false'"
+                  :tabindex="ui.playerGaugeStyle === style.key ? 0 : -1"
+                  :class="{on: ui.playerGaugeStyle === style.key}"
+                  @keydown="radioKey($event, gaugeStyles, ui.playerGaugeStyle, playerGaugeStyle)"
+                  @click="playerGaugeStyle(style.key)">{{ style.label }}</button>
+        </div>
+      </div>
+      <label class="srow">Full player colour
+        <select class="setting-select player-gauge-color" :value="ui.playerGaugeColor"
+                @change="gaugeColor('player', $event.target.value)">
+          <option v-for="color in gaugeColors" :key="'full-player-color-' + color.key"
+                  :value="color.key">{{ color.label }}</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="sgh">Preview</div>
+    <div class="sgroup">
+      <div class="srow surface-preview" aria-hidden="true" v-bind="fullPreviewAttrs">
+        <span class="surface-preview-swatch"></span>
+        <span class="surface-preview-copy">Full player</span>
+      </div>
+    </div>
+  </template>
+
+  <template v-else-if="ui.appearanceScreen === 'small'">
+    <div class="sgh">Position</div>
+    <div class="sgroup player-position-group" role="radiogroup" aria-label="Position">
+      <button v-for="position in playerPositions" :key="position.key" type="button"
+              class="srow player-presentation-row"
+              role="radio" :aria-checked="ui.playerPosition === position.key ? 'true' : 'false'"
+              :tabindex="ui.playerPosition === position.key ? 0 : -1"
+              @keydown="radioKey($event, playerPositions, ui.playerPosition, setPlayerPosition)"
+              @click="setPlayerPosition(position.key)">
+        <span class="player-presentation-copy"><span>{{ position.label }}</span></span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="sgroup theme-option-group" role="radiogroup" aria-label="Theme">
+      <button v-for="option in themeOptionsWithApp" :key="'small-theme-' + option.key" type="button"
+              class="srow theme-option-row"
+              role="radio" :aria-checked="ui.smallTheme === option.key ? 'true' : 'false'"
+              :tabindex="ui.smallTheme === option.key ? 0 : -1"
+              @keydown="radioKey($event, themeOptionsWithApp, ui.smallTheme, setSmallTheme)"
+              @click="setSmallTheme(option.key)">
+        <span class="theme-option-label">{{ option.label }}</span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Colour scheme">
+      <button v-for="scheme in colorSchemeOptionsWithApp" :key="'small-scheme-' + scheme.key" type="button"
+              class="srow color-scheme-row" :class="scheme.key === 'app' ? 'scheme-app' : ('scheme-' + scheme.key)"
+              role="radio" :aria-checked="ui.smallColorScheme === scheme.key ? 'true' : 'false'"
+              :tabindex="ui.smallColorScheme === scheme.key ? 0 : -1"
+              @keydown="radioKey($event, colorSchemeOptionsWithApp, ui.smallColorScheme, setSmallScheme)"
+              @click="setSmallScheme(scheme.key)">
+        <span v-if="scheme.key !== 'app'" class="scheme-swatches" aria-hidden="true">
+          <span class="scheme-swatch scheme-swatch-light"></span>
+          <span class="scheme-swatch scheme-swatch-dark"></span>
+        </span>
+        <span class="scheme-label">{{ scheme.label }}</span>
+        <span class="color-scheme-check" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="sgroup font-option-group" role="radiogroup" aria-label="Font">
+      <button v-for="font in fontOptionsWithApp" :key="'small-font-' + font.key" type="button"
+              class="srow font-option-row" :class="font.key === 'app' ? 'font-app' : ('font-' + font.key)"
+              role="radio" :aria-checked="ui.smallFont === font.key ? 'true' : 'false'"
+              :tabindex="ui.smallFont === font.key ? 0 : -1"
+              @keydown="radioKey($event, fontOptionsWithApp, ui.smallFont, setSmallFont)"
+              @click="setSmallFont(font.key)">
+        <span class="font-option-label">{{ font.label }}</span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="sgh">Preview</div>
+    <div class="sgroup">
+      <div class="srow surface-preview" aria-hidden="true" v-bind="smallPreviewAttrs">
+        <span class="surface-preview-swatch"></span>
+        <span class="surface-preview-copy">Small player</span>
+      </div>
+    </div>
+  </template>
+
+  <template v-else-if="ui.appearanceScreen === 'mini'">
+    <div class="sgroup theme-option-group" role="radiogroup" aria-label="Theme">
+      <button v-for="option in themeOptionsWithApp" :key="'mini-theme-' + option.key" type="button"
+              class="srow theme-option-row"
+              role="radio" :aria-checked="ui.miniTheme === option.key ? 'true' : 'false'"
+              :tabindex="ui.miniTheme === option.key ? 0 : -1"
+              @keydown="radioKey($event, themeOptionsWithApp, ui.miniTheme, setMiniTheme)"
+              @click="setMiniTheme(option.key)">
+        <span class="theme-option-label">{{ option.label }}</span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Colour scheme">
+      <button v-for="scheme in colorSchemeOptionsWithApp" :key="'mini-scheme-' + scheme.key" type="button"
+              class="srow color-scheme-row" :class="scheme.key === 'app' ? 'scheme-app' : ('scheme-' + scheme.key)"
+              role="radio" :aria-checked="ui.miniColorScheme === scheme.key ? 'true' : 'false'"
+              :tabindex="ui.miniColorScheme === scheme.key ? 0 : -1"
+              @keydown="radioKey($event, colorSchemeOptionsWithApp, ui.miniColorScheme, setMiniScheme)"
+              @click="setMiniScheme(scheme.key)">
+        <span v-if="scheme.key !== 'app'" class="scheme-swatches" aria-hidden="true">
+          <span class="scheme-swatch scheme-swatch-light"></span>
+          <span class="scheme-swatch scheme-swatch-dark"></span>
+        </span>
+        <span class="scheme-label">{{ scheme.label }}</span>
+        <span class="color-scheme-check" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="sgroup font-option-group" role="radiogroup" aria-label="Font">
+      <button v-for="font in fontOptionsWithApp" :key="'mini-font-' + font.key" type="button"
+              class="srow font-option-row" :class="font.key === 'app' ? 'font-app' : ('font-' + font.key)"
+              role="radio" :aria-checked="ui.miniFont === font.key ? 'true' : 'false'"
+              :tabindex="ui.miniFont === font.key ? 0 : -1"
+              @keydown="radioKey($event, fontOptionsWithApp, ui.miniFont, setMiniFont)"
+              @click="setMiniFont(font.key)">
+        <span class="font-option-label">{{ font.label }}</span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="sgh">Progress bar</div>
+    <div class="sgroup gauge-settings-group">
+      <div class="srow gauge-style-row">
+        <span>{{ miniGaugeStyleLabel }}</span>
+        <div class="gauge-segmented" role="radiogroup"
+             :aria-label="miniGaugeStyleLabel">
+          <button v-for="style in gaugeStyles" :key="'mini-only-' + style.key" type="button"
+                  role="radio" :aria-checked="ui.miniGaugeStyle === style.key ? 'true' : 'false'"
+                  :tabindex="ui.miniGaugeStyle === style.key ? 0 : -1"
+                  :class="{on: ui.miniGaugeStyle === style.key}"
+                  @keydown="radioKey($event, gaugeStyles, ui.miniGaugeStyle, miniGaugeStyle)"
+                  @click="miniGaugeStyle(style.key)">{{ style.label }}</button>
+        </div>
+      </div>
+      <label class="srow">Mini player colour
+        <select class="setting-select mini-gauge-color" :value="ui.miniGaugeColor"
+                @change="gaugeColor('mini', $event.target.value)">
+          <option v-for="color in gaugeColors" :key="'mini-only-color-' + color.key"
+                  :value="color.key">{{ color.label }}</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="sgh">Preview</div>
+    <div class="sgroup">
+      <div class="srow surface-preview" aria-hidden="true" v-bind="miniPreviewAttrs">
+        <span class="surface-preview-swatch"></span>
+        <span class="surface-preview-copy">Mini player</span>
+      </div>
+    </div>
+  </template>
+</div>
 <div v-else class="settings">
   <div class="sgh">Player</div>
   <div class="sgroup">
@@ -40,6 +369,35 @@ Vue.component('lms-settings', {
           <button title="Play together with the current player" @click.stop="sync(p)">Sync</button>
         </template>
       </div>
+    </template>
+    <button type="button" class="srow settings-command-row pointer"
+            :aria-expanded="String(showDefaultPlayer)" @click="showDefaultPlayer = !showDefaultPlayer">
+      Default player
+      <span class="v">{{ defaultPlayerName }}<template v-if="defaultPlayerNote"> · {{ defaultPlayerNote }}</template> ›</span>
+    </button>
+    <template v-if="showDefaultPlayer">
+      <div class="player-help">
+        Choose which player Echo Classic connects to when it starts. “Last used” follows whichever player you pick, even after a refresh.
+      </div>
+      <button type="button" class="srow player-presentation-row"
+              role="radio" :aria-checked="ui.defaultPlayer === 'last' ? 'true' : 'false'"
+              :tabindex="ui.defaultPlayer === 'last' ? 0 : -1"
+              @keydown="radioKey($event, defaultPlayerOptions, ui.defaultPlayer, defaultPlayer)"
+              @click="defaultPlayer('last')">
+        <span class="player-presentation-copy"><span>Last used</span></span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+      <button v-for="p in store.players" :key="p.id" type="button" class="srow player-presentation-row"
+              role="radio" :aria-checked="ui.defaultPlayer === p.id ? 'true' : 'false'"
+              :tabindex="ui.defaultPlayer === p.id ? 0 : -1"
+              @keydown="radioKey($event, defaultPlayerOptions, ui.defaultPlayer, defaultPlayer)"
+              @click="defaultPlayer(p.id)">
+        <span class="player-presentation-copy">
+          <span>{{ p.name }}</span>
+          <small v-if="!p.connected">{{ playerStatusLabel(p) }}</small>
+        </span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
     </template>
     <div class="srow">Connection <span class="v">{{ store.connected ? 'connected' : 'no player' }}</span></div>
     <label class="srow">Volume
@@ -99,13 +457,33 @@ Vue.component('lms-settings', {
     </div>
   </div>
 
-  <div class="sgh">Appearance</div>
+  <div class="sgh">Queue</div>
   <div class="sgroup">
-    <div class="srow">Theme
-      <span class="v">{{ ui.dark ? 'dark' : 'light' }}</span>
-      <button type="button" class="sw" :class="{on: ui.dark}" role="switch"
-              :aria-checked="String(ui.dark)" aria-label="Dark theme"
-              @click="toggleTheme"><span class="visually-hidden">Dark theme</span></button></div>
+    <button type="button" class="srow settings-command-row pointer"
+            :aria-expanded="String(showQueueArt)" @click="showQueueArt = !showQueueArt">
+      Queue artwork <span class="v">{{ queueArtModeLabel }} ›</span>
+    </button>
+    <template v-if="showQueueArt">
+      <div class="player-help">
+        Choose how often album art repeats in the playback queue.
+      </div>
+      <button v-for="mode in queueArtModes" :key="mode.key" type="button"
+              class="srow player-presentation-row"
+              role="radio" :aria-checked="ui.queueArtMode === mode.key ? 'true' : 'false'"
+              :tabindex="ui.queueArtMode === mode.key ? 0 : -1"
+              @keydown="radioKey($event, queueArtModes, ui.queueArtMode, queueArtMode)"
+              @click="queueArtMode(mode.key)">
+        <span class="player-presentation-copy">
+          <span>{{ mode.label }}</span>
+          <small>{{ queueArtModeHint(mode.key) }}</small>
+        </span>
+        <span class="font-option-check" aria-hidden="true"></span>
+      </button>
+    </template>
+  </div>
+
+  <div class="sgh">General</div>
+  <div class="sgroup">
     <div class="srow">Rate and bits in the bottom bar
       <button type="button" class="sw" :class="{on: ui.showBadges}" role="switch"
               :aria-checked="String(ui.showBadges)" aria-label="Rate and bits in the bottom bar"
@@ -132,98 +510,22 @@ Vue.component('lms-settings', {
     <span style="font-size:12px;color:var(--text2)">Choosing a language reloads the page. English is the original text; the others are translations shipped with the skin.</span>
   </div>
 
-  <div class="sgh">Colour scheme</div>
-  <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Colour scheme">
-    <button v-for="scheme in colorSchemes" :key="scheme.key" type="button"
-            class="srow color-scheme-row" :class="'scheme-' + scheme.key"
-            role="radio" :aria-checked="ui.colorScheme === scheme.key ? 'true' : 'false'"
-            :tabindex="ui.colorScheme === scheme.key ? 0 : -1"
-            @keydown="radioKey($event, colorSchemes, ui.colorScheme, colorScheme)"
-            @click="colorScheme(scheme.key)">
-      <span class="scheme-swatches" aria-hidden="true">
-        <span class="scheme-swatch scheme-swatch-light"></span>
-        <span class="scheme-swatch scheme-swatch-dark"></span>
-      </span>
-      <span class="scheme-label">{{ scheme.label }}</span>
-      <span class="color-scheme-check" aria-hidden="true"></span>
+  <div class="sgh">Appearance</div>
+  <div class="sgroup">
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('theme')">
+      Theme <span class="v">{{ themeSummary }} ›</span>
     </button>
-  </div>
-
-  <div class="sgh">Fonts</div>
-  <div class="sgroup font-option-group" role="radiogroup" aria-label="Fonts">
-    <button v-for="font in fontOptions" :key="font.key" type="button"
-            class="srow font-option-row" :class="'font-' + font.key"
-            role="radio" :aria-checked="ui.fontFamily === font.key ? 'true' : 'false'"
-            :tabindex="ui.fontFamily === font.key ? 0 : -1"
-            @keydown="radioKey($event, fontOptions, ui.fontFamily, fontFamily)"
-            @click="fontFamily(font.key)">
-      <span class="font-option-label">{{ font.label }}</span>
-      <span class="font-option-check" aria-hidden="true"></span>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('colorScheme')">
+      Colour scheme <span class="v">{{ colorSchemeSummary }} ›</span>
     </button>
-  </div>
-
-  <div class="sgh">Progress bars</div>
-  <div class="sgroup gauge-settings-group">
-    <div class="player-help">
-      {{ gaugeHelp }}
-    </div>
-    <div class="srow gauge-style-row">
-      <span>{{ miniGaugeStyleLabel }}</span>
-      <div class="gauge-segmented" role="radiogroup"
-           :aria-label="miniGaugeStyleLabel">
-        <button v-for="style in gaugeStyles" :key="'mini-' + style.key" type="button"
-                role="radio" :aria-checked="ui.miniGaugeStyle === style.key ? 'true' : 'false'"
-                :tabindex="ui.miniGaugeStyle === style.key ? 0 : -1"
-                :class="{on: ui.miniGaugeStyle === style.key}"
-                @keydown="radioKey($event, gaugeStyles, ui.miniGaugeStyle, miniGaugeStyle)"
-                @click="miniGaugeStyle(style.key)">{{ style.label }}</button>
-      </div>
-    </div>
-    <label class="srow">Mini player colour
-      <select class="setting-select mini-gauge-color" :value="ui.miniGaugeColor"
-              @change="gaugeColor('mini', $event.target.value)">
-        <option v-for="color in gaugeColors" :key="'mini-color-' + color.key"
-                :value="color.key">{{ color.label }}</option>
-      </select>
-    </label>
-    <div class="srow gauge-style-row">
-      <span>{{ playerGaugeStyleLabel }}</span>
-      <div class="gauge-segmented" role="radiogroup"
-           :aria-label="playerGaugeStyleLabel">
-        <button v-for="style in gaugeStyles" :key="'player-' + style.key" type="button"
-                role="radio" :aria-checked="ui.playerGaugeStyle === style.key ? 'true' : 'false'"
-                :tabindex="ui.playerGaugeStyle === style.key ? 0 : -1"
-                :class="{on: ui.playerGaugeStyle === style.key}"
-                @keydown="radioKey($event, gaugeStyles, ui.playerGaugeStyle, playerGaugeStyle)"
-                @click="playerGaugeStyle(style.key)">{{ style.label }}</button>
-      </div>
-    </div>
-    <label class="srow">Full player colour
-      <select class="setting-select player-gauge-color" :value="ui.playerGaugeColor"
-              @change="gaugeColor('player', $event.target.value)">
-        <option v-for="color in gaugeColors" :key="'player-color-' + color.key"
-                :value="color.key">{{ color.label }}</option>
-      </select>
-    </label>
-  </div>
-
-  <div class="sgh">Full player layout</div>
-  <div class="sgroup player-presentation-group" role="radiogroup"
-       aria-label="Full player layout">
-    <button v-for="mode in playerPresentations" :key="mode.key" type="button"
-            class="srow player-presentation-row"
-            :class="'player-presentation-' + mode.key"
-            role="radio" :aria-checked="ui.playerPresentation === mode.key ? 'true' : 'false'"
-            :tabindex="ui.playerPresentation === mode.key ? 0 : -1"
-            @keydown="radioKey($event, playerPresentations, ui.playerPresentation, playerPresentation)"
-            @click="playerPresentation(mode.key)">
-      <span class="player-presentation-copy">
-        <span>{{ mode.label }}</span>
-        <small>{{ mode.key === 'adaptive'
-          ? 'Column on wide screens; overlay on compact ones'
-          : 'Always fills the whole screen' }}</small>
-      </span>
-      <span class="font-option-check" aria-hidden="true"></span>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('font')">
+      Font <span class="v">{{ fontSummary }} ›</span>
+    </button>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('progress')">
+      Progress bars <span class="v">›</span>
+    </button>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('players')">
+      Player layout <span class="v">›</span>
     </button>
   </div>
 
@@ -284,16 +586,27 @@ Vue.component('lms-settings', {
   data: function () {
     return {
       ui: LmsUi.state, store: LmsStore.state,
+      /* Pilha de navegacao dos Ajustes -- exclusivamente em memoria (nav.js
+         nao persiste 'settings'), o mesmo tratamento do appearanceScreen que
+         ela mantem sincronizado no watch abaixo. */
+      nav: LmsNav.stacks,
       /* LmsStr existe sempre; a lista traz pelo menos o ingles, mesmo num
          servidor onde o strings.txt nao pode ser lido. */
       languages: (window.LmsStr && LmsStr.languages) ? LmsStr.languages() : [{ key: 'EN', label: 'English' }],
       currentLanguage: (window.LmsStr && LmsStr.lang) || 'EN',
       colorSchemes: LmsUi.COLOR_SCHEMES,
       fontOptions: LmsUi.FONT_OPTIONS,
+      /* ui.js nao exporta uma lista equivalente para o tema: sao so duas
+         opcoes fixas, Light e Dark, que nunca crescem como as outras listas
+         -- criar uma constante la so para isto seria indireção sem ganho. */
+      themeOptions: [{ key: 'light', label: 'Light' }, { key: 'dark', label: 'Dark' }],
+      playerPositions: LmsUi.PLAYER_POSITIONS,
       playerPresentations: LmsUi.PLAYER_PRESENTATIONS,
       gaugeStyles: LmsUi.GAUGE_STYLES,
       gaugeColors: LmsUi.GAUGE_COLORS,
-      info: null, loading: true, error: '', showPlayers: false,
+      queueArtModes: LmsUi.QUEUE_ART_MODES,
+      info: null, loading: true, error: '', showPlayers: false, showQueueArt: false,
+      showDefaultPlayer: false,
       pendingImport: null,
       /* Rascunhos locais: o numero ao lado do slider tem de acompanhar o
          arrasto, nao esperar o round-trip com o servidor. */
@@ -305,6 +618,39 @@ Vue.component('lms-settings', {
       var id = this.store.playerId;
       var found = (this.store.players || []).filter(function (p) { return p.id === id; })[0];
       return found ? found.name : 'none';
+    },
+    queueArtModeLabel: function () {
+      var key = this.ui.queueArtMode;
+      var found = this.queueArtModes.filter(function (mode) { return mode.key === key; })[0];
+      return found ? found.label : '';
+    },
+    /* AUDIT-1b: preferencia gravada em ui.js, resolvida em LmsStore ao
+       descobrir o player -- esta linha so mostra o que esta configurado.
+       Nome de player vem do servidor e nao passa por tradução; so o texto
+       fixo ('Last used', 'Unknown player') vai para o dicionario. */
+    defaultPlayerOptions: function () {
+      return [{ key: 'last' }].concat((this.store.players || []).map(function (p) {
+        return { key: p.id };
+      }));
+    },
+    defaultPlayerFound: function () {
+      if (this.ui.defaultPlayer === 'last') return null;
+      return (this.store.players || []).filter(function (p) {
+        return p.id === this.ui.defaultPlayer;
+      }, this)[0] || null;
+    },
+    defaultPlayerName: function () {
+      if (this.ui.defaultPlayer === 'last') return 'Last used';
+      var found = this.defaultPlayerFound;
+      return found ? found.name : 'Unknown player';
+    },
+    /* Um default configurado que nao esta em uso precisa dizer por que --
+       sem isto o usuario ve um nome que nao esta tocando e nao sabe se a
+       escolha "pegou". "Last used" nunca leva nota: e sempre o que esta
+       valendo, por definicao. */
+    defaultPlayerNote: function () {
+      if (this.ui.defaultPlayer === 'last') return '';
+      return this.playerStatusLabel(this.defaultPlayerFound || { connected: false, power: false });
     },
     skinVersion: function () {
       return typeof LMS_SKIN_VERSION === 'string' && LMS_SKIN_VERSION ? LMS_SKIN_VERSION : '—';
@@ -372,7 +718,36 @@ Vue.component('lms-settings', {
         }
       }, this);
       return names.length ? names : ['no recognised group'];
-    }
+    },
+    /* Resolved values shown on the three app-level Appearance rows -- text
+       nodes inside {{ }}, so translateTemplate wraps them in $t() and a
+       literal English match in strings.txt is all a translation needs. */
+    themeSummary: function () { return this.ui.dark ? 'Dark' : 'Light'; },
+    colorSchemeSummary: function () {
+      var found = this.colorSchemes.filter(function (s) { return s.key === this.ui.colorScheme; }, this)[0];
+      return found ? found.label : '';
+    },
+    fontSummary: function () {
+      var found = this.fontOptions.filter(function (f) { return f.key === this.ui.fontFamily; }, this)[0];
+      return found ? found.label : '';
+    },
+    /* Per-surface Theme/Colour scheme/Font rows offer "Follow app" first,
+       then the same list the app level uses. */
+    themeOptionsWithApp: function () {
+      return [{ key: 'app', label: 'Follow app' }].concat(this.themeOptions);
+    },
+    colorSchemeOptionsWithApp: function () {
+      return [{ key: 'app', label: 'Follow app' }].concat(this.colorSchemes);
+    },
+    fontOptionsWithApp: function () {
+      return [{ key: 'app', label: 'Follow app' }].concat(this.fontOptions);
+    },
+    /* Same pattern chrome/miniplayer.js and nowplaying.js already use for
+       their own root binding: v-bind="xPreviewAttrs" on the aria-hidden
+       preview strip at the foot of each player subscreen. */
+    fullPreviewAttrs: function () { return LmsUi.surfaceAttrs('full'); },
+    smallPreviewAttrs: function () { return LmsUi.surfaceAttrs('small'); },
+    miniPreviewAttrs: function () { return LmsUi.surfaceAttrs('mini'); }
   },
   watch: {
     /* Quando o servidor confirma o valor, o rascunho sai de cena e o controle
@@ -381,7 +756,28 @@ Vue.component('lms-settings', {
     'store.volume': function () {
       if (!this.store.volumeDragging) this.volumeDraft = null;
     },
-    'store.playerId': function () { this.volumeDraft = null; }
+    'store.playerId': function () { this.volumeDraft = null; },
+    /* Keeps ui.appearanceScreen -- the field the template branches on --
+       lined up with the top of LmsNav.stacks.settings after ANY change to
+       that stack that did not go through openAppearanceScreen: the on-screen
+       back chevron (app.js goBack -> LmsNav.back), browser Back and hardware
+       Back (nav.js's own popstate handler, which splices and rebuilds the
+       stack). Forward navigation already sets appearanceScreen directly in
+       openAppearanceScreen, so this only has to cover the pop direction --
+       but it is harmless and idempotent when it also fires on push.
+       immediate:true also runs syncAppearanceScreen once at component
+       creation, i.e. on every mount: goBack's history.back() resolves via an
+       async popstate, so a stack mutation can finish while lms-settings is
+       unmounted (v-else-if in app.js tears the component down, it is not
+       kept alive) and no watcher is listening to catch it. Without the
+       immediate run, the next mount's baseline would be that already-popped
+       value and the transition would never be observed again. Reconciling on
+       every mount, not just on the next length change, is what keeps
+       ui.appearanceScreen from getting stuck. */
+    'nav.settings.length': {
+      immediate: true,
+      handler: function () { this.syncAppearanceScreen(); }
+    }
   },
   methods: {
     n: function (v) { return LmsFmt.count(v); },
@@ -397,12 +793,43 @@ Vue.component('lms-settings', {
     },
     colorScheme: function (key) { LmsUi.setColorScheme(key); },
     fontFamily: function (key) { LmsUi.setFontFamily(key); },
+    queueArtMode: function (key) { LmsUi.setQueueArtMode(key); },
+    /* Vai para uma interpolacao ({{ }}), entao a reescrita de i18n ja embrulha
+       o retorno em $t() sozinha -- sem chamada explicita aqui. */
+    queueArtModeHint: function (key) {
+      if (key === 'every') return 'Cover art on every track';
+      if (key === 'album') return 'Cover art once per run of the same album';
+      if (key === 'headings') return 'Cover art once per album, with a caption above the group';
+      return '';
+    },
+    defaultPlayer: function (key) { LmsUi.setDefaultPlayer(key); },
+    /* Mesmo texto que a folha de acoes usa para o seletor de player
+       (actions.js) -- reaproveitado aqui, e nao reinventado, para o rotulo
+       nao mudar dependendo de por onde o usuario chega. Vai para uma
+       interpolacao ({{ }}), entao a reescrita de i18n ja embrulha o retorno
+       em $t() sozinha -- sem chamada explicita aqui. */
+    playerStatusLabel: function (p) {
+      if (!p.connected) return 'Disconnected';
+      if (!p.power) return 'Sleeping';
+      return '';
+    },
     playerPresentation: function (key) { LmsUi.setPlayerPresentation(key); },
     miniGaugeStyle: function (key) { LmsUi.setGaugeStyle('mini', key); },
     playerGaugeStyle: function (key) { LmsUi.setGaugeStyle('player', key); },
     gaugeColor: function (target, key) { LmsUi.setGaugeColor(target, key); },
     /* Padrao ARIA de radiogroup: as setas movem selecao e foco, e so o item
-       marcado fica na ordem de tabulacao. Sem isto eram 14 paradas de Tab. */
+       marcado fica na ordem de tabulacao. Sem isto eram 14 paradas de Tab.
+       N6 (3.2.6b, revisado): reforco defensivo, nao correcao de uma regressao
+       observada -- em todo radiogroup que esta funcao atende hoje, os botoes
+       role="radio" sao filhos DIRETOS da div role="radiogroup", entao
+       target.parentNode ja e essa mesma div e nenhum grupo vizinho a
+       compartilha; o parentNode sozinho ja escopava certo para esse marcado.
+       Subir ate o ancestral [role="radiogroup"] mais proximo com closest()
+       para de depender dessa suposicao de estrutura direta, o que importa
+       porque nem todo call site tem o wrapper marcado: os botoes de "Default
+       player" e "Queue artwork" nesta mesma tela nao usam role="radiogroup"
+       ao redor, entao closest() nao encontra nada e cai no parentNode como
+       antes -- por isso o fallback continua aqui. */
     radioKey: function (event, options, currentKey, apply) {
       var forward = event.key === 'ArrowRight' || event.key === 'ArrowDown';
       var back = event.key === 'ArrowLeft' || event.key === 'ArrowUp';
@@ -413,10 +840,64 @@ Vue.component('lms-settings', {
       if (index < 0) index = 0;
       var next = (index + (forward ? 1 : -1) + keys.length) % keys.length;
       apply(keys[next]);
-      var group = event.currentTarget.parentNode;
+      var target = event.currentTarget;
+      var group = (target.closest && target.closest('[role="radiogroup"]')) || target.parentNode;
       var buttons = group ? group.querySelectorAll('[role="radio"]') : null;
       if (buttons && buttons[next]) buttons[next].focus();
     },
+    /* Which Appearance screen is open drives the template branch directly
+       (ui.appearanceScreen); the frame pushed onto LmsNav.stacks.settings
+       carries the same key plus the label the nav bar shows as the title and
+       uses to build the back label of whatever screen sits above it -- the
+       generic per-tab wiring already in app.js (title/back computeds, goBack)
+       needs nothing extra to make Back work, hardware or on-screen. */
+    appearanceScreenLabel: function (screen) {
+      var labels = {
+        theme: 'Theme', colorScheme: 'Colour scheme', font: 'Font',
+        progress: 'Progress bars', players: 'Player layout',
+        full: 'Full player', small: 'Small player', mini: 'Mini player'
+      };
+      return labels[screen] || '';
+    },
+    openAppearanceScreen: function (screen) {
+      LmsNav.push('settings', { label: this.appearanceScreenLabel(screen), screen: screen });
+      this.ui.appearanceScreen = screen;
+    },
+    /* Reconciles ui.appearanceScreen with LmsNav.top('settings'); factored
+       out of the 'nav.settings.length' watch (immediate:true) so it also
+       runs once on every mount, and so it is callable directly in tests
+       without a real Vue instance. Handles an empty stack (top() falsy ->
+       null), a stack left more than one frame deep (top() is whatever frame
+       is now on top, not necessarily the one appearanceScreen last saw), and
+       a stack that changed entirely while the component was unmounted --
+       all three collapse into "read the current top and mirror it". */
+    syncAppearanceScreen: function () {
+      var top = LmsNav.top('settings');
+      this.ui.appearanceScreen = (top && top.screen) || null;
+    },
+    /* Hard constraint: the app-level Theme control must go through
+       LmsUi.toggleTheme() and never assign state.dark directly -- toggleTheme
+       also swaps in the gauge style remembered for the theme being entered.
+       A two-option radiogroup calls apply() on every arrow press even when
+       the value does not change, so this only actually toggles when the
+       chosen option differs from the current theme. */
+    selectTheme: function (key) {
+      var wantDark = key === 'dark';
+      if (wantDark !== this.ui.dark) LmsUi.toggleTheme();
+    },
+    surfaceStatusLabel: function (surface) {
+      return LmsUi.surfaceFollowsApp(surface) ? 'Follow app' : 'Custom';
+    },
+    setPlayerPosition: function (key) { LmsUi.setPlayerPosition(key); },
+    setFullTheme: function (key) { LmsUi.setSurfaceTheme('full', key); },
+    setFullScheme: function (key) { LmsUi.setSurfaceScheme('full', key); },
+    setFullFont: function (key) { LmsUi.setSurfaceFont('full', key); },
+    setSmallTheme: function (key) { LmsUi.setSurfaceTheme('small', key); },
+    setSmallScheme: function (key) { LmsUi.setSurfaceScheme('small', key); },
+    setSmallFont: function (key) { LmsUi.setSurfaceFont('small', key); },
+    setMiniTheme: function (key) { LmsUi.setSurfaceTheme('mini', key); },
+    setMiniScheme: function (key) { LmsUi.setSurfaceScheme('mini', key); },
+    setMiniFont: function (key) { LmsUi.setSurfaceFont('mini', key); },
     preference: function (key) { LmsUi.setPreference(key, !this.ui[key]); },
     control: function (p) { LmsStore.selectPlayer(p.id); },
     handoff: function (p) { LmsStore.handoffTo(p.id); },
@@ -513,14 +994,24 @@ Vue.component('lms-settings', {
 	        var tabs = keysOf(LmsUi.TABS);
 	        var views = keysOf(LmsUi.MUSIC_VIEWS);
 	        var albumModes = ['albums', 'tracks'];
+	        var queueArtModes = LmsUi.QUEUE_ART_MODES.map(function (mode) { return mode.key; });
 	        var playerPresentations = ['adaptive', 'fullscreen'];
 	        var playerPositions = ['right', 'left', 'center'];
 	        var gaugeStyles = ['flat', 'classic'];
 	        var gaugeColors = ['theme', 'blue', 'teal', 'crimson', 'indigo', 'amber'];
-	        var colorSchemes = ['blue', 'teal', 'crimson', 'indigo', 'amber'];
-	        var fontFamilies = ['system', 'helvetica', 'chicago'];
+	        /* N1 (3.2.6b): estas duas ainda eram literais duplicados de
+	           LmsUi.COLOR_SCHEMES/LmsUi.FONT_OPTIONS, apesar do comentario acima
+	           -- so tabs/views tinham sido corrigidas. Escolher Podium Sans (ou
+	           qualquer esquema/fonte acrescentada depois), exportar e reimportar
+	           batia aqui: fontFamily nao estava na lista literal e
+	           validateImportValue rejeitava o ARQUIVO INTEIRO com "incompatible
+	           value", nao so a chave. Agora derivam de LmsUi, como queryArtModes
+	           ja fazia. */
+	        var colorSchemes = keysOf(LmsUi.COLOR_SCHEMES);
+	        var fontFamilies = keysOf(LmsUi.FONT_OPTIONS);
 	        var enums = [
 	          ['tab', tabs], ['musicView', views], ['albumMode', albumModes],
+	          ['queueArtMode', queueArtModes],
 	          ['playerPresentation', playerPresentations], ['playerPosition', playerPositions],
 	          ['miniGaugeStyle', gaugeStyles], ['playerGaugeStyle', gaugeStyles],
 	          ['lightMiniGaugeStyle', gaugeStyles], ['lightPlayerGaugeStyle', gaugeStyles],

@@ -178,6 +178,45 @@ function panelInstance(extra) {
   return { self: self, def: def, ctx: captured.ctx };
 }
 
+/* lms-settings, same no-Vue harness as the filter panel: real LmsUi, real
+   LmsFmt. WP5 (3.2.6b, next pass) needs this to exercise the Appearance
+   screens without duplicating the arreio settings-import.test.js already
+   rolls for validateImportValue -- that file keeps its own settingsMethods()
+   on purpose and is unaffected by this helper existing. */
+function settingsComponent(extra) {
+  let definition = null;
+  const ctx = uiContext(Object.assign({
+    Vue: {
+      observable: function (o) { return o; },
+      component: function (name, def) { definition = def; },
+      nextTick: function (f) { if (f) f(); }
+    },
+    LmsApi: {},
+    LmsStore: { state: { players: [], connected: false, playerId: null } }
+  }, extra || {}));
+  runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/format.js');
+  runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/settings.js');
+  return { def: definition, ctx: ctx };
+}
+
+/* Instancia o painel de ajustes sem Vue: liga os dados, resolve os computeds
+   sob demanda e deixa os metodos com um `this` de verdade -- o mesmo arreio
+   de panelInstance, para o componente que WP5 vai estender. */
+function settingsInstance(extra) {
+  const captured = settingsComponent(extra);
+  const def = captured.def;
+  const self = def.data();
+  self.$nextTick = function (f) { if (f) f(); };
+  self.$refs = {};
+  Object.keys(def.methods).forEach(function (name) {
+    self[name] = def.methods[name].bind(self);
+  });
+  Object.keys(def.computed).forEach(function (name) {
+    Object.defineProperty(self, name, { get: def.computed[name].bind(self) });
+  });
+  return { self: self, def: def, ctx: captured.ctx };
+}
+
 /* The sort menu, instantiated the same way the filter panel is: no Vue, data
    bound, computeds resolved on demand, methods given a real `this`. */
 function sortMenuInstance(extra, props) {
@@ -215,6 +254,45 @@ function sortMenuInstance(extra, props) {
   return { self: self, def: def, ctx: ctx };
 }
 
+/* lms-queue, same no-Vue harness as the filter panel: real LmsUi (so
+   queueArtMode reads the real default and setter), real LmsFmt, and a
+   LmsStore stub the test fills in per case. */
+function queueComponent(extra) {
+  let definition = null;
+  const ctx = uiContext(Object.assign({
+    Vue: {
+      observable: function (o) { return o; },
+      component: function (name, def) { definition = def; },
+      nextTick: function (f) { if (f) f(); }
+    },
+    LmsStore: {
+      state: {
+        queue: [], queueIndex: 0, queueTotal: 0, mode: 'stop',
+        shuffle: 0, repeat: 0, queueUndo: [], np: { id: null }
+      },
+      queueRemaining: function () { return 0; }
+    }
+  }, extra || {}));
+  runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/format.js');
+  runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/queue.js');
+  return { def: definition, ctx: ctx };
+}
+
+function queueInstance(extra) {
+  const captured = queueComponent(extra);
+  const def = captured.def;
+  const self = def.data();
+  self.$nextTick = function (f) { if (f) f(); };
+  self.$refs = {};
+  Object.keys(def.methods).forEach(function (name) {
+    self[name] = def.methods[name].bind(self);
+  });
+  Object.keys(def.computed).forEach(function (name) {
+    Object.defineProperty(self, name, { get: def.computed[name].bind(self) });
+  });
+  return { self: self, def: def, ctx: captured.ctx };
+}
+
 module.exports = {
   root,
   skin,
@@ -227,5 +305,8 @@ module.exports = {
   browseComponent,
   filterPanelComponent,
   panelInstance,
-  sortMenuInstance
+  settingsComponent,
+  settingsInstance,
+  sortMenuInstance,
+  queueInstance
 };

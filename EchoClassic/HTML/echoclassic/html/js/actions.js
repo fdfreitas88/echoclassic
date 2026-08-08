@@ -42,21 +42,31 @@
     <button v-if="item.url" @click="favorite">
       {{ favoriteExists ? 'Remove from Favourites' : 'Add to Favourites' }}
     </button>
-    <button @click="pin">{{ pinned ? 'Remove from pinned items' : 'Fixar no Echo Classic' }}</button>
+    <div v-if="item.kind === 'player-picker'" class="sheet-choices player-picker-list" role="list">
+      <button v-for="p in players" :key="p.id" type="button" class="player-picker-row"
+              :class="{on: p.id === store.playerId, unavailable: !p.connected}"
+              :disabled="!p.connected" @click="choosePlayer(p)">
+        <span class="ell">{{ p.name }}</span>
+        <span v-if="playerStatusLabel(p)" class="v">{{ playerStatusLabel(p) }}</span>
+      </button>
+      <div v-if="!players.length" class="sheet-note">No players found.</div>
+    </div>
+    <button v-if="item.kind !== 'player-picker'" @click="pin">{{ pinned ? 'Remove from pinned items' : 'Fixar no Echo Classic' }}</button>
     <button v-if="item.kind === 'track' || item.type === 'track'" @click="info">Credits and information</button>
     <button v-if="!anchor" class="cancel" @click="close">Cancel</button>
   </div>
 </div>`,
     data: function () {
-      return { ui: LmsUi.state, playlists: [], showPlaylists: false, busy: false,
-               favoriteExists: false, favoriteIndex: null, sheetStyle: {},
+      return { ui: LmsUi.state, store: LmsStore.state, playlists: [], showPlaylists: false,
+               busy: false, favoriteExists: false, favoriteIndex: null, sheetStyle: {},
                previousFocus: null };
     },
     computed: {
       item: function () { return this.ui.actionItem; },
       anchor: function () { return this.ui.actionAnchor; },
       ctl: function () { return control(this.item); },
-      pinned: function () { return this.item ? LmsUi.isPinned(this.item) : false; }
+      pinned: function () { return this.item ? LmsUi.isPinned(this.item) : false; },
+      players: function () { return this.store.players || []; }
     },
     watch: {
       item: function (value) {
@@ -174,6 +184,21 @@
       pin: function () {
         LmsUi.togglePin(this.item);
         this.close();
+      },
+      /* AUDIT-11: a linha do player dentro do proprio player abre esta folha
+         com a lista de LmsStore.state.players. selectPlayer ja existe e ja
+         troca sem recarregar -- reaproveitado aqui, nao reescrito. */
+      choosePlayer: function (p) {
+        if (!p || !p.connected) return;
+        LmsStore.selectPlayer(p.id);
+        this.close();
+      },
+      /* Texto vai para uma interpolacao de template, entao a reescrita de
+         i18n ja envolve isto em $t() sozinha -- sem chamada explicita aqui. */
+      playerStatusLabel: function (p) {
+        if (!p.connected) return 'Disconnected';
+        if (!p.power) return 'Sleeping';
+        return '';
       },
       loadFavorite: async function (url) {
         try {
