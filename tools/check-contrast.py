@@ -67,6 +67,12 @@ PAIRS = [
     # circulo de esquema ja e coberta por 'aba ativa / titulo da navbar'.)
     ('rotulo da previa de superficie',    '--text',             '--chrome',      4.5),
     ('traco de progresso na previa',      '--text2',            '--chrome',      3.0),
+    # C5 (3.2.6c): a Appearance ficou inline e o accent colour ganhou uma fila
+    # de 5 swatches com anel de selecao -- o anel usa --accent (o mesmo token
+    # do swatch selecionado, por definicao) sobre --group-bg, porque a fila
+    # vive dentro do .sgroup (nunca direto sobre --group-page: o mesmo anel
+    # ali da 4.28 para teal claro, que passa 3.0 mas reprova 4.5).
+    ('anel do swatch selecionado',        '--accent',           '--group-bg',    3.0),
 ]
 
 

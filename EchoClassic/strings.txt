@@ -56,6 +56,10 @@ ECHOCLASSIC_UI_30_MINUTES
 	EN	30 minutes
 	PT	30 minutos
 
+ECHOCLASSIC_UI_ACCENT_COLOUR
+	EN	Accent colour
+	PT	Cor de destaque
+
 ECHOCLASSIC_UI_ACTIONS_FOR
 	EN	Actions for 
 	PT	Ações para 
