@@ -21,3 +21,5 @@ Gates at 6039d19, run once by verify: 237 tests · 4/4 · contrast 125/125 ·
 check-version 3.2.6c. [measured]
 Everything from c87816c onward is still [unverified] — not deployed, not seen
 in a browser. The acceptance walkthrough is what converts it.
+- 07f31b1 · AUDIT-20 recon on SqueezeDSP, from source · [code]
+- 7977e27 · SqueezeDSP not installed on the server · [measured]
