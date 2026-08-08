@@ -43,14 +43,15 @@ Vue.component('lms-queue', {
 
 	    <div class="qbody" v-if="tracks.length">
 	      <template v-for="(t, i) in tracks">
-	      <div v-if="showCaption(t, i)" :key="'cap-' + t.index" class="qcaption ell">{{ t.album }}</div>
+	      <div v-if="showCaption(t, i)" :key="'cap-' + t.index" class="qcaption"><span class="ell">{{ t.album }}</span></div>
 	      <div :key="t.index + '-' + t.id" class="qrow"
-	           :class="{now: isNow(t)}" :aria-current="isNow(t) ? 'true' : null"
+	           :class="{now: isNow(t), nocover: !showCover(t, i)}" :aria-current="isNow(t) ? 'true' : null"
 	           role="group" :aria-label="trackLabel(t)">
 	        <button type="button" class="qrow-main pointer" :aria-label="trackLabel(t)"
 	                @click="jump(t)">
 	          <span v-if="isNow(t)" class="nowmark" aria-hidden="true">▶</span>
-	          <span class="cover" :style="showCover(t, i) ? coverStyle(t) : {}"></span>
+	          <span class="cover" :class="{collapse: !showCover(t, i)}"
+	                :style="showCover(t, i) ? coverStyle(t) : {}"></span>
 	          <span class="ell">
 	            <span class="t ell">{{ t.title }}</span>
 	            <span class="s ell">{{ sub(t) }}</span>

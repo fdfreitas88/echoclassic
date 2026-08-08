@@ -1162,19 +1162,30 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   border-bottom:.5px solid var(--hair);color:var(--text2);font-size:12px}
 .queue .qbody{overflow-y:auto;flex:1}
 /* AUDIT-09, modo 'headings': legenda propria de 22px, nunca uma .qrow mais
-   alta -- a linha continua valendo 52px em qualquer modo de capa. */
-.qcaption{height:22px;display:flex;align-items:center;padding:0 14px;
+   alta -- 52px continua sendo a altura da linha em qualquer modo de capa.
+   RESP-02: 22px e 52px sao piso (min-height), nao altura travada: com altura
+   fixa e sem contencao, o conteudo transbordava e pintava por cima da linha
+   de baixo em vez de ser cortado. */
+.qcaption{min-height:22px;display:flex;align-items:center;padding:0 14px;
   font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase}
-.qrow{height:52px;display:flex;align-items:center;gap:11px;padding:0 14px;position:relative}
-.qrow+.qrow::before{content:'';position:absolute;top:0;left:59px;right:14px;height:.5px;background:var(--hair)}
+.qcaption .ell{flex:1}
+.qrow{--qhair-left:59px;min-height:52px;display:flex;align-items:center;gap:11px;padding:0 14px;position:relative}
+/* Fila com o slot de capa colapsado (RESP-03): sem os 34px de arte, o gap
+   ainda se aplica ao redor do item de largura zero, entao o conteudo comeca
+   em 25px (14 de padding + 11 de gap), nao em 59px. O tracejado pertence a
+   linha que o desenha -- a seguinte de um par -- e precisa seguir a propria
+   geometria, nao a da linha acima. */
+.qrow.nocover{--qhair-left:25px}
+.qrow+.qrow::before,.qcaption+.qrow::before{content:'';position:absolute;top:0;left:var(--qhair-left);right:14px;height:.5px;background:var(--hair)}
 .qrow .cover{width:34px;height:34px;flex:0 0 34px;border-radius:2px}
+.qrow .cover.collapse{flex-basis:0;width:0}
 .qrow .t{display:block;font-size:14px;letter-spacing:0}
 .qrow .s{display:block;font-size:11px;color:var(--text2);margin-top:2px}
 .qrow.now .t{color:var(--accent)}
 /* a faixa em curso nao pode depender so da cor do titulo */
 .qrow .nowmark{width:10px;height:12px;flex:0 0 10px;margin-right:-4px}
 .qrow.now .nowmark{background:var(--accent);clip-path:polygon(0 0,100% 50%,0 100%)}
-.qrow .dur{font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums}
+.qrow .dur{font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;margin-left:auto}
 .queue-reorder{display:flex}
 .queue-reorder button{width:44px;height:44px;color:var(--accent);font-size:18px}
 .qrow .drag{width:44px;height:44px;flex:0 0 44px;display:flex;align-items:center;
