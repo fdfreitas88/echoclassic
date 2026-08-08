@@ -288,7 +288,14 @@ button:disabled{opacity:.35}
   padding:0 12px;position:relative;z-index:var(--z-chrome)}
 /* .center cobre a barra de ponta a ponta para centralizar o titulo na JANELA,
    como no iOS 9. Sem pointer-events:none ele engole os cliques dos icones das
-   pontas — era o que deixava o icone da esquerda morto. */
+   pontas — era o que deixava o icone da esquerda morto.
+   REVISADO (RESP-16): left:0;right:0 nao reserva nada -- nao ha numero magico
+   aqui para apagar. O titulo pode, em tese, sobrepor .back/.r se ficar muito
+   longo, mas .back esconde o proprio rotulo abaixo de 700px (.navbar .back
+   span{display:none}) e os titulos vem de ecrans/telas curtos, nao de campos
+   de usuario. Consertar isso direito e trocar .center de overlay absoluto
+   para participante real da fileira flex -- maior que este commit garante
+   numa barra presente em toda tela; deixado como esta. */
 .navbar .center{position:absolute;left:0;right:0;display:flex;align-items:center;
   justify-content:center;font-size:17px;font-weight:500;color:var(--accent);
   pointer-events:none}
@@ -308,8 +315,16 @@ button:disabled{opacity:.35}
 .ic.chevleft{width:13px;height:20px}
 
 /* campo de busca */
-.searchwrap{position:absolute;left:52px;right:52px;display:flex;align-items:center;gap:8px;
+/* Reserva fixa de 52px de cada lado supunha "Cancel" com essa largura; em
+   portugues ("Cancelar") ou numa fonte de fallback, o botao passa dos 52px e
+   o campo cobre o texto. .searchwrap agora e um item real da fileira flex
+   (flex:1), entao acompanha a largura verdadeira de .r/.cancel sozinho. .sp
+   so existe para empurrar .r quando NAO se esta buscando -- aqui ele nao tem
+   funcao e sai da fileira. margin-left:52px preserva o alinhamento visual com
+   a coluna de icone de voltar/tema ao entrar no modo de busca. */
+.searchwrap{flex:1;min-width:0;margin-left:52px;margin-right:8px;display:flex;align-items:center;gap:8px;
   background:var(--field);border-radius:7px;height:28px;padding:0 9px}
+.searchwrap ~ .sp{display:none}
 .searchwrap input{border:0;background:transparent;font-size:14px;width:100%;font-family:inherit;color:var(--text)}
 .searchwrap input::placeholder,.opsearch input::placeholder{color:var(--text2);opacity:1}
 
@@ -350,13 +365,18 @@ body.resizing-split{cursor:col-resize;user-select:none}
 
 /* linha de lista principal (artista/album/genero/ano) */
 .row{height:var(--row-artist);display:flex;align-items:center;gap:14px;
-  padding:0 10px 0 20px;position:relative}
+  padding:0 10px 0 20px;position:relative;--rhair-left:82px}
 button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit;text-align:left}
-.row>.ell{flex:1}
 .row-main,.trow-main,.qrow-main{height:100%;min-width:0;flex:1;display:flex;align-items:center;
   gap:inherit;border:0;background:transparent;color:inherit;font:inherit;text-align:left;padding:0}
-.row+.row::before{content:'';position:absolute;top:0;left:82px;right:0;height:.5px;background:var(--hair)}
-.row.noart+.row.noart::before{left:20px}
+/* .ell da coluna de texto vive dentro do botao .row-main/.trow-main/.qrow-main,
+   nao mais como filho direto de .row -- o seletor antigo (.row>.ell) parou de
+   bater. */
+.row-main>.ell,.trow-main>.ell,.qrow-main>.ell{flex:1}
+.row+.row::before{content:'';position:absolute;top:0;left:var(--rhair-left);right:0;height:.5px;background:var(--hair)}
+/* segue o mesmo padrao de --qhair-left (fila): a reserva do filete acompanha
+   a largura real de .art nesta linha, em vez de repetir o numero magico. */
+.row.noart{--rhair-left:20px}
 .row.sel{background-color:var(--selection-accent);background-image:var(--selection-highlight);color:#FFFFFF}
 .row.sel .t,.row.sel .s,.row.sel .more-command{color:#FFFFFF}
 .row.sel+.row::before{background:transparent}
@@ -365,11 +385,13 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .row .art{width:48px;height:48px;flex:0 0 48px;border-radius:2px;background-color:var(--field)}
 /* Na raiz Albuns a capa e a informacao principal, entao ela cresce e a linha
    acompanha. Artistas e generos continuam com a linha de 72px do iOS 9. */
-.pane-left .row.albumrow{height:88px}
+.pane-left .row.albumrow{height:88px;--rhair-left:98px}
 .pane-left .row.albumrow .art{width:64px;height:64px;flex:0 0 64px;border-radius:3px}
 .pane-left .row.albumrow .t{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
   white-space:normal;overflow:hidden;line-height:19px;max-height:38px}
-.row.albumrow + .row.albumrow::before{left:98px}
+/* uma linha de album sem capa (noart) nao tem a coluna de 64px que --rhair-left:98px
+   pressupoe -- sem isto o filete comecaria no meio do vazio onde a capa estaria. */
+.pane-left .row.albumrow.noart{--rhair-left:20px}
 .row .t{display:block;font-size:16px;letter-spacing:0}
 .row .s{display:block;font-size:12px;color:var(--text2);margin-top:3px}
 .chev{margin-left:auto;flex:0 0 auto;stroke:var(--chev)}
@@ -527,8 +549,9 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .shuffle{padding:10px 36px;display:flex;align-items:center;border-bottom:.5px solid var(--hair);
   border-top:.5px solid var(--hair);color:var(--accent);font-size:16px}
 .shuffle .sp{flex:1}
-.trow{height:var(--row-track);display:flex;align-items:center;gap:12px;padding:0 36px;position:relative}
-.trow+.trow::before{content:'';position:absolute;top:0;left:68px;right:36px;height:.5px;background:var(--hair)}
+.trow{height:var(--row-track);display:flex;align-items:center;gap:12px;padding:0 36px;position:relative;
+  --thair-left:68px}
+.trow+.trow::before{content:'';position:absolute;top:0;left:var(--thair-left);right:36px;height:.5px;background:var(--hair)}
 .trow .num{width:20px;flex:0 0 20px;font-size:12px;color:var(--text2);text-align:right}
 .trow .cover{width:36px;height:36px;flex:0 0 36px;border-radius:2px}
 .trow .t{display:block;font-size:15px;letter-spacing:0}
@@ -643,7 +666,7 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .shufflerow svg{width:19px;height:19px;fill:none;stroke:var(--text2);
   stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:0 0 19px}
 /* Linhas da discografia: mesma linguagem do cabecalho, em escala de lista. */
-.trow.albrow{height:64px}
+.trow.albrow{height:64px;--thair-left:96px}
 .trow.albrow .cover{width:48px;height:48px;flex:0 0 48px;
   background-color:var(--field)}
 
@@ -683,7 +706,11 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .sgh{font-size:12px;color:var(--group-head);padding:0 16px 6px;text-transform:uppercase;letter-spacing:.02em}
 .srow{min-height:44px;display:flex;align-items:center;padding:0 16px;gap:10px;position:relative;font-size:16px}
 .srow+.srow::before{content:'';position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--hair)}
-.srow .v{margin-left:auto;color:var(--text2);font-size:15px}
+/* sem min-width:0 um valor longo (ex.: "Once per album, with headings ›")
+   estoura a linha em vez de truncar -- o padrao ja existia isolado em
+   .info-content .srow .v (abaixo), generalizado aqui. */
+.srow .v{margin-left:auto;color:var(--text2);font-size:15px;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player-choice{min-height:54px;display:flex;align-items:center;gap:6px;padding:5px 12px 5px 16px;
   border-top:.5px solid var(--hair)}
 .player-name{min-width:0;flex:1;display:flex;flex-direction:column;font-size:14px}
@@ -807,10 +834,10 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .mini{height:var(--mini);flex:0 0 auto;background:var(--chrome);border-top:.5px solid var(--hair);
   display:flex;align-items:center;padding:0 12px;gap:16px;position:relative}
 .mini.empty,.mini.inactive{height:58px}
-.mini .np{position:absolute;inset:0 216px 0 188px;display:flex;align-items:center;
-  justify-content:center;text-align:left;padding:6px 2px;color:var(--text);pointer-events:auto;gap:9px}
+.mini .np{flex:1;min-width:0;display:flex;align-items:center;
+  justify-content:center;text-align:left;padding:6px 2px;color:var(--text);gap:9px}
 .mini .np:disabled{opacity:.55;cursor:default}
-.mini.empty .np{left:56px;right:56px;text-align:center}
+.mini.empty .np{text-align:center}
 .mini-cover{width:42px;height:42px;flex:0 0 42px;overflow:hidden;background:var(--field);
   display:flex;align-items:center;justify-content:center;color:var(--art-placeholder);font-size:15px}
 .mini-cover img{display:block;width:100%;height:100%;object-fit:cover}
@@ -837,10 +864,11 @@ body[data-mini-gauge-style="flat"] .mini-gauge i{background-image:none;box-shado
   align-items:center;gap:4px;overflow:hidden}
 .mini .mini-badges .badge{padding:2px 4px;font-size:8.5px;white-space:nowrap}
 .mini .r{margin-left:auto;display:flex;align-items:center;gap:0;z-index:var(--z-bar-local)}
-/* O .np e absoluto de largura total e clicavel, entao sem uma camada local os
-   botoes de transporte viram decoracao: um clique real cai no .np. Mesmo bug da
-   nav bar, na barra de baixo. O mockup escapava com z-index inline; ao virar
-   classe a regra se perdeu. */
+/* .mini agora e uma fileira flex real de 3 partes -- transporte / .np (flex:1,
+   min-width:0) / .r -- sem numeros magicos reservando espaco para o rotulo
+   traduzido de .queue-label. O z-index local so importa de novo em
+   max-width:360px, onde .transport e .r voltam a ser absolutos por cima de
+   .np (empilhados abaixo dele). */
 .mini .transport{display:flex;align-items:center;gap:0;
   position:relative;z-index:var(--z-bar-local)}
 .mini .mini-action{width:44px;height:44px;display:flex;align-items:center;justify-content:center;
@@ -852,7 +880,6 @@ body[data-mini-gauge-style="flat"] .mini-gauge i{background-image:none;box-shado
 @media (min-width:1200px){
   .mini .queuebtn{width:auto;flex-basis:auto;padding:0 10px}
   .mini .queue-label{display:block}
-  .mini .np{right:330px}
 }
 .badges{display:flex;gap:5px}
 .badge{font:500 9.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:3px 5px;border-radius:3px;
@@ -1163,7 +1190,12 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   width:420px;max-width:calc(100vw - 24px);max-height:56vh;display:flex;flex-direction:column;
   background:var(--picker-bg);border:.5px solid var(--hair);border-radius:10px;
   box-shadow:0 8px 30px var(--shadow);overflow:hidden;color:var(--text)}
-.queue .qhead{min-height:44px;flex:0 0 44px;display:flex;align-items:center;gap:10px;
+/* flex:0 0 44px travava a altura mesmo com titulo + contador + Desfazer +
+   Limpar proximas + Limpar tudo + fechar disputando os 420px do popover: sem
+   como crescer, o conteudo espremia e .queue (overflow:hidden) cortava. Aqui a
+   fileira aceita quebrar e crescer; 44px vira apenas o piso. */
+.queue .qhead{min-height:44px;flex:0 0 auto;flex-wrap:wrap;row-gap:4px;
+  display:flex;align-items:center;gap:10px;
   padding:0 14px;border-bottom:.5px solid var(--hair)}
 .queue .qhead .ttl{font-size:15px;font-weight:500}
 .queue .qhead .n{font-size:12px;color:var(--text2)}
@@ -1439,7 +1471,6 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   .albhead,.albsub,.acts-row,.shuffle,.trow,.sectitle{padding-left:16px;padding-right:16px}
   .trow+.trow::before{left:48px;right:16px}
   .mini{padding-left:4px;padding-right:4px}
-  .mini .np{left:180px;right:48px}
   .mini .np{padding-top:6px;padding-bottom:6px;gap:4px}
   .mini-cover{width:30px;height:30px;flex-basis:30px}
   .mini .mini-badges{gap:3px}
@@ -1464,11 +1495,9 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   .player-name{flex-basis:100%}
   .sleep-row{flex-direction:column;gap:7px}
   .inline-commands{margin-left:0;justify-content:flex-start}
-  /* flex:0 0 44px da regra base fixava a altura da caixa enquanto flex-wrap
-     empurrava "Limpar tudo" e o fechar para uma segunda linha: os dois caiam
-     por cima da fileira de modos. Aqui a caixa volta a crescer com o conteudo. */
-  .queue .qhead{height:auto;min-height:42px;flex:0 0 auto;flex-wrap:wrap;
-    row-gap:4px;padding-top:5px;padding-bottom:5px}
+  /* flex-wrap e min-height ja vem da regra base; aqui so o que muda com a
+     largura estreita: piso mais baixo e respiro vertical quando quebra. */
+  .queue .qhead{min-height:42px;padding-top:5px;padding-bottom:5px}
   .queue .qhead .n{flex-basis:100%;order:3;display:block;margin-left:0}
   .queue .qhead .clear{margin-left:0;font-size:12px}
   .queue .qhead .ttl{margin-right:auto}
@@ -1484,7 +1513,7 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   :root{--mini:94px}
   .mini{height:var(--mini);align-items:flex-end;padding:0 4px}
   .mini.empty,.mini.inactive{height:58px}
-  .mini .np{inset:0 0 44px 0;padding:5px 8px;gap:7px}
+  .mini .np{position:absolute;inset:0 0 44px 0;padding:5px 8px;gap:7px}
   .mini .transport{position:absolute;left:calc(50% - 88px);bottom:0}
   .mini .r{position:absolute;right:4px;bottom:0}
   .mini-cover{width:34px;height:34px;flex-basis:34px}
