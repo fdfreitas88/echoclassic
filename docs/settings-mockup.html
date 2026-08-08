@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Echo Classic — Settings redesign mockup v3</title>
+<style>
+  :root{
+    --bg:#efeff4; --card:#ffffff; --text:#000; --text2:#8e8e93; --sep:#c8c7cc;
+    --blue:#007aff; --green:#4cd964; --track:#e5e5ea; --navbg:rgba(248,248,248,.94);
+    --note:#fff8dc; --notebd:#e6d78a;
+  }
+  body.dark{
+    --bg:#000; --card:#1c1c1e; --text:#fff; --text2:#8d8d93; --sep:#38383a;
+    --track:#39393d; --navbg:rgba(18,18,20,.94); --note:#3a3520; --notebd:#6b6132;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);transition:background .25s,color .25s}
+  .phone{max-width:420px;margin:24px auto;border:1px solid var(--sep);border-radius:24px;overflow:hidden;background:var(--bg);box-shadow:0 10px 40px rgba(0,0,0,.15)}
+  .nav{position:sticky;top:0;z-index:5;display:flex;align-items:center;height:52px;padding:0 12px;background:var(--navbg);backdrop-filter:blur(10px);border-bottom:1px solid var(--sep)}
+  .nav .back{color:var(--blue);font-size:17px;background:none;border:0;cursor:pointer;display:flex;align-items:center;gap:2px;padding:6px 4px;visibility:hidden;white-space:nowrap}
+  .nav.subnav .back{visibility:visible}
+  .nav .title{flex:1;text-align:center;font-size:17px;font-weight:600;margin-right:70px}
+  .scroll{height:640px;overflow-y:auto;padding-bottom:36px}
+  .sgh{margin:26px 16px 7px;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+  .foot{margin:6px 16px 0;font-size:12.5px;color:var(--text2);line-height:1.45}
+  .group{background:var(--card);border-top:1px solid var(--sep);border-bottom:1px solid var(--sep)}
+  .row{display:flex;align-items:center;min-height:46px;padding:6px 16px;gap:12px;border-bottom:1px solid var(--sep);font-size:16px}
+  .row:last-child{border-bottom:0}
+  .row .lbl{flex:1}
+  .row .val{color:var(--text2);font-size:16px;white-space:nowrap}
+  .row .chev{color:#c7c7cc;font-size:20px;line-height:1}
+  .row.tap{cursor:pointer}
+  .sw{position:relative;width:51px;height:31px;border-radius:16px;background:var(--track);border:0;cursor:pointer;transition:background .2s;flex:none}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:left .2s}
+  .sw.on{background:var(--green)}
+  .sw.on::after{left:22px}
+  .seg{display:flex;border:1.5px solid var(--blue);border-radius:8px;overflow:hidden;flex:none}
+  .seg button{background:transparent;color:var(--blue);border:0;padding:5px 14px;font-size:14px;cursor:pointer;border-right:1.5px solid var(--blue)}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--blue);color:#fff}
+  .check{color:var(--blue);font-size:17px;font-weight:600;width:22px;text-align:right}
+  .swatches{display:flex;gap:14px;flex:none}
+  .dot{width:28px;height:28px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;padding:0}
+  .dot.on{border-color:var(--text);box-shadow:0 0 0 2px var(--card) inset}
+  input[type=range]{flex:1;accent-color:var(--blue)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chips button{border:1px solid var(--blue);color:var(--blue);background:transparent;border-radius:14px;padding:5px 12px;font-size:13.5px;cursor:pointer}
+  .chips button.on{background:var(--blue);color:#fff}
+  .note{display:none;margin:8px 16px 0;padding:8px 10px;background:var(--note);border:1px solid var(--notebd);border-radius:8px;font-size:12.5px;line-height:1.45;color:var(--text)}
+  body.notes .note{display:block}
+  .notebtn{position:fixed;right:18px;bottom:18px;z-index:10;background:var(--blue);color:#fff;border:0;border-radius:20px;padding:10px 16px;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+  .view{display:none}.view.active{display:block}
+  .fontrow-system{font-family:-apple-system,sans-serif}
+  .fontrow-helvetica{font-family:Helvetica,Arial,sans-serif}
+  .fontrow-chicago{font-family:"Courier New",monospace;font-weight:700}
+  .fontrow-podium{font-family:Verdana,sans-serif}
+  .fontrow-espy{font-family:Trebuchet MS,sans-serif}
+  .preview{margin:10px 16px;border:1px solid var(--sep);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+  .preview .art{width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#7a7a80,#3c3c40)}
+  .preview .bar{height:4px;border-radius:2px;background:var(--track);flex:1;position:relative;overflow:hidden}
+  .preview .bar i{position:absolute;left:0;top:0;bottom:0;width:40%;background:var(--blue)}
+  .pv{display:none}
+  body.previews .pv{display:flex}
+</style>
+</head>
+<body>
+<button class="notebtn" onclick="document.body.classList.toggle('notes')">Design notes</button>
+
+<div class="phone">
+  <div class="nav" id="navbar">
+    <button class="back" id="navback" onclick="go('main')">‹ Settings</button>
+    <div class="title" id="navtitle">Settings</div>
+  </div>
+  <div class="scroll">
+
+  <!-- ============================ MAIN ============================ -->
+  <div class="view active" id="view-main" data-title="Settings">
+
+    <div class="sgh">Player</div>
+    <div class="group">
+      <div class="row tap"><span class="lbl">Active player</span><span class="val">SqueezeLite</span><span class="chev">›</span></div>
+      <div class="row tap"><span class="lbl">Default player</span><span class="val">Last used</span><span class="chev">›</span></div>
+    </div>
+    <div class="note">Volume removed from Settings — it is a playback control and lives in the player. Settings keeps what you configure, not what you operate.</div>
+
+    <div class="sgh">Playback</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Crossfade</span><button class="sw" id="xfsw" onclick="toggleXf()"></button></div>
+      <div class="row" id="xfdur" style="display:none"><span class="lbl">Duration</span><input type="range" min="1" max="10" value="4" oninput="document.getElementById('xfval').textContent=this.value+' s'"><span class="val" id="xfval">4 s</span></div>
+      <div class="row"><span class="lbl">Sleep timer</span>
+        <span class="chips">
+          <button onclick="chip(this)">15 min</button><button onclick="chip(this)">30 min</button>
+          <button onclick="chip(this)">1 h</button><button onclick="chip(this)">End of song</button>
+          <button onclick="chip(this)">End of queue</button>
+        </span>
+      </div>
+    </div>
+    <div class="foot" id="xffoot">Off: gapless playback — songs join with no gap and no blend.</div>
+
+    <div class="sgh">Appearance</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Dark theme</span><button class="sw" id="darksw" onclick="toggleDark()"></button></div>
+      <div class="row"><span class="lbl">Accent colour</span>
+        <span class="swatches">
+          <button class="dot on" style="background:#007aff" title="System Blue" onclick="pick(this)"></button>
+          <button class="dot" style="background:#2e8b8b" title="Atlantic Teal" onclick="pick(this)"></button>
+          <button class="dot" style="background:#b0313f" title="Editorial Crimson" onclick="pick(this)"></button>
+          <button class="dot" style="background:#4b4b8f" title="Studio Indigo" onclick="pick(this)"></button>
+          <button class="dot" style="background:#c8860a" title="Hi-Fi Amber" onclick="pick(this)"></button>
+        </span>
+      </div>
+      <div class="row tap" onclick="fontsel(this)"><span class="lbl fontrow-system">System (default)</span><span class="check fck">✓</span></div>
+      <div class="row tap" onclick="fontsel(this)"><span class="lbl fontrow-helvetica">Helvetica</span><span class="check fck"></span></div>
+      <div class="row tap" onclick="fontsel(this)"><span class="lbl fontrow-chicago">Chicago</span><span class="check fck"></span></div>
+      <div class="row tap" onclick="fontsel(this)"><span class="lbl fontrow-podium">Podium Sans</span><span class="check fck"></span></div>
+      <div class="row tap" onclick="fontsel(this)"><span class="lbl fontrow-espy">Espy Sans</span><span class="check fck"></span></div>
+    </div>
+    <div class="sgh" style="text-transform:none;margin-top:8px"></div>
+    <div class="group">
+      <div class="row tap" onclick="go('player')"><span class="lbl">Player layout</span><span class="chev">›</span></div>
+    </div>
+
+    <div class="sgh">Queue</div>
+    <div class="group">
+      <div class="row tap" onclick="qsel(this)"><span class="lbl">Cover art on every track</span><span class="check qck"></span></div>
+      <div class="row tap" onclick="qsel(this)"><span class="lbl">Once per album</span><span class="check qck">✓</span></div>
+      <div class="row tap" onclick="qsel(this)"><span class="lbl">Once per album, with headings</span><span class="check qck"></span></div>
+    </div>
+    <div class="foot">How cover art repeats when consecutive songs share an album.</div>
+
+    <div class="sgh">General</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Rate and bits in the bottom bar</span><button class="sw on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="row"><span class="lbl">Highlight hi-res</span><button class="sw on" onclick="this.classList.toggle('on')"></button></div>
+    </div>
+
+    <div class="sgh">Language</div>
+    <div class="group">
+      <div class="row tap" onclick="lsel(this)"><span class="lbl">English</span><span class="check lck">✓</span></div>
+      <div class="row tap" onclick="lsel(this)"><span class="lbl">Português</span><span class="check lck"></span></div>
+    </div>
+
+    <div class="sgh">Backup</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Skin preferences</span><span class="seg"><button>Export</button><button>Import</button></span></div>
+    </div>
+
+    <div class="sgh">About</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Artists</span><span class="val">214</span></div>
+      <div class="row"><span class="lbl">Albums</span><span class="val">1,459</span></div>
+      <div class="row"><span class="lbl">Songs</span><span class="val">18,204</span></div>
+      <div class="row"><span class="lbl">Server</span><span class="val">LMS 9.1.1</span></div>
+      <div class="row"><span class="lbl">Skin</span><span class="val">3.2.5</span></div>
+      <div class="row tap"><span class="lbl">Advanced LMS settings</span><span class="chev">›</span></div>
+    </div>
+  </div>
+
+  <!-- ============== PLAYER LAYOUT — ONE SCREEN, ALL THREE ============== -->
+  <div class="view" id="view-player" data-title="Player layout">
+
+    <div class="sgh" style="margin-top:18px"></div>
+    <div class="group">
+      <div class="row"><span class="lbl">Show previews</span><button class="sw" onclick="togglePreviews(this)"></button></div>
+    </div>
+    <div class="foot">A live sample of each player appears under its section.</div>
+    <div class="note">One screen, all three players — no back-and-forth. Each section repeats the same grammar: layout control, then "Match app appearance", then Progress bar where that player has one. Previews are off by default and appear in place when wanted, instead of always spending screen height.</div>
+
+    <!-- FULL -->
+    <div class="sgh">Full player</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Presentation</span>
+        <span class="seg"><button class="on" onclick="segsel(this)">Adaptive</button><button onclick="segsel(this)">Full screen</button></span>
+      </div>
+      <div class="row"><span class="lbl">Match app appearance</span><button class="sw" onclick="toggleFollow(this,'fullcustom','fullfoot','full player')"></button></div>
+      <div id="fullcustom" style="display:block">
+        <div class="row"><span class="lbl">Theme</span>
+          <span class="seg"><button onclick="segsel(this)">Light</button><button class="on" onclick="segsel(this)">Dark</button></span>
+        </div>
+        <div class="row"><span class="lbl">Accent</span>
+          <span class="swatches">
+            <button class="dot on" style="background:#007aff" onclick="pick(this)"></button>
+            <button class="dot" style="background:#2e8b8b" onclick="pick(this)"></button>
+            <button class="dot" style="background:#b0313f" onclick="pick(this)"></button>
+            <button class="dot" style="background:#4b4b8f" onclick="pick(this)"></button>
+            <button class="dot" style="background:#c8860a" onclick="pick(this)"></button>
+          </span>
+        </div>
+        <div class="row tap" onclick="sel(this,'.f-full')"><span class="lbl fontrow-system">System (default)</span><span class="check f-full"></span></div>
+        <div class="row tap" onclick="sel(this,'.f-full')"><span class="lbl fontrow-helvetica">Helvetica</span><span class="check f-full"></span></div>
+        <div class="row tap" onclick="sel(this,'.f-full')"><span class="lbl fontrow-chicago">Chicago</span><span class="check f-full">✓</span></div>
+        <div class="row tap" onclick="sel(this,'.f-full')"><span class="lbl fontrow-podium">Podium Sans</span><span class="check f-full"></span></div>
+        <div class="row tap" onclick="sel(this,'.f-full')"><span class="lbl fontrow-espy">Espy Sans</span><span class="check f-full"></span></div>
+      </div>
+      <div class="row"><span class="lbl">Progress bar</span>
+        <span class="seg"><button class="on" onclick="segsel(this)">Flat</button><button onclick="segsel(this)">Classic</button></span>
+      </div>
+      <div class="row"><span class="lbl">Bar colour</span>
+        <span class="swatches">
+          <button class="dot on" style="background:linear-gradient(135deg,#fff 50%,#000 50%)" title="Follow theme" onclick="pick(this)"></button>
+          <button class="dot" style="background:#007aff" onclick="pick(this)"></button>
+          <button class="dot" style="background:#2e8b8b" onclick="pick(this)"></button>
+          <button class="dot" style="background:#b0313f" onclick="pick(this)"></button>
+          <button class="dot" style="background:#c8860a" onclick="pick(this)"></button>
+        </span>
+      </div>
+    </div>
+    <div class="foot" id="fullfoot">Custom appearance for the full player only. The rest of the app is unchanged.</div>
+    <div class="note">Per-player font and theme — your example, live: Full player set to Chicago + Dark while the app stays System + Light. Match app OFF reveals Theme, Accent and the full font list (each name in its own face); flipping it back ON returns all three to the app's choices. Small and Mini have the identical rows behind their own toggles.</div>
+    <div class="preview pv"><div class="art"></div><div style="flex:1">
+      <div style="font-size:13px;font-weight:600">Blackened</div>
+      <div style="font-size:11.5px;color:var(--text2)">Metallica</div>
+      <div class="bar" style="margin-top:6px"><i></i></div>
+    </div></div>
+
+    <!-- SMALL -->
+    <div class="sgh">Small player</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Position</span>
+        <span class="seg"><button onclick="segsel(this)">Left</button><button onclick="segsel(this)">Center</button><button class="on" onclick="segsel(this)">Right</button></span>
+      </div>
+      <div class="row"><span class="lbl">Match app appearance</span><button class="sw on" onclick="toggleFollow(this,'smallcustom','smallfoot','small player')"></button></div>
+      <div id="smallcustom" style="display:none">
+        <div class="row"><span class="lbl">Theme</span>
+          <span class="seg"><button class="on" onclick="segsel(this)">Light</button><button onclick="segsel(this)">Dark</button></span>
+        </div>
+        <div class="row"><span class="lbl">Accent</span>
+          <span class="swatches">
+            <button class="dot on" style="background:#007aff" onclick="pick(this)"></button>
+            <button class="dot" style="background:#2e8b8b" onclick="pick(this)"></button>
+            <button class="dot" style="background:#b0313f" onclick="pick(this)"></button>
+            <button class="dot" style="background:#4b4b8f" onclick="pick(this)"></button>
+            <button class="dot" style="background:#c8860a" onclick="pick(this)"></button>
+          </span>
+        </div>
+        <div class="row tap" onclick="sel(this,'.f-small')"><span class="lbl fontrow-system">System (default)</span><span class="check f-small">✓</span></div>
+        <div class="row tap" onclick="sel(this,'.f-small')"><span class="lbl fontrow-helvetica">Helvetica</span><span class="check f-small"></span></div>
+        <div class="row tap" onclick="sel(this,'.f-small')"><span class="lbl fontrow-chicago">Chicago</span><span class="check f-small"></span></div>
+        <div class="row tap" onclick="sel(this,'.f-small')"><span class="lbl fontrow-podium">Podium Sans</span><span class="check f-small"></span></div>
+        <div class="row tap" onclick="sel(this,'.f-small')"><span class="lbl fontrow-espy">Espy Sans</span><span class="check f-small"></span></div>
+      </div>
+    </div>
+    <div class="foot" id="smallfoot">The small player uses the app's theme, accent and font.</div>
+    <div class="preview pv"><div class="art"></div><div style="flex:1">
+      <div style="font-size:13px;font-weight:600">Blackened</div>
+      <div style="font-size:11.5px;color:var(--text2)">Metallica</div>
+      <div class="bar" style="margin-top:6px"><i></i></div>
+    </div></div>
+
+    <!-- MINI -->
+    <div class="sgh">Mini player</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Match app appearance</span><button class="sw on" onclick="toggleFollow(this,'minicustom','minifoot','mini player')"></button></div>
+      <div id="minicustom" style="display:none">
+        <div class="row"><span class="lbl">Theme</span>
+          <span class="seg"><button class="on" onclick="segsel(this)">Light</button><button onclick="segsel(this)">Dark</button></span>
+        </div>
+        <div class="row"><span class="lbl">Accent</span>
+          <span class="swatches">
+            <button class="dot on" style="background:#007aff" onclick="pick(this)"></button>
+            <button class="dot" style="background:#2e8b8b" onclick="pick(this)"></button>
+            <button class="dot" style="background:#b0313f" onclick="pick(this)"></button>
+            <button class="dot" style="background:#4b4b8f" onclick="pick(this)"></button>
+            <button class="dot" style="background:#c8860a" onclick="pick(this)"></button>
+          </span>
+        </div>
+        <div class="row tap" onclick="sel(this,'.f-mini')"><span class="lbl fontrow-system">System (default)</span><span class="check f-mini">✓</span></div>
+        <div class="row tap" onclick="sel(this,'.f-mini')"><span class="lbl fontrow-helvetica">Helvetica</span><span class="check f-mini"></span></div>
+        <div class="row tap" onclick="sel(this,'.f-mini')"><span class="lbl fontrow-chicago">Chicago</span><span class="check f-mini"></span></div>
+        <div class="row tap" onclick="sel(this,'.f-mini')"><span class="lbl fontrow-podium">Podium Sans</span><span class="check f-mini"></span></div>
+        <div class="row tap" onclick="sel(this,'.f-mini')"><span class="lbl fontrow-espy">Espy Sans</span><span class="check f-mini"></span></div>
+      </div>
+      <div class="row"><span class="lbl">Progress bar</span>
+        <span class="seg"><button class="on" onclick="segsel(this)">Flat</button><button onclick="segsel(this)">Classic</button></span>
+      </div>
+      <div class="row"><span class="lbl">Bar colour</span>
+        <span class="swatches">
+          <button class="dot on" style="background:linear-gradient(135deg,#fff 50%,#000 50%)" title="Follow theme" onclick="pick(this)"></button>
+          <button class="dot" style="background:#007aff" onclick="pick(this)"></button>
+          <button class="dot" style="background:#2e8b8b" onclick="pick(this)"></button>
+          <button class="dot" style="background:#b0313f" onclick="pick(this)"></button>
+          <button class="dot" style="background:#c8860a" onclick="pick(this)"></button>
+        </span>
+      </div>
+    </div>
+    <div class="foot" id="minifoot">The mini player uses the app's theme, accent and font. Bar style is remembered per theme.</div>
+    <div class="preview pv"><div class="art"></div><div style="flex:1">
+      <div style="font-size:13px;font-weight:600">Blackened</div>
+      <div style="font-size:11.5px;color:var(--text2)">Metallica</div>
+      <div class="bar" style="margin-top:6px"><i></i></div>
+    </div></div>
+    <div class="note">The Small player has no progress bar of its own in the code (gauges exist for full and mini only), so its section simply has no bar rows — same grammar, one row fewer. Nothing drills deeper than this screen.</div>
+
+  </div>
+
+  </div><!-- /scroll -->
+</div><!-- /phone -->
+
+<script>
+var current='main';
+function go(v){
+  current=v;
+  document.querySelectorAll('.view').forEach(function(x){x.classList.remove('active')});
+  var el=document.getElementById('view-'+v);
+  el.classList.add('active');
+  var nav=document.getElementById('navbar');
+  document.getElementById('navtitle').textContent=el.getAttribute('data-title');
+  if(v==='main'){nav.classList.remove('subnav');}
+  else{nav.classList.add('subnav');}
+  document.querySelector('.scroll').scrollTop=0;
+}
+function togglePreviews(sw){
+  sw.classList.toggle('on');
+  document.body.classList.toggle('previews');
+}
+function toggleDark(){
+  var on=document.getElementById('darksw').classList.toggle('on');
+  document.body.classList.toggle('dark',on);
+}
+function toggleXf(){
+  var on=document.getElementById('xfsw').classList.toggle('on');
+  document.getElementById('xfdur').style.display=on?'flex':'none';
+  document.getElementById('xffoot').textContent=on
+    ?'Songs blend into each other for the chosen duration.'
+    :'Off: gapless playback — songs join with no gap and no blend.';
+}
+function toggleFollow(sw,rowsId,footId,name){
+  var on=sw.classList.toggle('on');
+  document.getElementById(rowsId).style.display=on?'none':'block';
+  document.getElementById(footId).textContent=on
+    ?"The "+name+" uses the app's theme, accent and font."
+    :'Custom appearance for the '+name+' only. The rest of the app is unchanged.';
+}
+function pick(el){
+  el.parentNode.querySelectorAll('.dot').forEach(function(d){d.classList.remove('on')});
+  el.classList.add('on');
+}
+function segsel(el){
+  el.parentNode.querySelectorAll('button').forEach(function(b){b.classList.remove('on')});
+  el.classList.add('on');
+}
+function fontsel(row){sel(row,'.fck');}
+function qsel(row){sel(row,'.qck');}
+function lsel(row){sel(row,'.lck');}
+function sel(row,cls){
+  row.parentNode.querySelectorAll(cls).forEach(function(c){c.textContent=''});
+  row.querySelector(cls).textContent='✓';
+}
+function chip(el){
+  var on=el.classList.contains('on');
+  el.parentNode.querySelectorAll('button').forEach(function(b){b.classList.remove('on')});
+  if(!on)el.classList.add('on');
+}
+</script>
+</body>
+</html>

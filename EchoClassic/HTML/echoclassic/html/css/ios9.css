@@ -220,6 +220,13 @@ body[data-font="espy"]{--app-font:"Espy Sans","Podium Sans",Geneva,Verdana,sans-
 [data-surface-font="chicago"]{--app-font:"Chicago","Charcoal","Geneva",sans-serif}
 [data-surface-font="podium"]{--app-font:"Podium Sans","Espy Sans",Geneva,Verdana,sans-serif}
 [data-surface-font="espy"]{--app-font:"Espy Sans","Podium Sans",Geneva,Verdana,sans-serif}
+/* --app-font is inherited; redefining it on a surface (above) does nothing
+   on its own because font-family is only resolved from it once, on body.
+   This re-resolves font-family on the surface itself so its subtree picks
+   up the surface's own value instead of inheriting body's already-resolved
+   family. surfaceAttrs() omits data-surface-font entirely for 'app', so
+   this can never match a surface that should just follow the app. */
+[data-surface-font]{font-family:var(--app-font)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 *{scrollbar-width:thin;scrollbar-color:var(--chev) transparent}
 *::-webkit-scrollbar{width:4px;height:4px}
