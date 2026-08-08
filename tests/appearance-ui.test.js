@@ -58,11 +58,11 @@ test('every Appearance drill-in row is a type="button" with a name for its desti
   const src = settingsSrc();
   /* C5 (3.2.6c): theme/colorScheme/font/progress died as drill-ins -- they
      are inline controls now (a switch, a swatch row, five checkmark rows).
-     "players" (Player layout) is the one that survives at the app level;
-     full/small/mini are its own three drill-ins one level down. */
+     C6 (3.2.6c) folds full/small/mini into the single 'players' screen too --
+     "Player layout" is the ONLY drill-in left anywhere in Settings; there is
+     no deeper navigation from it. */
   const expected = {
-    players: 'Player layout',
-    full: 'Full player', small: 'Small player', mini: 'Mini player'
+    players: 'Player layout'
   };
   const re = /<button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen\('([a-zA-Z]+)'\)">\s*([^<{]+)/g;
   const seen = {};
@@ -87,16 +87,26 @@ test('every live preview strip carries aria-hidden="true"', function () {
   });
 });
 
-/* Extracts the raw markup of one v-if/v-else-if branch keyed on
-   ui.appearanceScreen, the same string-inspection technique
-   tests/structure.test.js and tests/appearance.test.js already use for
-   templates that this harness cannot render. */
+/* Extracts the raw markup of the v-if branch keyed on ui.appearanceScreen,
+   the same string-inspection technique tests/structure.test.js and
+   tests/appearance.test.js already use for templates that this harness
+   cannot render. C6 folds the whole appearanceScreen branch into one screen
+   ('players') that itself nests <template v-if="!fullFollowsApp"> etc. for
+   its own conditional rows -- matching up to the first </template> (as this
+   helper did through C5, when full/small/mini were still separate
+   v-else-if branches) would stop at the FIRST of those inner closing tags
+   instead of the branch's own. tests/appearance.test.js's
+   appearanceDetailClasses() already anchors the end of the whole
+   appearanceScreen branch on the next top-level screen's opening tag; this
+   reuses the same reliable sentinel rather than counting nested tags. */
 function screenBranch(key) {
   const src = settingsSrc();
-  const marker = new RegExp('ui\\.appearanceScreen === \'' + key + '\'[\\s\\S]*?</template>');
-  const m = src.match(marker);
-  assert.ok(m, 'no template branch found for appearanceScreen === ' + key);
-  return m[0];
+  const marker = new RegExp('ui\\.appearanceScreen === \'' + key + '\'');
+  const start = src.search(marker);
+  assert.ok(start >= 0, 'no template branch found for appearanceScreen === ' + key);
+  const end = src.indexOf('<div v-else class="settings">', start);
+  assert.ok(end > start, 'could not find the end of the appearanceScreen branch');
+  return src.slice(start, end);
 }
 
 /* C5 (3.2.6c): the four app-level subscreens (theme, colorScheme, font,
@@ -104,22 +114,32 @@ function screenBranch(key) {
    -- this replaces the old test that drove ui.appearanceScreen through all
    five and asserted a v-if/v-else-if branch for each. 'players' is the only
    appearanceScreen value the app-level Appearance group still routes to. */
-test('theme/colorScheme/font/progress no longer exist as appearanceScreen branches', function () {
+test('theme/colorScheme/font/progress no longer exist as appearanceScreen branches, and neither do full/small/mini (C6: one Player layout screen)', function () {
   const src = settingsSrc();
-  ['theme', 'colorScheme', 'font', 'progress'].forEach(function (key) {
+  ['theme', 'colorScheme', 'font', 'progress', 'full', 'small', 'mini'].forEach(function (key) {
     const marker = new RegExp('ui\\.appearanceScreen === \'' + key + '\'');
-    assert.doesNotMatch(src, marker, key + ': branch should have been deleted in C5');
+    assert.doesNotMatch(src, marker, key + ': branch should have been deleted');
   });
+  /* Only one v-if/v-else-if branch keyed on ui.appearanceScreen remains at
+     all -- confirmed by the fact that screenBranch('players'), which matches
+     up to the FIRST </template>, contains every player section: if full/
+     small/mini were still separate branches after 'players', the marker
+     above would already have failed, but this also guards against a v-if
+     that reopened without the string 'ui.appearanceScreen ==='. */
+  assert.equal((src.match(/ui\.appearanceScreen ===/g) || []).length, 1);
 
   const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
   const self = inst.self;
   self.ui.appearanceScreen = 'players';
   assert.equal(self.ui.appearanceScreen, 'players');
 
+  /* No openAppearanceScreen call survives anywhere inside the players
+     branch -- there is nowhere deeper to drill into. */
   const players = screenBranch('players');
-  assert.match(players, /openAppearanceScreen\('full'\)/);
-  assert.match(players, /openAppearanceScreen\('small'\)/);
-  assert.match(players, /openAppearanceScreen\('mini'\)/);
+  assert.doesNotMatch(players, /openAppearanceScreen/);
+  assert.match(players, /Full player/);
+  assert.match(players, /Small player/);
+  assert.match(players, /Mini player/);
 });
 
 test('the inline Appearance group renders the Dark theme switch, the Accent colour swatch row and the Font checkmark rows', function () {
@@ -144,82 +164,135 @@ test('the inline Appearance group renders the Dark theme switch, the Accent colo
   assert.match(appearanceBlock, /openAppearanceScreen\('players'\)/);
 });
 
-test('the Full/Small/Mini player subscreens render Appearance controls for their own surface', function () {
-  const full = screenBranch('full');
-  assert.match(full, /ui\.fullTheme/);
-  assert.match(full, /ui\.fullColorScheme/);
-  assert.match(full, /ui\.fullFont/);
-  assert.match(full, /ui\.playerPresentation/);
-  assert.match(full, /ui\.playerGaugeStyle/);
-  assert.match(full, /v-bind="fullPreviewAttrs"/);
+test('the single Player layout screen renders Appearance controls for all three surfaces', function () {
+  const players = screenBranch('players');
+  assert.match(players, /ui\.fullTheme/);
+  assert.match(players, /ui\.fullColorScheme/);
+  assert.match(players, /ui\.fullFont/);
+  assert.match(players, /ui\.playerPresentation/);
+  assert.match(players, /ui\.playerGaugeStyle/);
+  assert.match(players, /v-bind="fullPreviewAttrs"/);
 
-  const small = screenBranch('small');
-  assert.match(small, /ui\.smallTheme/);
-  assert.match(small, /ui\.smallColorScheme/);
-  assert.match(small, /ui\.smallFont/);
-  assert.match(small, /ui\.playerPosition/);
-  assert.match(small, /v-bind="smallPreviewAttrs"/);
+  assert.match(players, /ui\.smallTheme/);
+  assert.match(players, /ui\.smallColorScheme/);
+  assert.match(players, /ui\.smallFont/);
+  assert.match(players, /ui\.playerPosition/);
+  assert.match(players, /v-bind="smallPreviewAttrs"/);
+  /* D-2 (phase2-decisions.md): the small player has no gauge of its own --
+     Full's Progress bar rows restyle it too, so Small's own section must not
+     invent one. */
+  assert.doesNotMatch(players.split('Small player')[1].split('Mini player')[0], /playerGaugeStyle|playerGaugeColor/);
 
-  const mini = screenBranch('mini');
-  assert.match(mini, /ui\.miniTheme/);
-  assert.match(mini, /ui\.miniColorScheme/);
-  assert.match(mini, /ui\.miniFont/);
-  assert.match(mini, /ui\.miniGaugeStyle/);
-  assert.match(mini, /v-bind="miniPreviewAttrs"/);
+  assert.match(players, /ui\.miniTheme/);
+  assert.match(players, /ui\.miniColorScheme/);
+  assert.match(players, /ui\.miniFont/);
+  assert.match(players, /ui\.miniGaugeStyle/);
+  assert.match(players, /v-bind="miniPreviewAttrs"/);
+
+  /* "Show previews" gates all three preview strips, off by default -- and is
+     genuinely a toggle, not a third value smuggled onto ui.appearanceScreen. */
+  assert.match(players, /showPreviews = !showPreviews/);
 });
 
-test('per-surface Theme/Colour scheme/Font rows offer "Follow app" first', function () {
-  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
-  const self = inst.self;
-  assert.equal(self.themeOptionsWithApp[0].key, 'app');
-  assert.equal(self.themeOptionsWithApp[0].label, 'Follow app');
-  assert.equal(self.colorSchemeOptionsWithApp[0].key, 'app');
-  assert.equal(self.fontOptionsWithApp[0].key, 'app');
-  /* Followed by the same lists the app level uses, in the same order. */
-  assert.deepEqual(self.themeOptionsWithApp.slice(1).map(function (o) { return o.key; }),
-    self.themeOptions.map(function (o) { return o.key; }));
-  assert.deepEqual(self.colorSchemeOptionsWithApp.slice(1).map(function (o) { return o.key; }),
-    self.colorSchemes.map(function (o) { return o.key; }));
-  assert.deepEqual(self.fontOptionsWithApp.slice(1).map(function (o) { return o.key; }),
-    self.fontOptions.map(function (o) { return o.key; }));
+/* N1 (audit): zero <select> elements anywhere in Settings -- the two gauge-
+   colour pickers (mini/full player colour) are Bar colour swatch rows now,
+   the same .swatch-row/.swatch-dot pattern the app-level Accent colour and
+   the per-surface Accent rows use. */
+test('N1: no <select> element remains anywhere in lms-settings', function () {
+  const src = settingsSrc();
+  assert.doesNotMatch(src, /<select/);
+  assert.doesNotMatch(src, /class="setting-select/);
 });
 
-test('a Player layout row reads "Follow app" when a surface\'s three keys are "app", "Custom" otherwise', function () {
+/* N4 (audit): "Match app appearance" ON writes 'app' to all three of that
+   surface's keys and leaves the other two surfaces alone; OFF seeds the
+   three keys from the app's own currently resolved values, not a hard-coded
+   default -- confirmed here against the real LmsUi (setFullFollowsApp etc.
+   are thin one-line wrappers around LmsUi.setSurfaceFollowsApp, so this also
+   exercises ui.js's half of the contract, not just the wiring). */
+test('N4: Match app appearance ON resets to \'app\', OFF seeds from the app\'s resolved values, one surface at a time', function () {
   const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
   const self = inst.self;
+  const ui = self.ui;
 
-  ['full', 'small', 'mini'].forEach(function (surface) {
-    assert.equal(self.surfaceStatusLabel(surface), 'Follow app', surface + ' starts following the app');
+  assert.equal(self.fullFollowsApp, true);
+  assert.equal(self.smallFollowsApp, true);
+  assert.equal(self.miniFollowsApp, true);
+
+  ui.dark = true;
+  ui.colorScheme = 'crimson';
+  ui.fontFamily = 'espy';
+
+  self.setFullFollowsApp(false);
+  assert.equal(ui.fullTheme, 'dark');
+  assert.equal(ui.fullColorScheme, 'crimson');
+  assert.equal(ui.fullFont, 'espy');
+  assert.equal(self.fullFollowsApp, false);
+  /* Only the surface just toggled moves. */
+  assert.equal(self.smallFollowsApp, true);
+  assert.equal(self.miniFollowsApp, true);
+  assert.equal(ui.smallTheme, 'app');
+  assert.equal(ui.miniTheme, 'app');
+
+  /* The app changes AFTER the seed -- the full player keeps its own custom
+     values; it does not track the app live while Match app appearance is off. */
+  ui.dark = false;
+  ui.colorScheme = 'teal';
+  assert.equal(ui.fullTheme, 'dark');
+  assert.equal(ui.fullColorScheme, 'crimson');
+
+  self.setFullFollowsApp(true);
+  assert.equal(ui.fullTheme, 'app');
+  assert.equal(ui.fullColorScheme, 'app');
+  assert.equal(ui.fullFont, 'app');
+  assert.equal(self.fullFollowsApp, true);
+
+  /* OFF -> ON -> OFF is idempotent: seeding from the (now different) app
+     values again reflects what the app resolves to NOW, not the values from
+     the first OFF above. */
+  self.setSmallFollowsApp(false);
+  assert.equal(ui.smallTheme, 'light');
+  assert.equal(ui.smallColorScheme, 'teal');
+  self.setSmallFollowsApp(true);
+  self.setSmallFollowsApp(false);
+  assert.equal(ui.smallTheme, 'light');
+  assert.equal(ui.smallColorScheme, 'teal');
+
+  self.setMiniFollowsApp(false);
+  assert.equal(ui.miniTheme, 'light');
+  assert.equal(ui.miniColorScheme, 'teal');
+  assert.equal(ui.miniFont, 'espy');
+});
+
+/* N5 (audit): every segmented control in the Player layout screen is a real
+   role="radiogroup" wrapping role="radio" buttons, wired through the shared
+   radioKey keyboard handler -- the same contract the pre-existing gauge-style
+   segmented controls already met, now generalised (.gauge-segmented ->
+   .segmented) to Presentation/Position/Theme as well. */
+test('N5: every .segmented control in the players screen is a radiogroup wired to radioKey', function () {
+  const players = screenBranch('players');
+  const groups = players.match(/<div class="segmented" role="radiogroup"[\s\S]*?<\/div>\s*<\/div>/g) || [];
+  assert.ok(groups.length >= 7, 'expected at least 7 segmented controls (Presentation, Position, 3x Theme, 2x Progress bar)');
+  groups.forEach(function (group) {
+    assert.match(group, /role="radio"/);
+    assert.match(group, /@keydown="radioKey\(/);
+    assert.match(group, /aria-checked=/);
+    assert.match(group, /:tabindex=/);
   });
-
-  self.ui.fullTheme = 'dark';
-  assert.equal(self.surfaceStatusLabel('full'), 'Custom');
-  assert.equal(self.surfaceStatusLabel('small'), 'Follow app');
-  assert.equal(self.surfaceStatusLabel('mini'), 'Follow app');
-  self.ui.fullTheme = 'app';
-
-  self.ui.smallColorScheme = 'teal';
-  assert.equal(self.surfaceStatusLabel('small'), 'Custom');
-  self.ui.smallColorScheme = 'app';
-
-  self.ui.miniFont = 'podium';
-  assert.equal(self.surfaceStatusLabel('mini'), 'Custom');
-  self.ui.miniFont = 'app';
 });
 
 test('no Appearance label is assembled by concatenating a translated fragment', function () {
   const src = settingsSrc();
-  /* appearanceScreenLabel MUST SURVIVE C5 even though it shrank to four
-     entries (players/full/small/mini) -- this split-on-name technique is the
-     regression net i18n-ui relies on to know the method is still there and
-     still returns a whole literal. themeSummary/colorSchemeSummary/fontSummary
-     died in C5 (the rows they used to label are inline controls now, not
-     drill-ins with a collapsed-state caption), so their concatenation guards
-     go with them. */
+  /* appearanceScreenLabel MUST SURVIVE C6 even though it shrank to one entry
+     (players) -- this split-on-name technique is the regression net i18n-ui
+     relies on to know the method is still there and still returns a whole
+     literal. surfaceStatusLabel (its 'Follow app'/'Custom' summary) died in
+     C6 along with the full/small/mini drill-ins it used to label -- the
+     Player layout screen shows every surface's controls directly now,
+     nothing left to summarise. */
   const body = src.split('appearanceScreenLabel: function')[1].split('},')[0];
   assert.doesNotMatch(body, /\+/, 'appearanceScreenLabel concatenates instead of returning a whole literal');
-  const statusBody = src.split('surfaceStatusLabel: function')[1].split('},')[0];
-  assert.doesNotMatch(statusBody, /\+/);
+  assert.doesNotMatch(src, /surfaceStatusLabel/, 'surfaceStatusLabel should have been deleted in C6');
 });
 
 /* N-defect fix (3.2.6b): ui.appearanceScreen must be reconciled from

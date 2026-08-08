@@ -73,6 +73,12 @@ PAIRS = [
     # vive dentro do .sgroup (nunca direto sobre --group-page: o mesmo anel
     # ali da 4.28 para teal claro, que passa 3.0 mas reprova 4.5).
     ('anel do swatch selecionado',        '--accent',           '--group-bg',    3.0),
+    # C6 (3.2.6c): .gauge-segmented generalizou para .segmented e passou a
+    # cobrir Presentation/Position/Theme, alem do estilo de barra que ja
+    # tinha -- o texto do segmento ligado (--accent-ink sobre --accent) nunca
+    # tinha par proprio ate agora, apesar de o mesmo estilo já existir em
+    # .navbar .segmented .seg.on desde antes desta passada.
+    ('texto do segmento ligado',          '--accent-ink',       '--accent',      4.5),
 ]
 
 

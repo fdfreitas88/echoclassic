@@ -19,82 +19,73 @@ Vue.component('lms-settings', {
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
   <template v-if="ui.appearanceScreen === 'players'">
     <div class="sgroup">
-      <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('full')">
-        Full player <span class="v">{{ surfaceStatusLabel('full') }} ›</span>
-      </button>
-      <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('small')">
-        Small player <span class="v">{{ surfaceStatusLabel('small') }} ›</span>
-      </button>
-      <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('mini')">
-        Mini player <span class="v">{{ surfaceStatusLabel('mini') }} ›</span>
-      </button>
-    </div>
-  </template>
-
-  <template v-else-if="ui.appearanceScreen === 'full'">
-    <div class="sgh">Presentation</div>
-    <div class="sgroup player-presentation-group" role="radiogroup" aria-label="Presentation">
-      <button v-for="mode in playerPresentations" :key="mode.key" type="button"
-              class="srow player-presentation-row"
-              :class="'player-presentation-' + mode.key"
-              role="radio" :aria-checked="ui.playerPresentation === mode.key ? 'true' : 'false'"
-              :tabindex="ui.playerPresentation === mode.key ? 0 : -1"
-              @keydown="radioKey($event, playerPresentations, ui.playerPresentation, playerPresentation)"
-              @click="playerPresentation(mode.key)">
-        <span class="player-presentation-copy">
-          <span>{{ mode.label }}</span>
-          <small>{{ mode.key === 'adaptive'
-            ? 'Column on wide screens; overlay on compact ones'
-            : 'Always fills the whole screen' }}</small>
-        </span>
-        <span class="font-option-check" aria-hidden="true"></span>
-      </button>
+      <div class="srow">Show previews
+        <button type="button" class="sw" :class="{on: showPreviews}" role="switch"
+                :aria-checked="String(showPreviews)" aria-label="Show previews"
+                @click="showPreviews = !showPreviews"><span class="visually-hidden">Show previews</span></button>
+      </div>
     </div>
 
-    <div class="sgroup theme-option-group" role="radiogroup" aria-label="Theme">
-      <button v-for="option in themeOptionsWithApp" :key="'full-theme-' + option.key" type="button"
-              class="srow theme-option-row"
-              role="radio" :aria-checked="ui.fullTheme === option.key ? 'true' : 'false'"
-              :tabindex="ui.fullTheme === option.key ? 0 : -1"
-              @keydown="radioKey($event, themeOptionsWithApp, ui.fullTheme, setFullTheme)"
-              @click="setFullTheme(option.key)">
-        <span class="theme-option-label">{{ option.label }}</span>
-        <span class="font-option-check" aria-hidden="true"></span>
-      </button>
+    <!-- FULL PLAYER -->
+    <div class="sgh">Full player</div>
+    <div class="sgroup">
+      <div class="srow segmented-row">
+        <span>Presentation</span>
+        <div class="segmented" role="radiogroup" aria-label="Presentation">
+          <button v-for="mode in playerPresentations" :key="'full-pres-' + mode.key" type="button"
+                  role="radio" :aria-checked="ui.playerPresentation === mode.key ? 'true' : 'false'"
+                  :tabindex="ui.playerPresentation === mode.key ? 0 : -1"
+                  :class="{on: ui.playerPresentation === mode.key}"
+                  @keydown="radioKey($event, playerPresentations, ui.playerPresentation, playerPresentation)"
+                  @click="playerPresentation(mode.key)">{{ mode.label }}</button>
+        </div>
+      </div>
+      <div class="srow">Match app appearance
+        <button type="button" class="sw" :class="{on: fullFollowsApp}" role="switch"
+                :aria-checked="String(fullFollowsApp)" aria-label="Match app appearance"
+                @click="setFullFollowsApp(!fullFollowsApp)"><span class="visually-hidden">Match app appearance</span></button>
+      </div>
+      <template v-if="!fullFollowsApp">
+        <div class="srow segmented-row">
+          <span>Theme</span>
+          <div class="segmented" role="radiogroup" aria-label="Theme">
+            <button v-for="option in themeOptions" :key="'full-theme-' + option.key" type="button"
+                    role="radio" :aria-checked="ui.fullTheme === option.key ? 'true' : 'false'"
+                    :tabindex="ui.fullTheme === option.key ? 0 : -1"
+                    :class="{on: ui.fullTheme === option.key}"
+                    @keydown="radioKey($event, themeOptions, ui.fullTheme, setFullTheme)"
+                    @click="setFullTheme(option.key)">{{ option.label }}</button>
+          </div>
+        </div>
+        <div class="srow">Accent
+          <div class="swatch-row" role="radiogroup" aria-label="Accent">
+            <button v-for="scheme in colorSchemes" :key="'full-accent-' + scheme.key" type="button"
+                    class="swatch-dot" :class="'scheme-' + scheme.key"
+                    role="radio" :aria-checked="ui.fullColorScheme === scheme.key ? 'true' : 'false'"
+                    :aria-label="tr(scheme.label)"
+                    :tabindex="ui.fullColorScheme === scheme.key ? 0 : -1"
+                    @keydown="radioKey($event, colorSchemes, ui.fullColorScheme, setFullScheme)"
+                    @click="setFullScheme(scheme.key)"></button>
+          </div>
+        </div>
+      </template>
     </div>
-    <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Colour scheme">
-      <button v-for="scheme in colorSchemeOptionsWithApp" :key="'full-scheme-' + scheme.key" type="button"
-              class="srow color-scheme-row" :class="scheme.key === 'app' ? 'scheme-app' : ('scheme-' + scheme.key)"
-              role="radio" :aria-checked="ui.fullColorScheme === scheme.key ? 'true' : 'false'"
-              :tabindex="ui.fullColorScheme === scheme.key ? 0 : -1"
-              @keydown="radioKey($event, colorSchemeOptionsWithApp, ui.fullColorScheme, setFullScheme)"
-              @click="setFullScheme(scheme.key)">
-        <span v-if="scheme.key !== 'app'" class="scheme-swatches" aria-hidden="true">
-          <span class="scheme-swatch scheme-swatch-light"></span>
-          <span class="scheme-swatch scheme-swatch-dark"></span>
-        </span>
-        <span class="scheme-label">{{ scheme.label }}</span>
-        <span class="color-scheme-check" aria-hidden="true"></span>
-      </button>
-    </div>
-    <div class="sgroup font-option-group" role="radiogroup" aria-label="Font">
-      <button v-for="font in fontOptionsWithApp" :key="'full-font-' + font.key" type="button"
-              class="srow font-option-row" :class="font.key === 'app' ? 'font-app' : ('font-' + font.key)"
+    <div v-if="!fullFollowsApp" class="sgroup font-option-group" role="radiogroup" aria-label="Font">
+      <button v-for="font in fontOptions" :key="'full-font-' + font.key" type="button"
+              class="srow font-option-row" :class="'font-' + font.key"
               role="radio" :aria-checked="ui.fullFont === font.key ? 'true' : 'false'"
               :tabindex="ui.fullFont === font.key ? 0 : -1"
-              @keydown="radioKey($event, fontOptionsWithApp, ui.fullFont, setFullFont)"
+              @keydown="radioKey($event, fontOptions, ui.fullFont, setFullFont)"
               @click="setFullFont(font.key)">
         <span class="font-option-label">{{ font.label }}</span>
         <span class="font-option-check" aria-hidden="true"></span>
       </button>
     </div>
-
     <div class="sgh">Progress bar</div>
-    <div class="sgroup gauge-settings-group">
-      <div class="srow gauge-style-row">
+    <div class="sgroup">
+      <div class="srow segmented-row">
         <span>{{ playerGaugeStyleLabel }}</span>
-        <div class="gauge-segmented" role="radiogroup"
-             :aria-label="playerGaugeStyleLabel">
+        <div class="segmented" role="radiogroup" :aria-label="playerGaugeStyleLabel">
           <button v-for="style in gaugeStyles" :key="'full-player-' + style.key" type="button"
                   role="radio" :aria-checked="ui.playerGaugeStyle === style.key ? 'true' : 'false'"
                   :tabindex="ui.playerGaugeStyle === style.key ? 0 : -1"
@@ -103,130 +94,144 @@ Vue.component('lms-settings', {
                   @click="playerGaugeStyle(style.key)">{{ style.label }}</button>
         </div>
       </div>
-      <label class="srow">Full player colour
-        <select class="setting-select player-gauge-color" :value="ui.playerGaugeColor"
-                @change="gaugeColor('player', $event.target.value)">
-          <option v-for="color in gaugeColors" :key="'full-player-color-' + color.key"
-                  :value="color.key">{{ color.label }}</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="sgh">Preview</div>
-    <div class="sgroup">
-      <div class="srow surface-preview" aria-hidden="true" v-bind="fullPreviewAttrs">
-        <span class="surface-preview-swatch"></span>
-        <span class="surface-preview-copy">Full player</span>
+      <div class="srow">Bar colour
+        <div class="swatch-row" role="radiogroup" aria-label="Full player colour">
+          <button v-for="color in gaugeColors" :key="'full-color-' + color.key" type="button"
+                  class="swatch-dot" :class="color.key === 'theme' ? 'gauge-color-theme' : ('scheme-' + color.key)"
+                  role="radio" :aria-checked="ui.playerGaugeColor === color.key ? 'true' : 'false'"
+                  :aria-label="tr(color.label)"
+                  :tabindex="ui.playerGaugeColor === color.key ? 0 : -1"
+                  @keydown="radioKey($event, gaugeColors, ui.playerGaugeColor, setPlayerGaugeColor)"
+                  @click="setPlayerGaugeColor(color.key)"></button>
+        </div>
       </div>
     </div>
-  </template>
+    <div class="player-help">Also applies to the small player.</div>
+    <div class="player-help">Bar style is remembered per theme.</div>
+    <template v-if="showPreviews">
+      <div class="sgh">Preview</div>
+      <div class="sgroup">
+        <div class="srow surface-preview" aria-hidden="true" v-bind="fullPreviewAttrs">
+          <span class="surface-preview-swatch"></span>
+          <span class="surface-preview-copy">Full player</span>
+        </div>
+      </div>
+    </template>
 
-  <template v-else-if="ui.appearanceScreen === 'small'">
-    <div class="sgh">Position</div>
-    <div class="sgroup player-position-group" role="radiogroup" aria-label="Position">
-      <button v-for="position in playerPositions" :key="position.key" type="button"
-              class="srow player-presentation-row"
-              role="radio" :aria-checked="ui.playerPosition === position.key ? 'true' : 'false'"
-              :tabindex="ui.playerPosition === position.key ? 0 : -1"
-              @keydown="radioKey($event, playerPositions, ui.playerPosition, setPlayerPosition)"
-              @click="setPlayerPosition(position.key)">
-        <span class="player-presentation-copy"><span>{{ position.label }}</span></span>
-        <span class="font-option-check" aria-hidden="true"></span>
-      </button>
+    <!-- SMALL PLAYER -->
+    <div class="sgh">Small player</div>
+    <div class="sgroup">
+      <div class="srow segmented-row">
+        <span>Position</span>
+        <div class="segmented" role="radiogroup" aria-label="Position">
+          <button v-for="position in playerPositions" :key="'small-pos-' + position.key" type="button"
+                  role="radio" :aria-checked="ui.playerPosition === position.key ? 'true' : 'false'"
+                  :tabindex="ui.playerPosition === position.key ? 0 : -1"
+                  :class="{on: ui.playerPosition === position.key}"
+                  @keydown="radioKey($event, playerPositions, ui.playerPosition, setPlayerPosition)"
+                  @click="setPlayerPosition(position.key)">{{ position.label }}</button>
+        </div>
+      </div>
+      <div class="srow">Match app appearance
+        <button type="button" class="sw" :class="{on: smallFollowsApp}" role="switch"
+                :aria-checked="String(smallFollowsApp)" aria-label="Match app appearance"
+                @click="setSmallFollowsApp(!smallFollowsApp)"><span class="visually-hidden">Match app appearance</span></button>
+      </div>
+      <template v-if="!smallFollowsApp">
+        <div class="srow segmented-row">
+          <span>Theme</span>
+          <div class="segmented" role="radiogroup" aria-label="Theme">
+            <button v-for="option in themeOptions" :key="'small-theme-' + option.key" type="button"
+                    role="radio" :aria-checked="ui.smallTheme === option.key ? 'true' : 'false'"
+                    :tabindex="ui.smallTheme === option.key ? 0 : -1"
+                    :class="{on: ui.smallTheme === option.key}"
+                    @keydown="radioKey($event, themeOptions, ui.smallTheme, setSmallTheme)"
+                    @click="setSmallTheme(option.key)">{{ option.label }}</button>
+          </div>
+        </div>
+        <div class="srow">Accent
+          <div class="swatch-row" role="radiogroup" aria-label="Accent">
+            <button v-for="scheme in colorSchemes" :key="'small-accent-' + scheme.key" type="button"
+                    class="swatch-dot" :class="'scheme-' + scheme.key"
+                    role="radio" :aria-checked="ui.smallColorScheme === scheme.key ? 'true' : 'false'"
+                    :aria-label="tr(scheme.label)"
+                    :tabindex="ui.smallColorScheme === scheme.key ? 0 : -1"
+                    @keydown="radioKey($event, colorSchemes, ui.smallColorScheme, setSmallScheme)"
+                    @click="setSmallScheme(scheme.key)"></button>
+          </div>
+        </div>
+      </template>
     </div>
-
-    <div class="sgroup theme-option-group" role="radiogroup" aria-label="Theme">
-      <button v-for="option in themeOptionsWithApp" :key="'small-theme-' + option.key" type="button"
-              class="srow theme-option-row"
-              role="radio" :aria-checked="ui.smallTheme === option.key ? 'true' : 'false'"
-              :tabindex="ui.smallTheme === option.key ? 0 : -1"
-              @keydown="radioKey($event, themeOptionsWithApp, ui.smallTheme, setSmallTheme)"
-              @click="setSmallTheme(option.key)">
-        <span class="theme-option-label">{{ option.label }}</span>
-        <span class="font-option-check" aria-hidden="true"></span>
-      </button>
-    </div>
-    <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Colour scheme">
-      <button v-for="scheme in colorSchemeOptionsWithApp" :key="'small-scheme-' + scheme.key" type="button"
-              class="srow color-scheme-row" :class="scheme.key === 'app' ? 'scheme-app' : ('scheme-' + scheme.key)"
-              role="radio" :aria-checked="ui.smallColorScheme === scheme.key ? 'true' : 'false'"
-              :tabindex="ui.smallColorScheme === scheme.key ? 0 : -1"
-              @keydown="radioKey($event, colorSchemeOptionsWithApp, ui.smallColorScheme, setSmallScheme)"
-              @click="setSmallScheme(scheme.key)">
-        <span v-if="scheme.key !== 'app'" class="scheme-swatches" aria-hidden="true">
-          <span class="scheme-swatch scheme-swatch-light"></span>
-          <span class="scheme-swatch scheme-swatch-dark"></span>
-        </span>
-        <span class="scheme-label">{{ scheme.label }}</span>
-        <span class="color-scheme-check" aria-hidden="true"></span>
-      </button>
-    </div>
-    <div class="sgroup font-option-group" role="radiogroup" aria-label="Font">
-      <button v-for="font in fontOptionsWithApp" :key="'small-font-' + font.key" type="button"
-              class="srow font-option-row" :class="font.key === 'app' ? 'font-app' : ('font-' + font.key)"
+    <div v-if="!smallFollowsApp" class="sgroup font-option-group" role="radiogroup" aria-label="Font">
+      <button v-for="font in fontOptions" :key="'small-font-' + font.key" type="button"
+              class="srow font-option-row" :class="'font-' + font.key"
               role="radio" :aria-checked="ui.smallFont === font.key ? 'true' : 'false'"
               :tabindex="ui.smallFont === font.key ? 0 : -1"
-              @keydown="radioKey($event, fontOptionsWithApp, ui.smallFont, setSmallFont)"
+              @keydown="radioKey($event, fontOptions, ui.smallFont, setSmallFont)"
               @click="setSmallFont(font.key)">
         <span class="font-option-label">{{ font.label }}</span>
         <span class="font-option-check" aria-hidden="true"></span>
       </button>
     </div>
-
-    <div class="sgh">Preview</div>
-    <div class="sgroup">
-      <div class="srow surface-preview" aria-hidden="true" v-bind="smallPreviewAttrs">
-        <span class="surface-preview-swatch"></span>
-        <span class="surface-preview-copy">Small player</span>
+    <template v-if="showPreviews">
+      <div class="sgh">Preview</div>
+      <div class="sgroup">
+        <div class="srow surface-preview" aria-hidden="true" v-bind="smallPreviewAttrs">
+          <span class="surface-preview-swatch"></span>
+          <span class="surface-preview-copy">Small player</span>
+        </div>
       </div>
-    </div>
-  </template>
+    </template>
 
-  <template v-else-if="ui.appearanceScreen === 'mini'">
-    <div class="sgroup theme-option-group" role="radiogroup" aria-label="Theme">
-      <button v-for="option in themeOptionsWithApp" :key="'mini-theme-' + option.key" type="button"
-              class="srow theme-option-row"
-              role="radio" :aria-checked="ui.miniTheme === option.key ? 'true' : 'false'"
-              :tabindex="ui.miniTheme === option.key ? 0 : -1"
-              @keydown="radioKey($event, themeOptionsWithApp, ui.miniTheme, setMiniTheme)"
-              @click="setMiniTheme(option.key)">
-        <span class="theme-option-label">{{ option.label }}</span>
-        <span class="font-option-check" aria-hidden="true"></span>
-      </button>
+    <!-- MINI PLAYER -->
+    <div class="sgh">Mini player</div>
+    <div class="sgroup">
+      <div class="srow">Match app appearance
+        <button type="button" class="sw" :class="{on: miniFollowsApp}" role="switch"
+                :aria-checked="String(miniFollowsApp)" aria-label="Match app appearance"
+                @click="setMiniFollowsApp(!miniFollowsApp)"><span class="visually-hidden">Match app appearance</span></button>
+      </div>
+      <template v-if="!miniFollowsApp">
+        <div class="srow segmented-row">
+          <span>Theme</span>
+          <div class="segmented" role="radiogroup" aria-label="Theme">
+            <button v-for="option in themeOptions" :key="'mini-theme-' + option.key" type="button"
+                    role="radio" :aria-checked="ui.miniTheme === option.key ? 'true' : 'false'"
+                    :tabindex="ui.miniTheme === option.key ? 0 : -1"
+                    :class="{on: ui.miniTheme === option.key}"
+                    @keydown="radioKey($event, themeOptions, ui.miniTheme, setMiniTheme)"
+                    @click="setMiniTheme(option.key)">{{ option.label }}</button>
+          </div>
+        </div>
+        <div class="srow">Accent
+          <div class="swatch-row" role="radiogroup" aria-label="Accent">
+            <button v-for="scheme in colorSchemes" :key="'mini-accent-' + scheme.key" type="button"
+                    class="swatch-dot" :class="'scheme-' + scheme.key"
+                    role="radio" :aria-checked="ui.miniColorScheme === scheme.key ? 'true' : 'false'"
+                    :aria-label="tr(scheme.label)"
+                    :tabindex="ui.miniColorScheme === scheme.key ? 0 : -1"
+                    @keydown="radioKey($event, colorSchemes, ui.miniColorScheme, setMiniScheme)"
+                    @click="setMiniScheme(scheme.key)"></button>
+          </div>
+        </div>
+      </template>
     </div>
-    <div class="sgroup color-scheme-group" role="radiogroup" aria-label="Colour scheme">
-      <button v-for="scheme in colorSchemeOptionsWithApp" :key="'mini-scheme-' + scheme.key" type="button"
-              class="srow color-scheme-row" :class="scheme.key === 'app' ? 'scheme-app' : ('scheme-' + scheme.key)"
-              role="radio" :aria-checked="ui.miniColorScheme === scheme.key ? 'true' : 'false'"
-              :tabindex="ui.miniColorScheme === scheme.key ? 0 : -1"
-              @keydown="radioKey($event, colorSchemeOptionsWithApp, ui.miniColorScheme, setMiniScheme)"
-              @click="setMiniScheme(scheme.key)">
-        <span v-if="scheme.key !== 'app'" class="scheme-swatches" aria-hidden="true">
-          <span class="scheme-swatch scheme-swatch-light"></span>
-          <span class="scheme-swatch scheme-swatch-dark"></span>
-        </span>
-        <span class="scheme-label">{{ scheme.label }}</span>
-        <span class="color-scheme-check" aria-hidden="true"></span>
-      </button>
-    </div>
-    <div class="sgroup font-option-group" role="radiogroup" aria-label="Font">
-      <button v-for="font in fontOptionsWithApp" :key="'mini-font-' + font.key" type="button"
-              class="srow font-option-row" :class="font.key === 'app' ? 'font-app' : ('font-' + font.key)"
+    <div v-if="!miniFollowsApp" class="sgroup font-option-group" role="radiogroup" aria-label="Font">
+      <button v-for="font in fontOptions" :key="'mini-font-' + font.key" type="button"
+              class="srow font-option-row" :class="'font-' + font.key"
               role="radio" :aria-checked="ui.miniFont === font.key ? 'true' : 'false'"
               :tabindex="ui.miniFont === font.key ? 0 : -1"
-              @keydown="radioKey($event, fontOptionsWithApp, ui.miniFont, setMiniFont)"
+              @keydown="radioKey($event, fontOptions, ui.miniFont, setMiniFont)"
               @click="setMiniFont(font.key)">
         <span class="font-option-label">{{ font.label }}</span>
         <span class="font-option-check" aria-hidden="true"></span>
       </button>
     </div>
-
     <div class="sgh">Progress bar</div>
-    <div class="sgroup gauge-settings-group">
-      <div class="srow gauge-style-row">
+    <div class="sgroup">
+      <div class="srow segmented-row">
         <span>{{ miniGaugeStyleLabel }}</span>
-        <div class="gauge-segmented" role="radiogroup"
-             :aria-label="miniGaugeStyleLabel">
+        <div class="segmented" role="radiogroup" :aria-label="miniGaugeStyleLabel">
           <button v-for="style in gaugeStyles" :key="'mini-only-' + style.key" type="button"
                   role="radio" :aria-checked="ui.miniGaugeStyle === style.key ? 'true' : 'false'"
                   :tabindex="ui.miniGaugeStyle === style.key ? 0 : -1"
@@ -235,22 +240,28 @@ Vue.component('lms-settings', {
                   @click="miniGaugeStyle(style.key)">{{ style.label }}</button>
         </div>
       </div>
-      <label class="srow">Mini player colour
-        <select class="setting-select mini-gauge-color" :value="ui.miniGaugeColor"
-                @change="gaugeColor('mini', $event.target.value)">
-          <option v-for="color in gaugeColors" :key="'mini-only-color-' + color.key"
-                  :value="color.key">{{ color.label }}</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="sgh">Preview</div>
-    <div class="sgroup">
-      <div class="srow surface-preview" aria-hidden="true" v-bind="miniPreviewAttrs">
-        <span class="surface-preview-swatch"></span>
-        <span class="surface-preview-copy">Mini player</span>
+      <div class="srow">Bar colour
+        <div class="swatch-row" role="radiogroup" aria-label="Mini player colour">
+          <button v-for="color in gaugeColors" :key="'mini-color-' + color.key" type="button"
+                  class="swatch-dot" :class="color.key === 'theme' ? 'gauge-color-theme' : ('scheme-' + color.key)"
+                  role="radio" :aria-checked="ui.miniGaugeColor === color.key ? 'true' : 'false'"
+                  :aria-label="tr(color.label)"
+                  :tabindex="ui.miniGaugeColor === color.key ? 0 : -1"
+                  @keydown="radioKey($event, gaugeColors, ui.miniGaugeColor, setMiniGaugeColor)"
+                  @click="setMiniGaugeColor(color.key)"></button>
+        </div>
       </div>
     </div>
+    <div class="player-help">Bar style is remembered per theme.</div>
+    <template v-if="showPreviews">
+      <div class="sgh">Preview</div>
+      <div class="sgroup">
+        <div class="srow surface-preview" aria-hidden="true" v-bind="miniPreviewAttrs">
+          <span class="surface-preview-swatch"></span>
+          <span class="surface-preview-copy">Mini player</span>
+        </div>
+      </div>
+    </template>
   </template>
 </div>
 <div v-else class="settings">
@@ -510,6 +521,10 @@ Vue.component('lms-settings', {
       queueArtModes: LmsUi.QUEUE_ART_MODES,
       info: null, loading: true, error: '', showPlayers: false,
       showDefaultPlayer: false,
+      /* Session-only, like showPlayers/showDefaultPlayer above -- a live
+         sample of each player under its own section is a lot of extra height
+         to default to on, and nothing about it needs to survive a reload. */
+      showPreviews: false,
       pendingImport: null,
       /* Rascunho local: o numero ao lado do slider tem de acompanhar o
          arrasto, nao esperar o round-trip com o servidor. */
@@ -606,20 +621,20 @@ Vue.component('lms-settings', {
       }, this);
       return names.length ? names : ['no recognised group'];
     },
-    /* Per-surface Theme/Colour scheme/Font rows offer "Follow app" first,
-       then the same list the app level uses. */
-    themeOptionsWithApp: function () {
-      return [{ key: 'app', label: 'Follow app' }].concat(this.themeOptions);
-    },
-    colorSchemeOptionsWithApp: function () {
-      return [{ key: 'app', label: 'Follow app' }].concat(this.colorSchemes);
-    },
-    fontOptionsWithApp: function () {
-      return [{ key: 'app', label: 'Follow app' }].concat(this.fontOptions);
-    },
+    /* C6: the nine "Follow app" option rows (themeOptionsWithApp/
+       colorSchemeOptionsWithApp/fontOptionsWithApp, one prepended 'app' entry
+       each) are gone -- one "Match app appearance" toggle per surface now
+       reads/drives all three of that surface's keys at once through
+       LmsUi.surfaceFollowsApp/setSurfaceFollowsApp, and the custom rows it
+       reveals reuse the plain themeOptions/colorSchemes/fontOptions lists
+       with no 'app' entry, because a real value is always seeded into them
+       the moment the toggle goes off (setFullFollowsApp etc., below). */
+    fullFollowsApp: function () { return LmsUi.surfaceFollowsApp('full'); },
+    smallFollowsApp: function () { return LmsUi.surfaceFollowsApp('small'); },
+    miniFollowsApp: function () { return LmsUi.surfaceFollowsApp('mini'); },
     /* Same pattern chrome/miniplayer.js and nowplaying.js already use for
        their own root binding: v-bind="xPreviewAttrs" on the aria-hidden
-       preview strip at the foot of each player subscreen. */
+       preview strip under each player's section. */
     fullPreviewAttrs: function () { return LmsUi.surfaceAttrs('full'); },
     smallPreviewAttrs: function () { return LmsUi.surfaceAttrs('small'); },
     miniPreviewAttrs: function () { return LmsUi.surfaceAttrs('mini'); }
@@ -688,6 +703,12 @@ Vue.component('lms-settings', {
     miniGaugeStyle: function (key) { LmsUi.setGaugeStyle('mini', key); },
     playerGaugeStyle: function (key) { LmsUi.setGaugeStyle('player', key); },
     gaugeColor: function (target, key) { LmsUi.setGaugeColor(target, key); },
+    /* Thin, curried wrappers so the Bar colour swatch rows' radioKey apply
+       argument can be a plain method reference, the same shape colorScheme/
+       fontFamily/setFullTheme etc. already are -- gaugeColor itself takes two
+       arguments and cannot be passed there directly. */
+    setPlayerGaugeColor: function (key) { this.gaugeColor('player', key); },
+    setMiniGaugeColor: function (key) { this.gaugeColor('mini', key); },
     /* Padrao ARIA de radiogroup: as setas movem selecao e foco, e so o item
        marcado fica na ordem de tabulacao. Sem isto eram 14 paradas de Tab.
        N6 (3.2.6b, revisado): reforco defensivo, nao correcao de uma regressao
@@ -725,8 +746,7 @@ Vue.component('lms-settings', {
        needs nothing extra to make Back work, hardware or on-screen. */
     appearanceScreenLabel: function (screen) {
       var labels = {
-        players: 'Player layout',
-        full: 'Full player', small: 'Small player', mini: 'Mini player'
+        players: 'Player layout'
       };
       return labels[screen] || '';
     },
@@ -760,9 +780,6 @@ Vue.component('lms-settings', {
       var wantDark = key === 'dark';
       if (wantDark !== this.ui.dark) LmsUi.toggleTheme();
     },
-    surfaceStatusLabel: function (surface) {
-      return LmsUi.surfaceFollowsApp(surface) ? 'Follow app' : 'Custom';
-    },
     setPlayerPosition: function (key) { LmsUi.setPlayerPosition(key); },
     setFullTheme: function (key) { LmsUi.setSurfaceTheme('full', key); },
     setFullScheme: function (key) { LmsUi.setSurfaceScheme('full', key); },
@@ -773,6 +790,15 @@ Vue.component('lms-settings', {
     setMiniTheme: function (key) { LmsUi.setSurfaceTheme('mini', key); },
     setMiniScheme: function (key) { LmsUi.setSurfaceScheme('mini', key); },
     setMiniFont: function (key) { LmsUi.setSurfaceFont('mini', key); },
+    /* One "Match app appearance" toggle per surface (C6), replacing the nine
+       "Follow app" option rows. ON writes 'app' to all three of that
+       surface's keys; OFF seeds them from the app's own resolved values --
+       see LmsUi.setSurfaceFollowsApp for why (uistate.test.js covers the
+       ON/OFF/ON round trip directly against LmsUi, not through this thin
+       per-surface wrapper). */
+    setFullFollowsApp: function (on) { LmsUi.setSurfaceFollowsApp('full', on); },
+    setSmallFollowsApp: function (on) { LmsUi.setSurfaceFollowsApp('small', on); },
+    setMiniFollowsApp: function (on) { LmsUi.setSurfaceFollowsApp('mini', on); },
     preference: function (key) { LmsUi.setPreference(key, !this.ui[key]); },
     control: function (p) { LmsStore.selectPlayer(p.id); },
     handoff: function (p) { LmsStore.handoffTo(p.id); },

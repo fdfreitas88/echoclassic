@@ -278,7 +278,7 @@ button:disabled{opacity:.35}
 .split-divider:focus-visible{outline-offset:-2px}
 /* Segmentados: o anel cai sobre o proprio acento quando o segmento esta ligado,
    entao vira anel duplo (tinta do acento + texto), por dentro do overflow. */
-.navbar .segmented .seg:focus-visible,.gauge-segmented button:focus-visible{
+.navbar .segmented .seg:focus-visible,.segmented button:focus-visible{
   outline:0;box-shadow:inset 0 0 0 2px var(--accent-ink),inset 0 0 0 4px var(--text)}
 .ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 
@@ -425,7 +425,7 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
    so the commands wrapped instead. */
 .library-tools input{height:44px;min-width:0;flex:1 1 90px;border:0;border-radius:7px;
   background:var(--field);padding:0 9px}
-.library-tools select,.setting-select{height:44px;border:.5px solid var(--hair);
+.library-tools select{height:44px;border:.5px solid var(--hair);
   border-radius:6px;background:var(--group-bg);padding:0 22px 0 7px;max-width:105px}
 /* "Adicionados recentemente" nao cabia em 105px e saia cortado no meio da
    palavra. Com folga na barra, o campo cresce ate caber. */
@@ -733,7 +733,6 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .playlist-source{margin-left:auto;color:var(--text2);font-size:11px;border:.5px solid var(--hair);
   border-radius:3px;padding:2px 5px;white-space:nowrap}
 .opsearch-action.secondary{color:var(--text2)}
-.setting-select{margin-left:auto;max-width:210px}
 .setting-range{margin-left:auto;min-width:100px}
 .sleep-row{align-items:flex-start;padding-top:8px;padding-bottom:8px}
 .inline-commands{margin-left:auto;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
@@ -750,18 +749,6 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
   border-top:.5px solid var(--hair);font-size:13px}
 .import-confirm>span{color:var(--text2);flex:1 1 260px}
 .import-confirm .inline-commands{flex:1 1 100%;margin-left:0;justify-content:flex-start}
-.color-scheme-row{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}
-.color-scheme-row:active{background:var(--selected)}
-.color-scheme-row:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
-.scheme-swatches{width:42px;height:24px;display:flex;align-items:center;flex:0 0 42px}
-.scheme-swatch{width:22px;height:22px;border:1px solid var(--hair);border-radius:50%;display:block}
-.scheme-swatch+.scheme-swatch{margin-left:-4px}
-.scheme-swatch-light{background:var(--scheme-light)}
-.scheme-swatch-dark{background:var(--scheme-dark)}
-.scheme-label{min-width:0;flex:1}
-.color-scheme-check{width:10px;height:18px;margin:0 4px 3px 8px;flex:0 0 10px;
-  border:solid var(--accent);border-width:0 2px 2px 0;transform:rotate(45deg);opacity:0}
-.color-scheme-row[aria-checked="true"] .color-scheme-check{opacity:1}
 .scheme-blue{--scheme-light:#0077B0;--scheme-dark:#33B5FF}
 .scheme-teal{--scheme-light:#007F73;--scheme-dark:#3BD6C1}
 .scheme-crimson{--scheme-light:#C51F4A;--scheme-dark:#FF5A7F}
@@ -811,31 +798,29 @@ body.dark .swatch-dot{background:var(--scheme-dark)}
 .player-presentation-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
 .player-presentation-copy small{color:var(--text2);font-size:11px;line-height:14px}
 .player-presentation-row[aria-checked="true"] .font-option-check{opacity:1}
-/* theme-option-* mirrors font-option-* exactly, same row geometry and the
-   same reused checkmark (.font-option-check, per the template). There is
-   deliberately no .theme-option-group rule here: like .font-option-group and
-   .color-scheme-group above, the box comes entirely from .sgroup, and
-   .player-position-group (WP2/WP3's small-player position radiogroup) follows
-   the same convention -- its three rows already reuse .player-presentation-row. */
-.theme-option-row{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}
-.theme-option-row:active{background:var(--selected)}
-.theme-option-row:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
-.theme-option-label{min-width:0;flex:1}
-.theme-option-row[aria-checked="true"] .font-option-check{opacity:1}
-/* "Follow app" leads each per-surface theme/scheme/font list. Same row, same
-   checkmark as its siblings (so the list doesn't jitter when the selection
-   moves) -- the template already withholds the swatch pair for scheme.key
-   === 'app', so the only thing left to mark it as inheriting rather than a
-   sixth colour or font is the secondary ink on the label. */
-.color-scheme-row.scheme-app .scheme-label{color:var(--text2)}
-.font-option-row.font-app .font-option-label{color:var(--text2)}
-.gauge-style-row{justify-content:space-between}
-.gauge-segmented{margin-left:auto;display:flex;border:1px solid var(--accent);border-radius:5px;
+/* C6: player-position-group (small player) now shares the same segmented
+   control as Presentation/Theme/Progress bar below, not a list of full rows
+   -- theme-option-row/-label, color-scheme-row/-check and the 'app'-entry
+   modifiers (.scheme-app/.font-app) that used to lead each per-surface list
+   are gone with it: the Player layout screen's custom Theme is a .segmented
+   control (Light/Dark, like Progress bar's Flat/Classic already was), its
+   Accent reuses .swatch-row/.swatch-dot exactly as the app level does, and
+   there is never an 'app' entry inside either list any more -- the toggle
+   above them (LmsUi.setSurfaceFollowsApp) owns that state instead. */
+.segmented-row{justify-content:space-between}
+.segmented{margin-left:auto;display:flex;border:1px solid var(--accent);border-radius:5px;
   overflow:hidden;flex:0 0 auto}
-.gauge-segmented button{width:82px;height:44px;color:var(--accent);font-size:13px}
-.gauge-segmented button+button{border-left:1px solid var(--accent)}
-.gauge-segmented button.on{background:var(--accent);color:var(--accent-ink)}
-.gauge-settings-group .setting-select{width:min(180px,48vw);min-width:0}
+.segmented button{min-width:44px;height:44px;padding:0 14px;color:var(--accent);
+  font-size:13px;white-space:nowrap}
+.segmented button+button{border-left:1px solid var(--accent)}
+.segmented button.on{background:var(--accent);color:var(--accent-ink)}
+/* Bar colour's first swatch ("Follow theme") has no single scheme to show --
+   a diagonal split of --content/--chrome (never a literal hex, like every
+   other token on this strip) stands for "whichever the active theme
+   resolves to". Written at the same specificity as both of .swatch-dot's own
+   light/dark defaults so it wins over them in either theme. */
+.swatch-dot.gauge-color-theme{background:linear-gradient(135deg,var(--content) 50%,var(--chrome) 50%)}
+body.dark .swatch-dot.gauge-color-theme{background:linear-gradient(135deg,var(--content) 50%,var(--chrome) 50%)}
 /* .surface-preview is the aria-hidden strip at the foot of each player
    subscreen (v-bind="fullPreviewAttrs" etc., settings.js) -- the element
    itself carries data-surface-theme/-scheme/-font when that surface
