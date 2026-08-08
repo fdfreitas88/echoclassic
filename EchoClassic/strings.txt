@@ -388,10 +388,6 @@ ECHOCLASSIC_UI_FOLLOW_THEME
 	EN	Follow theme
 	PT	Acompanhar tema
 
-ECHOCLASSIC_UI_FONTS
-	EN	Fonts
-	PT	Fontes
-
 ECHOCLASSIC_UI_FORMAT
 	EN	Format
 	PT	Formato
@@ -628,10 +624,6 @@ ECHOCLASSIC_UI_NOT_AVAILABLE_2
 	EN	Not available
 	PT	Não informado
 
-ECHOCLASSIC_UI_NOT_CONFIRMED
-	EN	not confirmed
-	PT	não confirmado
-
 ECHOCLASSIC_UI_NOT_CONFIRMED_BY_LMS
 	EN	Not confirmed by LMS
 	PT	Estado não confirmado pelo LMS
@@ -651,10 +643,6 @@ ECHOCLASSIC_UI_NO_CONNECTION_TO_THE_PLAYER
 ECHOCLASSIC_UI_NO_CREDITS_IN_THE_METADATA
 	EN	No credits in the metadata.
 	PT	Créditos não informados nos metadados.
-
-ECHOCLASSIC_UI_NO_CROSSFADE_GAPLESS
-	EN	No crossfade / gapless
-	PT	Sem transição / gapless
 
 ECHOCLASSIC_UI_NO_EDITABLE_PLAYLISTS
 	EN	No editable playlists.
@@ -723,10 +711,6 @@ ECHOCLASSIC_UI_PLAYER_SESSION
 ECHOCLASSIC_UI_PLAYER_SYNCHRONISATION
 	EN	Player synchronisation
 	PT	A sincronização dos players
-
-ECHOCLASSIC_UI_PLAYER_VOLUME
-	EN	Player volume
-	PT	Volume do player
 
 ECHOCLASSIC_UI_PLAYER_LAYOUT
 	EN	Player layout
@@ -1108,10 +1092,6 @@ ECHOCLASSIC_UI_UNDO
 	EN	Undo
 	PT	Desfazer
 
-ECHOCLASSIC_UI_UNITY_GAIN_TO_THE_DAC_LMS_DOES_NOT_TOUCH_THE
-	EN	Unity gain to the DAC: LMS does not touch the samples. Set the volume on the DAC itself.
-	PT	Ganho unitário até o DAC: o LMS não toca nas amostras. Ajuste o volume no próprio DAC.
-
 ECHOCLASSIC_UI_UNLOCK_SPLIT
 	EN	Unlock split
 	PT	Desbloquear divisão
@@ -1139,14 +1119,6 @@ ECHOCLASSIC_UI_YEAR_OF_THIS_EDITION
 ECHOCLASSIC_UI_YOU_HAVE_NOT_ADDED_ANY_FAVOURITES_YET_USE_AD
 	EN	You have not added any favourites yet. Use “Add to Favourites” in the menu of a track or station.
 	PT	Você ainda não adicionou favoritos. Use “Adicionar aos Favoritos” no menu de uma faixa ou estação.
-
-ECHOCLASSIC_UI_STYLE_REMEMBERED_PER_THEME
-	EN	The style is remembered separately for each theme. What you choose here applies to the
-	PT	O estilo é lembrado separadamente para cada tema. O que você escolher aqui vale para o tema
-
-ECHOCLASSIC_UI_STYLE_OTHER_THEME_KEEPS
-	EN	theme; the other theme keeps its own.
-	PT	; o outro tema mantém o dele.
 
 ECHOCLASSIC_UI_FILTERS
 	EN	Filters
@@ -1472,10 +1444,6 @@ ECHOCLASSIC_UI_KEPT_SOFTWARE_VOLUME
 	EN	LMS kept software volume.
 	PT	O LMS manteve o volume por software.
 
-ECHOCLASSIC_UI_VOLUME_FIXED_FULL
-	EN	fixed — full scale
-	PT	fixo — escala cheia
-
 ECHOCLASSIC_UI_VOLUME_LMS_SHORT
 	EN	LMS volume
 	PT	Volume LMS
@@ -1487,10 +1455,6 @@ ECHOCLASSIC_UI_NO_PLAYER_SHORT
 ECHOCLASSIC_UI_FAILED_SUFFIX
 	EN	failed.
 	PT	falhou.
-
-ECHOCLASSIC_UI_VOLUME_MODE_UNKNOWN
-	EN	LMS has not yet said whether this player uses software volume. Pick the player under “Active player”, or tap “Try again” in the connection bar to ask once more.
-	PT	O LMS ainda não respondeu se este player usa volume por software. Escolha o player em “Player ativo” ou toque em “Tentar novamente” na barra de conexão para consultar de novo.
 
 ECHOCLASSIC_UI_OPML_LIST_TRUNCATED
 	EN	This list has more than 200 items and this screen shows the first 200. Use search to reach the rest.
@@ -1839,14 +1803,6 @@ ECHOCLASSIC_UI_DEFAULT_TAG
 ECHOCLASSIC_UI_REMOVE
 	EN	Remove
 	PT	Remover
-
-ECHOCLASSIC_UI_GAUGE_HELP_DARK
-	EN	The style is remembered separately for each theme. What you choose here applies to the dark theme; the other theme keeps its own.
-	PT	O estilo é lembrado separadamente para cada tema. O que você escolher aqui vale para o tema escuro; o outro tema mantém o seu.
-
-ECHOCLASSIC_UI_GAUGE_HELP_LIGHT
-	EN	The style is remembered separately for each theme. What you choose here applies to the light theme; the other theme keeps its own.
-	PT	O estilo é lembrado separadamente para cada tema. O que você escolher aqui vale para o tema claro; o outro tema mantém o seu.
 
 ECHOCLASSIC_UI_MINI_GAUGE_STYLE_DARK
 	EN	Mini player style (dark theme)
