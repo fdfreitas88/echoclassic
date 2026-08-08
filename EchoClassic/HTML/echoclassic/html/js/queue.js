@@ -93,12 +93,17 @@ Vue.component('lms-queue', {
     },
 	    remaining: function () {
 	      var s = LmsStore.queueRemaining();
-	      return s ? LmsFmt.longDuration(s) + 'remaining' : 'live';
+	      return s ? LmsFmt.longDuration(s) + ' ' + LmsStr.t('remaining') : LmsStr.t('live');
 	    },
 	    countLabel: function () {
 	      var total = this.store.queueTotal || this.tracks.length;
-	      var label = total + (total === 1 ? 'track' : 'tracks');
-	      return total > this.tracks.length ? this.tracks.length + ' de ' + label + ' carregadas' : label;
+	      var trackUnit = total === 1 ? LmsStr.t('track') : LmsStr.t('tracks');
+	      var label = total + ' ' + trackUnit;
+	      if (total > this.tracks.length) {
+	        var msg = LmsStr.t('{{loaded}} of {{total}} loaded');
+	        return msg.replace('{{loaded}}', this.tracks.length).replace('{{total}}', label);
+	      }
+	      return label;
 	    },
 	    playStartsLabel: function () {
 	      if (!this.tracks.length || this.store.mode !== 'stop') return '';
@@ -106,8 +111,8 @@ Vue.component('lms-queue', {
 	      var track = this.tracks.filter(function (t) { return t.index === index; })[0] || this.tracks[index];
 	      /* O rotulo e montado aqui, entao a frase pronta nunca bate com uma
 	         chave do dicionario. Traduz-se o prefixo antes de concatenar. */
-	      var prefix = (window.LmsStr ? LmsStr.t('Play will start: ') : 'Play will start: ');
-	      return track ? prefix + track.title : '';
+	      var prefix = (window.LmsStr ? LmsStr.t('Play will start:') : 'Play will start:');
+	      return track ? prefix + ' ' + track.title : '';
 	    },
     shuffleLabel: function () {
       return ['Shuffle off', 'Shuffle songs', 'Shuffle albums'][this.store.shuffle] ||
