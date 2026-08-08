@@ -65,10 +65,22 @@ These are stranded by C3–C6's deletions. Verify each has zero remaining uses b
 (both live in `nowplaying.js`). `223 COLOUR_SCHEME`, `1004 THEME`, `1921 FONT`,
 `1945 PRESENTATION`, `1965 POSITION`, `736 PLAYER_LAYOUT` — all reused as row labels.
 
-## Portuguese still in settings.js source, to convert as each commit reaches it
+## Portuguese still in settings.js source — CLOSED at 3.2.6c
 
 `365` "Em uso" · `367` "Usar este player…"/"Controlar" · `368` "Transferir" ·
 `456` "Desligamento programado" · `551` "fica guardada no navegador…" ·
 `561` "Consultando o servidor…" · `948` `echo-classic-preferencias.json` ·
 `987/1029/1040/1051` "deveria ser um objeto".
 (C3 already converted `427` "Duração" and `432` "segundos".)
+
+**Resolution.** C4 and C5 converted everything from `551` down; a grep for each
+phrase now returns nothing. What survived was the active-player row and the
+sleep line — `In use`, `Use this player in Echo Classic`, `Control`, `Transfer`,
+`Sleep timer` — converted in the commit that closes this file, with the four
+missing `strings.txt` entries added beside them. `Sleep timer` already had
+`ECHOCLASSIC_UI_SLEEP_TIMER`. Every English sibling in that same row block
+(`connected`, `unavailable`, `Sync`, and both other button titles) already had
+an entry, which is why the row read half in each language.
+
+Two Portuguese *comments* remain, at `settings.js:610` and `:879`. Comments are
+not user-visible and are out of scope for a language pass.
