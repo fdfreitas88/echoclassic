@@ -78,6 +78,16 @@ test('toda fonte tem uma regra [data-surface-font] no CSS', function () {
   });
 });
 
+/* N7 (audit 3.2.6c C1): [data-surface-font="x"] so redefine a custom property
+   --app-font; sem uma regra que reaplique font-family a partir dela na propria
+   superficie, o valor nunca e re-resolvido e a superficie herda a familia ja
+   resolvida do body -- a troca de fonte por player fica sem efeito. */
+test('[data-surface-font] reaplica font-family a partir de --app-font', function () {
+  const sheet = css();
+  assert.match(sheet, /\[data-surface-font\]\s*\{\s*font-family\s*:\s*var\(--app-font\)\s*\}/,
+    'falta a regra que torna a fonte por superficie efetiva');
+});
+
 test('os dois blocos de tema de superficie existem e declaram os tokens essenciais', function () {
   const sheet = css();
   const lightMatch = sheet.match(/\[data-surface-theme="light"\]\s*\{([^}]*)\}/);
