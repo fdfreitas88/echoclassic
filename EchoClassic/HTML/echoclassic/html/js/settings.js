@@ -400,36 +400,21 @@ Vue.component('lms-settings', {
       </button>
     </template>
     <div class="srow">Connection <span class="v">{{ store.connected ? 'connected' : 'no player' }}</span></div>
-    <label class="srow">Volume
-      <input class="setting-range" type="range" min="0" max="100" step="1"
-             :value="volumeValue" :disabled="!volumeAdjustable"
-             aria-label="Player volume"
-             :title="volumeHint"
-             @input="onVolumeInput($event.target.value)"
-             @change="setVolumeValue($event.target.value)">
-      <span class="v">{{ volumeLabel }}</span></label>
-    <div v-if="store.fixedVolume" class="srow" style="min-height:34px">
-      <span style="font-size:12px;color:var(--text2)">Unity gain to the DAC: LMS does not touch the samples. Set the volume on the DAC itself.</span>
-    </div>
-    <div v-else-if="!store.volumeModeSynced" class="srow" style="min-height:34px">
-      <span style="font-size:12px;color:var(--text2)">LMS has not yet said whether this player uses software volume. Pick the player under “Active player”, or tap “Try again” in the connection bar to ask once more.</span>
-    </div>
   </div>
 
   <div class="sgh">Playback</div>
   <div class="sgroup">
-    <label class="srow">Crossfade
-      <select class="setting-select transition-select" :value="store.transitionType" @change="transition($event.target.value)">
-        <option value="0">No crossfade / gapless</option>
-        <option value="1">Crossfade</option>
-      </select>
-    </label>
-    <label v-if="store.transitionType" class="srow">Duração
+    <div class="srow">Crossfade
+      <button type="button" class="sw" :class="{on: !!store.transitionType}" role="switch"
+              :aria-checked="String(!!store.transitionType)" aria-label="Crossfade"
+              @click="toggleCrossfade"><span class="visually-hidden">Crossfade</span></button></div>
+    <div class="player-help">{{ crossfadeHint }}</div>
+    <label v-if="store.transitionType" class="srow">Duration
       <input class="setting-range" type="range" min="1" max="12"
              :value="durationValue"
              @input="durationDraft = Number($event.target.value)"
              @change="duration($event.target.value)">
-      <span class="v">{{ durationValue }} segundos</span>
+      <span class="v">{{ durationValue }} seconds</span>
     </label>
     <div class="srow sleep-row">
       Sleep timer
@@ -608,9 +593,9 @@ Vue.component('lms-settings', {
       info: null, loading: true, error: '', showPlayers: false, showQueueArt: false,
       showDefaultPlayer: false,
       pendingImport: null,
-      /* Rascunhos locais: o numero ao lado do slider tem de acompanhar o
+      /* Rascunho local: o numero ao lado do slider tem de acompanhar o
          arrasto, nao esperar o round-trip com o servidor. */
-      durationDraft: null, volumeDraft: null
+      durationDraft: null
     };
   },
   computed: {
@@ -660,18 +645,6 @@ Vue.component('lms-settings', {
     durationValue: function () {
       return this.durationDraft === null ? (this.store.transitionDuration || 4) : this.durationDraft;
     },
-    volumeAdjustable: function () {
-      return this.store.connected && this.store.volumeModeSynced && !this.store.fixedVolume;
-    },
-    volumeValue: function () {
-      if (this.store.fixedVolume) return 100;
-      return this.volumeDraft === null ? (this.store.volume || 0) : this.volumeDraft;
-    },
-    volumeLabel: function () {
-      if (this.store.fixedVolume) return 'fixed — full scale';
-      if (!this.store.volumeModeSynced) return 'not confirmed';
-      return this.volumeValue + '%';
-    },
     /* Built whole rather than glued around an interpolation: translateTemplate
        matches a text node against the dictionary, and a sentence split by
        {{ }} can never match. That is exactly how these three stayed Portuguese
@@ -687,11 +660,10 @@ Vue.component('lms-settings', {
     playerGaugeStyleLabel: function () {
       return this.tr(this.ui.dark ? 'Full player style (dark theme)' : 'Full player style (light theme)');
     },
-    volumeHint: function () {
-      if (this.store.fixedVolume) return 'Fixed output: volume is set on the DAC.';
-      if (!this.store.connected) return 'No player connected.';
-      if (!this.store.volumeModeSynced) return 'LMS has not confirmed this player\'s volume mode yet.';
-      return 'Player volume';
+    crossfadeHint: function () {
+      return this.tr(this.store.transitionType
+        ? 'On: crossfade — the end of one song blends into the start of the next'
+        : 'Off: gapless playback — songs join with no gap and no blend');
     },
     /* "This song" com nada tocando vira `sleep 1` no store (Math.max(1, 0-0))
        e desliga o player em um segundo. Sem reproducao nao ha "terminar". */
@@ -753,10 +725,6 @@ Vue.component('lms-settings', {
     /* Quando o servidor confirma o valor, o rascunho sai de cena e o controle
        volta a refletir o estado real. */
     'store.transitionDuration': function () { this.durationDraft = null; },
-    'store.volume': function () {
-      if (!this.store.volumeDragging) this.volumeDraft = null;
-    },
-    'store.playerId': function () { this.volumeDraft = null; },
     /* Keeps ui.appearanceScreen -- the field the template branches on --
        lined up with the top of LmsNav.stacks.settings after ANY change to
        that stack that did not go through openAppearanceScreen: the on-screen
@@ -902,23 +870,12 @@ Vue.component('lms-settings', {
     control: function (p) { LmsStore.selectPlayer(p.id); },
     handoff: function (p) { LmsStore.handoffTo(p.id); },
     sync: function (p) { LmsStore.syncWith(p.id); },
-    transition: function (value) {
-      LmsStore.setTransition(Number(value), this.store.transitionDuration || 4);
+    toggleCrossfade: function () {
+      LmsStore.setTransition(this.store.transitionType ? 0 : 1, this.store.transitionDuration || 4);
     },
     duration: function (value) {
       this.durationDraft = Number(value);
       LmsStore.setTransition(this.store.transitionType, Number(value));
-    },
-    /* O polling de 1s sobrescreve store.volume; setVolumeDragging segura isso
-       enquanto o arrasto nao termina. */
-    onVolumeInput: function (value) {
-      this.volumeDraft = Number(value);
-      LmsStore.setVolumeDragging(true);
-    },
-    setVolumeValue: function (value) {
-      this.volumeDraft = Number(value);
-      LmsStore.setVolumeDragging(false);
-      LmsStore.setVolume(Number(value));
     },
     sleepMinutes: function (minutes) { LmsStore.setSleep(minutes * 60); },
     sleepTrack: function () { LmsStore.sleepAfterTrack(); },
