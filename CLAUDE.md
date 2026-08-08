@@ -68,3 +68,23 @@ still worth merging; it is just not worth describing as verified.
 
 `npm install`, `git fetch/push`, `curl`, `ssh`, `scp`, `tools/deploy.sh`,
 `tools/rollback.sh`: propose the exact command and stop. Do not run it.
+
+## Agent efficiency — hard rules
+
+- Grep first, always. Never read a file >300 lines whole; read hit ±40 lines.
+- A delegated implementation task is ≤1 commit and ≤3 files. If it needs more,
+  the orchestrator splits it BEFORE delegating. A task that passes 60 tool
+  uses or ~100k tokens stops and reports instead of pushing on.
+- Gates run in exactly one place per cycle: verify. The orchestrator and
+  reviewer trust verify's numbers; they do not re-run npm test/validate to
+  double-check, except on a single named failing test.
+- reviewer reads `git diff` (or a stated range) only — never the repo at large.
+- Briefs, specs, decisions and sweep notes live as files in docs/prompts/;
+  delegations pass file PATHS, never inline the contents.
+- Long prompts from the user arrive as files (docs/prompts/*.md), invoked with
+  "Read <path> and execute" — never pasted into the terminal.
+- Before any deploy with -r, state the silent-death recovery command first.
+  ECHO_HOST/ECHO_HTTP_HOST come from the environment, never lms.local.
+- Each landed commit appends one line to docs/prompts/state.md
+  (hash · what · evidence marker) so a fresh session resumes without
+  re-reading history.
