@@ -147,6 +147,25 @@ exposed: `partitions 0`, `convolvergain -4`, `dither 1`, `gain -10`,
 exist with no UI control. There is no measurement-based room correction — only
 import of an externally produced impulse. [code]
 
+## The server does not have it
+
+`ls` over both plugin directories on musicplayer@musicplayer.local, 2026-08-08:
+CDplayer, DSDPlayer, EchoClassic, LocalPlayer, MaterialSkin, MusicArtistInfo,
+MyQobuz, Qobuz. **No SqueezeDSP.** [measured]
+
+All eight sit in `~/Library/Caches/Squeezebox/InstalledPlugins/Plugins`, and
+`~/Library/Application Support/Squeezebox/Plugins` is empty — so every plugin
+on this server arrived through the extension downloader and none is hand-
+dropped. That is a second, incidental confirmation that `repo.xml` is the real
+delivery path for Echo Classic, not a formality. [measured]
+
+Consequence for AUDIT-20: everything above is read from source and none of it
+has been exercised against a running plugin. Before any EQ work starts,
+SqueezeDSP has to be installed and the JSON-RPC surface in (b) confirmed
+against the live server — in particular that `squeezedsp.filters` answers, and
+what the half-second re-seek in (c) actually sounds like mid-track. Until then
+the whole design rests on [code].
+
 ## What this changes for the AUDIT-20 design
 
 Nothing is designed here. Recording only the constraints the design will have
