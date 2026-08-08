@@ -30,9 +30,10 @@ test('N2: the Player group has no volume slider and no fixed-volume/volume-mode 
   assert.doesNotMatch(group, /type="range"/);
   assert.doesNotMatch(group, /store\.fixedVolume/);
   assert.doesNotMatch(group, /store\.volumeModeSynced/);
-  /* Connection stays -- it is the only place a user sees "no player
-     connected" (phase2-decisions.md #4). */
-  assert.match(group, /store\.connected/);
+  /* C4 (3.2.6c) moved Connection into About -- it is the only place a user
+     sees "no player connected" (phase2-decisions.md #4), but it no longer
+     lives in the Player group itself. */
+  assert.doesNotMatch(group, /store\.connected/);
 });
 
 test('N2: volume leaves the component entirely -- no draft, computed, watch or method survives', function () {

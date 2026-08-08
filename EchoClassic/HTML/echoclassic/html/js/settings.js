@@ -399,7 +399,6 @@ Vue.component('lms-settings', {
         <span class="font-option-check" aria-hidden="true"></span>
       </button>
     </template>
-    <div class="srow">Connection <span class="v">{{ store.connected ? 'connected' : 'no player' }}</span></div>
   </div>
 
   <div class="sgh">Playback</div>
@@ -444,27 +443,23 @@ Vue.component('lms-settings', {
 
   <div class="sgh">Queue</div>
   <div class="sgroup">
-    <button type="button" class="srow settings-command-row pointer"
-            :aria-expanded="String(showQueueArt)" @click="showQueueArt = !showQueueArt">
-      Queue artwork <span class="v">{{ queueArtModeLabel }} ›</span>
+    <div class="player-help">
+      Choose how often album art repeats in the playback queue.
+    </div>
+  </div>
+  <div class="sgroup player-presentation-group" role="radiogroup" aria-label="Queue artwork">
+    <button v-for="mode in queueArtModes" :key="mode.key" type="button"
+            class="srow player-presentation-row"
+            role="radio" :aria-checked="ui.queueArtMode === mode.key ? 'true' : 'false'"
+            :tabindex="ui.queueArtMode === mode.key ? 0 : -1"
+            @keydown="radioKey($event, queueArtModes, ui.queueArtMode, queueArtMode)"
+            @click="queueArtMode(mode.key)">
+      <span class="player-presentation-copy">
+        <span>{{ mode.label }}</span>
+        <small>{{ queueArtModeHint(mode.key) }}</small>
+      </span>
+      <span class="font-option-check" aria-hidden="true"></span>
     </button>
-    <template v-if="showQueueArt">
-      <div class="player-help">
-        Choose how often album art repeats in the playback queue.
-      </div>
-      <button v-for="mode in queueArtModes" :key="mode.key" type="button"
-              class="srow player-presentation-row"
-              role="radio" :aria-checked="ui.queueArtMode === mode.key ? 'true' : 'false'"
-              :tabindex="ui.queueArtMode === mode.key ? 0 : -1"
-              @keydown="radioKey($event, queueArtModes, ui.queueArtMode, queueArtMode)"
-              @click="queueArtMode(mode.key)">
-        <span class="player-presentation-copy">
-          <span>{{ mode.label }}</span>
-          <small>{{ queueArtModeHint(mode.key) }}</small>
-        </span>
-        <span class="font-option-check" aria-hidden="true"></span>
-      </button>
-    </template>
   </div>
 
   <div class="sgh">General</div>
@@ -514,11 +509,8 @@ Vue.component('lms-settings', {
     </button>
   </div>
 
-  <div class="sgh">Security and compatibility</div>
+  <div class="sgh">Backup</div>
   <div class="sgroup">
-    <div class="srow">Lock screen controls
-      <span class="v">{{ mediaSessionSupported ? 'available' : 'not supported in this browser' }}</span>
-    </div>
     <div class="srow settings-actions">
       Skin preferences
       <span class="inline-commands">
@@ -532,8 +524,9 @@ Vue.component('lms-settings', {
     <div v-if="pendingImport" class="import-confirm" role="alert">
       <strong>Import preferences from this file?</strong>
       <span>Only these groups will be replaced: {{ pendingImportGroups.join(', ') }}.
-        Anything not in the file stays as it is. A copy of the current state
-        fica guardada no navegador antes da gravação. A página recarrega em seguida.</span>
+        <span>Anything not in the file stays as it is. A copy of the current state
+        is kept in the browser before the write happens. The page reloads afterwards.</span>
+      </span>
       <div class="inline-commands">
         <button @click="confirmImport">Import and reload</button>
         <button @click="cancelImport">Cancel</button>
@@ -541,9 +534,10 @@ Vue.component('lms-settings', {
     </div>
   </div>
 
-  <div class="sgh">Library</div>
+  <div class="sgh">About</div>
   <div class="sgroup">
-    <div v-if="loading" class="srow"><span style="color:var(--text2)">Consultando o servidor…</span></div>
+    <div class="srow">Connection <span class="v">{{ store.connected ? 'connected' : 'no player' }}</span></div>
+    <div v-if="loading" class="srow"><span style="color:var(--text2)">Querying the server…</span></div>
     <template v-else-if="info">
       <div class="srow">Artists <span class="v">{{ n(info.artists) }}</span></div>
       <div class="srow">Albums <span class="v">{{ n(info.albums) }}</span></div>
@@ -551,16 +545,15 @@ Vue.component('lms-settings', {
       <div class="srow">Genres <span class="v">{{ n(info.genres) }}</span></div>
     </template>
     <div v-else class="srow"><span style="color:var(--text2)">{{ error }}</span></div>
-  </div>
-
-  <div class="sgh">Server</div>
-  <div class="sgroup">
+    <div class="srow">Server version <span class="v">LMS {{ info ? info.version : '—' }}</span></div>
+    <div class="srow">Skin version <span class="v">{{ skinVersion }}</span></div>
+    <div class="srow">Lock screen controls
+      <span class="v">{{ mediaSessionSupported ? 'available' : 'not supported in this browser' }}</span>
+    </div>
     <button type="button" class="srow settings-command-row pointer"
             :aria-expanded="String(ui.advancedSettings)" @click="openAdvanced">
       Advanced LMS settings <span class="v">›</span>
     </button>
-    <div class="srow">Server version <span class="v">LMS {{ info ? info.version : '—' }}</span></div>
-    <div class="srow">Skin version <span class="v">{{ skinVersion }}</span></div>
   </div>
 
   <div class="sgh" style="text-transform:none">
@@ -590,7 +583,7 @@ Vue.component('lms-settings', {
       gaugeStyles: LmsUi.GAUGE_STYLES,
       gaugeColors: LmsUi.GAUGE_COLORS,
       queueArtModes: LmsUi.QUEUE_ART_MODES,
-      info: null, loading: true, error: '', showPlayers: false, showQueueArt: false,
+      info: null, loading: true, error: '', showPlayers: false,
       showDefaultPlayer: false,
       pendingImport: null,
       /* Rascunho local: o numero ao lado do slider tem de acompanhar o
@@ -603,11 +596,6 @@ Vue.component('lms-settings', {
       var id = this.store.playerId;
       var found = (this.store.players || []).filter(function (p) { return p.id === id; })[0];
       return found ? found.name : 'none';
-    },
-    queueArtModeLabel: function () {
-      var key = this.ui.queueArtMode;
-      var found = this.queueArtModes.filter(function (mode) { return mode.key === key; })[0];
-      return found ? found.label : '';
     },
     /* AUDIT-1b: preferencia gravada em ui.js, resolvida em LmsStore ao
        descobrir o player -- esta linha so mostra o que esta configurado.
@@ -795,9 +783,10 @@ Vue.component('lms-settings', {
        Subir ate o ancestral [role="radiogroup"] mais proximo com closest()
        para de depender dessa suposicao de estrutura direta, o que importa
        porque nem todo call site tem o wrapper marcado: os botoes de "Default
-       player" e "Queue artwork" nesta mesma tela nao usam role="radiogroup"
-       ao redor, entao closest() nao encontra nada e cai no parentNode como
-       antes -- por isso o fallback continua aqui. */
+       player" nesta mesma tela nao usam role="radiogroup" ao redor (C4,
+       3.2.6c, deu esse wrapper a "Queue artwork"), entao closest() nao
+       encontra nada e cai no parentNode como antes -- por isso o fallback
+       continua aqui. */
     radioKey: function (event, options, currentKey, apply) {
       var forward = event.key === 'ArrowRight' || event.key === 'ArrowDown';
       var back = event.key === 'ArrowLeft' || event.key === 'ArrowUp';
@@ -902,7 +891,7 @@ Vue.component('lms-settings', {
       var url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
       var link = document.createElement('a');
       link.href = url;
-      link.download = 'echo-classic-preferencias.json';
+      link.download = 'echo-classic-preferences.json';
       link.click();
       setTimeout(function () { URL.revokeObjectURL(url); }, 0);
       LmsUi.notify('Preferences exported.');
@@ -941,7 +930,7 @@ Vue.component('lms-settings', {
 	      try { parsed = JSON.parse(String(raw)); }
 	      catch (e) { return 'the contents of ' + canonical + ' is not valid JSON'; }
 	      if (canonical === 'echoclassic.ui.v2') {
-	        if (!this.isPlainObject(parsed)) return canonical + ' deveria ser um objeto';
+	        if (!this.isPlainObject(parsed)) return canonical + ' should be an object';
 	        /* Estas duas listas eram literais duplicados de ui.js. Acrescentar uma
 	           aba la quebrava a importacao de preferencias aqui, em silencio: o
 	           valor novo era recusado como invalido. Agora derivam da fonte. */
@@ -983,7 +972,7 @@ Vue.component('lms-settings', {
 	          }
 	        }
 	        if (parsed.byView !== undefined && !this.isPlainObject(parsed.byView)) {
-	          return 'byView deveria ser um objeto';
+	          return 'byView should be an object';
 	        }
 	        return null;
 	      }
@@ -994,7 +983,7 @@ Vue.component('lms-settings', {
         return null;
       }
       if (canonical === 'echoclassic.nav.v1') {
-        if (!this.isPlainObject(parsed)) return 'echoclassic.nav.v1 deveria ser um objeto';
+        if (!this.isPlainObject(parsed)) return 'echoclassic.nav.v1 should be an object';
         var stacks = ['music', 'playlists', 'radio', 'favourites'];
         for (var i = 0; i < stacks.length; i++) {
           var stack = parsed[stacks[i]];
@@ -1005,7 +994,7 @@ Vue.component('lms-settings', {
         }
         return null;
       }
-      if (!this.isPlainObject(parsed)) return canonical + ' deveria ser um objeto';
+      if (!this.isPlainObject(parsed)) return canonical + ' should be an object';
       return null;
     },
     importSettings: function (event) {
