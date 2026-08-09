@@ -586,7 +586,7 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
    de um artista. */
 .navbar .center{gap:12px}
 .navbar .pickttl{min-height:44px;display:flex;align-items:center;gap:5px;pointer-events:auto}
-.navbar .segmented{display:flex;border:0;border-radius:5px;box-shadow:inset 0 0 0 1px var(--accent);
+.navbar .segmented{margin-left:0;display:flex;border:0;border-radius:5px;box-shadow:inset 0 0 0 1px var(--accent);
   overflow:hidden;font-size:13px;font-weight:500;pointer-events:auto;flex:0 0 auto}
 .navbar .segmented .seg{padding:3px 14px;color:var(--accent);line-height:1.5}
 .navbar .segmented button.seg{min-height:44px}
