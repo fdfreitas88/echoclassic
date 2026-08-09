@@ -191,3 +191,151 @@ test('um default persistido desconhecido cai de volta sem lancar', async functio
   assert.equal(ctx.store.state.connected, false);
   assert.equal(ctx.store.state.lastError, 'No player is connected.');
 });
+
+/* EC-014. O carimbo do desfazer pertence ao player cuja fila foi destruida.
+   setQueueUndo relia state.playerId DEPOIS dos awaits do mutador: trocar de
+   player no meio carimbava o player NOVO, e a checagem de dono em undoQueue
+   entao aprovava injetar a fila da sala antiga na sala nova.
+
+   O segundo grupo cobre o outro lado do mesmo defeito: clearQueue tirava o
+   retrato de state.queue, que e so a janela de 500 linhas, enquanto
+   queueClear destroi a playlist inteira do servidor. */
+function queueContext(apiExtra, notes) {
+  return storeContext(Object.assign({
+    status: stubStatus,
+    queue: async function () {
+      return { tracks: [], index: 0, total: 0, shuffle: 0, repeat: 0 };
+    },
+    queueRemove: async function () {},
+    queueClear: async function () {},
+    queueMove: async function () {},
+    queueControl: async function () {},
+    queueJump: async function () {}
+  }, apiExtra || {}), {
+    notify: function (msg, kind) { notes.push({ msg: String(msg), kind: kind }); }
+  });
+}
+
+function track(i) { return { index: i, id: 100 + i, title: 'T' + i }; }
+
+function seedQueue(state, tracks, total, index) {
+  state.playerId = 'p1';
+  state.connected = true;
+  state.queue = tracks;
+  state.queueTotal = total == null ? tracks.length : total;
+  state.queueIndex = index || 0;
+}
+
+function truncationNotes(notes) {
+  return notes.filter(function (n) { return n.msg.indexOf('could be read') !== -1; });
+}
+
+function failureNotes(notes) {
+  return notes.filter(function (n) { return n.msg.indexOf('failed.') !== -1; });
+}
+
+test('EC-014 removeFromQueue carimba o desfazer no player de origem, nao no player para o qual se trocou durante o await', async function () {
+  const notes = [];
+  let ctx;
+  ctx = queueContext({
+    queueRemove: async function () { ctx.store.state.playerId = 'p2'; }
+  }, notes);
+  seedQueue(ctx.store.state, [track(0), track(1)]);
+
+  await ctx.store.removeFromQueue(0);
+
+  assert.deepEqual(failureNotes(notes), []);
+  assert.equal(ctx.store.state.queueUndo.length, 1);
+  assert.equal(ctx.store.state.queueUndoPlayerId, 'p1',
+    'o desfazer pertence a p1, cuja faixa foi removida, nao a p2, para onde o usuario trocou');
+});
+
+test('EC-014 clearQueue carimba o desfazer no player cuja fila foi destruida', async function () {
+  const notes = [];
+  let ctx;
+  ctx = queueContext({
+    queueClear: async function () { ctx.store.state.playerId = 'p2'; }
+  }, notes);
+  seedQueue(ctx.store.state, [track(0), track(1)]);
+
+  await ctx.store.clearQueue();
+
+  assert.deepEqual(failureNotes(notes), []);
+  assert.equal(ctx.store.state.queueUndo.length, 2);
+  assert.equal(ctx.store.state.queueUndoPlayerId, 'p1',
+    'restaurar isto em p2 encheria a sala errada com a fila de p1');
+});
+
+test('EC-014 clearUpcoming carimba o desfazer no player de origem mesmo quando o laco e interrompido pela troca', async function () {
+  const notes = [];
+  let removals = 0;
+  let ctx;
+  ctx = queueContext({
+    queueRemove: async function () {
+      removals++;
+      if (removals === 1) ctx.store.state.playerId = 'p2';
+    }
+  }, notes);
+  seedQueue(ctx.store.state, [track(0), track(1), track(2)], 3, 0);
+
+  await ctx.store.clearUpcoming();
+
+  assert.deepEqual(failureNotes(notes), []);
+  assert.equal(removals, 1, 'a troca de player tem de interromper o laco de remocao');
+  assert.equal(ctx.store.state.queueUndo.length, 1, 'so o que foi de fato removido entra no desfazer');
+  assert.equal(ctx.store.state.queueUndoPlayerId, 'p1');
+});
+
+test('EC-014 clearQueue guarda a fila inteira do servidor, nao a janela de 500 linhas', async function () {
+  const notes = [];
+  const total = 698;
+  const all = [];
+  for (let i = 0; i < total; i++) all.push(track(i));
+  const ctx = queueContext({
+    queue: async function (playerId, start, page) {
+      return { tracks: all.slice(start, start + page), index: 0, total: total, shuffle: 0, repeat: 0 };
+    }
+  }, notes);
+  seedQueue(ctx.store.state, all.slice(0, 500), total);
+
+  await ctx.store.clearQueue();
+
+  assert.equal(ctx.store.state.queueUndo.length, total,
+    'queueClear destroi as 698; o desfazer tem de poder devolver as 698');
+  assert.equal(ctx.store.state.queueUndo[697].item.id, all[697].id);
+  assert.deepEqual(truncationNotes(notes), [], 'nada se perdeu, entao nao ha o que avisar');
+});
+
+test('EC-014 clearQueue avisa quando nem tudo pode ser lido antes de destruir', async function () {
+  const notes = [];
+  const total = 698;
+  const all = [];
+  for (let i = 0; i < total; i++) all.push(track(i));
+  const ctx = queueContext({
+    queue: async function (playerId, start, page) {
+      // o servidor para de entregar depois da primeira pagina
+      if (start > 0) return { tracks: [], index: 0, total: total, shuffle: 0, repeat: 0 };
+      return { tracks: all.slice(0, page), index: 0, total: total, shuffle: 0, repeat: 0 };
+    }
+  }, notes);
+  seedQueue(ctx.store.state, all.slice(0, 500), total);
+
+  await ctx.store.clearQueue();
+
+  const warned = truncationNotes(notes);
+  assert.equal(warned.length, 1, 'perder 198 faixas em silencio e o defeito');
+  assert.equal(warned[0].kind, 'error');
+  assert.ok(warned[0].msg.indexOf('698') !== -1 && warned[0].msg.indexOf('500') !== -1);
+  assert.equal(ctx.store.state.queueUndo.length, 500);
+});
+
+test('EC-014 uma fila que cabe inteira na janela nao produz aviso de truncamento', async function () {
+  const notes = [];
+  const ctx = queueContext({}, notes);
+  seedQueue(ctx.store.state, [track(0), track(1), track(2)], 3);
+
+  await ctx.store.clearQueue();
+
+  assert.deepEqual(truncationNotes(notes), []);
+  assert.equal(ctx.store.state.queueUndo.length, 3);
+});
