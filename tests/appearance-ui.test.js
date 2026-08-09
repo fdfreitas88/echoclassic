@@ -14,6 +14,10 @@ function settingsSrc() {
   return helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
 }
 
+function uiSrc() {
+  return helpers.read('EchoClassic/HTML/echoclassic/html/js/ui.js');
+}
+
 /* A LmsNav double with a real backing array, so push/top behave like the
    real module for the one stack ('settings') these tests touch. */
 function fakeNav() {
@@ -22,6 +26,7 @@ function fakeNav() {
     stacks: { settings: settings },
     push: function (tab, frame) { settings.push(frame); },
     pop: function (tab) { return settings.length ? settings.pop() : null; },
+    back: function (tab) { return settings.length ? settings.pop() : null; },
     top: function (tab) { return settings.length ? settings[settings.length - 1] : null; },
     reset: function (tab) { settings.length = 0; }
   };
@@ -343,6 +348,41 @@ test('syncAppearanceScreen reconciles ui.appearanceScreen from LmsNav.top("setti
   assert.equal(self.ui.appearanceScreen, null);
 });
 
+test('Advanced LMS settings joins the Settings nav stack and restores the list scroll on return', function () {
+  const nav = fakeNav();
+  const inst = helpers.settingsInstance({ LmsNav: nav });
+  const self = inst.self;
+  self.$el = { scrollTop: 1414 };
+
+  self.openAdvanced();
+  assert.equal(nav.top('settings').advanced, true);
+  assert.equal(nav.top('settings').label, 'Advanced LMS settings');
+  assert.equal(self.ui.advancedSettings, true);
+  assert.equal(self.ui.appearanceScreen, null);
+  assert.equal(self.settingsReturnScroll, 1414);
+  assert.equal(self.$el.scrollTop, 0, 'the iframe screen starts at the top');
+
+  nav.pop('settings');
+  self.syncSettingsScreen();
+  assert.equal(self.ui.advancedSettings, false);
+  assert.equal(self.ui.appearanceScreen, null);
+  assert.equal(self.$el.scrollTop, 1414, 'returning to Settings restores the row that opened Advanced');
+});
+
+test('Advanced LMS settings relies on the app navbar, not a duplicate inner settings bar', function () {
+  const src = settingsSrc();
+  const branch = src.slice(
+    src.indexOf('<div v-if="ui.advancedSettings"'),
+    src.indexOf('<div v-else-if="ui.appearanceScreen"')
+  );
+  assert.match(branch, /<iframe ref="advancedFrame"/);
+  assert.match(branch, /src="\/echoclassic\/settings\/server\/basic\.html"/);
+  assert.doesNotMatch(branch, /advanced-settings-toolbar/);
+  assert.doesNotMatch(branch, /advancedBack/);
+  assert.doesNotMatch(branch, />\s*LMS settings\s*</);
+  assert.match(branch, /title="" aria-label="Advanced LMS settings"/);
+});
+
 test('Advanced LMS settings iframe receives Echo Classic theme tokens and CSS on load', function () {
   const nodes = {};
   const htmlAttrs = {};
@@ -392,8 +432,127 @@ test('Advanced LMS settings iframe receives Echo Classic theme tokens and CSS on
   assert.equal(htmlAttrs['data-echoclassic-scheme'], 'blue');
   assert.equal(htmlAttrs['data-echoclassic-font'], 'podium');
   assert.equal(bodyAttrs['data-echoclassic-page'], 'advanced-settings');
-  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('body> #header') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#header,#headerWrapper') >= 0);
   assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#settingsTabs') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#echoclassic-advanced-rail') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-rail-search') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-lms-chrome-hidden{display:none') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#echoclassic-advanced-hero{display:none') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#echoclassic-plugin-store-tools') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#echoclassic-plugin-store-grid') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-plugin-search') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-plugin-store .ec-advanced-content{display:none') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('ul.tabs,.tabs,#tabs,#settingsTabs,#choose_setting{display:none') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('background:var(--group-page)') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('form>table:not(.tabs):not(#tabs):not(#settingsTabs)') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('background:var(--group-bg)!important') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.settingSection') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.settingGroup') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.prefHead') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#choose_setting') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#saveSettings') >= 0);
+  assert.equal(nodes['echoclassic-advanced-theme'].textContent.indexOf('ul.tabs,.tabs,#tabs,#settingsTabs{display:flex'), -1);
+  assert.equal(nodes['echoclassic-advanced-theme'].textContent.indexOf('ul.tabs li,.tabs li,#tabs li,#settingsTabs li{display:block'), -1);
+});
+
+test('Advanced LMS settings uses a Material-style iframe controller over the real LMS form', function () {
+  const src = settingsSrc();
+  assert.match(src, /installAdvancedLinkController/);
+  assert.match(src, /installAdvancedDirtyTracking/);
+  assert.match(src, /installAdvancedSectionController/);
+  assert.match(src, /installAdvancedExpanders/);
+  assert.match(src, /normalizeAdvancedLabels/);
+  assert.match(src, /buildAdvancedIpadShell/);
+  assert.match(src, /hideAdvancedLmsChrome/);
+  assert.match(src, /advancedBuildRailRow/);
+  assert.match(src, /enhanceAdvancedFrame\(frame, doc\)/);
+  assert.doesNotMatch(src, /this\.adaptAdvancedFrame\(doc\)/);
+});
+
+test('Advanced LMS settings exposes iPad-style search rail and bridges navbar Apply to the real form', function () {
+  const settings = settingsSrc();
+  const navbar = helpers.read('EchoClassic/HTML/echoclassic/html/js/chrome/navbar.js');
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  assert.match(settings, /id = 'echoclassic-advanced-rail'/);
+  assert.match(settings, /placeholder="Search"/);
+  assert.match(settings, /oldHero[\s\S]*removeChild\(oldHero\)/);
+  assert.match(settings, /advancedIsPluginStore/);
+  assert.match(settings, /buildAdvancedPluginStore/);
+  assert.match(settings, /renderAdvancedPluginCard/);
+  assert.match(settings, /id = 'echoclassic-plugin-store-grid'/);
+  assert.match(settings, /placeholder="Search Plugins"/);
+  assert.match(settings, /self\.advancedClosest\(input, '#echoclassic-advanced-rail'\)/);
+  assert.match(settings, /self\.advancedClosest\(input, '#echoclassic-plugin-store-tools'\)/);
+  assert.match(settings, /hideAdvancedLmsChrome\(doc, root\)/);
+  assert.match(settings, /server settings\$/i);
+  assert.match(settings, /selector\.value = option\.value[\s\S]*advancedDispatchChange\(doc, selector\)/);
+  assert.match(settings, /querySelector\('#saveSettings,#save,input\[type="submit"\],button\[type="submit"\]'\)/);
+  assert.match(navbar, /v-if="ui\.advancedSettings" class="nav-apply pointer"[\s\S]*Apply/);
+  assert.match(navbar, /applyAdvanced: function \(\) \{[\s\S]*LmsUi\.applyAdvancedSettings/);
+  assert.match(css, /\.navbar \.nav-apply/);
+});
+
+test('Advanced LMS settings normalizes all-caps server labels without touching mixed-case names', function () {
+  const inst = helpers.settingsInstance();
+  const self = inst.self;
+  function textNode(text) {
+    return {
+      textContent: text,
+      firstChild: { nodeType: 3 },
+      childNodes: [{ nodeType: 3 }]
+    };
+  }
+  const nodes = [
+    textNode('LANGUAGE'),
+    textNode('MEDIA FOLDERS'),
+    textNode('SERVER IP ADDRESS'),
+    textNode('Media Library Name')
+  ];
+  self.normalizeAdvancedLabels({
+    querySelectorAll: function () { return nodes; }
+  });
+
+  assert.equal(nodes[0].textContent, 'Language');
+  assert.equal(nodes[1].textContent, 'Media Folders');
+  assert.equal(nodes[2].textContent, 'Server IP Address');
+  assert.equal(nodes[3].textContent, 'Media Library Name');
+});
+
+test('syncSettingsScreen keeps Advanced and Appearance mutually exclusive', function () {
+  const nav = fakeNav();
+  const inst = helpers.settingsInstance({ LmsNav: nav });
+  const self = inst.self;
+
+  nav.push('settings', { label: 'Player layout', screen: 'players' });
+  self.syncSettingsScreen();
+  assert.equal(self.ui.appearanceScreen, 'players');
+  assert.equal(self.ui.advancedSettings, false);
+
+  nav.push('settings', { label: 'Advanced LMS settings', advanced: true });
+  self.syncSettingsScreen();
+  assert.equal(self.ui.appearanceScreen, null);
+  assert.equal(self.ui.advancedSettings, true);
+});
+
+test('Escape closes Advanced LMS settings through the Settings navigation stack', function () {
+  const src = uiSrc();
+  const advancedEscape = src.match(/if \(state\.advancedSettings\) \{[\s\S]*?event\.preventDefault\(\);[\s\S]*?return;[\s\S]*?\n    \}/);
+  assert.ok(advancedEscape, 'global Escape handler should special-case Advanced LMS settings');
+  assert.match(advancedEscape[0], /LmsNav\.top\('settings'\)[\s\S]*LmsNav\.pop\('settings'\)/);
+  assert.doesNotMatch(advancedEscape[0], /LmsNav\.back\('settings'\)/);
+  assert.match(advancedEscape[0], /state\.advancedSettings = false/);
+});
+
+test('Advanced LMS settings exits never use browser history-backed LmsNav.back', function () {
+  const app = helpers.read('EchoClassic/HTML/echoclassic/html/js/app.js');
+  const tabbar = helpers.read('EchoClassic/HTML/echoclassic/html/js/chrome/tabbar.js');
+  const settings = settingsSrc();
+  assert.match(app, /ui\.tab === 'settings' && this\.ui\.advancedSettings[\s\S]*LmsNav\.pop\('settings'\)/);
+  assert.match(tabbar, /ui\.advancedSettings[\s\S]*LmsNav\.pop\('settings'\)/);
+  assert.match(settings, /top && top\.advanced[\s\S]*LmsNav\.pop\('settings'\)/);
+  assert.doesNotMatch(app, /advancedSettings[\s\S]{0,180}LmsNav\.back\('settings'\)/);
+  assert.doesNotMatch(tabbar, /advancedSettings[\s\S]{0,180}LmsNav\.back\('settings'\)/);
+  assert.doesNotMatch(settings, /top && top\.advanced[\s\S]{0,140}LmsNav\.back\('settings'\)/);
 });
 
 test('the app-level Theme control calls LmsUi.toggleTheme and never assigns state.dark directly', function () {

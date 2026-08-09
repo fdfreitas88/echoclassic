@@ -41,13 +41,18 @@
   <button v-if="ui.notice" class="notice" :class="ui.noticeKind"
           @click="LmsUi.dismissNotice">{{ ui.notice }}</button>
 
+  <!-- Fica aqui, e nao junto das folhas la embaixo: a barra de selecao e uma
+       linha da coluna .app (flex:0 0 44px), nao uma sobreposicao. A ordem de
+       origem e o que a coloca entre a lista e o mini player, porque
+       .app-header/.app-footer sao display:contents. Ver EC-003. -->
+  <lms-selection-bar></lms-selection-bar>
+
   <footer class="app-footer">
     <lms-miniplayer @full="LmsUi.openPlayer" @queue="ui.queueOpen = true"></lms-miniplayer>
     <lms-tabbar></lms-tabbar>
   </footer>
 
   <lms-queue v-if="ui.queueOpen"></lms-queue>
-  <lms-selection-bar></lms-selection-bar>
   <lms-action-sheet></lms-action-sheet>
   <lms-info-sheet></lms-info-sheet>
   <lms-filter-panel></lms-filter-panel>
@@ -115,7 +120,15 @@
       favKey: function () { return 'fav-' + (this.nav.favourites || []).length; }
     },
     methods: {
-      goBack: function () { LmsNav.back(this.ui.tab); },
+      goBack: function () {
+        if (this.ui.tab === 'settings' && this.ui.advancedSettings) {
+          if (LmsUi.canLeaveAdvancedSettings && !LmsUi.canLeaveAdvancedSettings()) return;
+          if (LmsNav.top('settings') && LmsNav.top('settings').advanced) LmsNav.pop('settings');
+          else this.ui.advancedSettings = false;
+          return;
+        }
+        LmsNav.back(this.ui.tab);
+      },
       reconnect: function () { LmsStore.reconnect(); },
       pickView: function (key) {
         LmsUi.setMusicView(key);

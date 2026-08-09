@@ -1,12 +1,8 @@
 # Continue 3.2.6c — close the settings pass, then AUDIT recon
 
-Start this in a FRESH claude session (`cd ~/Desktop/Claude/LMS/EchoClassic && claude`),
-then type exactly: `Read docs/prompts/continue-3.2.6c.md and execute it.`
-Do not paste this file into the terminal — pasted prompts have been truncated
-twice in this project.
-
-Use the orchestrator agent. All approvals below are granted; do not stop to ask
-except where this file says STOP.
+Archived execution note for the 3.2.6c settings/recon pass. It preserves the
+state and acceptance criteria from that pass, but it is not standing approval to
+run commands or continue stale agent-session workflows.
 
 ## State you inherit (do not re-derive it)
 
@@ -14,14 +10,14 @@ except where this file says STOP.
   settings redesign C1,C3,C4,C5,C6 (c87816c…d880318, local, NOT deployed).
 - 237 tests, 4/4 gates, 125/125 contrast at last check. Fonts DEFERRED — no
   bundling, no .woff2, licensing postponed by decision.
-- Prior session wrote three working files under ~/.claude/jobs/*/tmp/:
+- Prior session produced three working notes:
   settings-redesign-spec.md, phase2-decisions.md, i18n-sweep-notes.md.
 
 ## Step 0 — housekeeping (one commit)
 
-1. Copy the three tmp files above into docs/prompts/ (find them with
-   `ls ~/.claude/jobs/*/tmp/*.md`). If missing, say so and continue — the
-   i18n risks are re-derivable from `git diff 388b075..HEAD -- '*strings.txt' '*settings.js'`.
+1. Keep the three working notes above in docs/prompts/ when they are useful.
+   If missing, the i18n risks are re-derivable from
+   `git diff 388b075..HEAD -- '*strings.txt' '*settings.js'`.
 2. Append the "Agent efficiency rules" block at the bottom of this file to
    CLAUDE.md, verbatim.
 3. Commit: `chore: session working files into docs/prompts, efficiency rules`.
@@ -103,7 +99,7 @@ AWAITING:  deploy (my hands) · R1 go-ahead
 - Briefs, specs, decisions and sweep notes live as files in docs/prompts/;
   delegations pass file PATHS, never inline the contents.
 - Long prompts from the user arrive as files (docs/prompts/*.md), invoked with
-  "Read <path> and execute" — never pasted into the terminal.
+  read from a maintained file rather than pasted into a terminal.
 - Before any deploy with -r, state the silent-death recovery command first.
   ECHO_HOST/ECHO_HTTP_HOST come from the environment, never lms.local.
 - Each landed commit appends one line to docs/prompts/state.md

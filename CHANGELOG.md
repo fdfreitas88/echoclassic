@@ -13,6 +13,30 @@ language at the time. They are left as they were: they describe releases that
 were already published under those notes, and rewriting them would misreport
 what was announced.
 
+## [3.2.7] — 2026-08-09
+
+Private owner-QA candidate. Do not treat this as published until the owner
+accepts the candidate and explicitly approves public release.
+
+### Fixed
+
+- Advanced LMS settings now participates in the Settings navigation stack. The
+  browser Back button, the on-screen "Settings" back button, Escape, and tapping
+  the active Settings tab all return to the Settings list instead of trapping
+  the user or leaving stale Advanced state behind. Verified on desktop and
+  390px mobile viewports. [live]
+- Playback controls recover from the stopped remembered-track state that made
+  Play look clickable while LMS had no usable queue. Echo Classic now requests
+  album metadata in status, preserves the remembered track number, and rebuilds
+  the album queue when a stopped empty or one-track album queue needs to start.
+  Empty-queue Next/Previous now shows visible feedback instead of silently
+  doing nothing. [live] [code]
+
+### Changed
+
+- Sanitized retained engineering notes and local tooling so maintained files no
+  longer contain owner-private machine paths or live server URLs. [code]
+
 ## [3.2.6c] — 2026-08-08
 
 Settings stops being a tree of subscreens, the queue stops painting over

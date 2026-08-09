@@ -192,6 +192,145 @@ test('um default persistido desconhecido cai de volta sem lancar', async functio
   assert.equal(ctx.store.state.lastError, 'No player is connected.');
 });
 
+test('Playback: play reloads the known stopped track when LMS reports no queue', async function () {
+  const loaded = [];
+  const transports = [];
+  let statusCalls = 0;
+  const ctx = storeContext({
+    status: async function () {
+      statusCalls++;
+      return {
+        mode: statusCalls > 1 ? 'play' : 'stop',
+        time: 0, duration: 123, volume: 50,
+        track: {
+          id: 42, title: 'Back Home', artist: 'Zomby Woof',
+          album: 'Riding On A Tear', coverId: null, url: 'file:///track.flac'
+        },
+        sampleRate: 44100, sampleSize: 16, format: 'FLC', live: false
+      };
+    },
+    loadTrack: async function (playerId, trackId) { loaded.push([playerId, trackId]); },
+    songInfo: async function (playerId, trackId) {
+      return { id: trackId, albumId: 7, sampleRate: 44100, sampleSize: 16, format: 'FLC' };
+    },
+    queue: async function () {
+      return { tracks: [track(0)], index: 0, total: 1, shuffle: 0, repeat: 0 };
+    },
+    transport: async function (playerId, cmd) { transports.push([playerId, cmd]); }
+  });
+
+  await ctx.store.init();
+  await ctx.store.refresh();
+  assert.equal(ctx.store.state.mode, 'stop');
+  assert.equal(ctx.store.state.queueTotal, 0);
+  await ctx.store.play();
+  assert.deepEqual(loaded, [['p1', 42]]);
+  assert.deepEqual(transports, [['p1', 'play']]);
+  assert.equal(ctx.store.state.mode, 'play');
+  assert.equal(ctx.store.state.queueTotal, 1);
+});
+
+test('Playback: play rebuilds the album queue for a remembered album track', async function () {
+  const loadedContainers = [];
+  const jumps = [];
+  const loadedTracks = [];
+  let statusCalls = 0;
+  const ctx = storeContext({
+    status: async function () {
+      statusCalls++;
+      return {
+        mode: statusCalls > 1 ? 'play' : 'stop',
+        time: 0, duration: 123, volume: 50,
+        track: {
+          id: 42, title: 'Back Home', artist: 'Zomby Woof',
+          album: 'Riding On A Tear', albumId: 7, trackNum: 10,
+          coverId: null, url: 'file:///track.flac'
+        },
+        sampleRate: 44100, sampleSize: 16, format: 'FLC', live: false
+      };
+    },
+    loadContainer: async function (playerId, key, id) { loadedContainers.push([playerId, key, id]); },
+    queueJump: async function (playerId, index) { jumps.push([playerId, index]); },
+    loadTrack: async function (playerId, trackId) { loadedTracks.push([playerId, trackId]); },
+    songInfo: async function (playerId, trackId) {
+      return { id: trackId, albumId: 7, sampleRate: 44100, sampleSize: 16, format: 'FLC' };
+    },
+    queue: async function () {
+      return { tracks: [track(0), track(1)], index: 1, total: 10, shuffle: 0, repeat: 0 };
+    },
+    transport: async function () { throw new Error('album fallback should not use single-track transport'); }
+  });
+
+  await ctx.store.init();
+  await ctx.store.refresh();
+  assert.equal(ctx.store.state.mode, 'stop');
+  assert.equal(ctx.store.state.queueTotal, 0);
+  await ctx.store.play();
+  assert.deepEqual(loadedContainers, [['p1', 'album_id', 7]]);
+  assert.deepEqual(jumps, [['p1', 9]]);
+  assert.deepEqual(loadedTracks, []);
+  assert.equal(ctx.store.state.mode, 'play');
+  assert.equal(ctx.store.state.queueTotal, 10);
+});
+
+test('Playback: play rebuilds a stopped one-track album queue created by the old fallback', async function () {
+  const loadedContainers = [];
+  const jumps = [];
+  const ctx = storeContext({
+    status: async function () {
+      return {
+        mode: 'stop',
+        time: 0, duration: 123, volume: 50,
+        track: {
+          id: 42, title: 'Back Home', artist: 'Zomby Woof',
+          album: 'Riding On A Tear', albumId: 7, trackNum: 10,
+          coverId: null, url: 'file:///track.flac'
+        },
+        sampleRate: 44100, sampleSize: 16, format: 'FLC', live: false
+      };
+    },
+    loadContainer: async function (playerId, key, id) { loadedContainers.push([playerId, key, id]); },
+    queueJump: async function (playerId, index) { jumps.push([playerId, index]); },
+    songInfo: async function (playerId, trackId) {
+      return { id: trackId, albumId: 7, trackNum: 10, sampleRate: 44100, sampleSize: 16, format: 'FLC' };
+    },
+    queue: async function () {
+      return { tracks: [track(0)], index: 0, total: 1, shuffle: 0, repeat: 0 };
+    },
+    transport: async function () { throw new Error('one-track album fallback should not use plain play'); }
+  });
+
+  await ctx.store.init();
+  await ctx.store.refresh();
+  await ctx.store.loadQueue();
+  assert.equal(ctx.store.state.mode, 'stop');
+  assert.equal(ctx.store.state.queueTotal, 1);
+  await ctx.store.play();
+  assert.deepEqual(loadedContainers, [['p1', 'album_id', 7]]);
+  assert.deepEqual(jumps, [['p1', 9]]);
+});
+
+test('Playback: next/previous on an empty queue gives visible feedback instead of a silent no-op', async function () {
+  const notes = [];
+  let transportCalls = 0;
+  const ctx = storeContext({
+    status: stubStatus,
+    transport: async function () { transportCalls++; },
+    queue: async function () {
+      return { tracks: [], index: 0, total: 0, shuffle: 0, repeat: 0 };
+    }
+  }, {
+    notify: function (msg, kind) { notes.push({ msg: msg, kind: kind }); },
+    setBusy: function () {},
+    state: { defaultPlayer: 'last' }
+  });
+
+  await ctx.store.init();
+  await ctx.store.next();
+  assert.equal(transportCalls, 0);
+  assert.deepEqual(notes, [{ msg: 'The playback queue is empty.', kind: 'error' }]);
+});
+
 /* EC-014. O carimbo do desfazer pertence ao player cuja fila foi destruida.
    setQueueUndo relia state.playerId DEPOIS dos awaits do mutador: trocar de
    player no meio carimbava o player NOVO, e a checagem de dono em undoQueue

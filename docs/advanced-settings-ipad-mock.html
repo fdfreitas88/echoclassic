@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Echo Classic - iPad Advanced Settings Mock</title>
+<style>
+  :root {
+    --screen: #f0f0f5;
+    --pane: #f8f8fb;
+    --card: #ffffff;
+    --text: #111114;
+    --secondary: #6e6e73;
+    --tertiary: #9a9aa0;
+    --hair: rgba(60, 60, 67, .18);
+    --hair-soft: rgba(60, 60, 67, .10);
+    --blue: #007aff;
+    --green: #34c759;
+    --orange: #ff9500;
+    --gray-icon: #9b9ba1;
+    --player: #07080a;
+    --chrome: rgba(248, 248, 248, .92);
+    color-scheme: light;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: #d2d2d7; color: var(--text); }
+  body { padding: 18px; }
+  button, input, select { font: inherit; }
+
+  .device {
+    width: min(1490px, 100%);
+    height: 930px;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 20px;
+    background: var(--screen);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
+    display: grid;
+    grid-template-rows: 22px 50px 1fr 74px 54px;
+  }
+
+  .status {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0 11px;
+    background: var(--chrome);
+    font-size: 12px;
+  }
+  .status strong { font-weight: 700; }
+  .status .time { justify-self: center; }
+  .status .server { justify-self: end; }
+
+  .nav {
+    display: grid;
+    grid-template-columns: 230px 1fr 230px;
+    align-items: center;
+    background: var(--chrome);
+    border-bottom: .5px solid var(--hair);
+    backdrop-filter: blur(18px);
+  }
+  .back, .apply {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 18px;
+    padding: 9px 16px;
+  }
+  .back { justify-self: start; }
+  .back:before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    border-left: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+  }
+  .apply {
+    justify-self: end;
+    font-weight: 600;
+  }
+  .nav-title {
+    justify-self: center;
+    color: var(--blue);
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  .settings {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 302px 1fr;
+    gap: 20px;
+    padding: 18px 20px 24px;
+    overflow: hidden;
+  }
+
+  .rail {
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 20px;
+    background: rgba(248, 248, 251, .86);
+    border: .5px solid rgba(255, 255, 255, .85);
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+  }
+  .rail-top {
+    padding: 18px 14px 10px;
+  }
+  .search {
+    height: 34px;
+    border-radius: 17px;
+    background: rgba(118, 118, 128, .12);
+    color: var(--tertiary);
+    display: grid;
+    grid-template-columns: 24px 1fr 24px;
+    align-items: center;
+    padding: 0 9px;
+    font-size: 16px;
+  }
+  .mag {
+    width: 15px;
+    height: 15px;
+    border: 1.8px solid currentColor;
+    border-radius: 50%;
+    position: relative;
+  }
+  .mag:after {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 1.8px;
+    right: -5px;
+    bottom: -3px;
+    background: currentColor;
+    transform: rotate(45deg);
+  }
+  .mic {
+    justify-self: end;
+    width: 10px;
+    height: 16px;
+    border: 1.7px solid currentColor;
+    border-radius: 7px;
+    position: relative;
+  }
+  .mic:before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    right: -4px;
+    bottom: -5px;
+    height: 7px;
+    border: 1.7px solid currentColor;
+    border-top: 0;
+    border-radius: 0 0 8px 8px;
+  }
+  .mic:after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    bottom: -9px;
+    width: 2px;
+    height: 5px;
+    background: currentColor;
+  }
+  .identity {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 14px 12px;
+  }
+  .server-dot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, #fff 0 10%, transparent 11%),
+      repeating-linear-gradient(90deg, transparent 0 7px, rgba(255,255,255,.55) 7px 9px),
+      linear-gradient(135deg, #50545c, #101216);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.62), 0 1px 3px rgba(0,0,0,.18);
+  }
+  .identity b { display: block; font-size: 17px; }
+  .identity span { display: block; margin-top: 2px; color: var(--secondary); font-size: 12px; line-height: 1.2; }
+  .rail-list {
+    min-height: 0;
+    overflow: auto;
+    padding: 0 12px 16px;
+  }
+  .rail-label {
+    padding: 12px 10px 5px;
+    color: var(--secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  .nav-row {
+    min-height: 42px;
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 8px;
+    border-radius: 19px;
+    color: var(--text);
+    font-size: 16px;
+  }
+  .nav-row.active {
+    background: rgba(118, 118, 128, .20);
+    color: var(--blue);
+  }
+  .nav-row .value {
+    color: var(--secondary);
+    font-size: 14px;
+  }
+  .nav-row.active .value { color: var(--blue); }
+  .glyph {
+    width: 25px;
+    height: 25px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .g-gray { background: linear-gradient(#c6c6cc, #96969d); }
+  .g-blue { background: linear-gradient(#2da8ff, #007aff); }
+  .g-green { background: linear-gradient(#63da75, #30b94d); }
+  .g-orange { background: linear-gradient(#ffb34a, #ff8900); }
+  .g-red { background: linear-gradient(#ff6b6b, #ff3b30); }
+  .g-purple { background: linear-gradient(#ad7bff, #715aff); }
+
+  .detail {
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+    padding: 24px 8px 34px;
+  }
+  .hero {
+    min-height: 144px;
+    margin: 0 12px 28px;
+    border-radius: 24px;
+    background: var(--card);
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 22px 24px;
+  }
+  .hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 31px;
+    background: linear-gradient(#bdbdc4, #8d8d95);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.55);
+  }
+  .hero h1 {
+    margin: 0 0 7px;
+    font-size: 24px;
+    line-height: 1.05;
+  }
+  .hero p {
+    margin: 0;
+    max-width: 640px;
+    color: var(--secondary);
+    font-size: 15px;
+    line-height: 1.28;
+  }
+  .hero-state {
+    color: var(--secondary);
+    text-align: right;
+    font-size: 14px;
+  }
+  .hero-state b {
+    display: block;
+    color: var(--green);
+    font-size: 16px;
+  }
+
+  .group {
+    margin: 0 12px 26px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .group-title {
+    margin: 0 24px 8px;
+    color: var(--secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  .row {
+    min-height: 50px;
+    display: grid;
+    grid-template-columns: minmax(190px, 280px) minmax(0, 1fr);
+    align-items: center;
+    gap: 24px;
+    padding: 9px 18px 9px 18px;
+    position: relative;
+  }
+  .row + .row:before {
+    content: "";
+    position: absolute;
+    left: 18px;
+    right: 0;
+    top: 0;
+    height: .5px;
+    background: var(--hair-soft);
+  }
+  .label {
+    font-size: 17px;
+  }
+  .label small {
+    display: block;
+    margin-top: 2px;
+    color: var(--secondary);
+    font-size: 13px;
+    line-height: 1.22;
+  }
+  .control {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .control.end {
+    justify-content: flex-end;
+    color: var(--secondary);
+  }
+  .chev:after {
+    content: "\203A";
+    color: #c8c8cd;
+    margin-left: 7px;
+    font-size: 22px;
+  }
+  input[type="text"], select {
+    height: 36px;
+    min-width: 0;
+    border: .5px solid rgba(60, 60, 67, .35);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--text);
+    padding: 5px 10px;
+    font-size: 17px;
+  }
+  .short { width: 230px; }
+  .path { width: min(100%, 480px); }
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--blue);
+  }
+  .folder-grid {
+    width: min(100%, 760px);
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) auto 34px auto;
+    align-items: center;
+    gap: 8px;
+  }
+  .folder-heading {
+    color: var(--secondary);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .folder-grid input[type="text"] { width: 100%; }
+  .btn {
+    min-height: 34px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--blue);
+    color: #fff;
+    padding: 6px 13px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .btn.secondary {
+    border: .5px solid var(--hair);
+    background: #f6f6f8;
+    color: var(--blue);
+    font-weight: 500;
+  }
+  .text-btn {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    padding: 6px 2px;
+    font-size: 17px;
+  }
+
+  .mini {
+    display: grid;
+    grid-template-columns: 180px 48px 1fr 214px;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+    background: var(--player);
+    color: #fff;
+  }
+  .transport {
+    display: flex;
+    gap: 22px;
+    align-items: center;
+    font-size: 20px;
+  }
+  .art {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #ececec, #1e1f24);
+  }
+  .track {
+    min-width: 0;
+    text-align: center;
+    color: #e9e9eb;
+    font-size: 14px;
+  }
+  .track .artist { color: #a4a4aa; }
+  .progress {
+    height: 5px;
+    margin-top: 6px;
+    border: .5px solid #666872;
+    background: #25262b;
+  }
+  .queue {
+    justify-self: end;
+    color: #e6e6ea;
+    font-size: 15px;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    align-items: center;
+    background: var(--chrome);
+    border-top: .5px solid var(--hair);
+    color: var(--secondary);
+    font-size: 12px;
+  }
+  .tab {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+  }
+  .tab .icon { font-size: 20px; line-height: 1; }
+  .tab.active { color: var(--blue); }
+
+  @media (max-width: 860px) {
+    body { padding: 0; }
+    .device { height: 100vh; border-radius: 0; }
+    .settings { grid-template-columns: 1fr; overflow: auto; padding: 14px 12px; }
+    .rail { max-height: 360px; }
+    .detail { overflow: visible; padding: 0 0 24px; }
+    .hero { grid-template-columns: 56px 1fr; }
+    .hero-state { display: none; }
+    .row { display: block; }
+    .control { margin-top: 8px; }
+    .folder-grid { grid-template-columns: minmax(0, 1fr) auto 34px; }
+    .folder-heading { grid-column: 1 / -1; }
+    .folder-grid .btn:last-child { grid-column: 2; }
+    .mini { grid-template-columns: 124px 38px 1fr; }
+    .queue { display: none; }
+  }
+</style>
+</head>
+<body>
+<main class="device" aria-label="Echo Classic iPad-style advanced settings mock">
+  <div class="status">
+    <strong>Echo Classic</strong>
+    <span class="time">18:06</span>
+    <span class="server">LMS Server 9.1.1</span>
+  </div>
+
+  <header class="nav">
+    <button class="back">Settings</button>
+    <div class="nav-title">Advanced LMS settings</div>
+    <button class="apply">Apply</button>
+  </header>
+
+  <section class="settings">
+    <aside class="rail" aria-label="Advanced settings navigation">
+      <div class="rail-top">
+        <div class="search" role="search">
+          <span class="mag" aria-hidden="true"></span>
+          <span>Search</span>
+          <span class="mic" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <div class="identity">
+        <div class="server-dot" aria-hidden="true"></div>
+        <div>
+          <b>Music Player</b>
+          <span>Server settings, plugins, network and library</span>
+        </div>
+      </div>
+
+      <div class="rail-list">
+        <div class="rail-label">Server</div>
+        <div class="nav-row active"><span class="glyph g-gray">&#9881;</span><span>Basic Settings</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-blue">&#9835;</span><span>File Types</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-orange">Aa</span><span>Formatting</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-gray">i</span><span>Information</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-purple">&#9716;</span><span>Interface</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-gray">&#9636;</span><span>Logging</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-green">&#9834;</span><span>My Music</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-blue">&#9678;</span><span>Network</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-orange">&#9889;</span><span>Performance</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-red">&#9679;</span><span>Security</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-gray">&#8635;</span><span>Software Updates</span><span class="value"></span></div>
+
+        <div class="rail-label">Plugins</div>
+        <div class="nav-row"><span class="glyph g-gray">&#9638;</span><span>Manage Plugins</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-blue">E</span><span>Echo Classic</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-green">M</span><span>Material Skin</span><span class="value"></span></div>
+        <div class="nav-row"><span class="glyph g-red">Q</span><span>Qobuz</span><span class="value"></span></div>
+      </div>
+    </aside>
+
+    <section class="detail" aria-label="Basic Settings">
+      <article class="hero">
+        <div class="hero-icon" aria-hidden="true">&#9881;</div>
+        <div>
+          <h1>Basic Settings</h1>
+          <p>Manage language, library folders, playlist storage and media scanning for this LMS server.</p>
+        </div>
+        <div class="hero-state"><b>Ready</b>Changes apply to LMS</div>
+      </article>
+
+      <div class="group-title">General</div>
+      <section class="group">
+        <div class="row">
+          <div class="label">Language</div>
+          <div class="control"><select><option>English (British)</option></select></div>
+        </div>
+        <div class="row">
+          <div class="label">Media Library Name</div>
+          <div class="control"><input class="short" type="text" value="musicplayer"></div>
+        </div>
+      </section>
+
+      <div class="group-title">Library</div>
+      <section class="group">
+        <div class="row">
+          <div class="label">Media Folders<small>Folders scanned into the music library.</small></div>
+          <div class="control">
+            <div class="folder-grid">
+              <span class="folder-heading">Folder</span><span></span><span class="folder-heading">Music</span><span></span>
+              <input type="text" value="/Volumes/Disk8TB/Musik/Lossless">
+              <button class="btn secondary">Browse</button>
+              <input type="checkbox" checked aria-label="Music folder">
+              <button class="btn">Rescan</button>
+              <input type="text" value="/Volumes/Disk8TB/Musik/Recent Downloads">
+              <button class="btn secondary">Browse</button>
+              <input type="checkbox" checked aria-label="Music folder">
+              <button class="btn">Rescan</button>
+              <input type="text" value="">
+              <button class="btn secondary">Browse</button>
+              <input type="checkbox" checked aria-label="Music folder">
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="group-title">Playlists</div>
+      <section class="group">
+        <div class="row">
+          <div class="label">Playlists Folder</div>
+          <div class="control">
+            <input class="path" type="text" value="/Users/musicplayer/Music/Playlists">
+            <button class="btn secondary">Browse</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="group-title">Scanning</div>
+      <section class="group">
+        <div class="row">
+          <div class="label">Rescan Media Library<small>Look for new files or rebuild the library index.</small></div>
+          <div class="control">
+            <select><option>Look for new and changed media files</option></select>
+            <button class="btn">Rescan</button>
+            <button class="text-btn">View Previous Scan Details</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="label">Previous Scan</div>
+          <div class="control end chev">Today at 16:42</div>
+        </div>
+      </section>
+    </section>
+  </section>
+
+  <section class="mini" aria-label="Mini player">
+    <div class="transport"><span>&#9668;&#9668;</span><span>&#9654;</span><span>&#9632;</span><span>&#9658;&#9658;</span></div>
+    <div class="art"></div>
+    <div class="track">
+      <div>Take on Me (2015 Remaster)</div>
+      <div class="artist">A-Ha - Hunting High and Low</div>
+      <div class="progress"></div>
+    </div>
+    <div class="queue">&#9776; Playback queue</div>
+  </section>
+
+  <nav class="tabs" aria-label="Echo Classic tabs">
+    <div class="tab"><span class="icon">&#9825;</span><span>Favourites</span></div>
+    <div class="tab"><span class="icon">&#9678;</span><span>Radio</span></div>
+    <div class="tab"><span class="icon">&#9638;</span><span>Apps</span></div>
+    <div class="tab"><span class="icon">&#9836;</span><span>Playlists</span></div>
+    <div class="tab"><span class="icon">&#9835;</span><span>My Music</span></div>
+    <div class="tab active"><span class="icon">&#9788;</span><span>Settings</span></div>
+  </nav>
+</main>
+</body>
+</html>

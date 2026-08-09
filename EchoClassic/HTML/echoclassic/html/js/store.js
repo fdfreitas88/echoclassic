@@ -83,7 +83,8 @@
     if (previous && previous.id === state.np.id) return;
     var current = {
       id: state.np.id, title: state.np.title, artist: state.np.artist,
-      album: state.np.album, albumId: state.np.albumId, coverId: state.np.coverId,
+      album: state.np.album, albumId: state.np.albumId, trackNum: state.np.trackNum,
+      coverId: state.np.coverId,
       playedAt: Date.now()
     };
     state.history = [current].concat(state.history.filter(function (item) {
@@ -294,7 +295,8 @@
     var oldTrackId = state.np.id;
     state.np = {
       id: st.track.id, title: st.track.title, artist: st.track.artist,
-      album: st.track.album, albumId: st.track.albumId, coverId: st.track.coverId, url: st.track.url,
+      album: st.track.album, albumId: st.track.albumId, trackNum: st.track.trackNum,
+      coverId: st.track.coverId, url: st.track.url,
       sampleRate: st.sampleRate, sampleSize: st.sampleSize,
       format: st.format, live: st.live
     };
@@ -307,11 +309,13 @@
             state.trackInfo = info;
             if (info.albumId != null) {
               state.np.albumId = info.albumId;
+              if (info.trackNum) state.np.trackNum = info.trackNum;
               var remembered = state.history.filter(function (item) {
                 return String(item.id) === String(info.id);
               })[0];
               if (remembered) {
                 remembered.albumId = info.albumId;
+                if (info.trackNum) remembered.trackNum = info.trackNum;
                 saveHistory();
               }
             }
@@ -781,9 +785,42 @@
   /* Transporte. Apagadas por engano ao reescrever a fila; o export continuava
      citando-as, o que derrubava o modulo inteiro com "play is not defined". */
   async function transport(cmd) {
-    if (!state.playerId) return;
-    await api.transport(state.playerId, cmd);
+    if (!state.playerId || !state.connected) {
+      var found = await discoverPlayer();
+      if (!found) throw new Error(state.lastError || 'No player is available.');
+      await loadPlayerSettings();
+    }
+    var playerId = state.playerId;
+    if (cmd === 'play' && state.mode === 'stop' &&
+        (!state.queueTotal || (state.queueTotal === 1 && state.np && state.np.albumId != null)) &&
+        state.np && state.np.id != null) {
+      if (state.np.albumId != null && api.loadContainer) {
+        await api.loadContainer(playerId, 'album_id', state.np.albumId);
+        if (state.playerId !== playerId) return;
+        clearQueueUndo();
+        var trackIndex = Math.max(0, (state.np.trackNum || 1) - 1);
+        if (trackIndex && api.queueJump) await api.queueJump(playerId, trackIndex);
+      } else if (!state.queueTotal && api.loadTrack) {
+        await api.loadTrack(playerId, state.np.id);
+        if (state.playerId !== playerId) return;
+        await api.transport(playerId, 'play');
+      } else {
+        await api.transport(playerId, cmd);
+      }
+      if (state.playerId !== playerId) return;
+      await refresh();
+      await loadQueue();
+      return true;
+    }
+    if ((cmd === 'next' || cmd === 'prev') && !state.queueTotal) {
+      global.LmsUi.notify('The playback queue is empty.', 'error', 3500);
+      return false;
+    }
+    await api.transport(playerId, cmd);
+    if (state.playerId !== playerId) return;
     await refresh();
+    await loadQueue();
+    return true;
   }
 
   function play()  { return transport('play'); }
