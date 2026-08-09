@@ -21,8 +21,9 @@ Anything before this file existed is in `git log`. The settings redesign
 - 7977e27 · SqueezeDSP not installed on the server · [measured]
 - d11c6c9 · plugin dependency policy · [code]
 - 3f5b4c1 · EC-001: margin-left:0 on .navbar .segmented, navbar centre group no longer collapses onto Back/Search · [code]
+- b921e63 · EC-014 sub-defects 1+2: undo stamped with the owning player, clearQueue snapshots via fullQueue() + notifyTruncated; sub-defect 3 left alone (does not reproduce) · [measured]
 
-Gates at 6039d19, run once by verify: 237 tests · 4/4 · contrast 125/125 ·
+Gates at b921e63: 243 tests · 4/4 · contrast 125/125 ·
 check-version 3.2.6c. [measured]
 Everything from c87816c onward is still [unverified] — not deployed, not seen
 in a browser. The acceptance walkthrough is what converts it.
