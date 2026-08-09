@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Echo Classic — Material-gap features mockup</title>
+<style>
+  :root{
+    --bg:#efeff4; --card:#fff; --text:#000; --text2:#8e8e93; --sep:#c8c7cc;
+    --blue:#007aff; --green:#4cd964; --red:#c0392b; --track:#e5e5ea;
+    --navbg:rgba(248,248,248,.94); --note:#fff8dc; --notebd:#e6d78a;
+  }
+  body.dark{
+    --bg:#000; --card:#1c1c1e; --text:#fff; --text2:#8d8d93; --sep:#38383a;
+    --track:#39393d; --navbg:rgba(18,18,20,.94); --note:#3a3520; --notebd:#6b6132;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);transition:background .25s,color .25s}
+  .phone{max-width:420px;margin:24px auto;border:1px solid var(--sep);border-radius:24px;overflow:hidden;background:var(--bg);box-shadow:0 10px 40px rgba(0,0,0,.15)}
+  .nav{position:sticky;top:0;z-index:5;display:flex;align-items:center;height:52px;padding:0 12px;background:var(--navbg);backdrop-filter:blur(10px);border-bottom:1px solid var(--sep)}
+  .nav .back{color:var(--blue);font-size:17px;background:none;border:0;cursor:pointer;visibility:hidden;white-space:nowrap;padding:6px 4px}
+  .nav.subnav .back{visibility:visible}
+  .nav .title{flex:1;text-align:center;font-size:17px;font-weight:600;margin-right:70px}
+  .scroll{height:660px;overflow-y:auto;padding-bottom:36px}
+  .sgh{margin:24px 16px 7px;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+  .foot{margin:6px 16px 0;font-size:12.5px;color:var(--text2);line-height:1.45}
+  .group{background:var(--card);border-top:1px solid var(--sep);border-bottom:1px solid var(--sep)}
+  .row{display:flex;align-items:center;min-height:46px;padding:6px 16px;gap:12px;border-bottom:1px solid var(--sep);font-size:16px}
+  .row:last-child{border-bottom:0}
+  .row .lbl{flex:1}
+  .row .sub{font-size:12.5px;color:var(--text2)}
+  .row .val{color:var(--text2);white-space:nowrap}
+  .row .chev{color:#c7c7cc;font-size:20px}
+  .row.tap{cursor:pointer}
+  .sw{position:relative;width:51px;height:31px;border-radius:16px;background:var(--track);border:0;cursor:pointer;transition:background .2s;flex:none}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:left .2s}
+  .sw.on{background:var(--green)}
+  .sw.on::after{left:22px}
+  .seg{display:flex;border:1.5px solid var(--blue);border-radius:8px;overflow:hidden;flex:none}
+  .seg button{background:transparent;color:var(--blue);border:0;padding:5px 12px;font-size:13.5px;cursor:pointer;border-right:1.5px solid var(--blue)}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--blue);color:#fff}
+  .check{color:var(--blue);font-size:17px;font-weight:600;width:22px;text-align:right}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chips button{border:1px solid var(--blue);color:var(--blue);background:transparent;border-radius:14px;padding:5px 12px;font-size:13.5px;cursor:pointer}
+  .chips button.on{background:var(--blue);color:#fff}
+  input[type=range]{flex:1;accent-color:var(--blue)}
+  .note{display:none;margin:8px 16px 0;padding:8px 10px;background:var(--note);border:1px solid var(--notebd);border-radius:8px;font-size:12.5px;line-height:1.45}
+  body.notes .note{display:block}
+  .notebtn{position:fixed;right:18px;bottom:18px;z-index:10;background:var(--blue);color:#fff;border:0;border-radius:20px;padding:10px 16px;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+  .view{display:none}.view.active{display:block}
+  .status{width:9px;height:9px;border-radius:50%;flex:none}
+  .st-on{background:#34c759}.st-off{background:#aeaeb2}.st-sleep{background:#ff9f0a}
+  .destructive{color:var(--red)}
+  .btnrow{display:flex;gap:10px;margin:12px 16px}
+  .btnrow button{flex:1;border:1.5px solid var(--blue);color:var(--blue);background:transparent;border-radius:9px;padding:9px;font-size:15px;cursor:pointer}
+  .btnrow button.primary{background:var(--blue);color:#fff}
+  /* fake classic LMS page */
+  .classic{margin:10px 16px;border:1px solid var(--sep);border-radius:8px;overflow:hidden;font-family:Verdana,Arial,sans-serif}
+  .classic .chead{padding:8px 10px;font-size:13px;font-weight:700}
+  .classic .cbody{padding:10px;font-size:12.5px;line-height:2}
+  .classic .cbody label{display:block}
+  .classic .cbody input[type=text]{width:60%;font-size:12px;padding:2px}
+  .classic .cbody .cbtn{font-size:12px;padding:2px 10px}
+  .classic.raw{background:#d8d8d8;color:#111}
+  .classic.raw .chead{background:#5b7a9d;color:#fff}
+  .classic.raw .cbody{background:#efefef}
+  .classic.themed{background:var(--card);color:var(--text);font-family:inherit}
+  .classic.themed .chead{background:var(--navbg);color:var(--text);border-bottom:1px solid var(--sep)}
+  .classic.themed .cbody{background:var(--card)}
+  .classic.themed .cbody input[type=text]{border:1px solid var(--sep);border-radius:6px;background:var(--bg);color:var(--text);padding:4px 6px}
+  .classic.themed .cbody .cbtn{border:1.5px solid var(--blue);color:var(--blue);background:transparent;border-radius:8px;padding:4px 12px}
+  .eqbands{display:flex;justify-content:space-between;align-items:flex-end;gap:2px;padding:14px 10px 6px;height:170px}
+  .band{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;height:100%;min-width:0}
+  .band .vslider{flex:1;display:flex;align-items:center;justify-content:center;width:100%}
+  .band input[type=range]{width:112px;transform:rotate(-90deg);accent-color:var(--blue)}
+  .band .bl{font-size:9.5px;color:var(--text2);white-space:nowrap}
+  .band.pre .bl{font-weight:600}
+  .eqwrap{transition:opacity .15s}
+  .eqwrap.bypassed{opacity:.35}
+  .mockbar{display:flex;align-items:center;gap:10px;margin:10px 16px;padding:9px 12px;border:1px solid var(--sep);border-radius:12px;background:var(--card)}
+  .mockbar .mart{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,#7a7a80,#3c3c40);flex:none}
+  .mockbar .mt{flex:1;min-width:0}
+  .mockbar .mt b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mockbar .mt span{font-size:11px;color:var(--text2)}
+  .eqic{background:none;border:0;cursor:pointer;color:var(--text2);padding:4px;display:flex;align-items:center}
+  .eqic.on{color:var(--blue)}
+  .rowic{color:var(--blue);display:inline-flex;vertical-align:-3px;margin-left:6px}
+  .holdbtn{border:1.5px solid var(--blue);color:var(--blue);background:transparent;border-radius:9px;padding:7px 14px;font-size:14px;cursor:pointer;user-select:none;-webkit-user-select:none}
+  .holdbtn:active{background:var(--blue);color:#fff}
+  .badge{display:inline-block;border:1px solid var(--text2);border-radius:5px;padding:1px 7px;font-size:11px;color:var(--text2);font-family:ui-monospace,monospace}
+  .badge.eqon{border-color:var(--blue);color:var(--blue)}
+  .sheet{margin:14px 16px;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.25);background:var(--card)}
+  .sheet .shead{padding:12px 16px;font-size:13px;color:var(--text2);text-align:center;border-bottom:1px solid var(--sep)}
+  .bio{margin:10px 16px;font-size:14.5px;line-height:1.6;color:var(--text)}
+</style>
+</head>
+<body>
+<button class="notebtn" onclick="document.body.classList.toggle('notes')">Design notes</button>
+
+<div class="phone">
+  <div class="nav" id="navbar">
+    <button class="back" id="navback" onclick="back()">‹ Back</button>
+    <div class="title" id="navtitle">Feature demos</div>
+  </div>
+  <div class="scroll">
+
+  <!-- ========================= HUB ========================= -->
+  <div class="view active" id="view-hub" data-title="Feature demos">
+    <div class="sgh">Material-gap features, Echo Classic style</div>
+    <div class="group">
+      <div class="row tap" onclick="go('themed')"><span class="lbl">Themed LMS pages <span class="sub">AUDIT-13</span></span><span class="chev">›</span></div>
+      <div class="row tap" onclick="go('alarms')"><span class="lbl">Alarms <span class="sub">AUDIT-14</span></span><span class="chev">›</span></div>
+      <div class="row tap" onclick="go('psettings')"><span class="lbl">Player options — replay gain, DSTM, mix <span class="sub">AUDIT-15 · 03 · 02</span></span><span class="chev">›</span></div>
+      <div class="row tap" onclick="go('selector')"><span class="lbl">Player selector &amp; sync <span class="sub">AUDIT-11 · 16</span></span><span class="chev">›</span></div>
+      <div class="row tap" onclick="go('playlist')"><span class="lbl">Playlist management <span class="sub">AUDIT-17</span></span><span class="chev">›</span></div>
+      <div class="row tap" onclick="go('artist')"><span class="lbl">Artist information <span class="sub">AUDIT-18</span></span><span class="chev">›</span></div>
+      <div class="row tap" onclick="go('eq')"><span class="lbl">Equalizer <span class="sub">AUDIT-20</span></span><span class="chev">›</span></div>
+    </div>
+    <div class="row" style="background:transparent;border:0"><span class="lbl">Dark theme</span><button class="sw" onclick="this.classList.toggle('on');document.body.classList.toggle('dark')"></button></div>
+    <div class="note">Design frozen: nothing here invents new chrome. Every feature lands in the existing vocabulary — context menus, secondary panels, Settings rows — never new main-screen controls. AUDIT-19 (push vs polling) has no UI, so it has no demo.</div>
+  </div>
+
+  <!-- ==================== THEMED LMS PAGES ==================== -->
+  <div class="view" id="view-themed" data-title="Advanced LMS settings" data-back="hub">
+    <div class="sgh" style="margin-top:16px"></div>
+    <div class="group">
+      <div class="row"><span class="lbl">Inherit Echo Classic theme</span><button class="sw on" id="themesw" onclick="toggleThemed()"></button></div>
+    </div>
+    <div class="foot">This page is provided by the server. Echo Classic passes its colours, spacing and type to it.</div>
+
+    <div class="classic themed" id="classicbox">
+      <div class="chead">Basic Settings</div>
+      <div class="cbody">
+        <label>Media Folders&nbsp; <input type="text" value="Music folder"></label>
+        <label>Rescan Music Library&nbsp; <button class="cbtn">Rescan</button></label>
+        <label>Playlists Folder&nbsp; <input type="text" value="Playlists folder"></label>
+        <label><input type="checkbox" checked> Browse artists within genres</label>
+      </div>
+    </div>
+    <div class="note">The money demo — flip the toggle. OFF is today: the Default skin's grey/blue arrives untouched inside Echo Classic's chrome. ON is Material's trick, done our way: the same-origin iframe receives Echo Classic's CSS custom properties (theme, accent, font, radius) on load, so the server page wears the skin — dark theme included (flip Dark on the hub, come back). Pages that are not LMS-served get the OFF treatment plus this caption naming the source.</div>
+  </div>
+
+  <!-- ======================== ALARMS ======================== -->
+  <div class="view" id="view-alarms" data-title="Alarms — Bedroom" data-back="hub">
+    <div class="sgh">Alarms for this player</div>
+    <div class="group">
+      <div class="row"><span class="lbl">07:00 <span class="sub">Weekdays · Rádio Clássica</span></span><button class="sw on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="row"><span class="lbl">09:30 <span class="sub">Sat, Sun · Shuffle: Morning Jazz</span></span><button class="sw" onclick="this.classList.toggle('on')"></button></div>
+      <div class="row tap" onclick="go('alarmedit')"><span class="lbl" style="color:var(--blue)">Add alarm…</span></div>
+    </div>
+    <div class="foot">Alarms ring on the player, not in the browser. Reached from the player's context menu — not from main navigation.</div>
+    <div class="note">AUDIT-14. List = rows with a toggle, exactly the iOS Clock grammar. Tap a row (or Add) to edit. Per player, because that is how LMS stores them.</div>
+  </div>
+
+  <div class="view" id="view-alarmedit" data-title="Edit alarm" data-back="alarms">
+    <div class="sgh">Time</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Time</span><span class="val">07:00</span><span class="chev">›</span></div>
+      <div class="row"><span class="lbl">Repeat</span>
+        <span class="chips">
+          <button class="on" onclick="this.classList.toggle('on')">M</button><button class="on" onclick="this.classList.toggle('on')">T</button>
+          <button class="on" onclick="this.classList.toggle('on')">W</button><button class="on" onclick="this.classList.toggle('on')">T</button>
+          <button class="on" onclick="this.classList.toggle('on')">F</button><button onclick="this.classList.toggle('on')">S</button>
+          <button onclick="this.classList.toggle('on')">S</button>
+        </span>
+      </div>
+    </div>
+    <div class="sgh">Sound</div>
+    <div class="group">
+      <div class="row tap"><span class="lbl">Play</span><span class="val">Rádio Clássica</span><span class="chev">›</span></div>
+      <div class="row"><span class="lbl">Volume</span><input type="range" min="0" max="100" value="45"></div>
+      <div class="row"><span class="lbl">Fade in</span><button class="sw on" onclick="this.classList.toggle('on')"></button></div>
+    </div>
+    <div class="group" style="margin-top:22px">
+      <div class="row tap"><span class="lbl destructive">Delete alarm</span></div>
+    </div>
+  </div>
+
+  <!-- ================== PLAYER OPTIONS ================== -->
+  <div class="view" id="view-psettings" data-title="Playback options" data-back="hub">
+    <div class="sgh">Replay gain</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Volume adjustment</span>
+        <span class="seg"><button onclick="segsel(this)">Off</button><button class="on" onclick="segsel(this)">Track</button><button onclick="segsel(this)">Album</button><button onclick="segsel(this)">Smart</button></span>
+      </div>
+    </div>
+    <div class="foot">Evens out loudness between recordings, on this player.</div>
+
+    <div class="sgh">Don't stop the music</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Keep playing similar music</span><button class="sw" id="dstmsw" onclick="toggleDstm()"></button></div>
+      <div id="dstmrows" style="display:none">
+        <div class="row tap" onclick="sel(this,'.dck')"><span class="lbl">Similar by artist</span><span class="check dck">✓</span></div>
+        <div class="row tap" onclick="sel(this,'.dck')"><span class="lbl">Similar by genre</span><span class="check dck"></span></div>
+        <div class="row tap" onclick="sel(this,'.dck')"><span class="lbl">Random from library</span><span class="check dck"></span></div>
+      </div>
+    </div>
+    <div class="foot" id="dstmfoot">When the queue ends, playback stops.</div>
+
+    <div class="sgh">Random mix</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Start a mix of</span>
+        <span class="seg"><button class="on" onclick="segsel(this)">Songs</button><button onclick="segsel(this)">Albums</button><button onclick="segsel(this)">Artists</button><button onclick="segsel(this)">Year</button></span>
+      </div>
+      <div class="btnrow"><button class="primary">Start mix</button></div>
+    </div>
+    <div class="foot">Unavailable states: if the server lacks the plugin, the section shows one line saying so — never a dead control.</div>
+    <div class="note">AUDIT-15/03/02 live together in one "Playback options" sheet, opened from the player's ⋯ menu. DSTM is the crossfade pattern again: one toggle, providers revealed beneath, consequence stated when off. Replay gain is a segmented — four fixed LMS values, no list. Mix types come from the server; the segmented renders what exists.</div>
+  </div>
+
+  <!-- ================== SELECTOR & SYNC ================== -->
+  <div class="view" id="view-selector" data-title="Players" data-back="hub">
+    <div class="sgh">Choose player</div>
+    <div class="group">
+      <div class="row tap" onclick="sel(this,'.pck')"><span class="status st-on"></span><span class="lbl">SqueezeLite <span class="sub">Playing · Blackened</span></span><span class="check pck">✓</span></div>
+      <div class="row tap" onclick="sel(this,'.pck')"><span class="status st-on"></span><span class="lbl">Bedroom <span class="sub">Paused</span></span><span class="check pck"></span></div>
+      <div class="row tap" onclick="sel(this,'.pck')"><span class="status st-sleep"></span><span class="lbl">Office <span class="sub">Sleeping</span></span><span class="check pck"></span></div>
+      <div class="row tap" onclick="sel(this,'.pck')"><span class="status st-off"></span><span class="lbl">Patio <span class="sub">Disconnected</span></span><span class="check pck"></span></div>
+    </div>
+    <div class="sgh">Synchronization</div>
+    <div class="group">
+      <div class="row tap" onclick="go('sync')"><span class="lbl">Synchronize players…</span><span class="val">SqueezeLite + Bedroom</span><span class="chev">›</span></div>
+      <div class="row"><span class="lbl">Linked volume</span><button class="sw on" onclick="this.classList.toggle('on')"></button></div>
+    </div>
+    <div class="foot">Synced players play the same music in step. Linked volume moves them together.</div>
+    <div class="note">AUDIT-11 + 16. This sheet opens from the player name in the top bar — one tap from anywhere, unobtrusive with a single player (the name simply isn't a menu then). Status colours: green playing/on, amber sleeping, grey disconnected. Sync lives here, not in Settings, because it is an operating action.</div>
+  </div>
+
+  <div class="view" id="view-sync" data-title="Synchronize" data-back="selector">
+    <div class="sgh">Play in sync with SqueezeLite</div>
+    <div class="group">
+      <div class="row"><span class="status st-on"></span><span class="lbl">Bedroom</span><button class="sw on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="row"><span class="status st-sleep"></span><span class="lbl">Office</span><button class="sw" onclick="this.classList.toggle('on')"></button></div>
+      <div class="row"><span class="status st-off"></span><span class="lbl">Patio <span class="sub">Disconnected</span></span><button class="sw" disabled></button></div>
+    </div>
+    <div class="foot">Turning a player on joins it to this group and it starts playing the current queue.</div>
+    <div class="note">Sync as toggles — your mutex rule again: joining a group IS a binary per player, so it is a switch, not a multi-select dialog with OK/Cancel. Disconnected players show a disabled switch, not a hidden row.</div>
+  </div>
+
+  <!-- ================== PLAYLIST MGMT ================== -->
+  <div class="view" id="view-playlist" data-title="Morning Jazz" data-back="hub">
+    <div class="sheet">
+      <div class="shead">Playlist · 32 songs · 2 h 10 min</div>
+      <div class="row tap"><span class="lbl">Play</span></div>
+      <div class="row tap"><span class="lbl">Play next</span></div>
+      <div class="row tap"><span class="lbl">Add to queue</span></div>
+      <div class="row tap"><span class="lbl">Rename…</span></div>
+      <div class="row tap"><span class="lbl">Remove duplicates <span class="sub">2 found</span></span></div>
+      <div class="row tap"><span class="lbl destructive">Delete playlist…</span></div>
+    </div>
+    <div class="sgh">And on any song or album, anywhere</div>
+    <div class="sheet">
+      <div class="shead">Blackened · Metallica</div>
+      <div class="row tap"><span class="lbl">Add to playlist</span><span class="chev">›</span></div>
+      <div class="row tap" style="padding-left:32px"><span class="lbl">Morning Jazz</span></div>
+      <div class="row tap" style="padding-left:32px"><span class="lbl">Metal essentials</span></div>
+      <div class="row tap" style="padding-left:32px"><span class="lbl" style="color:var(--blue)">New playlist…</span></div>
+    </div>
+    <div class="note">AUDIT-17. All CRUD arrives through the action sheet that already exists — zero new chrome. Playlist sheet gains Rename / Remove duplicates / Delete; every song and album sheet gains "Add to playlist" with the list plus "New playlist…" inline. Deletion confirms, in red, per the existing destructive pattern.</div>
+  </div>
+
+  <!-- ================== ARTIST INFO ================== -->
+  <div class="view" id="view-artist" data-title="Miles Davis" data-back="hub">
+    <div class="sgh">From the artist's context menu</div>
+    <div class="group">
+      <div class="row"><span class="lbl">About this artist</span>
+        <span class="seg"><button class="on" onclick="segsel(this)">Biography</button><button onclick="segsel(this)">Similar</button></span>
+      </div>
+    </div>
+    <div class="bio">Miles Dewey Davis III (1926–1991) was an American trumpeter, bandleader, and composer. Among the most influential figures in the history of jazz, he was at the forefront of cool jazz, hard bop, modal jazz and fusion…</div>
+    <div class="foot">Provided by the Music and Artist Information plugin. Text in the server's language.</div>
+    <div class="group" style="margin-top:16px">
+      <div class="row tap"><span class="lbl">Lyrics for the current song</span><span class="chev">›</span></div>
+    </div>
+    <div class="note">AUDIT-18. Only rendered when the MAI plugin answers — no plugin, no row, no dead ends. Biography/Similar as a segmented inside one panel; lyrics reachable from Now Playing's ⋯ menu. Text is content, so it scrolls in the reading style, not in rows.</div>
+  </div>
+
+  <!-- ==================== EQUALIZER (pro) ==================== -->
+  <div class="view" id="view-eq" data-title="Equalizer — SqueezeLite" data-back="hub">
+    <div class="sgh">In the player and the queue</div>
+    <div class="mockbar">
+      <div class="mart"></div>
+      <div class="mt"><b>Blackened</b><span>Metallica — …And Justice For All</span></div>
+      <button class="eqic on" id="ic1" title="Equalizer" onclick="void(0)"><svg width="20" height="20" viewBox="0 0 20 20"><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="3" x2="4" y2="17"/><line x1="10" y1="3" x2="10" y2="17"/><line x1="16" y1="3" x2="16" y2="17"/></g><g fill="currentColor"><circle cx="4" cy="12" r="2.6"/><circle cx="10" cy="6" r="2.6"/><circle cx="16" cy="10" r="2.6"/></g></svg></button>
+      <button class="sw on" style="transform:scale(.8)" onclick="eqicToggle(this,'ic1')"></button>
+    </div>
+    <div class="mockbar">
+      <div class="mt"><b>Playback queue</b><span>21 tracks · 2 h 4 min remaining</span></div>
+      <button class="eqic on" id="ic2" title="Equalizer" onclick="void(0)"><svg width="20" height="20" viewBox="0 0 20 20"><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="3" x2="4" y2="17"/><line x1="10" y1="3" x2="10" y2="17"/><line x1="16" y1="3" x2="16" y2="17"/></g><g fill="currentColor"><circle cx="4" cy="12" r="2.6"/><circle cx="10" cy="6" r="2.6"/><circle cx="16" cy="10" r="2.6"/></g></svg></button>
+      <button class="sw on" style="transform:scale(.8)" onclick="eqicToggle(this,'ic2')"></button>
+    </div>
+    <div class="foot">The icon opens this screen; the switch beside it turns EQ on and off without opening anything. Blue icon = EQ in the signal path; grey = untouched.</div>
+    <div class="note">The EQ surfaces exactly where listening happens — the player bars and the queue header — as an icon in the skin's slider glyph plus a small switch, your icon+toggle spec verbatim. It is a shortcut, not a new home: both land on this one screen, so there is still a single source of truth.</div>
+
+    <div class="sgh"></div>
+    <div class="group">
+      <div class="row"><span class="lbl">Equalizer</span><button class="sw on" id="eqsw" onclick="toggleEq()"></button></div>
+      <div class="row"><span class="lbl">Compare with original</span>
+        <button class="holdbtn" onmousedown="bypass(1)" onmouseup="bypass(0)" onmouseleave="bypass(0)" ontouchstart="bypass(1)" ontouchend="bypass(0)">Hold to bypass</button>
+      </div>
+    </div>
+    <div class="foot" id="eqfoot">Applied on the server, per player. Release the button to hear the EQ again.</div>
+    <div class="note">Bypass as HOLD, not a checkbox: A/B comparing is momentary by nature — you press, you listen, you release. No state to forget switched off, which is exactly the kind of stale hidden state the redesign is removing elsewhere.</div>
+
+    <div class="sgh" id="presetgh">Preset</div>
+    <div class="group" id="presetlist">
+      <div class="row tap" onclick="go('eqpresets')"><span class="lbl">Preset</span><span class="val" id="curpreset">Rock</span><span class="chev">›</span></div>
+    </div>
+
+    <div class="group" style="margin-top:8px">
+      <div class="row"><span class="lbl">Choose preset automatically</span><button class="sw" id="gensw" onclick="toggleGenre()"></button></div>
+    </div>
+    <div class="sgh" id="genregh" style="display:none">Rules</div>
+    <div class="group" id="genrelist" style="display:none">
+      <div class="row tap" onclick="go('eqrules')"><span class="lbl">EQ rules</span><span class="val">6 rules</span><span class="chev">›</span></div>
+    </div>
+
+    <div class="sgh">Bands</div>
+    <div class="group eqwrap" id="eqwrap">
+      <div class="eqbands">
+        <div class="band pre"><div class="vslider"><input type="range" min="-12" max="12" value="-2" oninput="eqEdited()"></div><span class="bl">Pre</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="4" oninput="eqEdited()"></div><span class="bl">60</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="3" oninput="eqEdited()"></div><span class="bl">120</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="2" oninput="eqEdited()"></div><span class="bl">300</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="1" oninput="eqEdited()"></div><span class="bl">500</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="0" oninput="eqEdited()"></div><span class="bl">1k</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="0" oninput="eqEdited()"></div><span class="bl">2k</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="1" oninput="eqEdited()"></div><span class="bl">5k</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="2" oninput="eqEdited()"></div><span class="bl">8k</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="4" oninput="eqEdited()"></div><span class="bl">10k</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="5" oninput="eqEdited()"></div><span class="bl">12k</span></div>
+        <div class="band"><div class="vslider"><input type="range" min="-12" max="12" value="2" oninput="eqEdited()"></div><span class="bl">16k</span></div>
+      </div>
+      <div class="foot" style="margin:0 16px 10px;text-align:center">−12 dB … +12 dB · Pre = preamp headroom</div>
+      <div class="row" id="saverow" style="display:none"><span class="lbl" style="color:var(--blue)">Save as preset…</span><span class="val">edited</span></div>
+    </div>
+    <div class="note">Sliders are LIVE — the current curve is always visible and directly draggable, no separate editor screen. Touch a slider and the preset row flips to "Custom (edited)" with a Save row beneath: nothing is lost silently, nothing needs a mode. Preamp sits with the bands (it is one), left, like the reference.</div>
+
+    <div class="sgh">This song</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Blackened <span class="sub">Metallica · Rock</span></span>
+        <span><span class="badge">44,1 kHz</span> <span class="badge">16 bits</span> <span class="badge eqon" id="eqbadge">EQ</span></span>
+      </div>
+      <div class="row"><span class="lbl">Remember this EQ for this song</span><button class="sw" onclick="this.classList.toggle('on')"></button></div>
+    </div>
+    <div class="foot">Priority when several rules apply: song › album › artist › genre › folder › year › preset. The badge always names what is actually active.</div>
+
+    <div class="group" style="margin-top:14px">
+      <div class="row tap" onclick="go('eqctx')"><span class="lbl">Set EQ from any album, artist, genre…</span><span class="chev">›</span></div>
+      <div class="row tap" onclick="go('eqadv')"><span class="lbl">Advanced</span><span class="val">Filters, dynamic bass</span><span class="chev">›</span></div>
+    </div>
+    <div class="note">AUDIT-20. Everything the reference EQ has, in Echo Classic grammar: graphic bands + preamp live on the main screen; per-track EQ is one toggle on the song, not a Save/Remove button pair; bypass is momentary; the surgical tools (HPF/LPF/notch, Q, dynamic bass, mono) are real but live behind Advanced — present for the hi-fi user, invisible until wanted.</div>
+  </div>
+
+  <!-- ==================== EQ PRESETS ==================== -->
+  <div class="view" id="view-eqpresets" data-title="Preset" data-back="eq">
+    <div class="sgh">Built in</div>
+    <div class="group">
+      <div class="row tap" onclick="pickPreset(this,'Flat')"><span class="lbl">Flat</span><span class="check eck"></span></div>
+      <div class="row tap" onclick="pickPreset(this,'Rock')"><span class="lbl">Rock</span><span class="check eck">✓</span></div>
+      <div class="row tap" onclick="pickPreset(this,'Classical')"><span class="lbl">Classical</span><span class="check eck"></span></div>
+      <div class="row tap" onclick="pickPreset(this,'Jazz')"><span class="lbl">Jazz</span><span class="check eck"></span></div>
+      <div class="row tap" onclick="pickPreset(this,'Loudness')"><span class="lbl">Loudness</span><span class="check eck"></span></div>
+      <div class="row tap" onclick="pickPreset(this,'Bass Booster')"><span class="lbl">Bass Booster</span><span class="check eck"></span></div>
+    </div>
+    <div class="sgh">Custom</div>
+    <div class="group">
+      <div class="row tap" onclick="pickPreset(this,'My Vinyl Warm')"><span class="lbl">My Vinyl Warm</span><span class="check eck"></span></div>
+      <div class="row"><span class="lbl sub" style="flex:1">Rename · Delete on swipe, or via ⋯</span></div>
+      <div class="row tap"><span class="lbl" style="color:var(--blue)">New preset from current bands…</span></div>
+    </div>
+    <div class="foot">Custom presets can be chosen by genre rules too.</div>
+  </div>
+
+  <!-- ==================== EQ RULES ==================== -->
+  <div class="view" id="view-eqrules" data-title="EQ rules" data-back="eq">
+    <div class="sgh">Most specific wins</div>
+    <div class="group">
+      <div class="row tap"><span class="lbl">Blackened <span class="sub">Song</span></span><span class="val">Custom</span><span class="chev">›</span></div>
+      <div class="row tap"><span class="lbl">Kind of Blue <span class="sub">Album</span></span><span class="val">Jazz</span><span class="chev">›</span></div>
+      <div class="row tap"><span class="lbl">Metallica <span class="sub">Artist</span></span><span class="val">Loudness</span><span class="chev">›</span></div>
+      <div class="row tap"><span class="lbl">Classical <span class="sub">Genre</span></span><span class="val">Flat</span><span class="chev">›</span></div>
+      <div class="row tap"><span class="lbl">/Vinyl Rips <span class="sub">Folder</span></span><span class="val">My Vinyl Warm</span><span class="chev">›</span></div>
+      <div class="row tap"><span class="lbl">Before 1970 <span class="sub">Year</span></span><span class="val">Flat</span><span class="chev">›</span></div>
+      <div class="row tap"><span class="lbl" style="color:var(--blue)">Add rule…</span></div>
+    </div>
+    <div class="foot">Song › album › artist › genre › folder › year. When nothing matches, the manual preset applies. Swipe a rule to delete it.</div>
+    <div class="note">One flat list for every rule, whatever its type — not one screen per type. The sub-label says what kind of rule it is; the priority is fixed by specificity, so there is nothing to reorder and no way to build a contradiction.</div>
+  </div>
+
+  <!-- ==================== EQ FROM CONTEXT ==================== -->
+  <div class="view" id="view-eqctx" data-title="EQ everywhere" data-back="eq">
+    <div class="sgh">In every context menu</div>
+    <div class="sheet">
+      <div class="shead">Kind of Blue · Miles Davis · Album</div>
+      <div class="row tap"><span class="lbl">Play</span></div>
+      <div class="row tap"><span class="lbl">Add to queue</span></div>
+      <div class="row tap"><span class="lbl">Add to playlist</span><span class="chev">›</span></div>
+      <div class="row tap"><span class="lbl">Equalizer</span><span class="val">Jazz</span><span class="chev">›</span></div>
+    </div>
+    <div class="sheet">
+      <div class="shead">Classical · Genre</div>
+      <div class="row tap"><span class="lbl">Play all</span></div>
+      <div class="row tap"><span class="lbl">Equalizer</span><span class="val">Flat</span><span class="chev">›</span></div>
+    </div>
+    <div class="foot">The same Equalizer row appears on songs, albums, artists, genres, folders and years. Choosing a preset there creates the rule; "None" removes it.</div>
+
+    <div class="sgh">In the lists</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Kind of Blue <span class="rowic"><svg width="13" height="13" viewBox="0 0 20 20"><g stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="3" x2="4" y2="17"/><line x1="10" y1="3" x2="10" y2="17"/><line x1="16" y1="3" x2="16" y2="17"/></g><g fill="currentColor"><circle cx="4" cy="12" r="3"/><circle cx="10" cy="6" r="3"/><circle cx="16" cy="10" r="3"/></g></svg></span><br><span class="sub">Miles Davis · 1959</span></span></div>
+      <div class="row"><span class="lbl">Milestones<br><span class="sub">Miles Davis · 1958</span></span></div>
+    </div>
+    <div class="foot">A small EQ mark on rows that carry their own rule — you can see at a glance which albums sound different on purpose.</div>
+    <div class="note">Granularity without clutter: no new buttons on any list — the action sheet that already exists gains one row, and rows with a rule get a 13px mark. Everything created here shows up in the single EQ rules list.</div>
+  </div>
+
+  <!-- ==================== EQ ADVANCED ==================== -->
+  <div class="view" id="view-eqadv" data-title="Advanced" data-back="eq">
+    <div class="sgh">Dynamic bass</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Dynamic bass control</span><button class="sw" onclick="reveal(this,'dbrows')"></button></div>
+      <div id="dbrows" style="display:none">
+        <div class="row"><span class="lbl">Amount</span><input type="range" min="0" max="15" value="6"><span class="val">+6 dB</span></div>
+        <div class="row"><span class="lbl">Below</span>
+          <span class="seg"><button onclick="segsel(this)">80 Hz</button><button class="on" onclick="segsel(this)">140 Hz</button><button onclick="segsel(this)">200 Hz</button></span>
+        </div>
+      </div>
+    </div>
+    <div class="foot">Lifts low frequencies more at low volume, like the reference's loudness curve.</div>
+
+    <div class="sgh">Filters</div>
+    <div class="group">
+      <div class="row"><span class="lbl">High pass</span><button class="sw" onclick="reveal(this,'hprows')"></button></div>
+      <div id="hprows" style="display:none">
+        <div class="row"><span class="lbl">Frequency</span><input type="range" min="20" max="400" value="100" oninput="this.nextElementSibling.textContent=this.value+' Hz'"><span class="val">100 Hz</span></div>
+        <div class="row"><span class="lbl">Q</span>
+          <span class="seg"><button onclick="segsel(this)">0.5</button><button class="on" onclick="segsel(this)">0.7</button><button onclick="segsel(this)">1.0</button></span>
+        </div>
+      </div>
+      <div class="row"><span class="lbl">Low pass</span><button class="sw" onclick="reveal(this,'lprows')"></button></div>
+      <div id="lprows" style="display:none">
+        <div class="row"><span class="lbl">Frequency</span><input type="range" min="4000" max="20000" value="10000" oninput="this.nextElementSibling.textContent=(this.value/1000)+' kHz'"><span class="val">10 kHz</span></div>
+        <div class="row"><span class="lbl">Q</span>
+          <span class="seg"><button class="on" onclick="segsel(this)">0.5</button><button onclick="segsel(this)">0.7</button><button onclick="segsel(this)">1.0</button></span>
+        </div>
+      </div>
+      <div class="row"><span class="lbl">Notch</span><button class="sw" onclick="reveal(this,'ntrows')"></button></div>
+      <div id="ntrows" style="display:none">
+        <div class="row"><span class="lbl">Frequency</span><input type="range" min="100" max="10000" value="1000" oninput="this.nextElementSibling.textContent=this.value+' Hz'"><span class="val">1000 Hz</span></div>
+        <div class="row"><span class="lbl">Width</span>
+          <span class="seg"><button onclick="segsel(this)">Narrow</button><button class="on" onclick="segsel(this)">Medium</button><button onclick="segsel(this)">Wide</button></span>
+        </div>
+      </div>
+    </div>
+    <div class="foot">Each filter is off until switched on — a filter that is off has no rows and no effect.</div>
+
+    <div class="sgh">Signal</div>
+    <div class="group">
+      <div class="row"><span class="lbl">Treble enhance</span><button class="sw" onclick="this.classList.toggle('on')"></button></div>
+      <div class="row"><span class="lbl">Stereo to mono</span><button class="sw" onclick="this.classList.toggle('on')"></button></div>
+    </div>
+
+    <div class="group" style="margin-top:18px">
+      <div class="row tap"><span class="lbl destructive">Reset equalizer…</span></div>
+    </div>
+    <div class="foot">Returns bands, filters and signal options to Flat. Presets are kept.</div>
+    <div class="note">The reference crams HPF/LPF/notch/Q/mono onto the main panel; Echo Classic keeps them one level down, each behind its own toggle (your disclosure rule), with plain-word values (Narrow/Medium/Wide) where the reference shows raw Q numbers — and exact numbers still available where they matter. Q as segmented presets, not a free-text field. [Unverified] every control here must map to what SqueezeDSP actually exposes; the audit prunes anything the backend cannot do.</div>
+  </div>
+
+  </div><!-- /scroll -->
+</div><!-- /phone -->
+
+<script>
+var current='hub';
+function go(v){
+  current=v;
+  document.querySelectorAll('.view').forEach(function(x){x.classList.remove('active')});
+  var el=document.getElementById('view-'+v);
+  el.classList.add('active');
+  var nav=document.getElementById('navbar');
+  document.getElementById('navtitle').textContent=el.getAttribute('data-title');
+  if(v==='hub'){nav.classList.remove('subnav');}
+  else{
+    nav.classList.add('subnav');
+    var b=el.getAttribute('data-back')||'hub';
+    document.getElementById('navback').textContent='‹ '+document.getElementById('view-'+b).getAttribute('data-title');
+  }
+  document.querySelector('.scroll').scrollTop=0;
+}
+function back(){
+  var el=document.getElementById('view-'+current);
+  go(el.getAttribute('data-back')||'hub');
+}
+function toggleThemed(){
+  var on=document.getElementById('themesw').classList.toggle('on');
+  var box=document.getElementById('classicbox');
+  box.className='classic '+(on?'themed':'raw');
+}
+function toggleEq(){
+  var on=document.getElementById('eqsw').classList.toggle('on');
+  syncGenreSections();
+  document.getElementById('eqwrap').style.opacity=on?'1':'.35';
+  document.getElementById('eqbadge').style.display=on?'inline-block':'none';
+  document.getElementById('eqfoot').textContent=on
+    ?'Applied on the server, per player. Release the button to hear the EQ again.'
+    :'Off: the signal reaches the DAC untouched — the badge row shows only rate and bits.';
+}
+function toggleGenre(){
+  document.getElementById('gensw').classList.toggle('on');
+  syncGenreSections();
+}
+function syncGenreSections(){
+  var eqOn=document.getElementById('eqsw').classList.contains('on');
+  var gOn=document.getElementById('gensw').classList.contains('on');
+  document.getElementById('presetgh').style.display=(eqOn&&!gOn)?'block':'none';
+  document.getElementById('presetlist').style.display=(eqOn&&!gOn)?'block':'none';
+  document.getElementById('genregh').style.display=(eqOn&&gOn)?'block':'none';
+  document.getElementById('genrelist').style.display=(eqOn&&gOn)?'block':'none';
+}
+function bypass(on){
+  document.getElementById('eqwrap').classList.toggle('bypassed',!!on);
+  var b=document.getElementById('eqbadge');
+  b.textContent=on?'bypass':'EQ';
+}
+function eqEdited(){
+  document.getElementById('curpreset').textContent='Custom (edited)';
+  document.getElementById('saverow').style.display='flex';
+}
+function pickPreset(row,name){
+  sel(row,'.eck');
+  document.getElementById('curpreset').textContent=name;
+  document.getElementById('saverow').style.display='none';
+  back();
+}
+function reveal(sw,id){
+  var on=sw.classList.toggle('on');
+  document.getElementById(id).style.display=on?'block':'none';
+}
+function eqicToggle(sw,iconId){
+  var on=sw.classList.toggle('on');
+  document.getElementById(iconId).classList.toggle('on',on);
+}
+function toggleDstm(){
+  var on=document.getElementById('dstmsw').classList.toggle('on');
+  document.getElementById('dstmrows').style.display=on?'block':'none';
+  document.getElementById('dstmfoot').textContent=on
+    ?'When the queue ends, Echo Classic keeps playing music like what was on.'
+    :'When the queue ends, playback stops.';
+}
+function segsel(el){
+  el.parentNode.querySelectorAll('button').forEach(function(b){b.classList.remove('on')});
+  el.classList.add('on');
+}
+function sel(row,cls){
+  row.parentNode.querySelectorAll(cls).forEach(function(c){c.textContent=''});
+  row.querySelector(cls).textContent='✓';
+}
+</script>
+</body>
+</html>

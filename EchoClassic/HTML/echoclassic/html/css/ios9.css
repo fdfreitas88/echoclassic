@@ -312,6 +312,7 @@ button:disabled{opacity:.35}
 .navbar .sp{flex:1}
 .navbar .r{z-index:var(--z-bar-local);display:flex;gap:16px;align-items:center}
 .navbar .theme,.navbar .search{width:44px;height:44px;padding:11px}
+.navbar .nav-apply{min-height:44px;padding:0 4px;color:var(--accent);font-size:17px;font-weight:600}
 .navbar .cancel{min-height:44px;display:flex;align-items:center}
 .navbar .pickttl{color:var(--accent)}
 .ic{width:22px;height:22px;display:block;fill:none;stroke:var(--accent);stroke-width:1.7;
@@ -702,11 +703,6 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .settings{background:var(--group-page);min-height:100%;padding:18px 0;width:100%}
 .settings-scroller{overflow-x:hidden}
 .advanced-settings-shell{display:flex;height:100%;min-height:100%;flex-direction:column;padding:0;overflow:hidden}
-.advanced-settings-toolbar{position:sticky;top:0;z-index:var(--z-chrome);height:52px;flex:0 0 52px;
-  display:grid;grid-template-columns:minmax(88px,1fr) auto minmax(88px,1fr);align-items:center;
-  padding:0 10px;background:var(--chrome);border-bottom:.5px solid var(--hair)}
-.advanced-settings-toolbar strong{text-align:center;font-size:15px}
-.advanced-back{justify-self:start;min-width:88px;height:44px;text-align:left;color:var(--accent);font-size:15px}
 .advanced-settings-frame{display:block;width:100%;min-height:0;
   flex:1;border:0;background:var(--content);color-scheme:light dark}
 .sgroup{background:var(--group-bg);border-top:.5px solid var(--hair);border-bottom:.5px solid var(--hair);margin-bottom:26px}
@@ -1381,8 +1377,16 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .info-sub{font-size:14px;color:var(--text2);padding:4px 16px 20px}
 .info-content .srow .v{max-width:62%;white-space:normal;text-align:right}
 .muted{color:var(--text2);font-size:13px}
-.selection-bar{position:fixed;z-index:var(--z-sheet);left:0;right:0;
-  bottom:calc(var(--mini) + var(--tabbar));height:44px;background:var(--chrome);
+/* Linha real da coluna .app, nao sobreposicao (EC-003). Como `position:fixed`
+   a barra saia do fluxo: a .workspace nunca encolhia, o .scroller passava por
+   baixo dela e a ultima linha da lista ficava meio coberta -- o clique na
+   caixa de selecao caia no botao Cancel e destruia a selecao inteira. Com
+   `flex:0 0 44px` os 44px sao reservados na coluna, entao o rail e o scroller
+   terminam acima da barra. Depende da ordem no template: o
+   <lms-selection-bar> precisa vir antes do <footer class="app-footer">
+   (app.js), porque .app-header/.app-footer sao display:contents e quem
+   posiciona de fato e a ordem de origem dentro de .app. */
+.selection-bar{flex:0 0 44px;height:44px;background:var(--chrome);
   border-top:.5px solid var(--hair);display:flex;align-items:center;justify-content:flex-start;gap:16px;
   padding:0 12px;font-size:13px}
 .selection-bar button{height:44px;color:var(--accent)}

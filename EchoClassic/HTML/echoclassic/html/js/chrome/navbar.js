@@ -59,7 +59,8 @@ Vue.component('lms-navbar', {
 
     <span class="sp"></span>
     <span class="r">
-      <button ref="searchButton" class="search pointer" title="Search" aria-label="Search" @click="open">
+      <button v-if="ui.advancedSettings" class="nav-apply pointer" @click="applyAdvanced">Apply</button>
+      <button v-else ref="searchButton" class="search pointer" title="Search" aria-label="Search" @click="open">
         <svg class="ic" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="M16 16l5.5 5.5"/></svg>
       </button>
     </span>
@@ -77,6 +78,9 @@ Vue.component('lms-navbar', {
       LmsUi.openSearch();
       var self = this;
       this.$nextTick(function () { if (self.$refs.q) self.$refs.q.focus(); });
+    },
+    applyAdvanced: function () {
+      if (LmsUi.applyAdvancedSettings) LmsUi.applyAdvancedSettings();
     },
     /* Fechar a busca sem devolver o foco deixava o teclado no <body> e a
        navegacao recomecava do topo da pagina. */

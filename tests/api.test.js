@@ -53,6 +53,31 @@ test('a fila pede a tag e, e o album_id volta como albumId sem quebrar faixas se
   assert.equal(q.tracks[1].albumId, null, 'faixa sem album_id nao pode virar undefined nem lancar');
 });
 
+test('status pede album_id e tracknum para reconstruir playback de uma faixa lembrada', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'status') {
+      return {
+        mode: 'stop', time: 0,
+        playlist_cur_index: 0,
+        playlist_loop: [{
+          id: 42, title: 'Back Home', artist: 'Zomby Woof',
+          album: 'Riding On A Tear', album_id: 7, tracknum: '10',
+          duration: 123, samplerate: 44100, samplesize: 16, type: 'flc'
+        }]
+      };
+    }
+    return {};
+  });
+
+  const st = await ctx.api.status('p1');
+  const sent = ctx.calls[0];
+  assert.equal(sent[0], 'status');
+  assert.ok(sent[3].indexOf('e') >= 0, 'status tags need e for album_id: ' + sent[3]);
+  assert.ok(sent[3].indexOf('t') >= 0, 'status tags need t for tracknum: ' + sent[3]);
+  assert.equal(st.track.albumId, 7);
+  assert.equal(st.track.trackNum, 10);
+});
+
 /* 2b: trackstat e um plugin de terceiros, ausente num servidor padrao. O core
    despacha ['rating','_item','_rating'] (Commands.pm ratingCommand), numa
    escala 0-100 -- a mesma que songinfo devolve em trackInfo.rating. */

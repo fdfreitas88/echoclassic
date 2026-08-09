@@ -409,6 +409,8 @@
     playerGaugeColor: isGaugeColor(saved.playerGaugeColor) ? saved.playerGaugeColor : 'theme',
     playerFullscreen: false,
     advancedSettings: false,
+    advancedSettingsDirty: false,
+    advancedSettingsPage: '',
     queueOpen: false,
     queueInline: false,  // Proximas abre sob demanda, como na folha do iOS 9
     picker: false,
@@ -1110,8 +1112,27 @@
     if (event.defaultPrevented) return;
     if (state.picker) { state.picker = false; event.preventDefault(); return; }
     if (state.playerPicker) { state.playerPicker = false; event.preventDefault(); return; }
+    if (state.advancedSettings) {
+      if (!canLeaveAdvancedSettings()) { event.preventDefault(); return; }
+      if (global.LmsNav && LmsNav.top && LmsNav.top('settings') && LmsNav.top('settings').advanced) {
+        LmsNav.pop('settings');
+      } else {
+        state.advancedSettings = false;
+      }
+      event.preventDefault();
+      return;
+    }
     if (state.searching) { closeSearch(); event.preventDefault(); }
   });
+
+  function canLeaveAdvancedSettings() {
+    if (!state.advancedSettingsDirty) return true;
+    if (global.confirm && !global.confirm('Advanced LMS settings have unapplied changes. Leave without applying them?')) {
+      return false;
+    }
+    state.advancedSettingsDirty = false;
+    return true;
+  }
 
   global.LmsUi = {
     state: state, TABS: TABS, MUSIC_VIEWS: MUSIC_VIEWS,
@@ -1120,6 +1141,8 @@
     surfaceAttrs: surfaceAttrs, surfaceFollowsApp: surfaceFollowsApp,
     setSurfaceTheme: setSurfaceTheme, setSurfaceScheme: setSurfaceScheme,
     setSurfaceFont: setSurfaceFont, setSurfaceFollowsApp: setSurfaceFollowsApp,
+    canLeaveAdvancedSettings: canLeaveAdvancedSettings,
+    applyAdvancedSettings: null,
     PLAYER_PRESENTATIONS: PLAYER_PRESENTATIONS,
     setPlayerPresentation: setPlayerPresentation,
     PLAYER_POSITIONS: PLAYER_POSITIONS,

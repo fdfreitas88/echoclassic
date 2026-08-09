@@ -16,7 +16,12 @@ Vue.component('lms-tabbar', {
   methods: {
     pick: function (key) {
       if (key === 'settings' && this.ui.tab === 'settings' && this.ui.advancedSettings) {
-        this.ui.advancedSettings = false;
+        if (LmsUi.canLeaveAdvancedSettings && !LmsUi.canLeaveAdvancedSettings()) return;
+        if (window.LmsNav && LmsNav.top && LmsNav.top('settings') && LmsNav.top('settings').advanced) {
+          LmsNav.pop('settings');
+        } else {
+          this.ui.advancedSettings = false;
+        }
         return;
       }
       LmsUi.setTab(key);

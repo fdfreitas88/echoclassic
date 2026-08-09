@@ -2,13 +2,14 @@
    attributes, and string literals handed to notify/error/label paths.
    Comments and identifiers are excluded -- they never reach the screen. */
 const fs=require('node:fs'), path=require('node:path');
-const JS='/Users/felipefreitas/Desktop/Claude/LMS/EchoClassic/EchoClassic/HTML/echoclassic/html/js';
+const ROOT=path.resolve(__dirname, '..');
+const JS=path.join(ROOT, 'EchoClassic/HTML/echoclassic/html/js');
 /* Any text that exactly matches a Portuguese translation in strings.txt is
    Portuguese, whatever it looks like. That catches phrases with no accents and
    no obvious marker words -- "Estilo no mini player (tema claro)" sat on screen
    for weeks because a word-list heuristic never flagged it. */
 const PT_VALUES = (() => {
-  const txt = fs.readFileSync('/Users/felipefreitas/Desktop/Claude/LMS/EchoClassic/EchoClassic/strings.txt','utf8');
+  const txt = fs.readFileSync(path.join(ROOT, 'EchoClassic/strings.txt'),'utf8');
   const out = new Set(); const en = new Map(); let key = null;
   for (const line of txt.split('\n')) {
     if (/^\S/.test(line) && line.trim()) { key = line.trim(); continue; }

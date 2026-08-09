@@ -155,3 +155,45 @@ test('RESP-16: .navbar .center is documented as reviewed-and-kept, not silently 
   assert.match(centerBlock, /REVISADO \(RESP-16\)/,
     'the brief allows leaving this one with a comment if the safe fix is bigger than the commit warrants -- it must say so, not just go untouched with no trace of the decision');
 });
+
+/* ---------- EC-003: the selection bar reserves its own space instead of
+   covering the list ----------
+
+   `.selection-bar` was `position:fixed` above the mini player, so the list
+   scroller's box ran underneath it: the last row was half hidden and its
+   checkbox click landed on the bar's Cancel button, discarding the whole
+   selection. The fix makes the bar a real row of `.app`'s flex column, which
+   is why it also has to move above `.app-footer` in the template.
+
+   Same caveat as the RESP suites: this is a regex-over-source-text check. It
+   proves the CSS and the template declare the intended structure; it cannot
+   compute rendered geometry. The defect was reproduced [live]; the corrected
+   geometry needs its own live check. */
+
+test('EC-003: .selection-bar is a flow row of the app column, not a fixed overlay', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const bar = css.match(/\.selection-bar\{([^}]*)\}/)[1];
+  assert.match(bar, /flex:0 0 44px/,
+    'the bar has to reserve its 44px in the column -- that reservation is what stops it covering the last list row');
+  assert.doesNotMatch(bar, /position:fixed/,
+    'position:fixed is the defect: it takes the bar out of flow, so .workspace never shrinks and the scroller runs under it');
+  assert.doesNotMatch(bar, /bottom:calc/,
+    'the bottom:calc(var(--mini) + var(--tabbar)) offset only exists to fake a flow position -- a real flex row is placed by the column');
+});
+
+test('EC-003: .selection-bar no longer needs the sheet stacking context it used to sit in', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const bar = css.match(/\.selection-bar\{([^}]*)\}/)[1];
+  assert.doesNotMatch(bar, /z-index:var\(--z-sheet\)/,
+    'a flow row does not compete with sheets for stacking order; keeping --z-sheet would re-raise it over the footer it now sits beside');
+});
+
+test('EC-003: <lms-selection-bar> sits inside the app column, above the footer', function () {
+  const app = helpers.read('EchoClassic/HTML/echoclassic/html/js/app.js');
+  const bar = app.indexOf('<lms-selection-bar>');
+  const footer = app.indexOf('<footer class="app-footer">');
+  assert.ok(bar > -1, 'sanity: the bar is still rendered');
+  assert.ok(footer > -1, 'sanity: the footer is still rendered');
+  assert.ok(bar < footer,
+    'the bar must precede the footer: .app-header/.app-footer are display:contents, so .app is the real flex column and source order is what places the bar above the mini player');
+});

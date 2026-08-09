@@ -537,7 +537,7 @@
   function forgetSongInfo() { songCache.clear(); }
 
   async function status(playerId) {
-    var r = await rpc(playerId, ['status', '-', 1, 'tags:aluKNcdt']);
+    var r = await rpc(playerId, ['status', '-', 1, 'tags:alueKNcdt']);
     var cur = loop(r, 'playlist_loop')[0] || {};
     var duration = num(cur.duration) || num(r.duration);
     var st = {
@@ -550,6 +550,7 @@
         id: cur.id != null ? cur.id : null,
         title: txt(cur.title), artist: canonicalArtist(cur.artist),
         album: txt(cur.album), albumId: cur.album_id != null ? cur.album_id : cur.albumid,
+        trackNum: num(cur.tracknum),
         coverId: cur.coverid || null,
         url: txt(cur.url)
       },

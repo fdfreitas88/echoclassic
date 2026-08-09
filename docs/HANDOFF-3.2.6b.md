@@ -335,14 +335,9 @@ errors on load, interaction, or reload.
 **These facts were read directly from the LMS 9.1.1 server source. Trust them. Do not
 re-derive them, and do not substitute your own assumptions about how LMS works.**
 
-If the LMS source is available on the machine you are working on, it is at:
-
-```
-/Volumes/Interno/Applications/Lyrion Music Server.app/Contents/MacOS/Lyrion Music Server.app/Contents/Resources/server
-```
-
-If that path does not exist, **do not go looking on the network.** Everything you need is in
-this section.
+If the LMS source is available on the machine you are working on, use the local LMS
+application resources. If it is not available, **do not go looking on the network.**
+Everything you need is in this section.
 
 ### 6.1 Release types (needed for AUDIT-05 / AUDIT-12)
 
