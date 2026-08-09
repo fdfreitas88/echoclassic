@@ -1,4 +1,11 @@
 
+var ECHOCLASSIC_ADVANCED_THEME_TOKENS = [
+  '--accent', '--chrome', '--content', '--selected', '--text', '--text2',
+  '--hair', '--field', '--accent-ink', '--group-page', '--group-bg',
+  '--group-head', '--sw-off', '--sw-on', '--knob', '--destructive',
+  '--picker-bg', '--shadow', '--app-font'
+];
+
 /* Ajustes. Everything here is either read live from the server or is a real
    switch that changes the interface immediately. Advanced LMS pages remain
    native, but open inside this tab so Echo Classic navigation is preserved. */
@@ -13,7 +20,8 @@ Vue.component('lms-settings', {
     <strong>LMS settings</strong>
     <span aria-hidden="true"></span>
   </div>
-  <iframe class="advanced-settings-frame" title="Advanced LMS settings"
+  <iframe ref="advancedFrame" class="advanced-settings-frame" title="Advanced LMS settings"
+          @load="themeAdvancedFrame"
           src="/settings/index.html"></iframe>
 </div>
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
@@ -663,9 +671,24 @@ Vue.component('lms-settings', {
     'nav.settings.length': {
       immediate: true,
       handler: function () { this.syncAppearanceScreen(); }
-    }
+    },
+    'ui.dark': function () { this.themeAdvancedFrame(); },
+    'ui.colorScheme': function () { this.themeAdvancedFrame(); },
+    'ui.fontFamily': function () { this.themeAdvancedFrame(); }
+  },
+  beforeDestroy: function () {
+    this.stopAdvancedThemeObserver();
+  },
+  destroyed: function () {
+    this.stopAdvancedThemeObserver();
   },
   methods: {
+    stopAdvancedThemeObserver: function () {
+      if (this.advancedThemeObserver && this.advancedThemeObserver.disconnect) {
+        this.advancedThemeObserver.disconnect();
+      }
+      this.advancedThemeObserver = null;
+    },
     n: function (v) { return LmsFmt.count(v); },
     toggleTheme: function () { LmsUi.toggleTheme(); },
     /* setLanguage guarda a escolha e recarrega: os templates ja foram
@@ -709,6 +732,126 @@ Vue.component('lms-settings', {
        arguments and cannot be passed there directly. */
     setPlayerGaugeColor: function (key) { this.gaugeColor('player', key); },
     setMiniGaugeColor: function (key) { this.gaugeColor('mini', key); },
+    advancedFrameCss: function () {
+      return [
+        'html{background:var(--group-page)!important;color:var(--text)!important;',
+        'font-family:var(--app-font)!important;color-scheme:light;}',
+        'html[data-echoclassic-theme="dark"]{color-scheme:dark;}',
+        'body{margin:0!important;min-height:100vh;background:var(--group-page)!important;',
+        'color:var(--text)!important;font:15px/1.35 var(--app-font)!important;',
+        '-webkit-text-size-adjust:100%;}',
+        'body> #header,body> #headerWrapper,body> #header-wrapper,body> #branding,',
+        'body> #masthead,body> .header,body> .masthead,body> .topbar{display:none!important;}',
+        'a{color:var(--accent)!important;}',
+        'h1,h2,h3,h4,.pageHeader,.sectionHeader,.settingGroupHeader{color:var(--text)!important;',
+        'font-family:var(--app-font)!important;}',
+        'form,#settings,#content,.content,.settingsPage{box-sizing:border-box;max-width:980px;',
+        'padding:14px 12px 34px!important;}',
+        'table{border-collapse:collapse;max-width:100%;color:var(--text)!important;',
+        'font-family:var(--app-font)!important;}',
+        'td,th{border-color:var(--hair)!important;color:var(--text)!important;',
+        'padding:7px 8px!important;vertical-align:middle;}',
+        'th,label,.label,.prefHead,.settingLabel{color:var(--text)!important;font-weight:600;}',
+        '.prefDesc,.smallText,.help,.description,.settingDescription{color:var(--text2)!important;}',
+        'ul.tabs,.tabs,#tabs,#settingsTabs{display:flex!important;gap:0;overflow-x:auto;',
+        'margin:0!important;padding:8px 10px 0!important;background:var(--group-page)!important;',
+        'border:0!important;border-bottom:.5px solid var(--hair)!important;white-space:nowrap;}',
+        'ul.tabs li,.tabs li,#tabs li,#settingsTabs li{display:block!important;margin:0!important;',
+        'padding:0!important;list-style:none!important;}',
+        'ul.tabs a,.tabs a,#tabs a,#settingsTabs a{display:block!important;min-height:30px;',
+        'box-sizing:border-box;padding:7px 12px 6px!important;border:.5px solid var(--hair)!important;',
+        'border-left:0!important;background:var(--chrome)!important;color:var(--accent)!important;',
+        'text-decoration:none!important;font:14px/1 var(--app-font)!important;}',
+        'ul.tabs li:first-child a,.tabs li:first-child a,#tabs li:first-child a,#settingsTabs li:first-child a{',
+        'border-left:.5px solid var(--hair)!important;border-radius:6px 0 0 6px!important;}',
+        'ul.tabs li:last-child a,.tabs li:last-child a,#tabs li:last-child a,#settingsTabs li:last-child a{',
+        'border-radius:0 6px 6px 0!important;}',
+        'ul.tabs .active a,ul.tabs a.active,.tabs .active a,.tabs a.active,#tabs .active a,#tabs a.active,',
+        '#settingsTabs .active a,#settingsTabs a.active{background:var(--accent)!important;',
+        'color:var(--accent-ink)!important;}',
+        'fieldset,.settingsGroup,.prefGroup,.group{margin:0 0 18px!important;padding:0!important;',
+        'background:var(--group-bg)!important;border:.5px solid var(--hair)!important;',
+        'border-radius:7px!important;overflow:hidden;}',
+        'legend{padding:8px 10px!important;color:var(--group-head)!important;',
+        'font:12px/1.2 var(--app-font)!important;text-transform:uppercase;letter-spacing:.02em;}',
+        'input[type="text"],input[type="password"],input[type="search"],input[type="number"],',
+        'input[type="url"],input[type="email"],textarea,select{box-sizing:border-box;',
+        'min-height:28px;border:.5px solid var(--hair)!important;border-radius:6px!important;',
+        'background:var(--group-bg)!important;color:var(--text)!important;',
+        'font:14px var(--app-font)!important;padding:4px 7px!important;}',
+        'textarea{min-height:70px;}',
+        'input[type="checkbox"],input[type="radio"]{accent-color:var(--accent);}',
+        'button,input[type="button"],input[type="submit"],input[type="reset"],.button,.stdclick{',
+        'min-height:28px;border:.5px solid var(--hair)!important;border-radius:6px!important;',
+        'background:var(--chrome)!important;color:var(--accent)!important;',
+        'font:14px var(--app-font)!important;padding:4px 9px!important;box-shadow:none!important;}',
+        'input[type="submit"],button[type="submit"],.primary{background:var(--accent)!important;',
+        'border-color:var(--accent)!important;color:var(--accent-ink)!important;}',
+        'hr{border:0!important;border-top:.5px solid var(--hair)!important;}',
+        'pre,code{background:var(--field)!important;color:var(--text)!important;',
+        'border-radius:5px;padding:2px 4px;}',
+        'img{max-width:100%;}'
+      ].join('');
+    },
+    themeAdvancedFrame: function (event) {
+      var frame = (event && event.target) || this.$refs.advancedFrame;
+      if (!frame) return false;
+
+      var doc;
+      try {
+        doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+      } catch (e) {
+        return false;
+      }
+      if (!doc || !doc.documentElement || !doc.head) return false;
+
+      var source = null;
+      if (window.getComputedStyle) {
+        source = window.getComputedStyle(document.body || document.documentElement);
+      }
+      if (!source) return false;
+
+      for (var i = 0; i < ECHOCLASSIC_ADVANCED_THEME_TOKENS.length; i++) {
+        var key = ECHOCLASSIC_ADVANCED_THEME_TOKENS[i];
+        var value = source.getPropertyValue(key);
+        if (value) doc.documentElement.style.setProperty(key, value);
+      }
+
+      doc.documentElement.setAttribute('data-echoclassic-theme', this.ui.dark ? 'dark' : 'light');
+      doc.documentElement.setAttribute('data-echoclassic-scheme', this.ui.colorScheme || 'blue');
+      doc.documentElement.setAttribute('data-echoclassic-font', this.ui.fontFamily || 'system');
+      if (doc.body) {
+        doc.body.setAttribute('data-echoclassic-page', 'advanced-settings');
+      }
+
+      var style = doc.getElementById('echoclassic-advanced-theme');
+      if (!style) {
+        style = doc.createElement('style');
+        style.id = 'echoclassic-advanced-theme';
+        style.type = 'text/css';
+        doc.head.appendChild(style);
+      }
+      style.textContent = this.advancedFrameCss();
+      this.watchAdvancedFrameBody(frame, doc);
+      return true;
+    },
+    watchAdvancedFrameBody: function (frame, doc) {
+      this.stopAdvancedThemeObserver();
+      if (!window.MutationObserver || !doc || !doc.documentElement) return;
+      this.advancedThemeObserver = new MutationObserver(function () {
+        var current;
+        try {
+          current = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+        } catch (e) {
+          return;
+        }
+        if (current !== doc) return;
+        if (doc.body && doc.body.getAttribute('data-echoclassic-page') !== 'advanced-settings') {
+          doc.body.setAttribute('data-echoclassic-page', 'advanced-settings');
+        }
+      });
+      this.advancedThemeObserver.observe(doc.documentElement, { childList: true });
+    },
     /* Padrao ARIA de radiogroup: as setas movem selecao e foco, e so o item
        marcado fica na ordem de tabulacao. Sem isto eram 14 paradas de Tab.
        N6 (3.2.6b, revisado): reforco defensivo, nao correcao de uma regressao

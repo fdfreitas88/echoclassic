@@ -343,6 +343,59 @@ test('syncAppearanceScreen reconciles ui.appearanceScreen from LmsNav.top("setti
   assert.equal(self.ui.appearanceScreen, null);
 });
 
+test('Advanced LMS settings iframe receives Echo Classic theme tokens and CSS on load', function () {
+  const nodes = {};
+  const htmlAttrs = {};
+  const bodyAttrs = {};
+  const copied = {};
+  const doc = {
+    head: {
+      appendChild: function (node) {
+        nodes[node.id] = node;
+      }
+    },
+    body: {
+      setAttribute: function (key, value) { bodyAttrs[key] = value; },
+      getAttribute: function (key) { return bodyAttrs[key]; }
+    },
+    documentElement: {
+      style: { setProperty: function (key, value) { copied[key] = value; } },
+      setAttribute: function (key, value) { htmlAttrs[key] = value; }
+    },
+    getElementById: function (id) { return nodes[id] || null; },
+    createElement: function (tag) { return { tagName: tag.toUpperCase(), textContent: '' }; }
+  };
+  const tokens = {
+    '--accent': '#33B5FF',
+    '--accent-ink': '#000',
+    '--group-page': '#000',
+    '--group-bg': '#101012',
+    '--text': '#fff',
+    '--app-font': 'Geneva,Verdana,sans-serif'
+  };
+  const inst = helpers.settingsInstance({
+    LmsNav: fakeNav(),
+    getComputedStyle: function () {
+      return { getPropertyValue: function (key) { return tokens[key] || ''; } };
+    }
+  });
+  const self = inst.self;
+  self.ui.dark = true;
+  self.ui.colorScheme = 'blue';
+  self.ui.fontFamily = 'podium';
+  self.$refs.advancedFrame = { contentDocument: doc };
+
+  assert.equal(self.themeAdvancedFrame(), true);
+  assert.equal(copied['--accent'], '#33B5FF');
+  assert.equal(copied['--app-font'], 'Geneva,Verdana,sans-serif');
+  assert.equal(htmlAttrs['data-echoclassic-theme'], 'dark');
+  assert.equal(htmlAttrs['data-echoclassic-scheme'], 'blue');
+  assert.equal(htmlAttrs['data-echoclassic-font'], 'podium');
+  assert.equal(bodyAttrs['data-echoclassic-page'], 'advanced-settings');
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('body> #header') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#settingsTabs') >= 0);
+});
+
 test('the app-level Theme control calls LmsUi.toggleTheme and never assigns state.dark directly', function () {
   const src = settingsSrc();
   /* No assignment to .dark anywhere in the component (comparisons like
