@@ -20,6 +20,7 @@ Anything before this file existed is in `git log`. The settings redesign
 - 07f31b1 · AUDIT-20 recon on SqueezeDSP, from source · [code]
 - 7977e27 · SqueezeDSP not installed on the server · [measured]
 - d11c6c9 · plugin dependency policy · [code]
+- 3f5b4c1 · EC-001: margin-left:0 on .navbar .segmented, navbar centre group no longer collapses onto Back/Search · [code]
 
 Gates at 6039d19, run once by verify: 237 tests · 4/4 · contrast 125/125 ·
 check-version 3.2.6c. [measured]
