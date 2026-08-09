@@ -510,10 +510,17 @@
      fila do LMS nunca passava de um item. Carregar o container e saltar para o
      indice e o que o proprio LMS faz. */
   /* Guarda o dono do desfazer junto com as entradas: a fila de uma sala nao
-     pode ser injetada no player de outra depois de trocar de player. */
-  function setQueueUndo(entries) {
+     pode ser injetada no player de outra depois de trocar de player.
+     O dono vem por parametro, capturado ANTES do primeiro await do mutador.
+     Lendo state.playerId aqui, uma troca de player com as chamadas ainda no ar
+     carimbava o player NOVO -- e a checagem de dono em undoQueue, que existe
+     justamente para impedir isso, passava a aprovar a injecao errada.
+     Sem dono nao ha desfazer: queueUndoPlayerId fica undefined, undoQueue
+     descarta, e a falta de desfazer e sempre melhor que o desfazer na sala
+     errada. */
+  function setQueueUndo(entries, ownerId) {
     state.queueUndo = entries;
-    state.queueUndoPlayerId = state.playerId;
+    state.queueUndoPlayerId = ownerId;
   }
 
   function clearQueueUndo() {
@@ -568,11 +575,12 @@
      ele era gravado ANTES da chamada: se ela falhasse, guarded() engolia o erro,
      a faixa continuava na fila e "Undo" a inseria de novo - duplicando. */
   async function removeFromQueue(index) {
-    if (!state.playerId) return;
+    var playerId = state.playerId;
+    if (!playerId) return;
     if (index < 0 || index >= state.queue.length) return;
     var item = state.queue.find(function (t) { return t.index === index; });
-    await api.queueRemove(state.playerId, index);
-    if (item) setQueueUndo([{ item: item, index: index }]);
+    await api.queueRemove(playerId, index);
+    if (item) setQueueUndo([{ item: item, index: index }], playerId);
     await loadQueue();
   }
 
@@ -596,13 +604,23 @@
   function playNext(key, id) { return queueItem('insert', key, id); }
   function addToQueue(key, id) { return queueItem('add', key, id); }
 
+  /* queueClear destroi a playlist inteira do servidor, mas o retrato saia de
+     state.queue -- que e so a janela de 500 linhas. Numa fila de 698, o
+     "Undo" devolvia 500 e as outras 198 sumiam sem aviso nenhum. Aqui a fila
+     e relida inteira antes de destruir, e o que nao vier e dito ao usuario,
+     como handoffTo ja fazia. */
   async function clearQueue() {
-    if (!state.playerId) return;
-    var snapshot = state.queue.map(function (item) {
+    var playerId = state.playerId;
+    if (!playerId) return;
+    var full = await fullQueue();
+    if (full.tracks.length < full.total) {
+      notifyTruncated(full.tracks.length, full.total);
+    }
+    var snapshot = full.tracks.map(function (item) {
       return { item: item, index: item.index };
     });
-    await api.queueClear(state.playerId);
-    setQueueUndo(snapshot);
+    await api.queueClear(playerId);
+    setQueueUndo(snapshot, playerId);
     await refresh();
     await loadQueue();
   }
@@ -626,7 +644,7 @@
         done.push({ item: removed[i], index: removed[i].index });
       }
     } finally {
-      if (done.length) setQueueUndo(done);
+      if (done.length) setQueueUndo(done, playerId);
       else clearQueueUndo();
     }
     await loadQueue();
