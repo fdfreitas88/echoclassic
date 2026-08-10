@@ -39,3 +39,4 @@ browser automation policy.
 - 40dc172 · I18N-01: action sheet commands are English in the source, Portuguese lives in strings.txt · [measured]
 - 5d74b34 · I18N-01: queue mutation notice is one translatable English phrase with the count in {n} · [measured]
 - ebbd5a5 · I18N-01: source-language gate now fails on the literals it let through; predicate exported for regression · [measured]
+- 12082f7 · A11Y-01: root picker is an ARIA listbox with focus, arrows, Home/End, Escape and focus restore · [measured]
