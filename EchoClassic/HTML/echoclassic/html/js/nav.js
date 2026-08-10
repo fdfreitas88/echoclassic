@@ -113,6 +113,14 @@
     s.splice(0, s.length);
     frames.forEach(function (frame) { s.push(frame); });
     persist();
+    /* NAV-01: a seta do navegador devolve a busca pelo mesmo caminho que o
+       Back contextual. Sem isto os dois discordavam -- um voltava aos
+       resultados, o outro caia na raiz da aba. resumeSearch nao faz nada
+       quando nao ha busca suspensa daquela aba, entao voltar ao fundo de uma
+       pilha comum continua sendo voltar a raiz. */
+    if (!s.length && global.LmsUi && global.LmsUi.resumeSearch) {
+      global.LmsUi.resumeSearch(target.tab);
+    }
     applyingHistory = false;
   });
 
