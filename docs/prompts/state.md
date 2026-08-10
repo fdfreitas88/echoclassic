@@ -27,3 +27,10 @@ Gates at b921e63: 243 tests · 4/4 · contrast 125/125 ·
 check-version 3.2.6c. [measured]
 Everything from c87816c onward is still [unverified] — not deployed, not seen
 in a browser. The acceptance walkthrough is what converts it.
+
+- f8893ab · official-skin audit findings closed in Advanced Settings, Player layout navigation and disconnected-player feedback · [measured]
+
+Gates at f8893ab: 278 tests · 4/4 · contrast 155/155 · check-version 3.2.8.
+[measured] Visual acceptance remains [unverified] until the updated tree is
+deployed to the LMS HTTP server; the local `file://` fixture was blocked by the
+browser automation policy.
