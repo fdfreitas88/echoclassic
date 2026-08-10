@@ -15,18 +15,51 @@ what was announced.
 
 ## [Unreleased]
 
-### Changed
-
-- Manage Plugins now presents the native LMS plugin form as a three-column,
-  iOS-style App Store pane with live status filters, plugin and active counts,
-  native search/category controls, banded groups, metadata tiles and the same
-  switches used elsewhere in Echo Classic. [code]
-- Advanced LMS settings now uses a compact settings-page drawer on tablet and
-  mobile. Manage Plugins opens on Active at those widths while retaining every
-  native checkbox in the authoritative LMS form. [code]
+## [3.2.9] — 2026-08-10
 
 ### Fixed
 
+- The connection banner no longer covers the list toolbar. It was a fixed
+  overlay pinned 70px from the top, which at 390x844 put it over the centres of
+  Filter artists, Filters, Sort and Select -- a hit-test there returned the
+  alert's text -- and over Recent, the first option of the root picker. It is
+  now a row of the app column, so the workspace shrinks by its height and
+  nothing sits behind it. [code]
+- The action sheet is in the interface language again. Play now, Play next and
+  Pin to Echo Classic were Portuguese literals in the template, which the
+  dictionary -- keyed by the English phrase -- could never reach, so they
+  showed in Portuguese in every language. The queue notice built by
+  concatenation (`N itens adicionados`) had the same defect and is now one
+  translatable phrase per plural form with the count substituted after
+  translation. [code]
+- `tools/check-source-language.js` no longer passes on the literals it exists
+  to catch. Its word list held `reprodução` but not `reproduzir`, had no
+  `fixar`, and knew `adicionar` only in the infinitive. [measured]
+- The My Music root picker is a listbox per the ARIA APG. The trigger declares
+  aria-haspopup and aria-expanded, the popup and its options carry roles and
+  aria-selected, focus opens on the root in use, arrows wrap, Home/End jump,
+  Escape closes and focus returns to the trigger -- and Tab stays inside the
+  popup instead of leaving for Search, which used to mean crossing the whole
+  library list to reach an option. [code]
+- Opening a search result no longer discards the search. The term, the results,
+  the page size and the scroll position survive in LmsUi, and both the
+  contextual Back and the browser's Back return to them without running the
+  query again. The label reads Search only while a snapshot exists, so a reload
+  -- which keeps the stack and drops the snapshot -- cannot offer a return that
+  would not happen. [code]
+- Losing the player is reconciled as one transition. The screen used to show
+  `No player was found on LMS` beside a track, with the progress bar running
+  and Previous/Play/Stop/Next enabled, and only a reload settled it. The store
+  now clears the player, the connection, the playback mode, the position and
+  the right to command together, and keeps the cached track deliberately as the
+  last known one; both transports and the scrubber read that right rather than
+  each deciding for itself. [code]
+- Service errors say what to do. Apps showed
+  `[network] qobuz items 0 200 menu:qobuz: Failed to fetch` -- the error kind,
+  the RPC verb, the pagination window and the fetch's own words. Browse, play
+  and in-service search in Apps/Radio, and the album screen, now report through
+  friendlyError, which leaves the protocol string in the console, and end with
+  a human action. [code]
 - Selecting an Advanced LMS settings page no longer starts a feedback loop
   that continuously rebuilds the settings rail and traps its scrollbar. The
   rail is now updated in place, retains its search and scroll position, and
@@ -51,6 +84,25 @@ what was announced.
   Advanced LMS settings. Disconnected playback identifies cached track data
   instead of claiming that no player exists while showing a current track.
   [code]
+
+### Changed
+
+- `tools/release.sh` refuses a package that is not the tree that produced it,
+  and a descriptor that is not publishable. The 3.2.8 descriptor was ready to
+  publish while declaring itself a private QA candidate and pointing at a local
+  path, and its recorded SHA-1 matched a zip whose ios9.css and actions.js were
+  older than HEAD -- the file count was right, which is all the packaging step
+  checked. The bump now rewrites the whole `<url>` from the version, the
+  publication invariants reject a candidate marker, and packaging unzips the
+  artifact and diffs it against the tree. `repo.xml` carries the public asset
+  URL again. [measured]
+- Manage Plugins now presents the native LMS plugin form as a three-column,
+  iOS-style App Store pane with live status filters, plugin and active counts,
+  native search/category controls, banded groups, metadata tiles and the same
+  switches used elsewhere in Echo Classic. [code]
+- Advanced LMS settings now uses a compact settings-page drawer on tablet and
+  mobile. Manage Plugins opens on Active at those widths while retaining every
+  native checkbox in the authoritative LMS form. [code]
 
 ## [3.2.8] — 2026-08-09
 
