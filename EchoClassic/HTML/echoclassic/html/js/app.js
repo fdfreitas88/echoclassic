@@ -16,6 +16,18 @@
               @segment="LmsUi.setAlbumMode($event)"></lms-navbar>
   </header>
 
+  <!-- Linha real da coluna .app, e nao sobreposicao: fixed no topo, o alerta
+       cobria a barra de ferramentas da lista (Filter artists, Filters, Sort,
+       Select) e o primeiro item do seletor de raiz. Ver UX-01, mesmo mecanismo
+       de EC-003. A posicao aqui, entre o cabecalho e a .workspace, e o que o
+       coloca abaixo da navbar: .app-header e display:contents. -->
+  <div v-if="store.initialized && !store.connected" class="connection-banner" role="alert">
+    <span>{{ connectionMessage }}</span>
+    <button :disabled="store.reconnecting" @click="reconnect">
+      {{ reconnectLabel }}
+    </button>
+  </div>
+
 	  <main class="workspace" :class="workspaceClasses">
 	    <h1 class="visually-hidden">{{ pageHeading }}</h1>
 	    <lms-nowplaying v-if="ui.full" :fullscreen="ui.playerFullscreen"></lms-nowplaying>
@@ -31,12 +43,6 @@
     </div>
   </main>
 
-  <div v-if="store.initialized && !store.connected" class="connection-banner" role="alert">
-    <span>{{ connectionMessage }}</span>
-    <button :disabled="store.reconnecting" @click="reconnect">
-      {{ reconnectLabel }}
-    </button>
-  </div>
   <div v-if="ui.busyMessage" class="operation-banner" role="status">{{ ui.busyMessage }}</div>
   <button v-if="ui.notice" class="notice" :class="ui.noticeKind"
           @click="LmsUi.dismissNotice">{{ ui.notice }}</button>

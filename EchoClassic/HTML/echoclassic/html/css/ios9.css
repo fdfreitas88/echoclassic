@@ -487,11 +487,19 @@ button:disabled{opacity:.35}
 .app-header,.app-footer{display:contents}
 .pointer{cursor:pointer}
 .pointer:active{opacity:.55}
-.connection-banner,.operation-banner,.notice{position:fixed;z-index:var(--z-notice);
+.operation-banner,.notice{position:fixed;z-index:var(--z-notice);
   background:var(--picker-bg);border:.5px solid var(--hair);box-shadow:0 4px 18px var(--shadow);
   color:var(--text)}
-.connection-banner{top:70px;left:50%;transform:translateX(-50%);width:min(520px,calc(100vw - 24px));
-  min-height:44px;padding:7px 8px 7px 14px;border-radius:8px;display:flex;align-items:center;
+/* UX-01, mesmo mecanismo de EC-003: `position:fixed;top:70px` tirava o aviso do
+   fluxo, entao ele pousava por cima da barra de ferramentas da lista -- em
+   390x844 os centros de Filter artists, Filters, Sort e Select caiam todos
+   debaixo dele, e o hit-test devolvia o texto do alerta. Como linha da coluna
+   .app (flex:0 0 auto) os pixels sao reservados: a .workspace encolhe e nada
+   fica atras. Depende da ordem no template: a div precisa vir depois de
+   </header> e antes de <main>, porque .app-header e display:contents. */
+.connection-banner{flex:0 0 auto;background:var(--picker-bg);
+  border-bottom:.5px solid var(--hair);color:var(--text);
+  min-height:44px;padding:7px 12px 7px 16px;display:flex;align-items:center;
   gap:10px;font-size:13px}
 .connection-banner span{flex:1;min-width:0}
 .connection-banner button{min-height:32px;padding:0 10px;color:var(--accent);font-size:13px}
