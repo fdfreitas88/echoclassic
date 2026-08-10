@@ -70,7 +70,9 @@ Vue.component('lms-miniplayer', {
     },
     openLabel: function () {
       if (!this.hasTrack) return 'Nothing playing';
-      return 'Abrir o player' + (this.np.title ? ': ' + this.np.title : '');
+      var label = 'Open player';
+      if (window.LmsStr && LmsStr.t) label = LmsStr.t(label);
+      return label + (this.np.title ? ': ' + this.np.title : '');
     },
     playing: function () { return this.store.mode === 'play'; },
     coverUrl: function () { return LmsFmt.coverUrl(this.np.coverId, 50); },

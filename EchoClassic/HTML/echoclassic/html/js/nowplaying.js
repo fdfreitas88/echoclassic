@@ -13,9 +13,9 @@ Vue.component('lms-nowplaying', {
 <div class="npstage" :class="fullscreen ? 'mode-fullscreen' : 'mode-adaptive'" v-bind="surfaceAttrs">
   <div class="npback" @click="close"></div>
   <section ref="dialog" class="npfull" :class="{'with-queue': ui.queueInline}"
-           role="dialog" :aria-modal="String(isModal)" aria-label="Reproduzindo agora"
+           role="dialog" :aria-modal="String(isModal)" aria-label="Now playing"
            tabindex="-1" @keydown.tab="trapFocus" @keydown.esc.stop.prevent="close">
-	    <button type="button" class="dismiss pointer" title="Close" aria-label="Fechar player" @click="close">
+	    <button type="button" class="dismiss pointer" title="Close" aria-label="Close player" @click="close">
       <svg viewBox="0 0 24 12"><path d="M3 3l9 6 9-6"/></svg>
     </button>
     <button v-if="!fullscreen" type="button" class="player-position pointer"
@@ -90,8 +90,7 @@ Vue.component('lms-nowplaying', {
     </div>
 
     <div class="bottom">
-      <div class="vol" :class="{fixed: store.fixedVolume}"
-           :title="store.fixedVolume ? 'Volume fixo no servidor' : 'Volume'">
+      <div class="vol" :class="{fixed: store.fixedVolume}" :title="volumeTitle">
         <svg class="mono quiet" viewBox="0 0 24 24"><path d="M4 9v6h3l5 4V5L7 9z"/></svg>
         <div class="vbar">
           <i :style="{width: volPct + '%'}"></i>
@@ -145,7 +144,7 @@ Vue.component('lms-nowplaying', {
     </div>
     <div v-if="store.canRate && np.id" class="rating-row" aria-label="Rating">
       <button type="button" v-for="n in 5" :key="n" :class="{on: n <= rating}" @click="rate(n)"
-              :aria-label="n + (n === 1 ? ' estrela' : ' estrelas')">★</button>
+              :aria-label="ratingLabel(n)">★</button>
       <span>{{ playCount }} {{ playCount === 1 ? 'playback' : 'plays' }}</span>
     </div>
 
@@ -208,6 +207,9 @@ Vue.component('lms-nowplaying', {
       return this.dragVolume === null ? this.store.volume : this.dragVolume;
     },
     volPct: function () { return this.store.fixedVolume ? 100 : this.volumeValue; },
+    volumeTitle: function () {
+      return this.tr(this.store.fixedVolume ? 'Fixed volume on server' : 'Volume');
+    },
     volumeModeTitle: function () {
       if (this.store.volumeModeBusy) return 'Confirming volume mode…';
       return this.store.fixedVolume ? 'Fixed output (no attenuation)' : 'Volume controlled by LMS';
@@ -217,7 +219,7 @@ Vue.component('lms-nowplaying', {
       return this.store.fixedVolume ? 'Set the volume on the DAC' : 'LMS adjusts the output level';
     },
     compactVolumeModeTitle: function () {
-      if (this.store.volumeModeBusy) return 'Confirmando';
+      if (this.store.volumeModeBusy) return this.tr('Confirming…');
       return this.store.fixedVolume ? 'Fixed output' : 'LMS volume';
     },
     coverUrl: function () { return LmsFmt.coverUrl(this.np.coverId, 600); },
@@ -252,9 +254,10 @@ Vue.component('lms-nowplaying', {
              'Repeat off';
     },
     positionTitle: function () {
-      var labels = { right: 'direita', left: 'esquerda', center: 'centro' };
+      var labels = { right: this.tr('Right'), left: this.tr('Left'), center: this.tr('Center') };
       var next = { right: 'left', left: 'center', center: 'right' }[this.ui.playerPosition];
-      return 'Current position: ' + labels[this.ui.playerPosition] + '. Next: ' + labels[next];
+      return this.tr('Current position:') + ' ' + labels[this.ui.playerPosition] +
+        '. ' + this.tr('Next:') + ' ' + labels[next];
     }
   },
   watch: {
@@ -268,6 +271,12 @@ Vue.component('lms-nowplaying', {
     }
   },
   methods: {
+    tr: function (text) {
+      return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
+    },
+    ratingLabel: function (rating) {
+      return rating + ' ' + this.tr(rating === 1 ? 'star' : 'stars');
+    },
     close: function () {
       LmsUi.closePlayer();
     },

@@ -320,6 +320,10 @@ ECHOCLASSIC_UI_DARK_THEME
 	EN	Dark theme
 	PT	Tema escuro
 
+ECHOCLASSIC_UI_BLACK
+	EN	Black
+	PT	Preto
+
 ECHOCLASSIC_UI_DESCENDING_ORDER
 	EN	Descending order
 	PT	Ordem decrescente
@@ -1820,6 +1824,18 @@ ECHOCLASSIC_UI_PLAYER_GAUGE_STYLE_LIGHT
 	EN	Full player style (light theme)
 	PT	Estilo no player completo (tema claro)
 
+ECHOCLASSIC_UI_MINI_GAUGE_STYLE_LEGACY
+	EN	Mini player style (Legacy theme)
+	PT	Estilo no mini player (tema Legado)
+
+ECHOCLASSIC_UI_PLAYER_GAUGE_STYLE_LEGACY
+	EN	Full player style (Legacy theme)
+	PT	Estilo no player completo (tema Legado)
+
+ECHOCLASSIC_UI_SILVER
+	EN	Silver
+	PT	Prata
+
 ECHOCLASSIC_UI_MINI_PLAYER_COLOUR
 	EN	Mini player colour
 	PT	Cor no mini player
@@ -1867,6 +1883,10 @@ ECHOCLASSIC_UI_LEFT
 ECHOCLASSIC_UI_LIGHT_OPTION
 	EN	Light
 	PT	Claro
+
+ECHOCLASSIC_UI_LEGACY_OPTION
+	EN	Legacy
+	PT	Legado
 
 ECHOCLASSIC_UI_NOT_SPECIFIED
 	EN	Not specified
@@ -1955,3 +1975,103 @@ ECHOCLASSIC_UI_CONTROL
 ECHOCLASSIC_UI_TRANSFER
 	EN	Transfer
 	PT	Transferir
+
+ECHOCLASSIC_UI_NOW_PLAYING
+	EN	Now playing
+	PT	Reproduzindo agora
+
+ECHOCLASSIC_UI_CLOSE_PLAYER
+	EN	Close player
+	PT	Fechar player
+
+ECHOCLASSIC_UI_OPEN_PLAYER
+	EN	Open player
+	PT	Abrir o player
+
+ECHOCLASSIC_UI_STAR
+	EN	star
+	PT	estrela
+
+ECHOCLASSIC_UI_STARS
+	EN	stars
+	PT	estrelas
+
+ECHOCLASSIC_UI_FIXED_VOLUME_ON_SERVER
+	EN	Fixed volume on server
+	PT	Volume fixo no servidor
+
+ECHOCLASSIC_UI_CONFIRMING_SHORT
+	EN	Confirming…
+	PT	Confirmando…
+
+ECHOCLASSIC_UI_CURRENT_POSITION_COMPACT
+	EN	Current position:
+	PT	Posição atual:
+
+ECHOCLASSIC_UI_NEXT_COMPACT
+	EN	Next:
+	PT	Próxima:
+
+ECHOCLASSIC_UI_FORMAT_COLON
+	EN	Format:
+	PT	Formato:
+
+ECHOCLASSIC_UI_SOURCE_COLON
+	EN	Source:
+	PT	Origem:
+
+ECHOCLASSIC_UI_SHOW_MORE
+	EN	Show more
+	PT	Mostrar mais
+
+ECHOCLASSIC_UI_SHOW_LESS
+	EN	Show less
+	PT	Mostrar menos
+
+ECHOCLASSIC_UI_MIXED_SOURCES
+	EN	Mixed sources
+	PT	Origens mistas
+
+ECHOCLASSIC_UI_IDENTIFYING_SOURCE
+	EN	Identifying source
+	PT	Identificando a origem
+
+ECHOCLASSIC_UI_PINNED
+	EN	Pinned
+	PT	Fixados
+
+ECHOCLASSIC_UI_SEARCH_IN
+	EN	Search in
+	PT	Buscar em
+
+ECHOCLASSIC_UI_TUNE
+	EN	Tune
+	PT	Sintonizar
+
+ECHOCLASSIC_UI_RESULTS_COLON
+	EN	Results:
+	PT	Resultados:
+
+ECHOCLASSIC_UI_UPDATING_FAVOURITES
+	EN	Updating favourites…
+	PT	Atualizando favoritos…
+
+ECHOCLASSIC_UI_COULD_NOT_LOAD_FAVOURITES
+	EN	Could not load favourites
+	PT	Não foi possível carregar os favoritos
+
+ECHOCLASSIC_UI_FAVOURITES_INVALID_ITEMS
+	EN	The server returned items that cannot be opened.
+	PT	O servidor retornou itens que não podem ser abertos.
+
+ECHOCLASSIC_UI_SEARCHING
+	EN	Searching…
+	PT	Buscando…
+
+ECHOCLASSIC_UI_SHOW_MORE_RESULTS
+	EN	Show more results
+	PT	Mostrar mais resultados
+
+ECHOCLASSIC_UI_USES_APP_APPEARANCE
+	EN	Uses the app theme, accent and font.
+	PT	Usa o tema, o destaque e a fonte do app.

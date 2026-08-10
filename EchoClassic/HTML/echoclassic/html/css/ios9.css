@@ -9,6 +9,18 @@
   --gauge-border:#828D99;
   --gauge-track:linear-gradient(to bottom,#D2D8DD 0%,#F7F8F9 22%,#E5E8EA 52%,#FAFAFA 100%);
   --mini-control:#000000;
+  --status-bg:var(--chrome); --status-fg:var(--text); --status-sh:none;
+  --nav-bg:var(--chrome); --nav-title:var(--accent); --nav-fg:var(--accent); --nav-sh:none;
+  --nav-edge:var(--hair); --nav-top:transparent;
+  --tools-bg:var(--chrome); --tools-edge:var(--hair);
+  --mini-bg:var(--chrome); --mini-edge:var(--hair);
+  --tab-bg:var(--chrome); --tab-edge:var(--hair); --tab-on:var(--accent);
+  --button-bg:var(--group-bg); --button-bd:var(--hair); --button-fg:var(--accent);
+  --button-sh:none; --button-tsh:none; --icon-sh:none;
+  --seg-bg:transparent; --seg-on:var(--accent);
+  --field-bg:var(--field); --field-bd:transparent; --field-sh:none;
+  --group-rad:0px; --group-inset:0px; --texture:none;
+  --emboss:none; --engrave:none;
   --app-font:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
   --row-artist:72px; --row-track:48px; --pane:320px;
   /* tokens derivados, para que o tema escuro seja uma troca e nao um remendo */
@@ -57,6 +69,21 @@ body.dark,
   --gauge-border:#5F5F66;
   --gauge-track:linear-gradient(to bottom,#111114 0%,#48484D 22%,#242427 52%,#09090B 100%);
   --mini-control:#FFFFFF;
+  /* Derived surface tokens must be redeclared here. A custom property such as
+     --mini-bg:var(--chrome) declared on :root is resolved from :root's light
+     palette before it is inherited, leaving the dark footer almost white. */
+  --status-bg:#0A0A0C; --status-fg:#F7F7F8; --status-sh:none;
+  --nav-bg:#0A0A0C; --nav-title:#33B5FF; --nav-fg:#33B5FF; --nav-sh:none;
+  --nav-edge:#64646D; --nav-top:transparent;
+  --tools-bg:#0A0A0C; --tools-edge:#64646D;
+  --mini-bg:#0A0A0C; --mini-edge:#64646D;
+  --tab-bg:#0A0A0C; --tab-edge:#64646D; --tab-on:#33B5FF;
+  --button-bg:#101012; --button-bd:#64646D; --button-fg:#33B5FF;
+  --button-sh:none; --button-tsh:none; --icon-sh:none;
+  --seg-bg:transparent; --seg-on:#33B5FF;
+  --field-bg:#1A1A1D; --field-bd:transparent; --field-sh:none;
+  --group-rad:0px; --group-inset:0px; --texture:none;
+  --emboss:none; --engrave:none;
 }
 
 /* :root e a unica fonte clara hoje, e :root nao se reaplica dentro de
@@ -88,6 +115,140 @@ body.dark,
   --dismiss-bg:rgba(40,40,45,.85); --dismiss-ink:#FFFFFF;
   --playbtn-bg:rgba(255,255,255,.82); --shadow:rgba(0,0,0,.18);
   --np-l1:92%; --np-l2:84%; --np-s1:18%; --np-s2:14%;
+}
+
+body.legacy,
+[data-surface-theme="legacy"]{
+  color-scheme:light;
+  --accent:#0B5FD0; --chrome:#E3E6EA; --content:#FFFFFF;
+  --selected:#D1D7DF; --text:#0B0B0C; --text2:#485461; --hair:#8F9399;
+  --selection-accent:#0B5FD0;
+  --selection-highlight:linear-gradient(to bottom,#4A96F4 0%,#176FE7 48%,#0B5AD4 52%,#094FBF 100%);
+  --gauge-border:#717A86;
+  --gauge-track:linear-gradient(to bottom,#9AA0A8 0%,#C3C7CD 100%);
+  --mini-control:#263242;
+  --chev:#65707D; --raildim:#4E6178; --field:#DDE1E6;
+  --art-placeholder:#545F6D; --accent-ink:#FFFFFF;
+  --group-page:#C5CCD3; --group-bg:#FFFFFF; --group-head:#303B46;
+  --sw-off:#89919B; --sw-on:#2C8A5F; --knob:linear-gradient(#FFFFFF,#E2E4E8);
+  --destructive:#A51F32;
+  --tabicon:#9C9EA3; --badge-bg:rgba(255,255,255,.62);
+  --picker-bg:linear-gradient(#FDFDFE,#ECEEF1); --empty-h:#5C6674;
+  --np-sub:#485461; --np-times:#65707C; --np-track:rgba(0,0,0,.24);
+  --np-fill:#2F3946; --np-ink:#1B232D; --np-mono:#2F3946;
+  --np-backdrop:rgba(0,0,0,.48); --picker-backdrop:rgba(0,0,0,.22);
+  --queue-backdrop:rgba(0,0,0,.30); --knob-shadow:rgba(0,0,0,.45);
+  --dismiss-bg:rgba(40,40,45,.85); --dismiss-ink:#FFFFFF;
+  --playbtn-bg:rgba(255,255,255,.82); --shadow:rgba(0,0,0,.28);
+  --np-l1:88%; --np-l2:78%; --np-s1:17%; --np-s2:13%;
+  --status-bg:linear-gradient(#ECF1F7 0%,#D7E0EA 55%,#C8D3DF 100%);
+  --status-fg:#111417; --status-sh:0 1px 0 rgba(255,255,255,.75);
+  --nav-bg:linear-gradient(#9DB0C8 0%,#8399B6 48%,#6E87A8 52%,#5F7A9D 100%);
+  --nav-title:#FFFFFF; --nav-fg:#FFFFFF; --nav-sh:0 -1px 0 rgba(0,0,0,.55);
+  --nav-edge:#33465F; --nav-top:rgba(255,255,255,.55);
+  --tools-bg:linear-gradient(#FBFBFC 0%,#E9EAEC 48%,#DFE0E3 52%,#D2D4D8 100%);
+  --tools-edge:#9A9DA2;
+  --mini-bg:linear-gradient(#F4F5F6 0%,#DFE1E4 48%,#D4D6DA 52%,#C4C7CC 100%);
+  --mini-edge:#9A9DA2;
+  --tab-bg:linear-gradient(#4B4B4D 0%,#333335 12%,#1D1D1F 55%,#111112 100%);
+  --tab-edge:#000000; --tab-on:#57A9FF;
+  --button-bg:linear-gradient(#FDFDFE,#E3E5E9 48%,#D7D9DE 52%,#C9CCD2);
+  --button-bd:#93979E; --button-fg:#2B3542;
+  --button-sh:inset 0 1px 0 rgba(255,255,255,.85),0 1px 1px rgba(0,0,0,.18);
+  --button-tsh:0 1px 0 rgba(255,255,255,.85);
+  --icon-sh:drop-shadow(0 -1px 0 rgba(0,0,0,.45));
+  --seg-bg:rgba(30,55,90,.34); --seg-on:rgba(12,30,58,.62);
+  --field-bg:linear-gradient(#DFE1E5,#F4F5F7); --field-bd:#9EA1A7;
+  --field-sh:inset 0 2px 3px rgba(0,0,0,.22),0 1px 0 rgba(255,255,255,.75);
+  --group-rad:10px; --group-inset:10px;
+  --texture:repeating-linear-gradient(0deg,rgba(0,0,0,.022) 0 1px,transparent 1px 3px);
+  --emboss:0 1px 0 rgba(255,255,255,.85);
+  --engrave:0 -1px 0 rgba(0,0,0,.5);
+}
+
+body.legacy[data-color-scheme="blue"],
+[data-surface-theme="legacy"][data-surface-scheme="blue"]{
+  --accent:#0B5FD0; --selection-accent:#0B5FD0;
+  --selection-highlight:linear-gradient(to bottom,#4A96F4 0%,#176FE7 48%,#0B5AD4 52%,#094FBF 100%);
+  --nav-bg:linear-gradient(#9DB0C8 0%,#8399B6 48%,#6E87A8 52%,#5F7A9D 100%);
+  --nav-edge:#33465F; --tab-on:#57A9FF;
+}
+body.legacy[data-color-scheme="teal"],
+[data-surface-theme="legacy"][data-surface-scheme="teal"]{
+  --accent:#226F4E; --selection-accent:#2C8A5F;
+  --selection-highlight:linear-gradient(to bottom,#63B88E 0%,#2C8A5F 48%,#216C4A 52%,#1A573C 100%);
+  --nav-bg:linear-gradient(#A7BDB6 0%,#87A99A 48%,#66917D 52%,#557D6C 100%);
+  --nav-edge:#244A3B; --tab-on:#72D9AE;
+}
+body.legacy[data-color-scheme="crimson"],
+[data-surface-theme="legacy"][data-surface-scheme="crimson"]{
+  --accent:#B0344C; --selection-accent:#B0344C;
+  --selection-highlight:linear-gradient(to bottom,#D56B7C 0%,#B0344C 48%,#8D263B 52%,#741F31 100%);
+  --nav-bg:linear-gradient(#C7A4AE 0%,#B48695 48%,#9F6478 52%,#8B5168 100%);
+  --nav-edge:#5D2331; --tab-on:#FF8BA2;
+}
+body.legacy[data-color-scheme="indigo"],
+[data-surface-theme="legacy"][data-surface-scheme="indigo"]{
+  --accent:#5B4BD0; --selection-accent:#5B4BD0;
+  --selection-highlight:linear-gradient(to bottom,#9288F0 0%,#5B4BD0 48%,#4839A7 52%,#3B2F8A 100%);
+  --nav-bg:linear-gradient(#B1ACC9 0%,#9790B8 48%,#7D74A7 52%,#6A6096 100%);
+  --nav-edge:#302B64; --tab-on:#AFA8FF;
+}
+body.legacy[data-color-scheme="amber"],
+[data-surface-theme="legacy"][data-surface-scheme="amber"]{
+  --accent:#9A5500; --selection-accent:#9A5500;
+  --selection-highlight:linear-gradient(to bottom,#D09750 0%,#A45C05 48%,#7F4500 52%,#653700 100%);
+  --nav-bg:linear-gradient(#C4B39B 0%,#B29975 48%,#9A7F55 52%,#876B42 100%);
+  --nav-edge:#593815; --tab-on:#FFC15E;
+}
+body[data-color-scheme="silver"],
+[data-surface-theme="light"][data-surface-scheme="silver"]{
+  --accent:#4D5967;--accent-ink:#FFFFFF;--selection-accent:#4D5967;
+  --selection-highlight:linear-gradient(to bottom,#6D7A89 0%,#4D5967 48%,#36414D 100%)}
+body.dark[data-color-scheme="silver"],
+[data-surface-theme="dark"][data-surface-scheme="silver"]{
+  --accent:#AAB3BD;--accent-ink:#000000;--selection-accent:#5D6875;
+  --selection-highlight:linear-gradient(to bottom,#778390 0%,#5D6875 48%,#424B56 100%)}
+body[data-color-scheme="black"],
+[data-surface-theme="light"][data-surface-scheme="black"]{
+  --accent:#343A42;--accent-ink:#FFFFFF;--selection-accent:#343A42;
+  --selection-highlight:linear-gradient(to bottom,#505963 0%,#343A42 48%,#22272D 100%)}
+body.dark[data-color-scheme="black"],
+[data-surface-theme="dark"][data-surface-scheme="black"]{
+  --accent:#B8C0CA;--accent-ink:#000000;--selection-accent:#4C535C;
+  --selection-highlight:linear-gradient(to bottom,#656E78 0%,#4C535C 48%,#343A42 100%)}
+body.legacy[data-color-scheme="silver"],
+[data-surface-theme="legacy"][data-surface-scheme="silver"]{
+  --accent:#4D5967; --accent-ink:#FFFFFF; --selection-accent:#4D5967;
+  --nav-bg:linear-gradient(#FDFDFE 0%,#ECEEF1 48%,#DEE0E5 52%,#C8CBD1 100%);
+  --nav-edge:#8B8F96; --nav-top:rgba(255,255,255,.95);
+  --nav-title:#1E2228; --nav-fg:#1E2228; --nav-sh:0 1px 0 rgba(255,255,255,.9);
+  --status-bg:linear-gradient(#FCFCFD,#E4E6EA 55%,#D6D9DE);
+  --status-fg:#1E2228; --status-sh:0 1px 0 rgba(255,255,255,.9);
+  --button-bg:linear-gradient(#FDFDFE,#E8EAEE 48%,#DCDEE3 52%,#CDD0D6);
+  --button-bd:#8B8F96; --button-fg:#1E2228; --button-tsh:0 1px 0 rgba(255,255,255,.9);
+  --icon-sh:drop-shadow(0 1px 0 rgba(255,255,255,.9));
+  --seg-bg:rgba(255,255,255,.28); --seg-on:rgba(190,196,204,.82);
+  --tab-on:#4D5967;
+}
+body.legacy[data-color-scheme="black"],
+[data-surface-theme="legacy"][data-surface-scheme="black"]{
+  --accent:#343A42; --accent-ink:#FFFFFF; --selection-accent:#343A42;
+  --nav-bg:linear-gradient(#3D4148 0%,#262A30 48%,#15181D 52%,#07080A 100%);
+  --nav-edge:#000000; --nav-top:rgba(255,255,255,.20);
+  --nav-title:#F2F4F7; --nav-fg:#F2F4F7; --nav-sh:0 -1px 0 rgba(0,0,0,.8);
+  --status-bg:#000000; --status-fg:#FFFFFF; --status-sh:0 -1px 0 rgba(0,0,0,.7);
+  --tools-bg:linear-gradient(#3C3F45 0%,#25282E 48%,#171A1F 52%,#0A0B0D 100%);
+  --tools-edge:#000000;
+  --mini-bg:linear-gradient(#3C3F45 0%,#25282E 48%,#171A1F 52%,#0A0B0D 100%);
+  --mini-edge:#000000; --mini-control:#F2F4F7;
+  --button-bg:linear-gradient(#4A4E55,#2E333A 48%,#1F2329 52%,#111418);
+  --button-bd:#000000; --button-fg:#F2F4F7; --button-tsh:0 -1px 0 rgba(0,0,0,.8);
+  --field-bg:linear-gradient(#111418,#262B32); --field-bd:#050607;
+  --field-sh:inset 0 2px 3px rgba(0,0,0,.75),0 1px 0 rgba(255,255,255,.15);
+  --icon-sh:drop-shadow(0 -1px 0 rgba(0,0,0,.8));
+  --seg-bg:rgba(0,0,0,.38); --seg-on:rgba(0,0,0,.66);
+  --tab-on:#7BB9FF;
 }
 body[data-color-scheme="blue"]{--accent:#0077B0;--accent-ink:#FFFFFF;--selection-accent:#0077B0;
   --selection-highlight:linear-gradient(to bottom,#0074A8 0%,#006B9E 48%,#00527E 100%)}
@@ -165,6 +326,75 @@ body.dark [data-surface-scheme="amber"]:not([data-surface-theme="light"]),
 [data-surface-theme="dark"][data-surface-scheme="amber"]
   {--accent:#FFB52E;--accent-ink:#000000;--selection-accent:#945304;
   --selection-highlight:linear-gradient(to bottom,#A76514 0%,#945304 48%,#6F3D00 100%)}
+body:not(.dark) [data-surface-scheme="silver"]:not([data-surface-theme="dark"]):not([data-surface-theme="legacy"]),
+[data-surface-theme="light"][data-surface-scheme="silver"]
+  {--accent:#4D5967;--accent-ink:#FFFFFF;--selection-accent:#4D5967;
+  --selection-highlight:linear-gradient(to bottom,#6D7A89 0%,#4D5967 48%,#36414D 100%)}
+body.dark [data-surface-scheme="silver"]:not([data-surface-theme="light"]):not([data-surface-theme="legacy"]),
+[data-surface-theme="dark"][data-surface-scheme="silver"]
+  {--accent:#AAB3BD;--accent-ink:#000000;--selection-accent:#5D6875;
+  --selection-highlight:linear-gradient(to bottom,#778390 0%,#5D6875 48%,#424B56 100%)}
+body:not(.dark) [data-surface-scheme="black"]:not([data-surface-theme="dark"]):not([data-surface-theme="legacy"]),
+[data-surface-theme="light"][data-surface-scheme="black"]
+  {--accent:#343A42;--accent-ink:#FFFFFF;--selection-accent:#343A42;
+  --selection-highlight:linear-gradient(to bottom,#505963 0%,#343A42 48%,#22272D 100%)}
+body.dark [data-surface-scheme="black"]:not([data-surface-theme="light"]):not([data-surface-theme="legacy"]),
+[data-surface-theme="dark"][data-surface-scheme="black"]
+  {--accent:#B8C0CA;--accent-ink:#000000;--selection-accent:#4C535C;
+  --selection-highlight:linear-gradient(to bottom,#656E78 0%,#4C535C 48%,#343A42 100%)}
+body.legacy [data-surface-scheme="blue"]:not([data-surface-theme="light"]):not([data-surface-theme="dark"]),
+[data-surface-theme="legacy"][data-surface-scheme="blue"]
+  {--accent:#0B5FD0;--accent-ink:#FFFFFF;--selection-accent:#0B5FD0;
+  --selection-highlight:linear-gradient(to bottom,#4A96F4 0%,#176FE7 48%,#0B5AD4 52%,#094FBF 100%);
+  --nav-bg:linear-gradient(#9DB0C8 0%,#8399B6 48%,#6E87A8 52%,#5F7A9D 100%);
+  --nav-edge:#33465F;--tab-on:#57A9FF}
+body.legacy [data-surface-scheme="teal"]:not([data-surface-theme="light"]):not([data-surface-theme="dark"]),
+[data-surface-theme="legacy"][data-surface-scheme="teal"]
+  {--accent:#226F4E;--accent-ink:#FFFFFF;--selection-accent:#2C8A5F;
+  --selection-highlight:linear-gradient(to bottom,#63B88E 0%,#2C8A5F 48%,#216C4A 52%,#1A573C 100%);
+  --nav-bg:linear-gradient(#A7BDB6 0%,#87A99A 48%,#66917D 52%,#557D6C 100%);
+  --nav-edge:#244A3B;--tab-on:#72D9AE}
+body.legacy [data-surface-scheme="crimson"]:not([data-surface-theme="light"]):not([data-surface-theme="dark"]),
+[data-surface-theme="legacy"][data-surface-scheme="crimson"]
+  {--accent:#B0344C;--accent-ink:#FFFFFF;--selection-accent:#B0344C;
+  --selection-highlight:linear-gradient(to bottom,#D56B7C 0%,#B0344C 48%,#8D263B 52%,#741F31 100%);
+  --nav-bg:linear-gradient(#C7A4AE 0%,#B48695 48%,#9F6478 52%,#8B5168 100%);
+  --nav-edge:#5D2331;--tab-on:#FF8BA2}
+body.legacy [data-surface-scheme="indigo"]:not([data-surface-theme="light"]):not([data-surface-theme="dark"]),
+[data-surface-theme="legacy"][data-surface-scheme="indigo"]
+  {--accent:#5B4BD0;--accent-ink:#FFFFFF;--selection-accent:#5B4BD0;
+  --selection-highlight:linear-gradient(to bottom,#9288F0 0%,#5B4BD0 48%,#4839A7 52%,#3B2F8A 100%);
+  --nav-bg:linear-gradient(#B1ACC9 0%,#9790B8 48%,#7D74A7 52%,#6A6096 100%);
+  --nav-edge:#302B64;--tab-on:#AFA8FF}
+body.legacy [data-surface-scheme="amber"]:not([data-surface-theme="light"]):not([data-surface-theme="dark"]),
+[data-surface-theme="legacy"][data-surface-scheme="amber"]
+  {--accent:#9A5500;--accent-ink:#FFFFFF;--selection-accent:#9A5500;
+  --selection-highlight:linear-gradient(to bottom,#D09750 0%,#A45C05 48%,#7F4500 52%,#653700 100%);
+  --nav-bg:linear-gradient(#C4B39B 0%,#B29975 48%,#9A7F55 52%,#876B42 100%);
+  --nav-edge:#593815;--tab-on:#FFC15E}
+body.legacy [data-surface-scheme="silver"]:not([data-surface-theme="light"]):not([data-surface-theme="dark"]),
+[data-surface-theme="legacy"][data-surface-scheme="silver"]
+  {--accent:#4D5967;--accent-ink:#FFFFFF;--selection-accent:#4D5967;
+  --nav-bg:linear-gradient(#FDFDFE 0%,#ECEEF1 48%,#DEE0E5 52%,#C8CBD1 100%);
+  --nav-edge:#8B8F96;--nav-top:rgba(255,255,255,.95);--nav-title:#1E2228;--nav-fg:#1E2228;
+  --nav-sh:0 1px 0 rgba(255,255,255,.9);--status-bg:linear-gradient(#FCFCFD,#E4E6EA 55%,#D6D9DE);
+  --status-fg:#1E2228;--status-sh:0 1px 0 rgba(255,255,255,.9);--button-fg:#1E2228;
+  --button-tsh:0 1px 0 rgba(255,255,255,.9);--icon-sh:drop-shadow(0 1px 0 rgba(255,255,255,.9));
+  --seg-bg:rgba(255,255,255,.28);--seg-on:rgba(190,196,204,.82);--tab-on:#4D5967}
+body.legacy [data-surface-scheme="black"]:not([data-surface-theme="light"]):not([data-surface-theme="dark"]),
+[data-surface-theme="legacy"][data-surface-scheme="black"]
+  {--accent:#343A42;--accent-ink:#FFFFFF;--selection-accent:#343A42;
+  --nav-bg:linear-gradient(#3D4148 0%,#262A30 48%,#15181D 52%,#07080A 100%);
+  --nav-edge:#000000;--nav-top:rgba(255,255,255,.20);--nav-title:#F2F4F7;--nav-fg:#F2F4F7;
+  --nav-sh:0 -1px 0 rgba(0,0,0,.8);--status-bg:#000000;--status-fg:#FFFFFF;
+  --status-sh:0 -1px 0 rgba(0,0,0,.7);--tools-bg:linear-gradient(#3C3F45 0%,#25282E 48%,#171A1F 52%,#0A0B0D 100%);
+  --tools-edge:#000000;--mini-bg:linear-gradient(#3C3F45 0%,#25282E 48%,#171A1F 52%,#0A0B0D 100%);
+  --mini-edge:#000000;--mini-control:#F2F4F7;--button-bg:linear-gradient(#4A4E55,#2E333A 48%,#1F2329 52%,#111418);
+  --button-bd:#000000;--button-fg:#F2F4F7;--button-tsh:0 -1px 0 rgba(0,0,0,.8);
+  --field-bg:linear-gradient(#111418,#262B32);--field-bd:#050607;
+  --field-sh:inset 0 2px 3px rgba(0,0,0,.75),0 1px 0 rgba(255,255,255,.15);
+  --icon-sh:drop-shadow(0 -1px 0 rgba(0,0,0,.8));--seg-bg:rgba(0,0,0,.38);
+  --seg-on:rgba(0,0,0,.66);--tab-on:#7BB9FF}
 
 /* N2, corrigido: os quatro aliases do gauge tem que reagir a QUALQUER forma
    de override de --accent na superficie -- so tema (acima) nao bastava,
@@ -188,21 +418,29 @@ body[data-mini-gauge-color="indigo"]{--mini-gauge-accent:#4B50B8;--mini-gauge-hi
 /* N5: faltava o par claro de ambar aqui -- o par escuro (linha ~160) e o par
    claro do player (abaixo) sempre existiram; so este ficou de fora. */
 body[data-mini-gauge-color="amber"]{--mini-gauge-accent:#9A5500;--mini-gauge-highlight:linear-gradient(to bottom,#C47A18 0%,#A45C05 48%,#7F4500 100%)}
+body[data-mini-gauge-color="silver"]{--mini-gauge-accent:#4D5967;--mini-gauge-highlight:linear-gradient(to bottom,#7B8795 0%,#4D5967 48%,#36414D 100%)}
+body[data-mini-gauge-color="black"]{--mini-gauge-accent:#343A42;--mini-gauge-highlight:linear-gradient(to bottom,#505963 0%,#343A42 48%,#22272D 100%)}
 body[data-player-gauge-color="blue"]{--player-gauge-accent:#0077B0;--player-gauge-highlight:linear-gradient(to bottom,#00A2D7 0%,#008CC7 48%,#0073AD 100%)}
 body[data-player-gauge-color="teal"]{--player-gauge-accent:#007F73;--player-gauge-highlight:linear-gradient(to bottom,#1CA998 0%,#078B7E 48%,#006C63 100%)}
 body[data-player-gauge-color="crimson"]{--player-gauge-accent:#C51F4A;--player-gauge-highlight:linear-gradient(to bottom,#E2486C 0%,#CB2954 48%,#A9163D 100%)}
 body[data-player-gauge-color="indigo"]{--player-gauge-accent:#4B50B8;--player-gauge-highlight:linear-gradient(to bottom,#7478D5 0%,#565BC1 48%,#3E439D 100%)}
 body[data-player-gauge-color="amber"]{--player-gauge-accent:#9A5500;--player-gauge-highlight:linear-gradient(to bottom,#C47A18 0%,#A45C05 48%,#7F4500 100%)}
+body[data-player-gauge-color="silver"]{--player-gauge-accent:#4D5967;--player-gauge-highlight:linear-gradient(to bottom,#7B8795 0%,#4D5967 48%,#36414D 100%)}
+body[data-player-gauge-color="black"]{--player-gauge-accent:#343A42;--player-gauge-highlight:linear-gradient(to bottom,#505963 0%,#343A42 48%,#22272D 100%)}
 body.dark[data-mini-gauge-color="blue"]{--mini-gauge-accent:#33B5FF;--mini-gauge-highlight:linear-gradient(to bottom,#53C4FF 0%,#279DDD 48%,#117CB8 100%)}
 body.dark[data-mini-gauge-color="teal"]{--mini-gauge-accent:#3BD6C1;--mini-gauge-highlight:linear-gradient(to bottom,#59E2D0 0%,#28B8A5 48%,#118A7D 100%)}
 body.dark[data-mini-gauge-color="crimson"]{--mini-gauge-accent:#FF5A7F;--mini-gauge-highlight:linear-gradient(to bottom,#FF7896 0%,#E3476E 48%,#B92750 100%)}
 body.dark[data-mini-gauge-color="indigo"]{--mini-gauge-accent:#9B91FF;--mini-gauge-highlight:linear-gradient(to bottom,#B0A9FF 0%,#8178E4 48%,#5C55B8 100%)}
 body.dark[data-mini-gauge-color="amber"]{--mini-gauge-accent:#FFB52E;--mini-gauge-highlight:linear-gradient(to bottom,#FFC85C 0%,#E69A22 48%,#B96B08 100%)}
+body.dark[data-mini-gauge-color="silver"]{--mini-gauge-accent:#AAB3BD;--mini-gauge-highlight:linear-gradient(to bottom,#C9D0D8 0%,#AAB3BD 48%,#7A8490 100%)}
+body.dark[data-mini-gauge-color="black"]{--mini-gauge-accent:#B8C0CA;--mini-gauge-highlight:linear-gradient(to bottom,#D2D8DF 0%,#B8C0CA 48%,#858E9A 100%)}
 body.dark[data-player-gauge-color="blue"]{--player-gauge-accent:#33B5FF;--player-gauge-highlight:linear-gradient(to bottom,#53C4FF 0%,#279DDD 48%,#117CB8 100%)}
 body.dark[data-player-gauge-color="teal"]{--player-gauge-accent:#3BD6C1;--player-gauge-highlight:linear-gradient(to bottom,#59E2D0 0%,#28B8A5 48%,#118A7D 100%)}
 body.dark[data-player-gauge-color="crimson"]{--player-gauge-accent:#FF5A7F;--player-gauge-highlight:linear-gradient(to bottom,#FF7896 0%,#E3476E 48%,#B92750 100%)}
 body.dark[data-player-gauge-color="indigo"]{--player-gauge-accent:#9B91FF;--player-gauge-highlight:linear-gradient(to bottom,#B0A9FF 0%,#8178E4 48%,#5C55B8 100%)}
 body.dark[data-player-gauge-color="amber"]{--player-gauge-accent:#FFB52E;--player-gauge-highlight:linear-gradient(to bottom,#FFC85C 0%,#E69A22 48%,#B96B08 100%)}
+body.dark[data-player-gauge-color="silver"]{--player-gauge-accent:#AAB3BD;--player-gauge-highlight:linear-gradient(to bottom,#C9D0D8 0%,#AAB3BD 48%,#7A8490 100%)}
+body.dark[data-player-gauge-color="black"]{--player-gauge-accent:#B8C0CA;--player-gauge-highlight:linear-gradient(to bottom,#D2D8DF 0%,#B8C0CA 48%,#858E9A 100%)}
 /* O dono fornece os dois arquivos depois; ate la a pilha cai em Geneva/Verdana
    -- ver html/fonts/README.md. font-display:swap evita texto invisivel
    enquanto o arquivo nao existe: o fallback aparece de imediato. */
@@ -283,16 +521,17 @@ button:disabled{opacity:.35}
 .ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 
 /* ====== status bar ===================================================== */
-.statusbar{height:var(--statusbar);flex:0 0 auto;background:var(--chrome);
+.statusbar{height:var(--statusbar);flex:0 0 auto;background:var(--status-bg);
+  color:var(--status-fg);text-shadow:var(--status-sh);
   display:flex;align-items:center;padding:0 7px;font-size:12px;font-weight:600;letter-spacing:0}
 .statusbar .mid{flex:1;text-align:center;font-weight:400}
 .statusbar .brand,.statusbar .srv{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
 .statusbar .srv{font-weight:400}
 
 /* ====== nav bar ======================================================== */
-.navbar{height:var(--navbar);flex:0 0 auto;background:var(--chrome);
-  border-bottom:.5px solid var(--hair);display:flex;align-items:center;
-  padding:0 12px;position:relative;z-index:var(--z-chrome)}
+.navbar{height:var(--navbar);flex:0 0 auto;background:var(--nav-bg);
+  border-bottom:.5px solid var(--nav-edge);box-shadow:inset 0 1px 0 var(--nav-top);
+  display:flex;align-items:center;padding:0 12px;position:relative;z-index:var(--z-chrome)}
 /* .center cobre a barra de ponta a ponta para centralizar o titulo na JANELA,
    como no iOS 9. Sem pointer-events:none ele engole os cliques dos icones das
    pontas — era o que deixava o icone da esquerda morto.
@@ -304,20 +543,20 @@ button:disabled{opacity:.35}
    para participante real da fileira flex -- maior que este commit garante
    numa barra presente em toda tela; deixado como esta. */
 .navbar .center{position:absolute;left:0;right:0;display:flex;align-items:center;
-  justify-content:center;font-size:17px;font-weight:500;color:var(--accent);
+  justify-content:center;font-size:17px;font-weight:500;color:var(--nav-title);text-shadow:var(--nav-sh);
   pointer-events:none}
 .navbar .center > *{pointer-events:auto}
 .navbar .back{min-width:44px;min-height:44px;display:flex;align-items:center;gap:5px;
-  color:var(--accent);font-size:17px;z-index:var(--z-bar-local)}
+  color:var(--nav-fg);font-size:17px;z-index:var(--z-bar-local);text-shadow:var(--nav-sh)}
 .navbar .sp{flex:1}
 .navbar .r{z-index:var(--z-bar-local);display:flex;gap:16px;align-items:center}
 .navbar .theme,.navbar .search{width:44px;height:44px;padding:11px}
-.navbar .nav-apply{min-height:44px;padding:0 4px;color:var(--accent);font-size:17px;font-weight:600}
+.navbar .nav-apply{min-height:44px;padding:0 4px;color:var(--nav-fg);font-size:17px;font-weight:600;text-shadow:var(--nav-sh)}
 .navbar .cancel{min-height:44px;display:flex;align-items:center}
-.navbar .pickttl{color:var(--accent)}
-.ic{width:22px;height:22px;display:block;fill:none;stroke:var(--accent);stroke-width:1.7;
+.navbar .pickttl{color:var(--nav-title)}
+.ic{width:22px;height:22px;display:block;fill:none;stroke:var(--nav-fg);stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round}
-.ic.fill{fill:var(--accent);stroke:none}
+.ic.fill{fill:var(--nav-fg);stroke:none}
 .ic.sm{width:12px;height:12px;stroke-width:2.4}
 .ic.sm-search{width:14px;height:14px}
 .ic.chevleft{width:13px;height:20px}
@@ -331,7 +570,8 @@ button:disabled{opacity:.35}
    funcao e sai da fileira. margin-left:52px preserva o alinhamento visual com
    a coluna de icone de voltar/tema ao entrar no modo de busca. */
 .searchwrap{flex:1;min-width:0;margin-left:52px;margin-right:8px;display:flex;align-items:center;gap:8px;
-  background:var(--field);border-radius:7px;height:28px;padding:0 9px}
+  background:var(--field-bg);border:.5px solid var(--field-bd);box-shadow:var(--field-sh);
+  border-radius:7px;height:28px;padding:0 9px}
 .searchwrap ~ .sp{display:none}
 .searchwrap input{border:0;background:transparent;font-size:14px;width:100%;font-family:inherit;color:var(--text)}
 .searchwrap input::placeholder,.opsearch input::placeholder{color:var(--text2);opacity:1}
@@ -390,7 +630,8 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .row.sel+.row::before{background:transparent}
 .pane-left .row .t{font-weight:600}
 .pane-left .row.artistrow.sel .t{font-weight:700}
-.row .art{width:48px;height:48px;flex:0 0 48px;border-radius:2px;background-color:var(--field)}
+.row .art{width:48px;height:48px;flex:0 0 48px;border-radius:2px;background:var(--field-bg);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 2px var(--shadow)}
 /* Na raiz Albuns a capa e a informacao principal, entao ela cresce e a linha
    acompanha. Artistas e generos continuam com a linha de 72px do iOS 9. */
 .pane-left .row.albumrow{height:88px;--rhair-left:98px}
@@ -418,16 +659,17 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .row.chosen,.trow.chosen{background:var(--selected)}
 
 .library-tools{grid-column:1/-1;grid-row:1;min-height:56px;display:flex;align-items:center;
-  flex-wrap:wrap;gap:4px;padding:6px;border-bottom:.5px solid var(--hair);background:var(--chrome);
+  flex-wrap:wrap;gap:4px;padding:6px;border-bottom:.5px solid var(--tools-edge);background:var(--tools-bg);
   position:relative}
 /* The field yields, the icons cannot: they are fixed at 44px and wrapping one
    onto a second row costs more height than a narrower search box costs
    usefulness. min-width:90px made the field the one thing that would not give,
    so the commands wrapped instead. */
-.library-tools input{height:44px;min-width:0;flex:1 1 90px;border:0;border-radius:7px;
-  background:var(--field);padding:0 9px}
-.library-tools select{height:44px;border:.5px solid var(--hair);
-  border-radius:6px;background:var(--group-bg);padding:0 22px 0 7px;max-width:105px}
+.library-tools input{height:44px;min-width:0;flex:1 1 90px;border:.5px solid var(--field-bd);border-radius:7px;
+  background:var(--field-bg);box-shadow:var(--field-sh);padding:0 9px}
+.library-tools select{height:44px;border:.5px solid var(--button-bd);
+  border-radius:6px;background:var(--button-bg);box-shadow:var(--button-sh);
+  color:var(--button-fg);text-shadow:var(--button-tsh);padding:0 22px 0 7px;max-width:105px}
 /* "Adicionados recentemente" nao cabia em 105px e saia cortado no meio da
    palavra. Com folga na barra, o campo cresce ate caber. */
 .library-tools:not(.tight) select{max-width:168px}
@@ -443,9 +685,10 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .library-tools .select-command.tight svg{width:20px;height:20px;fill:none;
   stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .library-tools.tight .split-options-command{margin-left:auto}
-.icon-command{width:44px;height:44px;color:var(--accent);font-size:20px;flex:0 0 44px}
+.icon-command{width:44px;height:44px;color:var(--button-fg);font-size:20px;flex:0 0 44px;
+  text-shadow:var(--button-tsh)}
 .icon-command svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;
-  stroke-linecap:round;stroke-linejoin:round}
+  stroke-linecap:round;stroke-linejoin:round;filter:var(--icon-sh)}
 .selection-tools{display:flex;align-items:center;gap:2px;min-width:0;color:var(--accent)}
 .selection-count{min-width:24px;text-align:center;font-size:12px;font-variant-numeric:tabular-nums}
 .selection-add-command,.selection-done-command{height:44px;color:var(--accent)}
@@ -454,7 +697,7 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
   stroke-linecap:round;stroke-linejoin:round}
 .selection-add-command:disabled{color:var(--text2)}
 .selection-done-command{padding:0 7px}
-.text-command{min-width:44px;height:44px;color:var(--accent);font-size:13px}
+.text-command{min-width:44px;height:44px;color:var(--button-fg);font-size:13px;text-shadow:var(--button-tsh)}
 .split-options-command{flex:0 0 44px}
 .split-options{position:absolute;z-index:var(--z-picker);top:52px;right:7px;width:210px;
   overflow:hidden;border:.5px solid var(--hair);border-radius:7px;background:var(--picker-bg);
@@ -502,8 +745,8 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .opsearch{padding:10px 20px;display:flex;align-items:center;gap:9px}
 .row.newpl .t{color:var(--accent)}
 .row.newpl .favicon svg{stroke:var(--accent)}
-.opsearch input{flex:1;border:0;background:var(--field);border-radius:7px;
-  height:44px;padding:0 11px;font:inherit;font-size:14px;color:var(--text)}
+.opsearch input{flex:1;border:.5px solid var(--field-bd);background:var(--field-bg);box-shadow:var(--field-sh);
+  border-radius:7px;height:44px;padding:0 11px;font:inherit;font-size:14px;color:var(--text)}
 .opsearch-action{min-width:44px;min-height:44px;padding:0 4px;border:0;background:transparent;
   color:var(--accent);font:inherit;font-size:14px}
 
@@ -587,12 +830,12 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
    de um artista. */
 .navbar .center{gap:12px}
 .navbar .pickttl{min-height:44px;display:flex;align-items:center;gap:5px;pointer-events:auto}
-.navbar .segmented{margin-left:0;display:flex;border:0;border-radius:5px;box-shadow:inset 0 0 0 1px var(--accent);
-  overflow:hidden;font-size:13px;font-weight:500;pointer-events:auto;flex:0 0 auto}
-.navbar .segmented .seg{padding:3px 14px;color:var(--accent);line-height:1.5}
+.navbar .segmented{margin-left:0;display:flex;border:0;border-radius:5px;box-shadow:inset 0 0 0 1px var(--nav-fg),var(--button-sh);
+  background:var(--seg-bg);overflow:hidden;font-size:13px;font-weight:500;pointer-events:auto;flex:0 0 auto}
+.navbar .segmented .seg{padding:3px 14px;color:var(--nav-fg);line-height:1.5;text-shadow:var(--nav-sh)}
 .navbar .segmented button.seg{min-height:44px}
-.navbar .segmented button.seg+button.seg{border-left:1px solid var(--accent)}
-.navbar .segmented .seg.on{background:var(--accent);color:var(--accent-ink)}
+.navbar .segmented button.seg+button.seg{border-left:1px solid var(--nav-fg)}
+.navbar .segmented .seg.on{background:var(--seg-on);color:var(--accent-ink)}
 
 /* Grade de albuns com capa grande, como o app da Apple no iPad. */
 .albumgrid{display:grid;gap:18px 16px;padding:16px 20px 24px;
@@ -700,12 +943,13 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .empty .p{font-size:13px;color:var(--text2);text-align:center;max-width:360px;line-height:1.4}
 
 /* ajustes */
-.settings{background:var(--group-page);min-height:100%;padding:18px 0;width:100%}
+.settings{background-color:var(--group-page);background-image:var(--texture);min-height:100%;padding:18px 0;width:100%}
 .settings-scroller{overflow-x:hidden}
 .advanced-settings-shell{display:flex;height:100%;min-height:100%;flex-direction:column;padding:0;overflow:hidden}
 .advanced-settings-frame{display:block;width:100%;min-height:0;
   flex:1;border:0;background:var(--content);color-scheme:light dark}
-.sgroup{background:var(--group-bg);border-top:.5px solid var(--hair);border-bottom:.5px solid var(--hair);margin-bottom:26px}
+.sgroup{background:var(--group-bg);border-top:.5px solid var(--hair);border-bottom:.5px solid var(--hair);
+  border-radius:var(--group-rad);margin:0 var(--group-inset) 26px;overflow:hidden}
 .sgh{font-size:12px;color:var(--group-head);padding:0 16px 6px;text-transform:uppercase;letter-spacing:.02em}
 .srow{min-height:44px;display:flex;align-items:center;padding:0 16px;gap:10px;position:relative;font-size:16px}
 .srow+.srow::before{content:'';position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--hair)}
@@ -721,8 +965,9 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .player-help{padding:10px 16px;color:var(--text2);font-size:12px;line-height:1.4;
   border-top:.5px solid var(--hair)}
 .player-current{min-width:52px;text-align:center;color:var(--text2);font-size:12px}
-.player-choice button,.inline-commands button{min-width:44px;min-height:44px;padding:0 8px;color:var(--accent);
-  border:.5px solid var(--hair);border-radius:5px;font-size:12px}
+.player-choice button,.inline-commands button{min-width:44px;min-height:44px;padding:0 8px;color:var(--button-fg);
+  text-shadow:var(--button-tsh);background:var(--button-bg);box-shadow:var(--button-sh);
+  border:.5px solid var(--button-bd);border-radius:5px;font-size:12px}
 .settings-command-row{width:100%;text-align:left;color:var(--text)}
 .playlist-command{min-height:44px;padding:0 8px;color:var(--accent);font-size:14px}
 .playlist-command.destructive,.destructive{color:var(--destructive)}
@@ -735,11 +980,13 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .playlist-name-input{width:100%;border:0;border-bottom:1px solid var(--accent);
   background:transparent;font-size:24px;font-weight:300}
 .reorder-command{width:44px;height:44px;color:var(--accent);font-size:20px}
-.sw{width:44px;height:26px;border-radius:13px;background:var(--sw-off);position:relative;margin-left:auto;flex:0 0 44px}
+.sw{width:44px;height:44px;background:transparent;position:relative;margin-left:auto;flex:0 0 44px}
+.sw::before{content:'';position:absolute;left:0;top:9px;width:44px;height:26px;border-radius:13px;
+  background:var(--sw-off);box-shadow:inset 0 2px 3px rgba(0,0,0,.22),0 1px 0 rgba(255,255,255,.55)}
 .sw:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.sw.on{background:var(--sw-on)}
-.sw::after{content:'';position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;
-  background:var(--knob);box-shadow:0 1px 2px var(--knob-shadow);transition:left .15s}
+.sw.on::before{background:var(--sw-on)}
+.sw::after{content:'';position:absolute;top:11px;left:2px;width:22px;height:22px;border-radius:50%;
+  background:var(--knob);box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 1px 2px var(--knob-shadow);transition:left .15s}
 .sw.on::after{left:20px}
 .import-confirm{padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;
   border-top:.5px solid var(--hair);font-size:13px}
@@ -750,6 +997,8 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .scheme-crimson{--scheme-light:#C51F4A;--scheme-dark:#FF5A7F}
 .scheme-indigo{--scheme-light:#4B50B8;--scheme-dark:#9B91FF}
 .scheme-amber{--scheme-light:#9A5500;--scheme-dark:#FFB52E}
+.scheme-silver{--scheme-light:#4D5967;--scheme-dark:#AAB3BD}
+.scheme-black{--scheme-light:#343A42;--scheme-dark:#B8C0CA}
 /* Appearance (app level, C5): a solid dot per scheme instead of the
    light/dark split circle above -- reuses the same --scheme-light/
    --scheme-dark custom properties the .scheme-<key> classes already set on
@@ -758,12 +1007,14 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
    is --accent against the row's own --group-bg (the swatch row lives inside
    .sgroup, never directly on --group-page) -- see tools/check-contrast.py's
    'anel do swatch selecionado' pair. */
-.swatch-row{display:flex;gap:14px;flex:none;margin-left:auto}
-.swatch-dot{width:28px;height:28px;border-radius:50%;border:2.5px solid transparent;
-  padding:0;cursor:pointer;flex:0 0 28px;background:var(--scheme-light)}
-body.dark .swatch-dot{background:var(--scheme-dark)}
+.swatch-row{display:flex;gap:4px;flex:none;margin-left:auto}
+.swatch-dot{width:44px;height:44px;border:0;padding:0;cursor:pointer;flex:0 0 44px;
+  position:relative;background:transparent}
+.swatch-dot::before{content:'';position:absolute;left:8px;top:8px;width:28px;height:28px;
+  box-sizing:border-box;border-radius:50%;border:2.5px solid transparent;background:var(--scheme-light)}
+body.dark .swatch-dot::before{background:var(--scheme-dark)}
 .swatch-dot:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.swatch-dot[aria-checked="true"]{border-color:var(--accent)}
+.swatch-dot[aria-checked="true"]::before{border-color:var(--accent)}
 .font-option-row{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}
 .font-option-row:active{background:var(--selected)}
 .font-option-row:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
@@ -805,18 +1056,22 @@ body.dark .swatch-dot{background:var(--scheme-dark)}
    above them (LmsUi.setSurfaceFollowsApp) owns that state instead. */
 .segmented-row{justify-content:space-between}
 .segmented{margin-left:auto;display:flex;border:1px solid var(--accent);border-radius:5px;
-  overflow:hidden;flex:0 0 auto}
+  overflow:hidden;flex:0 0 auto;background:var(--seg-bg)}
 .segmented button{min-width:44px;height:44px;padding:0 14px;color:var(--accent);
   font-size:13px;white-space:nowrap}
 .segmented button+button{border-left:1px solid var(--accent)}
-.segmented button.on{background:var(--accent);color:var(--accent-ink)}
+.segmented button.on{background:var(--seg-on);color:var(--accent-ink)}
 /* Bar colour's first swatch ("Follow theme") has no single scheme to show --
    a diagonal split of --content/--chrome (never a literal hex, like every
    other token on this strip) stands for "whichever the active theme
    resolves to". Written at the same specificity as both of .swatch-dot's own
    light/dark defaults so it wins over them in either theme. */
-.swatch-dot.gauge-color-theme{background:linear-gradient(135deg,var(--content) 50%,var(--chrome) 50%)}
-body.dark .swatch-dot.gauge-color-theme{background:linear-gradient(135deg,var(--content) 50%,var(--chrome) 50%)}
+.swatch-dot.gauge-color-theme::before{background:linear-gradient(135deg,var(--content) 50%,var(--chrome) 50%)}
+body.dark .swatch-dot.gauge-color-theme::before{background:linear-gradient(135deg,var(--content) 50%,var(--chrome) 50%)}
+@media (max-width:480px){
+  .srow:has(>.swatch-row){flex-wrap:wrap;padding-top:5px;padding-bottom:5px}
+  .srow>.swatch-row{width:100%;margin-left:0;justify-content:space-between;gap:0}
+}
 /* .surface-preview is the aria-hidden strip at the foot of each player
    subscreen (v-bind="fullPreviewAttrs" etc., settings.js) -- the element
    itself carries data-surface-theme/-scheme/-font when that surface
@@ -832,14 +1087,14 @@ body.dark .swatch-dot.gauge-color-theme{background:linear-gradient(135deg,var(--
   background:var(--text2);align-self:center}
 
 /* ====== mini player ==================================================== */
-.mini{height:var(--mini);flex:0 0 auto;background:var(--chrome);border-top:.5px solid var(--hair);
+.mini{height:var(--mini);flex:0 0 auto;background:var(--mini-bg);border-top:.5px solid var(--mini-edge);
   display:flex;align-items:center;padding:0 12px;gap:16px;position:relative}
 .mini.empty,.mini.inactive{height:58px}
 .mini .np{flex:1;min-width:0;display:flex;align-items:center;
   justify-content:center;text-align:left;padding:6px 2px;color:var(--text);gap:9px}
 .mini .np:disabled{opacity:.55;cursor:default}
 .mini.empty .np{text-align:center}
-.mini-cover{width:42px;height:42px;flex:0 0 42px;overflow:hidden;background:var(--field);
+.mini-cover{width:42px;height:42px;flex:0 0 42px;overflow:hidden;background:var(--field-bg);
   display:flex;align-items:center;justify-content:center;color:var(--art-placeholder);font-size:15px}
 .mini-cover img{display:block;width:100%;height:100%;object-fit:cover}
 .mini-copy{display:flex;flex:1;min-width:0;flex-direction:column;justify-content:center;
@@ -888,13 +1143,13 @@ body[data-mini-gauge-style="flat"] .mini-gauge i{background-image:none;box-shado
 .badge.hi{color:var(--accent);border-color:var(--accent)}
 
 /* ====== tab bar ======================================================== */
-.tabbar{height:var(--tabbar);flex:0 0 auto;background:var(--chrome);
-  border-top:.5px solid var(--hair);display:flex}
+.tabbar{height:var(--tabbar);flex:0 0 auto;background:var(--tab-bg);
+  border-top:.5px solid var(--tab-edge);display:flex}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   color:var(--tabicon);font-size:10.5px;background:transparent;border:0}
 .tab svg{width:24px;height:24px;fill:none;stroke:var(--tabicon);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.tab.on{color:var(--accent)}
-.tab.on svg{stroke:var(--accent)}
+.tab.on{color:var(--tab-on)}
+.tab.on svg{stroke:var(--tab-on)}
 
 /* ====== now playing: tela inteira inspirada no iPod classic ============ */
 .npstage{position:fixed;inset:0;z-index:var(--z-np)}
@@ -1170,7 +1425,7 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   .workspace.player-adaptive .npfull.with-queue .queue.inline{height:100%;max-height:none}
 }
 
-@media (max-width:700px){
+@media (max-width:820px){
   .npstage.mode-adaptive{padding:10px}
   .npstage.mode-adaptive .npfull{--player-column:min(calc(100% - 36px),38vh,300px);
     width:100%;max-height:none;padding-top:38px}
@@ -1369,7 +1624,8 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .info-sheet{position:absolute;z-index:var(--z-sheet);right:0;top:0;bottom:0;
   width:min(480px,100vw);background:var(--group-page);display:flex;flex-direction:column}
 .info-head{height:44px;flex:0 0 44px;display:grid;grid-template-columns:90px 1fr 90px;
-  align-items:center;background:var(--chrome);border-bottom:.5px solid var(--hair)}
+  align-items:center;background:var(--nav-bg);border-bottom:.5px solid var(--nav-edge);
+  color:var(--nav-title);text-shadow:var(--nav-sh)}
 .info-head .ttl{text-align:center;font-weight:600}
 .back-command{color:var(--accent);height:44px}
 .info-content{padding-top:18px}
@@ -1386,7 +1642,7 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
    <lms-selection-bar> precisa vir antes do <footer class="app-footer">
    (app.js), porque .app-header/.app-footer sao display:contents e quem
    posiciona de fato e a ordem de origem dentro de .app. */
-.selection-bar{flex:0 0 44px;height:44px;background:var(--chrome);
+.selection-bar{flex:0 0 44px;height:44px;background:var(--tools-bg);
   border-top:.5px solid var(--hair);display:flex;align-items:center;justify-content:flex-start;gap:16px;
   padding:0 12px;font-size:13px}
 .selection-bar button{height:44px;color:var(--accent)}
@@ -1465,8 +1721,8 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .edition-years{display:flex;flex-direction:column;gap:2px;margin-top:5px;
   color:var(--text2);font-size:11px}
 
-/* ====== responsivo: celular (uma coluna) =============================== */
-@media (max-width:700px){
+/* ====== responsivo: celular e tablet vertical (uma coluna) ============= */
+@media (max-width:820px){
   :root{--pane:100%}
   .pane-left{width:100%;flex:1 1 100%;border-right:0}
   .split-divider,.split-options-command,.split-options{display:none}
@@ -1577,8 +1833,8 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .filter-apply{font-weight:600;text-align:right}
 .filter-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:10px 14px 16px}
 .filter-search{display:block;margin-bottom:12px}
-.filter-search input{width:100%;height:44px;border:0;border-radius:7px;
-  background:var(--field);color:var(--text);padding:0 10px}
+.filter-search input{width:100%;height:44px;border:.5px solid var(--field-bd);border-radius:7px;
+  background:var(--field-bg);box-shadow:var(--field-sh);color:var(--text);padding:0 10px}
 .filter-group{border:0;margin:0 0 14px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
 .filter-group legend{width:100%;padding:0 0 6px;font-size:12px;font-weight:600;color:var(--text2)}
 .filter-option{min-height:44px;padding:0 12px;border:.5px solid var(--hair);border-radius:8px;
@@ -1604,12 +1860,63 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .filter-view-tag{color:var(--text2);font-size:11px}
 .filter-chip-clear.destructive{color:var(--destructive)}
 .filter-actions{flex:0 0 auto;display:flex;align-items:center;gap:10px;
-  padding:8px 14px;background:var(--chrome);border-top:.5px solid var(--hair)}
+  padding:8px 14px;background:var(--tools-bg);border-top:.5px solid var(--tools-edge)}
 .filter-actions-spacer{flex:1}
 .filter-apply-main{min-width:120px;text-align:center;background:var(--selected);
   color:var(--accent);border-color:var(--accent);font-weight:600}
 /* Com a folha em tela cheia o corpo atras nao pode rolar junto. */
 body.filter-panel-open{overflow:hidden}
+body.legacy .navbar .theme,
+body.legacy .navbar .search,
+body.legacy .navbar .back,
+body.legacy .library-tools .icon-command,
+body.legacy .library-tools .text-command,
+body.legacy .selection-add-command,
+body.legacy .selection-done-command,
+body.legacy .mini .mini-action,
+[data-surface-theme="legacy"] .mini .mini-action{
+  background:var(--button-bg);border:1px solid var(--button-bd);border-radius:5px;
+  box-shadow:var(--button-sh);color:var(--button-fg);text-shadow:var(--button-tsh)
+}
+body.legacy .navbar .theme,
+body.legacy .navbar .search{padding:10px}
+body.legacy .navbar .theme .ic,
+body.legacy .navbar .search .ic,
+body.legacy .navbar .back .ic,
+body.legacy .library-tools svg,
+body.legacy .mini .mini-action .ic,
+[data-surface-theme="legacy"] .mini .mini-action .ic{filter:var(--icon-sh)}
+body.legacy .row.sel .t,
+body.legacy .row.sel .s,
+body.legacy .trow.playing .t,
+body.legacy .trow.playing .s{text-shadow:var(--engrave)}
+body.legacy .row .t,
+body.legacy .trow .t,
+body.legacy .album-title-row,
+body.legacy .npfull .head .t{text-shadow:var(--emboss)}
+body.legacy .sec-head{
+  background:linear-gradient(#B7BEC7,#9BA4B0);color:#FFFFFF;text-shadow:var(--engrave);
+  border-top:.5px solid rgba(255,255,255,.35);border-bottom:.5px solid #8B939E
+}
+body.legacy .sectitle{color:#4A5461;text-shadow:0 1px 0 rgba(255,255,255,.7)}
+body.legacy .albumart,
+body.legacy .gart,
+body.legacy .npfull .cover{
+  border:1px solid rgba(0,0,0,.32);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 2px 5px rgba(0,0,0,.30)
+}
+body.legacy .mini-gauge,
+[data-surface-theme="legacy"] .mini-gauge,
+body.legacy .npfull .bar,
+[data-surface-theme="legacy"] .npfull .bar{
+  border-color:var(--gauge-border);
+  box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.7)
+}
+body.legacy[data-color-scheme="silver"] .segmented button.on,
+body.legacy [data-surface-scheme="silver"]:not([data-surface-theme="light"]):not([data-surface-theme="dark"]) .segmented button.on,
+[data-surface-theme="legacy"][data-surface-scheme="silver"] .segmented button.on{
+  color:#1E2228;text-shadow:0 1px 0 rgba(255,255,255,.9)
+}
 @media (max-width:700px){
   .filter-panel.filter-small .filter-group{flex-direction:column;align-items:stretch}
   .filter-panel.filter-small .filter-years{flex-direction:row;flex-wrap:wrap}

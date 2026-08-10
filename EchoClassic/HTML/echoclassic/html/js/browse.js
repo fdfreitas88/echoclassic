@@ -36,7 +36,7 @@ Vue.component('lms-browse', {
   <div class="pane-left">
     <div class="library-tools" :class="{tight: toolbarTight}">
       <input v-model="ui.filter" type="search" placeholder="Filter"
-             :aria-label="'Filter' + viewLabel.toLowerCase()">
+             :aria-label="'Filter ' + viewLabel.toLowerCase()">
       <button ref="filterTrigger" class="icon-command filter-command" :class="{on: toolsActive}"
               :title="filterTitle" :aria-label="filterTriggerLabel" aria-haspopup="dialog"
               :aria-expanded="String(ui.filterPanel)" @click="openFilters">

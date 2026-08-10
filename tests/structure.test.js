@@ -26,6 +26,20 @@ test('templates keep structural accessibility gates closed', function () {
   assert.match(joined, /Choose a My Music root/);
   assert.match(joined, /albumSubtitle\(a\)/);
   assert.match(helpers.read('EchoClassic/HTML/echoclassic/html/js/opmlview.js'), /You have not added any favourites yet/);
+  assert.match(helpers.read('EchoClassic/HTML/echoclassic/html/js/actions.js'), /tab="favourites"/);
+  assert.doesNotMatch(helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js'), /'Filter' \+ viewLabel/);
+});
+
+test('dark footer tokens and tablet single-column breakpoint are explicit', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const dark = css.match(/body\.dark,\s*\[data-surface-theme="dark"\]\{([\s\S]*?)\n\}/);
+  assert.ok(dark, 'dark theme block');
+  ['--mini-bg:#0A0A0C', '--tab-bg:#0A0A0C', '--mini-control:#FFFFFF'].forEach(function (token) {
+    assert.match(dark[1], new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  });
+  assert.match(css, /responsivo: celular e tablet vertical[\s\S]*@media \(max-width:820px\)/);
+  assert.match(css, /\.swatch-dot\{width:44px;height:44px/);
+  assert.match(css, /@media \(max-width:480px\)[\s\S]*\.srow>\.swatch-row\{width:100%/);
 });
 
 /* O template so quebra em producao: um erro de compilacao aqui aparece como

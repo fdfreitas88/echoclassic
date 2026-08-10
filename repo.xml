@@ -2,7 +2,7 @@
 <!--
   Descritor de repositorio de extensoes do LMS.
 
-  PRIVATE 3.2.7 QA CANDIDATE: this local file intentionally does not point to a
+  PRIVATE 3.2.8 QA CANDIDATE: this local file intentionally does not point to a
   GitHub release asset. Do not publish this repo.xml as-is.
 
   O <url> aponta para um zip que contem a pasta EchoClassic na raiz. O <sha> e
@@ -21,16 +21,16 @@
     <title lang="PT">Echo Classic</title>
   </details>
   <plugins>
-    <plugin name="EchoClassic" version="3.2.7" minTarget="8.0" maxTarget="*">
+    <plugin name="EchoClassic" version="3.2.8" minTarget="8.0" maxTarget="*">
       <title lang="EN">Echo Classic</title>
       <title lang="PT">Echo Classic</title>
       <desc lang="EN">The iPad Music look of iOS 9, over your own library. Shows the native sample rate and bit depth of what actually reaches the DAC.</desc>
       <desc lang="PT">A aparencia do app Musica do iPad no iOS 9, sobre a sua biblioteca. Mostra a taxa nativa e a profundidade de bits do que realmente chega ao DAC.</desc>
-      <url>private-candidate/EchoClassic-3.2.7.zip</url>
+      <url>private-candidate/EchoClassic-3.2.8.zip</url>
       <link>https://github.com/fdfreitas88/echoclassic</link>
       <category>skin</category>
       <icon>https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/EchoClassic/HTML/echoclassic/html/images/icon.svg</icon>
-      <sha>bee4a2efbec798ab697ba1c53be6de8f83f29473</sha>
+      <sha>d3493a9a16a342ad625ac9b4eb5cc05126fb8512</sha>
       <creator>Felipe Freitas</creator>
     </plugin>
   </plugins>

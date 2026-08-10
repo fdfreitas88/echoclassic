@@ -47,6 +47,7 @@ Vue.component('lms-settings', {
                 :aria-checked="String(fullFollowsApp)" aria-label="Match app appearance"
                 @click="setFullFollowsApp(!fullFollowsApp)"><span class="visually-hidden">Match app appearance</span></button>
       </div>
+      <div v-if="fullFollowsApp" class="player-help">Uses the app theme, accent and font.</div>
       <template v-if="!fullFollowsApp">
         <div class="srow segmented-row">
           <span>Theme</span>
@@ -139,6 +140,7 @@ Vue.component('lms-settings', {
                 :aria-checked="String(smallFollowsApp)" aria-label="Match app appearance"
                 @click="setSmallFollowsApp(!smallFollowsApp)"><span class="visually-hidden">Match app appearance</span></button>
       </div>
+      <div v-if="smallFollowsApp" class="player-help">Uses the app theme, accent and font.</div>
       <template v-if="!smallFollowsApp">
         <div class="srow segmented-row">
           <span>Theme</span>
@@ -193,6 +195,7 @@ Vue.component('lms-settings', {
                 :aria-checked="String(miniFollowsApp)" aria-label="Match app appearance"
                 @click="setMiniFollowsApp(!miniFollowsApp)"><span class="visually-hidden">Match app appearance</span></button>
       </div>
+      <div v-if="miniFollowsApp" class="player-help">Uses the app theme, accent and font.</div>
       <template v-if="!miniFollowsApp">
         <div class="srow segmented-row">
           <span>Theme</span>
@@ -364,10 +367,16 @@ Vue.component('lms-settings', {
 
   <div class="sgh">Appearance</div>
   <div class="sgroup">
-    <div class="srow">Dark theme
-      <button type="button" class="sw" :class="{on: ui.dark}" role="switch"
-              :aria-checked="String(ui.dark)" aria-label="Dark theme"
-              @click="toggleTheme"><span class="visually-hidden">Dark theme</span></button>
+    <div class="srow segmented-row">
+      <span>Theme</span>
+      <div class="segmented" role="radiogroup" aria-label="Theme">
+        <button v-for="option in themeOptions" :key="'app-theme-' + option.key" type="button"
+                role="radio" :aria-checked="ui.theme === option.key ? 'true' : 'false'"
+                :tabindex="ui.theme === option.key ? 0 : -1"
+                :class="{on: ui.theme === option.key}"
+                @keydown="radioKey($event, themeOptions, ui.theme, selectTheme)"
+                @click="selectTheme(option.key)">{{ option.label }}</button>
+      </div>
     </div>
     <div class="srow">Accent colour
       <div class="swatch-row" role="radiogroup" aria-label="Accent colour">
@@ -381,6 +390,7 @@ Vue.component('lms-settings', {
       </div>
     </div>
   </div>
+  <div class="sgh">Font</div>
   <div class="sgroup font-option-group" role="radiogroup" aria-label="Font">
     <button v-for="font in fontOptions" :key="font.key" type="button"
             class="srow font-option-row" :class="'font-' + font.key"
@@ -512,10 +522,7 @@ Vue.component('lms-settings', {
       currentLanguage: (window.LmsStr && LmsStr.lang) || 'EN',
       colorSchemes: LmsUi.COLOR_SCHEMES,
       fontOptions: LmsUi.FONT_OPTIONS,
-      /* ui.js nao exporta uma lista equivalente para o tema: sao so duas
-         opcoes fixas, Light e Dark, que nunca crescem como as outras listas
-         -- criar uma constante la so para isto seria indireção sem ganho. */
-      themeOptions: [{ key: 'light', label: 'Light' }, { key: 'dark', label: 'Dark' }],
+      themeOptions: LmsUi.THEME_OPTIONS,
       playerPositions: LmsUi.PLAYER_POSITIONS,
       playerPresentations: LmsUi.PLAYER_PRESENTATIONS,
       gaugeStyles: LmsUi.GAUGE_STYLES,
@@ -529,6 +536,7 @@ Vue.component('lms-settings', {
       showPreviews: false,
       pendingImport: null,
       settingsReturnScroll: 0,
+      appearanceReturnScroll: 0,
       advancedSettingsDirty: false,
       advancedSettingsPage: '',
       advancedThemeObserver: null,
@@ -591,10 +599,12 @@ Vue.component('lms-settings', {
        for one commit, until C6 lands it as a footer under those same rows
        (phase2-decisions.md, D-2). */
     miniGaugeStyleLabel: function () {
-      return this.tr(this.ui.dark ? 'Mini player style (dark theme)' : 'Mini player style (light theme)');
+      if (this.ui.theme === 'legacy') return this.tr('Mini player style (Legacy theme)');
+      return this.tr(this.ui.theme === 'dark' ? 'Mini player style (dark theme)' : 'Mini player style (light theme)');
     },
     playerGaugeStyleLabel: function () {
-      return this.tr(this.ui.dark ? 'Full player style (dark theme)' : 'Full player style (light theme)');
+      if (this.ui.theme === 'legacy') return this.tr('Full player style (Legacy theme)');
+      return this.tr(this.ui.theme === 'dark' ? 'Full player style (dark theme)' : 'Full player style (light theme)');
     },
     crossfadeHint: function () {
       return this.tr(this.store.transitionType
@@ -670,7 +680,7 @@ Vue.component('lms-settings', {
       immediate: true,
       handler: function () { this.syncSettingsScreen(); }
     },
-    'ui.dark': function () { this.themeAdvancedFrame(); },
+    'ui.theme': function () { this.themeAdvancedFrame(); },
     'ui.colorScheme': function () { this.themeAdvancedFrame(); },
     'ui.fontFamily': function () { this.themeAdvancedFrame(); }
   },
@@ -753,11 +763,11 @@ Vue.component('lms-settings', {
         'background:color-mix(in srgb,var(--chrome) 88%,transparent)!important;',
         'border:.5px solid color-mix(in srgb,var(--group-bg) 86%,var(--hair))!important;}',
         '.ec-rail-top{padding:18px 14px 10px!important;}',
-        '.ec-rail-search{box-sizing:border-box;height:34px;border-radius:17px;background:var(--field)!important;',
+        '.ec-rail-search{box-sizing:border-box;height:44px;border-radius:22px;background:var(--field)!important;',
         'color:var(--text2)!important;display:grid;grid-template-columns:24px 1fr 24px;align-items:center;',
         'padding:0 9px!important;font:16px var(--app-font)!important;}',
         '.ec-rail-search input{border:0!important;background:transparent!important;color:var(--text)!important;',
-        'height:34px!important;min-height:34px!important;padding:0!important;width:100%!important;font:16px var(--app-font)!important;}',
+        'height:44px!important;min-height:44px!important;padding:0!important;width:100%!important;font:16px var(--app-font)!important;}',
         '.ec-rail-search input::placeholder{color:var(--text2)!important;opacity:1;}',
         '.ec-rail-mag{width:15px;height:15px;border:1.8px solid currentColor;border-radius:50%;position:relative;}',
         '.ec-rail-mag:after{content:"";position:absolute;width:7px;height:1.8px;right:-5px;bottom:-3px;background:currentColor;transform:rotate(45deg);}',
@@ -772,7 +782,7 @@ Vue.component('lms-settings', {
         '.ec-rail-identity span{display:block;margin-top:2px;color:var(--text2)!important;font-size:12px;line-height:1.2;}',
         '.ec-rail-list{min-height:0;overflow:auto;padding:0 12px 16px!important;}',
         '.ec-rail-label{padding:12px 10px 5px!important;color:var(--text2)!important;font-size:12px;text-transform:uppercase;}',
-        '.ec-nav-row{appearance:none;border:0!important;width:100%;min-height:42px;display:grid!important;grid-template-columns:28px 1fr auto;',
+        '.ec-nav-row{appearance:none;border:0!important;width:100%;min-height:44px;display:grid!important;grid-template-columns:28px 1fr auto;',
         'align-items:center;gap:9px;padding:5px 8px!important;border-radius:19px!important;background:transparent!important;',
         'color:var(--text)!important;text-align:left;font:16px var(--app-font)!important;}',
         '.ec-nav-row.ec-active{background:color-mix(in srgb,var(--text2) 20%,transparent)!important;color:var(--accent)!important;}',
@@ -782,6 +792,12 @@ Vue.component('lms-settings', {
         '.ec-g-green{background:linear-gradient(#63da75,#30b94d);}.ec-g-orange{background:linear-gradient(#ffb34a,#ff8900);}',
         '.ec-g-red{background:linear-gradient(#ff6b6b,#ff3b30);}.ec-g-purple{background:linear-gradient(#ad7bff,#715aff);}',
         '.ec-lms-chrome-hidden{display:none!important;}',
+        '.ec-plugin-store #topGraphicBox{display:none!important;}',
+        '.ec-plugin-store #homeMenu{display:block!important;box-sizing:border-box;width:100%!important;',
+        'margin:0!important;padding:0 12px 110px!important;background:var(--group-page)!important;color:var(--text)!important;}',
+        '#echoclassic-native-plugin-title{margin:0 0 16px!important;color:var(--text)!important;',
+        'font:700 30px/1.1 var(--app-font)!important;}',
+        '.ec-plugin-store .pluginItem .headerLabel{display:flex!important;align-items:center;gap:8px;min-height:44px;}',
         '#echoclassic-advanced-hero{display:none!important;}',
         '#echoclassic-plugin-store-tools{box-sizing:border-box;margin:4px 12px 18px!important;',
         'display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;}',
@@ -892,7 +908,7 @@ Vue.component('lms-settings', {
         'font:12px/1.2 var(--app-font)!important;text-transform:uppercase;letter-spacing:.02em;}',
         'input[type="text"],input[type="password"],input[type="search"],input[type="number"],',
         'input[type="url"],input[type="email"],textarea,select{box-sizing:border-box;',
-        'min-height:36px;max-width:100%;border:.5px solid var(--hair)!important;border-radius:9px!important;',
+        'min-height:44px;max-width:100%;border:.5px solid var(--hair)!important;border-radius:9px!important;',
         'background:var(--group-bg)!important;color:var(--text)!important;',
         'font:17px var(--app-font)!important;padding:5px 10px!important;}',
         'input[type="text"],input[type="password"],input[type="search"],input[type="url"],',
@@ -900,9 +916,9 @@ Vue.component('lms-settings', {
         'input[type="number"]{width:90px!important;}',
         'textarea{min-height:70px;}',
         'input[type="range"]{accent-color:var(--accent);}',
-        'input[type="checkbox"],input[type="radio"]{accent-color:var(--accent);}',
+        'input[type="checkbox"],input[type="radio"]{width:24px;height:24px;min-height:24px;accent-color:var(--accent);}',
         'button,input[type="button"],input[type="submit"],input[type="reset"],.button,.stdclick{',
-        'min-height:34px;border:.5px solid var(--hair)!important;border-radius:9px!important;',
+        'min-height:44px;border:.5px solid var(--hair)!important;border-radius:9px!important;',
         'background:var(--chrome)!important;color:var(--accent)!important;',
         'font:16px var(--app-font)!important;padding:6px 13px!important;box-shadow:none!important;}',
         'button:active,input[type="button"]:active,input[type="submit"]:active,.button:active,.stdclick:active{',
@@ -1319,6 +1335,16 @@ Vue.component('lms-settings', {
         row.removeAttribute('data-ec-plugin-label');
       });
     },
+    enhanceNativePluginStore: function (doc) {
+      var menu = doc.getElementById && doc.getElementById('homeMenu');
+      if (!menu) return;
+      var title = doc.getElementById('echoclassic-native-plugin-title');
+      if (!title) {
+        title = this.advancedCreateEl(doc, 'h1', '', 'Plugins');
+        title.id = 'echoclassic-native-plugin-title';
+        menu.insertBefore(title, menu.firstChild);
+      }
+    },
     buildAdvancedIpadShell: function (frame, doc) {
       if (!doc || !doc.body || !doc.createElement || !doc.querySelector) return;
       var self = this;
@@ -1339,8 +1365,14 @@ Vue.component('lms-settings', {
       if (doc.body.classList) {
         doc.body.classList.toggle('ec-plugin-store', pluginStore);
       }
-      if (pluginStore) this.buildAdvancedPluginStore(doc, root);
-      else this.removeAdvancedPluginStore(doc);
+      /* The LMS 9.1 plugin form lives in #homeMenu, outside setup_chooser.
+         Building cards from setup_chooser therefore produced an empty custom
+         grid while leaving the real manager visible underneath it, with two
+         toolbars and the old breadcrumb chrome. Keep the authoritative native
+         form (including its real checkboxes and submit controls), remove the
+         incomplete duplicate and isolate/style #homeMenu instead. */
+      this.removeAdvancedPluginStore(doc);
+      if (pluginStore) this.enhanceNativePluginStore(doc);
 
       if (!selector || !selector.options || !selector.options.length) return;
       var rail = doc.getElementById('echoclassic-advanced-rail');
@@ -1439,7 +1471,7 @@ Vue.component('lms-settings', {
         if (value) doc.documentElement.style.setProperty(key, value);
       }
 
-      doc.documentElement.setAttribute('data-echoclassic-theme', this.ui.dark ? 'dark' : 'light');
+      doc.documentElement.setAttribute('data-echoclassic-theme', this.ui.theme || 'light');
       doc.documentElement.setAttribute('data-echoclassic-scheme', this.ui.colorScheme || 'blue');
       doc.documentElement.setAttribute('data-echoclassic-font', this.ui.fontFamily || 'system');
       if (doc.body) {
@@ -1548,8 +1580,13 @@ Vue.component('lms-settings', {
       return labels[screen] || '';
     },
     openAppearanceScreen: function (screen) {
+      var self = this;
+      this.appearanceReturnScroll = this.$el ? this.$el.scrollTop : 0;
       LmsNav.push('settings', { label: this.appearanceScreenLabel(screen), screen: screen });
       this.ui.appearanceScreen = screen;
+      this.$nextTick(function () {
+        if (self.$el) self.$el.scrollTop = 0;
+      });
     },
     /* Reconciles ui.appearanceScreen with LmsNav.top('settings'); factored
        out of the 'nav.settings.length' watch (immediate:true) so it also
@@ -1567,25 +1604,18 @@ Vue.component('lms-settings', {
       var top = LmsNav.top('settings');
       var advanced = !!(top && top.advanced);
       var wasAdvanced = this.ui.advancedSettings;
+      var wasAppearance = !!this.ui.appearanceScreen;
       this.ui.advancedSettings = advanced;
       this.ui.appearanceScreen = advanced ? null : ((top && top.screen) || null);
       if (advanced) LmsUi.applyAdvancedSettings = this.applyAdvancedFrame;
       else if (LmsUi.applyAdvancedSettings === this.applyAdvancedFrame) LmsUi.applyAdvancedSettings = null;
       if (wasAdvanced && !advanced) this.restoreSettingsScroll();
+      if (wasAppearance && !advanced && !this.ui.appearanceScreen) this.restoreAppearanceScroll();
     },
-    /* Hard constraint: the app-level Theme control must go through
-       LmsUi.toggleTheme() and never assign state.dark directly -- toggleTheme
-       also swaps in the gauge style remembered for the theme being entered.
-       C5 replaced the Theme radiogroup with the inline Dark theme switch in
-       the Appearance group (@click="toggleTheme" directly there, since a
-       two-state switch never needs the key-to-boolean translation this
-       method exists for), but the method stays: appearance-ui.test.js's
-       toggleTheme regression net calls it directly, and it is the one place
-       that guarantees "select the same theme again" is a no-op rather than a
-       spurious toggle. */
+    /* Theme selection goes through ui.js so the app theme, the downgrade
+       dark boolean and the per-theme gauge style all move together. */
     selectTheme: function (key) {
-      var wantDark = key === 'dark';
-      if (wantDark !== this.ui.dark) LmsUi.toggleTheme();
+      if (key !== this.ui.theme) LmsUi.setTheme(key);
     },
     setPlayerPosition: function (key) { LmsUi.setPlayerPosition(key); },
     setFullTheme: function (key) { LmsUi.setSurfaceTheme('full', key); },
@@ -1625,6 +1655,12 @@ Vue.component('lms-settings', {
       var self = this;
       this.$nextTick(function () {
         if (self.$el) self.$el.scrollTop = Math.max(0, self.settingsReturnScroll || 0);
+      });
+    },
+    restoreAppearanceScroll: function () {
+      var self = this;
+      this.$nextTick(function () {
+        if (self.$el) self.$el.scrollTop = Math.max(0, self.appearanceReturnScroll || 0);
       });
     },
     openAdvanced: function () {
@@ -1714,7 +1750,7 @@ Vue.component('lms-settings', {
 	        var playerPresentations = ['adaptive', 'fullscreen'];
 	        var playerPositions = ['right', 'left', 'center'];
 	        var gaugeStyles = ['flat', 'classic'];
-	        var gaugeColors = ['theme', 'blue', 'teal', 'crimson', 'indigo', 'amber'];
+	        var gaugeColors = keysOf(LmsUi.GAUGE_COLORS);
 	        /* N1 (3.2.6b): estas duas ainda eram literais duplicados de
 	           LmsUi.COLOR_SCHEMES/LmsUi.FONT_OPTIONS, apesar do comentario acima
 	           -- so tabs/views tinham sido corrigidas. Escolher Podium Sans (ou
@@ -1724,6 +1760,7 @@ Vue.component('lms-settings', {
 	           value", nao so a chave. Agora derivam de LmsUi, como queryArtModes
 	           ja fazia. */
 	        var colorSchemes = keysOf(LmsUi.COLOR_SCHEMES);
+	        var themes = keysOf(LmsUi.THEME_OPTIONS);
 	        var fontFamilies = keysOf(LmsUi.FONT_OPTIONS);
 	        var enums = [
 	          ['tab', tabs], ['musicView', views], ['albumMode', albumModes],
@@ -1732,8 +1769,9 @@ Vue.component('lms-settings', {
 	          ['miniGaugeStyle', gaugeStyles], ['playerGaugeStyle', gaugeStyles],
 	          ['lightMiniGaugeStyle', gaugeStyles], ['lightPlayerGaugeStyle', gaugeStyles],
 	          ['darkMiniGaugeStyle', gaugeStyles], ['darkPlayerGaugeStyle', gaugeStyles],
+	          ['legacyMiniGaugeStyle', gaugeStyles], ['legacyPlayerGaugeStyle', gaugeStyles],
 	          ['miniGaugeColor', gaugeColors], ['playerGaugeColor', gaugeColors],
-	          ['colorScheme', colorSchemes], ['fontFamily', fontFamilies]
+	          ['theme', themes], ['colorScheme', colorSchemes], ['fontFamily', fontFamilies]
 	        ];
 	        for (var e = 0; e < enums.length; e++) {
 	          var key = enums[e][0];

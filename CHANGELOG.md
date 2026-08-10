@@ -13,6 +13,50 @@ language at the time. They are left as they were: they describe releases that
 were already published under those notes, and rewriting them would misreport
 what was announced.
 
+## [3.2.8] — 2026-08-09
+
+### Added
+
+- Added the Legacy theme as a third appearance theme, with iOS 6-style chrome
+  paint, grouped settings tables, bevels, embossed/engraved text shadows and
+  classic progress-bar defaults. [code]
+- Added Silver and Black accent schemes across app and per-player appearance
+  controls. In Legacy, Silver keeps light chrome with dark bar text, while
+  Black carries the dark chrome through the toolbar and mini player. [code]
+
+### Changed
+
+- Appearance theme state now persists as `light`, `dark` or `legacy`, while
+  still writing the old `dark` boolean for one-release downgrade compatibility.
+  [code]
+- Extended the contrast checker from two theme columns to Light, Dark and
+  Legacy across all seven accent schemes. [code]
+- Added the missing Font section header in Appearance. [code]
+
+### Fixed
+
+- Dark mode now applies its own chrome tokens to the mini player and tab bar,
+  keeping controls and labels legible when surfaces follow the app theme.
+  [code]
+- Contextual Back now pops the active tab's own stack instead of crossing into
+  the previously visited tab. [code]
+- English sessions no longer expose Portuguese labels in the player, album
+  metadata, favourites, selection bar, OPML search or global search states.
+  [code]
+- Malformed favourite entries now show an explicit load failure with Retry
+  instead of a static, non-actionable row. [code]
+- Album search enrichment now requests artwork metadata, the library filter
+  has a correctly spaced accessible name, portrait tablets use the single-
+  column drill-in layout, and the mobile colour swatches fit at 390px. [code]
+- Player layout now opens at its first control instead of inheriting a hidden
+  scroll offset, restores the previous offset on return, explains inherited
+  appearance controls, and gives switches and colour swatches 44px touch
+  targets. [code]
+- Advanced LMS plugin settings now retain the server's authoritative plugin
+  form and controls while removing the incomplete duplicate card layer and
+  obsolete native header chrome. Native settings controls also receive 44px
+  row and button targets. [code]
+
 ## [3.2.7] — 2026-08-09
 
 Private owner-QA candidate. Do not treat this as published until the owner

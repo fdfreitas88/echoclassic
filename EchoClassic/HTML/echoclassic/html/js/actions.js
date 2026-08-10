@@ -215,7 +215,7 @@
            apagava o favorito que tivesse ocupado aquela posicao. */
         if (!this.item || !this.item.url || this.busy) return;
         this.busy = true;
-        LmsUi.setBusy('Atualizando favoritos…');
+        LmsUi.setBusy('Updating favourites…');
         try {
           if (this.favoriteExists && this.favoriteIndex !== null) {
             await LmsApi.favoriteRemove(this.favoriteIndex);
@@ -284,14 +284,14 @@
       <div class="sgroup">
         <div class="srow">Year of this edition <span class="v">{{ info.year || 'Not available' }}</span></div>
         <div class="srow">Original year <span class="v">{{ info.originalYear || 'Not available' }}</span></div>
-        <div v-if="info.releaseType" class="srow">Tipo <span class="v">{{ info.releaseType }}</span></div>
+        <div v-if="info.releaseType" class="srow">Type <span class="v">{{ info.releaseType }}</span></div>
       </div>
       <div class="sgh">Credits</div>
       <div class="sgroup">
         <div v-if="info.albumArtist" class="srow">Album artist <span class="v">{{ info.albumArtist }}</span></div>
         <div v-if="info.composer" class="srow">Composition <span class="v">{{ info.composer }}</span></div>
         <div v-if="info.conductor" class="srow">Conductor <span class="v">{{ info.conductor }}</span></div>
-        <div v-if="info.band" class="srow">Conjunto <span class="v">{{ info.band }}</span></div>
+        <div v-if="info.band" class="srow">Band <span class="v">{{ info.band }}</span></div>
         <div v-if="!info.albumArtist && !info.composer && !info.conductor && !info.band"
              class="srow"><span class="muted">No credits in the metadata.</span></div>
       </div>
@@ -384,14 +384,19 @@
     template: `
 <div v-if="ui.selectionMode" class="selection-bar">
   <button @click="cancel">Cancel</button>
-  <strong>{{ count }} selecionado{{ count === 1 ? '' : 's' }}</strong>
+  <strong>{{ selectionLabel }}</strong>
 </div>`,
     data: function () { return { ui: LmsUi.state }; },
     computed: {
       values: function () {
         return Object.keys(this.ui.selected).map(function (k) { return LmsUi.state.selected[k]; });
       },
-      count: function () { return this.values.length; }
+      count: function () { return this.values.length; },
+      selectionLabel: function () {
+        var text = this.count === 1 ? 'item selected' : 'items selected';
+        if (window.LmsStr && LmsStr.t) text = LmsStr.t(text);
+        return this.count + ' ' + text;
+      }
     },
     methods: {
       cancel: function () { LmsUi.clearSelection(); }
@@ -402,7 +407,7 @@
     template: `
 <div class="favorites-body">
   <section v-if="ui.pins.length" class="pinned-section">
-    <div class="sectitle">Fixados</div>
+    <div class="sectitle">Pinned</div>
     <div class="pinned-scroll">
       <button v-for="p in ui.pins" :key="LmsUi.selectionKey(p)" class="pinned-item"
               @click="open(p)">
@@ -412,7 +417,7 @@
     </div>
   </section>
   <div class="favorites-list">
-    <lms-opml root="favorites" tab="favoritos"></lms-opml>
+    <lms-opml root="favorites" tab="favourites"></lms-opml>
   </div>
 </div>`,
     data: function () { return { ui: LmsUi.state, LmsUi: LmsUi }; },

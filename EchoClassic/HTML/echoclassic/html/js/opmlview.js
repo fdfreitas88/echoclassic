@@ -15,6 +15,11 @@ Vue.component('lms-opml', {
     <div class="h">Could not open</div><div class="p">{{ error }}</div>
     <button class="retry-command" @click="load">Try again</button>
   </div>
+  <div v-else-if="invalidContent" class="empty">
+    <div class="h">Could not load favourites</div>
+    <div class="p">The server returned items that cannot be opened.</div>
+    <button class="retry-command" @click="load">Try again</button>
+  </div>
   <template v-else-if="hasContent">
     <template v-for="(it, i) in items">
       <div v-if="it.kind === 'text'" :key="'t' + i" class="optext">{{ it.title }}</div>
@@ -76,6 +81,15 @@ Vue.component('lms-opml', {
        Com items.length === 1 o ramo vazio nunca rodava e a tela mostrava o
        "Empty" cru do servidor. Uma lista so de rotulos e uma lista vazia. */
     hasContent: function () {
+      return this.items.some(function (it) {
+        if (it.kind === 'search') return true;
+        if (it.kind === 'menu') return !!it.node;
+        if (it.kind === 'audio') return !!it.playNode;
+        return false;
+      });
+    },
+    invalidContent: function () {
+      if (this.root !== 'favorites' || !this.items.length || this.hasContent) return false;
       return this.items.some(function (it) { return it.kind !== 'text'; });
     },
     searchTerm: function () {
@@ -91,7 +105,7 @@ Vue.component('lms-opml', {
          serviço de rádio" com o TuneIn funcionando e conselho errado. */
       if (this.searchTerm) {
         return 'The search for “' + this.searchTerm + '” found nothing. ' +
-          'Confira a grafia ou tente um termo mais curto.';
+          'Check the spelling or try a shorter term.';
       }
       if (this.frame) return 'This list has no items right now.';
       if (this.root === 'radio') {
@@ -118,15 +132,18 @@ Vue.component('lms-opml', {
       return /\burl\b/i.test((it && it.title) || '');
     },
     searchPlaceholder: function (it) {
-      return this.isTuneUrl(it) ? 'https://servidor/stream' : it.title;
+      return this.isTuneUrl(it) ? 'https://server/stream' : it.title;
     },
     searchTitle: function (it) {
       return this.isTuneUrl(it)
         ? 'Enter the full stream address, including http:// or https://'
-        : 'Searchr em ' + it.title;
+        : this.tr('Search in') + ' ' + it.title;
     },
     searchAction: function (it) {
-      return this.isTuneUrl(it) ? 'Sintonizar' : 'Search';
+      return this.isTuneUrl(it) ? this.tr('Tune') : this.tr('Search');
+    },
+    tr: function (text) {
+      return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
     },
     openMusic: function () {
       LmsUi.setTab('music');
@@ -186,7 +203,7 @@ Vue.component('lms-opml', {
         var hits = await LmsApi.opmlSearch(LmsStore.state.playerId || '',
                                            it.node || this.node(), term, 0, 200);
         LmsNav.push(this.tab, {
-          kind: 'opml', label: 'Resultados: ' + term, term: term, preloaded: hits
+          kind: 'opml', label: this.tr('Results:') + ' ' + term, term: term, preloaded: hits
         });
       } catch (e) {
         /* A lista atual continua valida; o problema foi desta consulta. */
