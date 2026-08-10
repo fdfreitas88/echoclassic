@@ -119,3 +119,16 @@ test('PUB-01: release.sh compares the package against the tree that produced it,
     'the 3.2.8 zip had the right number of files and the wrong contents -- only a content comparison sees that');
   assert.match(release, /o pacote nao e a arvore que o gerou/);
 });
+
+test('PUB-01: the committed descriptor is publishable -- public asset URL, no candidate marker, version agreed', function () {
+  const repo = helpers.read('repo.xml');
+  assert.doesNotMatch(repo, /private-candidate|[Dd]o not publish/,
+    'this exact text shipped in the 3.2.8 descriptor while it sat ready to publish');
+
+  const version = repo.match(/<plugin\s+name="EchoClassic"\s+version="([^"]+)"/)[1];
+  const url = repo.match(/<url>([^<]+)<\/url>/)[1];
+  assert.equal(url,
+    'https://github.com/fdfreitas88/echoclassic/releases/download/v' + version +
+    '/EchoClassic-' + version + '.zip',
+    'the descriptor has to point at the asset of its own release: a local path installs nothing, and a URL from another version installs the wrong thing');
+});
