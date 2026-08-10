@@ -1,8 +1,7 @@
 # Forum post — Echo Classic 3.2.9
 
 Draft for the Lyrion / Squeezebox community forum. Plain text with BBCode-friendly
-structure; the image URLs are pinned to the `v3.2.9` tag so they cannot drift when
-`main` moves.
+structure. The image URLs point at `main`, so they follow the current screenshots.
 
 ---
 
@@ -32,35 +31,42 @@ Source, releases and changelog: https://github.com/fdfreitas88/echoclassic
 
 ### Screenshots
 
-> Captured at 3.2.5 against a real server (LMS 9.1.1, 1,400 albums) — not mockups. The
-> library, filtering and phone views below are unchanged in substance. They predate the
-> Legacy theme, the Silver and Black accents and the rebuilt Settings screens; I will
-> post fresh shots of those in a follow-up rather than pass these off as current.
+Taken against the deployed 3.2.9 on a real server — LMS 9.1.1, 1,464 albums, 14,797
+songs. Not mockups.
 
-**Library, split view.** The album header states codec, bitrate range, sample rate, bit
-depth and where the file comes from.
-https://raw.githubusercontent.com/fdfreitas88/echoclassic/v3.2.9/docs/img/forum/library.png
+**Library, split view.** The album header states codec, sample rate, bit depth and where
+the file comes from — Qobuz here rather than the local library.
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/library.png
+
+**Legacy**, the third theme: bevelled chrome, gradient title bar, glossy segmented
+controls, grouped tables.
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/legacy.png
+
+**Dark**, with the hi-res badge on every track above CD quality.
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/dark.png
 
 **One panel for filtering, sorting, grouping and playback preference.** It works as a
 draft — nothing applies until you press Apply.
-https://raw.githubusercontent.com/fdfreitas88/echoclassic/v3.2.9/docs/img/forum/filters.png
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/filters.png
 
 **Filters combine, each one a removable pill.** Grouping adds section headers with counts
-and never drops a row from the list.
-https://raw.githubusercontent.com/fdfreitas88/echoclassic/v3.2.9/docs/img/forum/sections.png
+and never drops a row.
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/sections.png
 
-**Dark theme**, with the hi-res badge on every track above CD quality.
-https://raw.githubusercontent.com/fdfreitas88/echoclassic/v3.2.9/docs/img/forum/dark.png
+**Player layout**, rebuilt in this release: how the player opens, which side the panel
+takes, and one switch for appearance.
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/playerlayout.png
+
+**Settings** on one scrollable screen, and the accent/type controls.
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/settings.png
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/themes.png
 
 **Playlists**, editable in place.
-https://raw.githubusercontent.com/fdfreitas88/echoclassic/v3.2.9/docs/img/forum/playlists.png
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/playlists.png
 
-**Themes and accents.**
-https://raw.githubusercontent.com/fdfreitas88/echoclassic/v3.2.9/docs/img/forum/themes.png
-
-**On a phone**, the same panel becomes a full-screen single-column sheet with the primary
-actions pinned to the bottom.
-https://raw.githubusercontent.com/fdfreitas88/echoclassic/v3.2.9/docs/img/forum/mobile.png
+**On a phone**, the same panel becomes a full-screen sheet with the primary actions
+pinned to the bottom.
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/mobile.png
 
 ---
 
@@ -153,9 +159,9 @@ changed for you:
   only where the system provides it.
 - **Portuguese is the only translation** shipping today. The dictionary is keyed by the
   English phrase, so adding a language is a `strings.txt` edit, not a code change.
-- **3.2.9 has not had a visual walkthrough on a server yet.** Its changes are covered by
-  tests — 335 of them — and read in the source, but the CHANGELOG marks them `[code]` or
-  `[measured]`, never `[live]`. I would rather say that here than have you find it.
+- **3.2.9 is freshly deployed.** The screens above are the running build, but the release
+  has had a first pass rather than a long soak; the CHANGELOG marks each change with how
+  it was established. If something looks wrong, it probably is — please say so.
 - The retired `/mojo` alias is deliberately not registered and returns 404.
 
 Bug reports and screenshots of anything that looks wrong are welcome on the issue
