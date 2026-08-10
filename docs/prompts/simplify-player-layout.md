@@ -1,6 +1,6 @@
 # Echo Classic — simplify Settings > Player layout
 
-Read `CLAUDE.md` first, then execute this task. This is a focused UX correction
+Read the project brief first, then execute this task. This is a focused UX correction
 for the 3.2.9 publication candidate. Do not re-audit the whole product.
 
 ## Outcome
@@ -241,7 +241,7 @@ replace them with behavior-oriented assertions.
 - Never edit vendored Vue.
 - Use `apply_patch` for manual changes.
 - Preserve unrelated user changes.
-- Each commit: at most three files, per `CLAUDE.md`.
+- Each commit: at most three files, per the project brief.
 - Use Conventional Commits with project scopes.
 - Add evidence entries to `docs/prompts/state.md` after landed commits.
 - Run focused tests during implementation. Run the full gates once in verify:
@@ -256,7 +256,7 @@ node tools/check-source-language.js
 ## Visual acceptance
 
 After local tests, deploy only with explicit approval and follow the recovery
-rules in `CLAUDE.md`. Verify the exact deployed tree in Chrome at:
+rules in the project brief. Verify the exact deployed tree in Chrome at:
 
 - 1512x805 or 1440x900;
 - 768x1024;
