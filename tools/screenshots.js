@@ -195,6 +195,50 @@ const SHOTS = {
       await api.sleep(1200);
     }
   },
+  /* The native LMS screens, rebuilt in 3.2.9. Not a bare iframe: the server's
+     own page loads into a same-origin frame inside Settings, with the skin's
+     navigation bar and Save button around it. Opened through the user's own
+     path -- clicking the row -- for the same reason as the playerlayout preset:
+     the component reconciles its state with the top of the navigation stack, so
+     state written from outside can be undone before the shot fires. */
+  advancedlms: {
+    width: 1440, height: 900, wait: 60000,
+    setup: async function (api) {
+      await api.ready();
+      api.reset();
+      window.LmsUi.setTab('settings');
+      await api.sleep(2500);
+      const row = Array.prototype.find.call(
+        document.querySelectorAll('.settings-scroller button'),
+        (el) => /advanced lms|avancad/i.test(el.textContent || ''));
+      if (!row) throw new Error('Advanced LMS settings row not found -- is the server serving this build?');
+      row.click();
+      await api.frameReady(/basic\.html/);
+      await api.sleep(1200);
+    }
+  },
+  /* Plugin management as a grid. We swap the frame's src rather than hunting for
+     the link in the sidebar: the sidebar lives inside the frame, so relying on
+     it means depending on two DOM trees instead of one. The window is taller
+     because the grid only tells its story with three rows of cards. */
+  plugins: {
+    width: 1440, height: 1050, wait: 70000,
+    setup: async function (api) {
+      await api.ready();
+      api.reset();
+      window.LmsUi.setTab('settings');
+      await api.sleep(2500);
+      const row = Array.prototype.find.call(
+        document.querySelectorAll('.settings-scroller button'),
+        (el) => /advanced lms|avancad/i.test(el.textContent || ''));
+      if (!row) throw new Error('Advanced LMS settings row not found');
+      row.click();
+      await api.frameReady(/basic\.html/);
+      document.querySelector('iframe').src = '/echoclassic/settings/server/plugins.html';
+      await api.frameReady(/plugins\.html/);
+      await api.sleep(2000);
+    }
+  },
   dark: {
     width: 1440, height: 900, wait: 45000,
     setup: async function (api) {
@@ -249,6 +293,19 @@ const HELPERS = `
        observadores de filtro e grupo, e o recarregamento seguinte apagava a
        navegacao logo depois de o album ser aberto -- o painel direito saia
        vazio na foto. */
+  /* The Advanced settings frame is same-origin -- the proxy serves everything
+     through a single port -- so we can wait for the inner document to actually
+     be ready instead of sleeping a fixed amount. The optional pattern argument
+     exists because for a few frames after the src changes, the OLD document
+     still reports readyState 'complete'. */
+  frameReady: (re) => api.until(() => {
+    const f = document.querySelector('iframe');
+    if (!f || !f.contentDocument) return false;
+    const d = f.contentDocument;
+    if (d.readyState !== 'complete') return false;
+    if (re && !re.test(d.location.pathname)) return false;
+    return !!(d.body && d.body.children.length);
+  }),
     reset: () => {
       const vm = api.browse();
       if (vm && vm.setPaneWidth) vm.setPaneWidth(window.__paneWidth || 560);
