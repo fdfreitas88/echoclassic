@@ -607,3 +607,31 @@ test('I18N-01: both phrases carry a Portuguese translation in strings.txt', func
   assert.match(strings, /\tEN\tOne item added to the playback queue\.\n\tPT\tUm item adicionado à fila de reprodução\./);
   assert.match(strings, /\tEN\t\{n\} items added to the playback queue\.\n\tPT\t\{n\} itens adicionados à fila de reprodução\./);
 });
+
+/* SPL-2: one Player layout screen now renders whichever surface is selected,
+   so the form has to read that surface's stored values by name. surfaceAttrs
+   cannot serve: it deliberately drops a key whose value is 'app', because it
+   feeds a root binding where the attribute must be absent. A settings form
+   needs the opposite -- the raw value, 'app' included -- and it must not keep
+   its own copy of the surface-to-key mapping, which is one rename away from
+   editing the wrong preference. */
+
+test('SPL-2: surfaceValues returns the stored values of a surface, app included', function () {
+  const u = ui();
+  assert.deepEqual(plain(u.surfaceValues('full')), { theme: 'app', scheme: 'app', font: 'app' },
+    'a surface that follows the app stores app in all three, and the form has to see it');
+  assert.deepEqual(plain(u.surfaceAttrs('full')), {},
+    'sanity: the root binding drops those same keys, which is why it cannot serve the form');
+
+  u.setSurfaceFollowsApp('small', false);
+  u.setSurfaceTheme('small', 'dark');
+  u.setSurfaceScheme('small', 'amber');
+  const small = plain(u.surfaceValues('small'));
+  assert.equal(small.theme, 'dark');
+  assert.equal(small.scheme, 'amber');
+  assert.equal(small.font, u.state.fontFamily, 'the font came from the seed the OFF branch wrote');
+
+  assert.deepEqual(plain(u.surfaceValues('full')), { theme: 'app', scheme: 'app', font: 'app' },
+    'reading one surface must not disturb another');
+  assert.deepEqual(plain(u.surfaceValues('nope')), {}, 'an unknown surface answers with nothing, never throws');
+});
