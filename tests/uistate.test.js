@@ -294,6 +294,7 @@ test('uma carga da 3.2.5 (sem as chaves de superficie) preserva tudo que ja exis
     assert.equal(u.state[key], 'app', key + ' cai em "app" quando a carga nao tinha a chave');
   });
 
+  assert.equal(u.state.theme, 'dark');
   assert.equal(u.state.dark, true);
   assert.equal(u.state.colorScheme, 'teal');
   assert.equal(u.state.fontFamily, 'chicago');
@@ -303,6 +304,8 @@ test('uma carga da 3.2.5 (sem as chaves de superficie) preserva tudo que ja exis
   assert.equal(u.state.lightPlayerGaugeStyle, 'classic');
   assert.equal(u.state.darkMiniGaugeStyle, 'flat');
   assert.equal(u.state.darkPlayerGaugeStyle, 'flat');
+  assert.equal(u.state.legacyMiniGaugeStyle, 'classic');
+  assert.equal(u.state.legacyPlayerGaugeStyle, 'classic');
   assert.equal(u.state.miniGaugeColor, 'amber');
   assert.equal(u.state.playerGaugeColor, 'indigo');
   assert.equal(u.state.prefer, 'quality');
@@ -447,7 +450,7 @@ test('surfaceFollowsApp e verdadeiro so quando as tres chaves daquela superficie
    default, so flipping the toggle never repaints the player by itself. */
 test('setSurfaceFollowsApp(surface, false) semeia dos valores resolvidos do app; (surface, true) volta a "app" nas tres', function () {
   const u = ui();
-  u.state.dark = true;
+  u.setTheme('dark');
   u.state.colorScheme = 'amber';
   u.state.fontFamily = 'chicago';
 
@@ -462,7 +465,7 @@ test('setSurfaceFollowsApp(surface, false) semeia dos valores resolvidos do app;
 
   /* The app changing afterwards does not retroactively touch the seeded
      custom values -- OFF is a snapshot, not a live link. */
-  u.state.dark = false;
+  u.setTheme('light');
   u.state.colorScheme = 'teal';
   assert.equal(u.state.fullTheme, 'dark');
   assert.equal(u.state.fullColorScheme, 'amber');
@@ -482,6 +485,31 @@ test('setSurfaceFollowsApp(surface, false) semeia dos valores resolvidos do app;
   /* Unknown surface: no key anywhere is touched, and it does not throw. */
   assert.doesNotThrow(function () { u.setSurfaceFollowsApp('players', false); });
   assert.doesNotThrow(function () { u.setSurfaceFollowsApp('players', true); });
+});
+
+test('theme enum migrates from the old dark boolean and preserves downgrade dark writes', function () {
+  const store = {};
+  const u = helpers.uiContext({
+    localStorage: {
+      getItem: function (k) { return k === 'echoclassic.ui.v2' ? JSON.stringify({ dark: true }) : null; },
+      setItem: function (k, v) { store[k] = String(v); },
+      removeItem: function (k) { delete store[k]; }
+    }
+  }).LmsUi;
+
+  assert.equal(u.state.theme, 'dark');
+  assert.equal(u.state.dark, true);
+  u.setTheme('legacy');
+  assert.equal(u.state.theme, 'legacy');
+  assert.equal(u.state.dark, false);
+  assert.equal(u.state.miniGaugeStyle, 'classic');
+  assert.equal(u.state.playerGaugeStyle, 'classic');
+
+  const blob = JSON.parse(store['echoclassic.ui.v2']);
+  assert.equal(blob.theme, 'legacy');
+  assert.equal(blob.dark, false);
+  assert.equal(blob.legacyMiniGaugeStyle, 'classic');
+  assert.equal(blob.legacyPlayerGaugeStyle, 'classic');
 });
 
 /* Phase 2 decision (3.2.6c C6): PLAYER_POSITIONS reorders to left/center/

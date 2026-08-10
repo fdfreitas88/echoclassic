@@ -28,7 +28,15 @@
     Object.freeze({ key: 'teal', label: 'Atlantic Teal' }),
     Object.freeze({ key: 'crimson', label: 'Editorial Crimson' }),
     Object.freeze({ key: 'indigo', label: 'Studio Indigo' }),
-    Object.freeze({ key: 'amber', label: 'Hi-Fi Amber' })
+    Object.freeze({ key: 'amber', label: 'Hi-Fi Amber' }),
+    Object.freeze({ key: 'silver', label: 'Silver' }),
+    Object.freeze({ key: 'black', label: 'Black' })
+  ]);
+
+  var THEME_OPTIONS = Object.freeze([
+    Object.freeze({ key: 'light', label: 'Light' }),
+    Object.freeze({ key: 'dark', label: 'Dark' }),
+    Object.freeze({ key: 'legacy', label: 'Legacy' })
   ]);
 
   var FONT_OPTIONS = Object.freeze([
@@ -95,11 +103,17 @@
     Object.freeze({ key: 'teal', label: 'Atlantic Teal' }),
     Object.freeze({ key: 'crimson', label: 'Editorial Crimson' }),
     Object.freeze({ key: 'indigo', label: 'Studio Indigo' }),
-    Object.freeze({ key: 'amber', label: 'Hi-Fi Amber' })
+    Object.freeze({ key: 'amber', label: 'Hi-Fi Amber' }),
+    Object.freeze({ key: 'silver', label: 'Silver' }),
+    Object.freeze({ key: 'black', label: 'Black' })
   ]);
 
   function isColorScheme(key) {
     return COLOR_SCHEMES.some(function (scheme) { return scheme.key === key; });
+  }
+
+  function isThemeOption(key) {
+    return THEME_OPTIONS.some(function (theme) { return theme.key === key; });
   }
 
   function isFontOption(key) {
@@ -113,7 +127,7 @@
      'app', which is meaningless. These three predicates are the only place
      'app' is a legal value. */
   function isSurfaceTheme(key) {
-    return key === 'app' || key === 'light' || key === 'dark';
+    return key === 'app' || isThemeOption(key);
   }
 
   function isSurfaceScheme(key) {
@@ -340,6 +354,27 @@
     : (isGaugeStyle(saved.playerGaugeStyle) ? saved.playerGaugeStyle : 'classic');
   var darkMiniGaugeStyle = isGaugeStyle(saved.darkMiniGaugeStyle) ? saved.darkMiniGaugeStyle : 'flat';
   var darkPlayerGaugeStyle = isGaugeStyle(saved.darkPlayerGaugeStyle) ? saved.darkPlayerGaugeStyle : 'flat';
+  var legacyMiniGaugeStyle = isGaugeStyle(saved.legacyMiniGaugeStyle) ? saved.legacyMiniGaugeStyle : 'classic';
+  var legacyPlayerGaugeStyle = isGaugeStyle(saved.legacyPlayerGaugeStyle) ? saved.legacyPlayerGaugeStyle : 'classic';
+  var initialTheme = isThemeOption(saved.theme) ? saved.theme : (saved.dark ? 'dark' : 'light');
+
+  function currentMiniGaugeStyle(theme) {
+    if (theme === 'dark') return darkMiniGaugeStyle;
+    if (theme === 'legacy') return legacyMiniGaugeStyle;
+    return lightMiniGaugeStyle;
+  }
+
+  function currentPlayerGaugeStyle(theme) {
+    if (theme === 'dark') return darkPlayerGaugeStyle;
+    if (theme === 'legacy') return legacyPlayerGaugeStyle;
+    return lightPlayerGaugeStyle;
+  }
+
+  function gaugePrefix(theme) {
+    if (theme === 'dark') return 'dark';
+    if (theme === 'legacy') return 'legacy';
+    return 'light';
+  }
 
   /* persist() ja gravava musicView; so o estado inicial ignorava, e a raiz
      escolhida se perdia a cada recarga. */
@@ -393,18 +428,21 @@
        corrompido, cai no sentinela 'last' em vez de travar a escolha de
        player num id que nao existe mais. */
     defaultPlayer: isDefaultPlayer(saved.defaultPlayer) ? saved.defaultPlayer : DEFAULT_PLAYER_LAST,
-    dark: !!saved.dark,
+    theme: initialTheme,
+    dark: initialTheme === 'dark',
     searching: false,
     query: '',
     full: false,
     playerPresentation: isPlayerPresentation(saved.playerPresentation) ? saved.playerPresentation : 'adaptive',
     playerPosition: isPlayerPosition(saved.playerPosition) ? saved.playerPosition : 'right',
-    miniGaugeStyle: saved.dark ? darkMiniGaugeStyle : lightMiniGaugeStyle,
-    playerGaugeStyle: saved.dark ? darkPlayerGaugeStyle : lightPlayerGaugeStyle,
+    miniGaugeStyle: currentMiniGaugeStyle(initialTheme),
+    playerGaugeStyle: currentPlayerGaugeStyle(initialTheme),
     lightMiniGaugeStyle: lightMiniGaugeStyle,
     lightPlayerGaugeStyle: lightPlayerGaugeStyle,
     darkMiniGaugeStyle: darkMiniGaugeStyle,
     darkPlayerGaugeStyle: darkPlayerGaugeStyle,
+    legacyMiniGaugeStyle: legacyMiniGaugeStyle,
+    legacyPlayerGaugeStyle: legacyPlayerGaugeStyle,
     miniGaugeColor: isGaugeColor(saved.miniGaugeColor) ? saved.miniGaugeColor : 'theme',
     playerGaugeColor: isGaugeColor(saved.playerGaugeColor) ? saved.playerGaugeColor : 'theme',
     playerFullscreen: false,
@@ -470,7 +508,10 @@
 
   function applyAppearance() {
     if (!document.body) return;
-    document.body.classList.toggle('dark', state.dark);
+    state.dark = state.theme === 'dark';
+    document.body.classList.toggle('dark', state.theme === 'dark');
+    document.body.classList.toggle('legacy', state.theme === 'legacy');
+    document.body.setAttribute('data-theme', state.theme);
     document.body.setAttribute('data-color-scheme', state.colorScheme);
     document.body.setAttribute('data-font', state.fontFamily);
     document.body.setAttribute('data-mini-gauge-style', state.miniGaugeStyle);
@@ -485,7 +526,7 @@
   function persist() {
     try {
       localStorage.setItem('echoclassic.ui.v2', JSON.stringify({
-        tab: state.tab, musicView: state.musicView, dark: state.dark,
+        tab: state.tab, musicView: state.musicView, theme: state.theme, dark: state.theme === 'dark',
         byView: byView,
         albumMode: state.albumMode, queueArtMode: state.queueArtMode,
         defaultPlayer: state.defaultPlayer,
@@ -498,6 +539,8 @@
         lightPlayerGaugeStyle: state.lightPlayerGaugeStyle,
         darkMiniGaugeStyle: state.darkMiniGaugeStyle,
         darkPlayerGaugeStyle: state.darkPlayerGaugeStyle,
+        legacyMiniGaugeStyle: state.legacyMiniGaugeStyle,
+        legacyPlayerGaugeStyle: state.legacyPlayerGaugeStyle,
         miniGaugeColor: state.miniGaugeColor, playerGaugeColor: state.playerGaugeColor,
         prefer: state.prefer,
         miniTheme: state.miniTheme, miniColorScheme: state.miniColorScheme, miniFont: state.miniFont,
@@ -542,9 +585,16 @@
   }
 
   function toggleTheme() {
-    state.dark = !state.dark;
-    state.miniGaugeStyle = state.dark ? state.darkMiniGaugeStyle : state.lightMiniGaugeStyle;
-    state.playerGaugeStyle = state.dark ? state.darkPlayerGaugeStyle : state.lightPlayerGaugeStyle;
+    var next = state.theme === 'light' ? 'dark' : (state.theme === 'dark' ? 'legacy' : 'light');
+    setTheme(next);
+  }
+
+  function setTheme(key) {
+    if (!isThemeOption(key)) return;
+    state.theme = key;
+    state.dark = key === 'dark';
+    state.miniGaugeStyle = currentMiniGaugeStyle(key);
+    state.playerGaugeStyle = currentPlayerGaugeStyle(key);
     applyAppearance();
     persist();
   }
@@ -629,7 +679,7 @@
       state[map.scheme] = 'app';
       state[map.font] = 'app';
     } else {
-      state[map.theme] = state.dark ? 'dark' : 'light';
+      state[map.theme] = state.theme;
       state[map.scheme] = state.colorScheme;
       state[map.font] = state.fontFamily;
     }
@@ -639,7 +689,7 @@
   function setGaugeStyle(target, key) {
     if ((target !== 'mini' && target !== 'player') || !isGaugeStyle(key)) return;
     state[target + 'GaugeStyle'] = key;
-    state[(state.dark ? 'dark' : 'light') + (target === 'mini' ? 'Mini' : 'Player') + 'GaugeStyle'] = key;
+    state[gaugePrefix(state.theme) + (target === 'mini' ? 'Mini' : 'Player') + 'GaugeStyle'] = key;
     applyAppearance();
     persist();
   }
@@ -1136,6 +1186,7 @@
 
   global.LmsUi = {
     state: state, TABS: TABS, MUSIC_VIEWS: MUSIC_VIEWS,
+    THEME_OPTIONS: THEME_OPTIONS, setTheme: setTheme,
     COLOR_SCHEMES: COLOR_SCHEMES, setColorScheme: setColorScheme,
     FONT_OPTIONS: FONT_OPTIONS, setFontFamily: setFontFamily,
     surfaceAttrs: surfaceAttrs, surfaceFollowsApp: surfaceFollowsApp,

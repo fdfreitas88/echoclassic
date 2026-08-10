@@ -22,7 +22,7 @@ import sys
 CSS = os.path.join(os.path.dirname(__file__), '..',
                    'EchoClassic/HTML/echoclassic/html/css/ios9.css')
 
-SCHEMES = ['blue', 'teal', 'crimson', 'indigo', 'amber']
+SCHEMES = ['blue', 'teal', 'crimson', 'indigo', 'amber', 'silver', 'black']
 
 # Tokens que um bloco de esquema pode sobrescrever. Um par so precisa ser
 # reexaminado por esquema quando um dos dois lados esta nesta lista -- os
@@ -138,18 +138,21 @@ def pair_relevant(fg, bg, scheme_only):
 def build_contexts(rules):
     root = rules.get(':root', {})
     dark = rules.get('body.dark', {})
+    legacy = rules.get('body.legacy', {})
     surf_light = rules.get('[data-surface-theme="light"]', {})
     surf_dark = rules.get('[data-surface-theme="dark"]', {})
+    surf_legacy = rules.get('[data-surface-theme="legacy"]', {})
 
-    contexts = [('app / default (blue)', root, dark, False)]
+    contexts = [('app / default (blue)', root, dark, legacy, False)]
     for k in SCHEMES:
         contexts.append((
             'app / %s' % k,
             merge(root, rules.get('body[data-color-scheme="%s"]' % k, {})),
             merge(dark, rules.get('body.dark[data-color-scheme="%s"]' % k, {})),
+            merge(legacy, rules.get('body.legacy[data-color-scheme="%s"]' % k, {})),
             True
         ))
-    contexts.append(('superficie / default (blue)', surf_light, surf_dark, False))
+    contexts.append(('superficie / default (blue)', surf_light, surf_dark, surf_legacy, False))
     for k in SCHEMES:
         # Superficie com o PROPRIO tema tambem sobrescrito (o par so aparece
         # quando o proprio elemento traz data-surface-theme="light"/"dark" --
@@ -159,6 +162,7 @@ def build_contexts(rules):
             'superficie+tema / %s' % k,
             merge(surf_light, rules.get('[data-surface-theme="light"][data-surface-scheme="%s"]' % k, {})),
             merge(surf_dark, rules.get('[data-surface-theme="dark"][data-surface-scheme="%s"]' % k, {})),
+            merge(surf_legacy, rules.get('[data-surface-theme="legacy"][data-surface-scheme="%s"]' % k, {})),
             True
         ))
         # A combinacao que o defeito relatado pelo coordenador expunha: SO o
@@ -176,6 +180,8 @@ def build_contexts(rules):
                 'body:not(.dark) [data-surface-scheme="%s"]:not([data-surface-theme="dark"])' % k, {})),
             merge(dark, rules.get(
                 'body.dark [data-surface-scheme="%s"]:not([data-surface-theme="light"])' % k, {})),
+            merge(legacy, rules.get(
+                'body.legacy [data-surface-scheme="%s"]:not([data-surface-theme="light"]):not([data-surface-theme="dark"])' % k, {})),
             True
         ))
     return contexts
@@ -191,17 +197,17 @@ def main():
     rules = parse_rules(css)
     contexts = build_contexts(rules)
 
-    print('  %-32s %-36s %7s %7s  %5s  %s'
-          % ('contexto', 'par', 'claro', 'escuro', 'min', 'veredito'))
+    print('  %-32s %-36s %7s %7s %7s  %5s  %s'
+          % ('contexto', 'par', 'claro', 'escuro', 'legado', 'min', 'veredito'))
     failures = 0
     total = 0
-    for ctx_label, light, dark, scheme_only in contexts:
+    for ctx_label, light, dark, legacy, scheme_only in contexts:
         for label, fg, bg, minimum in PAIRS:
             if not pair_relevant(fg, bg, scheme_only):
                 continue
             total += 1
             cells, ok = [], True
-            for theme in (light, dark):
+            for theme in (light, dark, legacy):
                 f, b = token(theme, fg), token(theme, bg)
                 if not (f and b and f.startswith('#') and b.startswith('#')):
                     cells.append(None)
@@ -214,8 +220,8 @@ def main():
             if not ok:
                 failures += 1
             fmt = lambda v: ('%.2f' % v) if v else '  -  '
-            print('  %-32s %-36s %7s %7s  %5.1f  %s'
-                  % (ctx_label, label, fmt(cells[0]), fmt(cells[1]), minimum,
+            print('  %-32s %-36s %7s %7s %7s  %5.1f  %s'
+                  % (ctx_label, label, fmt(cells[0]), fmt(cells[1]), fmt(cells[2]), minimum,
                      'passa' if ok else 'REPROVA'))
 
     print()

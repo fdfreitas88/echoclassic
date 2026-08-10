@@ -44,19 +44,17 @@ test('exactly one sgh "Appearance", and the old sub-headings are gone', function
   assert.doesNotMatch(src, /<div class="sgh">Colour scheme<\/div>/);
 });
 
-test('the General group does not contain the dark-theme switch; Appearance does, as a single inline toggle', function () {
+test('the General group does not contain theme controls; Appearance does inline', function () {
   const src = settingsSrc();
   const generalBlock = src.split('<div class="sgh">General</div>')[1].split('<div class="sgh">')[0];
   assert.doesNotMatch(generalBlock, /aria-label="Dark theme"/);
+  assert.doesNotMatch(generalBlock, /aria-label="Theme"/);
   assert.match(generalBlock, /Rate and bits in the bottom bar/);
   assert.match(generalBlock, /Highlight hi-res/);
 
-  /* C5: Appearance is inline now -- one role="switch" driving toggleTheme,
-     not a drill-in row into a Theme subscreen. */
-  const appearanceBlock = src.split('<div class="sgh">Appearance</div>')[1].split('<div class="sgh">')[0];
-  const darkSwitches = appearanceBlock.match(/aria-label="Dark theme"/g) || [];
-  assert.equal(darkSwitches.length, 1);
-  assert.match(appearanceBlock, /role="switch"[\s\S]{0,200}@click="toggleTheme"/);
+  const appearanceBlock = src.split('<div class="sgh">Appearance</div>')[1].split('<div class="sgh">Queue</div>')[0];
+  assert.match(appearanceBlock, /role="radiogroup" aria-label="Theme"/);
+  assert.match(appearanceBlock, /@click="selectTheme\(option\.key\)"/);
 });
 
 test('every Appearance drill-in row is a type="button" with a name for its destination', function () {
@@ -147,21 +145,20 @@ test('theme/colorScheme/font/progress no longer exist as appearanceScreen branch
   assert.match(players, /Mini player/);
 });
 
-test('the inline Appearance group renders the Dark theme switch, the Accent colour swatch row and the Font checkmark rows', function () {
+test('the inline Appearance group renders Theme, Accent colour and Font controls', function () {
   const src = settingsSrc();
-  const appearanceBlock = src.split('<div class="sgh">Appearance</div>')[1].split('<div class="sgh">')[0];
+  const appearanceBlock = src.split('<div class="sgh">Appearance</div>')[1].split('<div class="sgh">Queue</div>')[0];
 
-  // Dark theme: a real switch, not a two-option radiogroup.
-  assert.match(appearanceBlock, /role="switch"[\s\S]{0,200}@click="toggleTheme"/);
+  assert.match(appearanceBlock, /role="radiogroup" aria-label="Theme"/);
+  assert.match(appearanceBlock, /v-for="option in themeOptions"/);
+  assert.match(appearanceBlock, /ui\.theme === option\.key/);
+  assert.match(appearanceBlock, /@click="selectTheme\(option\.key\)"/);
 
-  // Accent colour: 5 dots in their own radiogroup, aria-label per swatch.
   assert.match(appearanceBlock, /role="radiogroup" aria-label="Accent colour"/);
   assert.match(appearanceBlock, /v-for="scheme in colorSchemes"/);
   assert.match(appearanceBlock, /class="swatch-dot"/);
   assert.match(appearanceBlock, /:aria-label="tr\(scheme\.label\)"/);
 
-  // Font: the five-option checkmark radiogroup, same pattern as before,
-  // just no longer behind a drill-in.
   assert.match(appearanceBlock, /role="radiogroup" aria-label="Font"/);
   assert.match(appearanceBlock, /v-for="font in fontOptions"/);
 
@@ -224,7 +221,7 @@ test('N4: Match app appearance ON resets to \'app\', OFF seeds from the app\'s r
   assert.equal(self.smallFollowsApp, true);
   assert.equal(self.miniFollowsApp, true);
 
-  ui.dark = true;
+  ui.theme = 'dark';
   ui.colorScheme = 'crimson';
   ui.fontFamily = 'espy';
 
@@ -241,7 +238,7 @@ test('N4: Match app appearance ON resets to \'app\', OFF seeds from the app\'s r
 
   /* The app changes AFTER the seed -- the full player keeps its own custom
      values; it does not track the app live while Match app appearance is off. */
-  ui.dark = false;
+  ui.theme = 'light';
   ui.colorScheme = 'teal';
   assert.equal(ui.fullTheme, 'dark');
   assert.equal(ui.fullColorScheme, 'crimson');
@@ -369,6 +366,23 @@ test('Advanced LMS settings joins the Settings nav stack and restores the list s
   assert.equal(self.$el.scrollTop, 1414, 'returning to Settings restores the row that opened Advanced');
 });
 
+test('Player layout starts at the top and restores the Settings scroll on return', function () {
+  const nav = fakeNav();
+  const inst = helpers.settingsInstance({ LmsNav: nav });
+  const self = inst.self;
+  self.$el = { scrollTop: 187 };
+
+  self.openAppearanceScreen('players');
+  assert.equal(nav.top('settings').screen, 'players');
+  assert.equal(self.appearanceReturnScroll, 187);
+  assert.equal(self.$el.scrollTop, 0, 'Player layout must expose its first control');
+
+  nav.pop('settings');
+  self.syncSettingsScreen();
+  assert.equal(self.ui.appearanceScreen, null);
+  assert.equal(self.$el.scrollTop, 187, 'Back restores the Settings position');
+});
+
 test('Advanced LMS settings relies on the app navbar, not a duplicate inner settings bar', function () {
   const src = settingsSrc();
   const branch = src.slice(
@@ -420,7 +434,7 @@ test('Advanced LMS settings iframe receives Echo Classic theme tokens and CSS on
     }
   });
   const self = inst.self;
-  self.ui.dark = true;
+  self.ui.theme = 'dark';
   self.ui.colorScheme = 'blue';
   self.ui.fontFamily = 'podium';
   self.$refs.advancedFrame = { contentDocument: doc };
@@ -477,6 +491,11 @@ test('Advanced LMS settings exposes iPad-style search rail and bridges navbar Ap
   assert.match(settings, /placeholder="Search"/);
   assert.match(settings, /oldHero[\s\S]*removeChild\(oldHero\)/);
   assert.match(settings, /advancedIsPluginStore/);
+  assert.match(settings, /enhanceNativePluginStore/);
+  assert.match(settings, /this\.removeAdvancedPluginStore\(doc\);[\s\S]*if \(pluginStore\) this\.enhanceNativePluginStore\(doc\)/);
+  assert.match(settings, /id = 'echoclassic-native-plugin-title'/);
+  assert.match(settings, /\.ec-plugin-store #topGraphicBox\{display:none/);
+  assert.match(settings, /\.ec-plugin-store #homeMenu\{display:block/);
   assert.match(settings, /buildAdvancedPluginStore/);
   assert.match(settings, /renderAdvancedPluginCard/);
   assert.match(settings, /id = 'echoclassic-plugin-store-grid'/);
@@ -490,6 +509,17 @@ test('Advanced LMS settings exposes iPad-style search rail and bridges navbar Ap
   assert.match(navbar, /v-if="ui\.advancedSettings" class="nav-apply pointer"[\s\S]*Apply/);
   assert.match(navbar, /applyAdvanced: function \(\) \{[\s\S]*LmsUi\.applyAdvancedSettings/);
   assert.match(css, /\.navbar \.nav-apply/);
+});
+
+test('Player layout explains inherited controls and gives touch controls 44px hit areas', function () {
+  const settings = settingsSrc();
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  assert.equal((settings.match(/Uses the app theme, accent and font\./g) || []).length, 3);
+  assert.match(css, /\.sw\{width:44px;height:44px/);
+  assert.match(css, /\.swatch-dot\{width:44px;height:44px/);
+  assert.match(css, /\.swatch-dot::before[\s\S]*width:28px;height:28px/);
+  assert.match(settings, /input\[type="checkbox"\],input\[type="radio"\]\{width:24px;height:24px/);
+  assert.match(settings, /button,input\[type="button"\][\s\S]*min-height:44px/);
 });
 
 test('Advanced LMS settings normalizes all-caps server labels without touching mixed-case names', function () {
@@ -555,7 +585,7 @@ test('Advanced LMS settings exits never use browser history-backed LmsNav.back',
   assert.doesNotMatch(settings, /top && top\.advanced[\s\S]{0,140}LmsNav\.back\('settings'\)/);
 });
 
-test('the app-level Theme control calls LmsUi.toggleTheme and never assigns state.dark directly', function () {
+test('the app-level Theme control calls LmsUi.setTheme and never assigns state.dark directly', function () {
   const src = settingsSrc();
   /* No assignment to .dark anywhere in the component (comparisons like
      ui.dark === 'x' or ternaries reading it are fine; `.dark =` is not). */
@@ -564,15 +594,19 @@ test('the app-level Theme control calls LmsUi.toggleTheme and never assigns stat
   let calls = 0;
   const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
   const self = inst.self;
-  const realToggle = inst.ctx.LmsUi.toggleTheme;
-  inst.ctx.LmsUi.toggleTheme = function () { calls++; return realToggle.apply(this, arguments); };
+  const realSetTheme = inst.ctx.LmsUi.setTheme;
+  inst.ctx.LmsUi.setTheme = function () { calls++; return realSetTheme.apply(this, arguments); };
 
-  self.ui.dark = false;
+  self.ui.theme = 'light';
   self.selectTheme('light');
-  assert.equal(calls, 0, 'selecting the theme already in effect must not toggle');
+  assert.equal(calls, 0, 'selecting the theme already in effect must not write');
   self.selectTheme('dark');
   assert.equal(calls, 1);
+  assert.equal(self.ui.theme, 'dark');
   assert.equal(self.ui.dark, true);
   self.selectTheme('dark');
-  assert.equal(calls, 1, 'selecting the theme already in effect must not toggle');
+  assert.equal(calls, 1, 'selecting the theme already in effect must not write');
+  self.selectTheme('legacy');
+  assert.equal(calls, 2);
+  assert.equal(self.ui.theme, 'legacy');
 });

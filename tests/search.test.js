@@ -33,7 +33,7 @@ function apiWithResponses() {
       } else if (cmd[0] === 'playlists') {
         result = { playlists_loop: [] };
       } else if (cmd[0] === 'albums' && String(cmd[3]) === 'album_id:1246') {
-        result = { albums_loop: [{ id: 1246, album: 'Acqua Fragile', artist: 'Acqua Fragile', year: 1973 }] };
+        result = { albums_loop: [{ id: 1246, album: 'Acqua Fragile', artist: 'Acqua Fragile', year: 1973, artwork_track_id: 456 }] };
       } else if (cmd[0] === 'songinfo') {
         const id = String(cmd[3]).replace('track_id:', '');
         const info = {
@@ -62,10 +62,14 @@ test('search ranks exact matches first and enriches album and track context', as
   assert.equal(found.artists[0].name, 'Acqua Fragile');
   assert.equal(found.albums[0].artist, 'Acqua Fragile');
   assert.equal(found.albums[0].year, 1973);
+  assert.equal(found.albums[0].artworkTrackId, 456);
   assert.equal(found.tracks[0].title, 'Acqua');
   assert.equal(found.tracks[0].artist, 'Exact Artist');
   assert.equal(found.tracks[0].album, 'Exact Album');
   assert.equal(found.tracks[0].duration, 222);
   assert.equal(found.tracks[0].source, 'Local library');
   assert.ok(harness.calls.some(function (cmd) { return cmd[0] === 'songinfo'; }));
+  assert.ok(harness.calls.some(function (cmd) {
+    return cmd[0] === 'albums' && cmd.indexOf('tags:jlay') >= 0;
+  }));
 });

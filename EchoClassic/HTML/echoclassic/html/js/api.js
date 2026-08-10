@@ -247,13 +247,15 @@
 	  }
 
 	  async function albumSearchInfo(playerId, album) {
-	    if (!album || album.id == null || (album.artist && album.year)) return album;
+	    if (!album || album.id == null ||
+	        (album.artist && album.year && album.artworkTrackId)) return album;
 	    try {
-	      var r = await rpc(playerId, ['albums', 0, 1, 'album_id:' + album.id, 'tags:lay']);
+	      var r = await rpc(playerId, ['albums', 0, 1, 'album_id:' + album.id, 'tags:jlay']);
 	      var row = loop(r, 'albums_loop')[0] || {};
 	      album.artist = album.artist || canonicalArtist(row.artist);
 	      album.year = album.year || LmsFmt.year(row.year);
 	      album.originalYear = album.originalYear || LmsFmt.year(row.originalyear || row.original_year);
+	      album.artworkTrackId = album.artworkTrackId || row.artwork_track_id || row.coverid || null;
 	    } catch (e) {}
 	    return album;
 	  }

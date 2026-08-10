@@ -86,14 +86,9 @@
 
 	  function back(tab) {
 	    if (!depth(tab)) return null;
-	    var current = history.state;
-	    if (!applyingHistory && current && current.echoClassic &&
-	        current.tab === tab && current.depth === depth(tab) && history.back) {
-	      history.back();
-	      return top(tab);
-	    }
-	    /* Fallback para estados antigos/importados: continua dentro da aba atual
-	       sem atravessar para outra aba do historico. */
+	    /* The visible Back command belongs to the current tab's own stack. Browser
+	       history also records tab switches, so history.back() could unexpectedly
+	       leave this tab instead of returning to its parent screen. */
 	    var removed = pop(tab);
     if (!applyingHistory && history.replaceState) {
       history.replaceState(historyState(tab), '');

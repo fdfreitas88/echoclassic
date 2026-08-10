@@ -8,7 +8,7 @@ Vue.component('lms-search', {
     <div class="h">Search the library</div>
     <div class="p">Type an artist, album or track.</div>
   </div>
-  <div v-else-if="loading && !total" class="empty"><div class="p">Searchndo…</div></div>
+  <div v-else-if="loading && !total" class="empty"><div class="p">Searching…</div></div>
   <div v-else-if="error" class="empty">
     <div class="h">Search failed</div>
     <div class="p">{{ error }}</div>
@@ -19,7 +19,7 @@ Vue.component('lms-search', {
     <div class="p">We did not find “{{ query.trim() }}” in your library.</div>
   </div>
   <template v-else>
-    <div v-if="loading" class="search-refreshing" role="status" aria-live="polite">Searchndo…</div>
+    <div v-if="loading" class="search-refreshing" role="status" aria-live="polite">Searching…</div>
 	    <section v-if="results.artists.length" class="search-group">
 	      <h2 class="search-heading">Artists <span>{{ results.artists.length }}</span></h2>
 	      <button v-for="a in results.artists" :key="'ar' + a.id"
@@ -81,7 +81,7 @@ Vue.component('lms-search', {
 	      </button>
 	    </section>
     <button v-if="hasMore" class="load-more-command" :disabled="loading" @click="loadMore">
-      {{ loading ? 'Searchndo…' : 'Mostrar mais resultados' }}
+      {{ loading ? 'Searching…' : 'Show more results' }}
     </button>
   </template>
 </div>`,

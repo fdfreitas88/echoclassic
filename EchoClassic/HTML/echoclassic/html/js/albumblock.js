@@ -36,7 +36,7 @@ Vue.component('lms-album-block', {
         <span>Original year: {{ album.originalYear || 'not available' }}</span>
       </div>
       <div v-if="tracks.length" class="album-facts" aria-label="Album technical details">
-        <span class="album-fact" :title="'Formato: ' + formatLine">
+        <span class="album-fact" :title="tr('Format:') + ' ' + formatLine">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4"/></svg>
           <span>{{ formatLine }}</span>
         </span>
@@ -44,7 +44,7 @@ Vue.component('lms-album-block', {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-6M8 18V6M12 14v-4M16 19V5M20 15V9"/></svg>
           <span>{{ bitRateLine }}</span>
         </span>
-        <span class="album-fact" :title="'Origem: ' + originLine">
+        <span class="album-fact" :title="tr('Source:') + ' ' + originLine">
           <svg v-if="originIsLocal" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4zM7 15.5h.01M10 15.5h7"/></svg>
           <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18.5h10a4 4 0 0 0 .6-8A6 6 0 0 0 6.2 9.2 4.7 4.7 0 0 0 7 18.5z"/></svg>
           <span>{{ originLine }}</span>
@@ -66,7 +66,7 @@ Vue.component('lms-album-block', {
     </div>
     <button v-if="hasHiddenRelated" class="related-more"
             :aria-expanded="String(relatedExpanded)" @click="relatedExpanded = !relatedExpanded">
-      <span>{{ relatedExpanded ? 'Menos' : 'Mais' }}</span>
+      <span>{{ tr(relatedExpanded ? 'Show less' : 'Show more') }}</span>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l5 5 5-5"/></svg>
     </button>
   </div>
@@ -180,10 +180,11 @@ Vue.component('lms-album-block', {
       return providers.length === 1 ? providers[0] : 'mixed';
     },
     sourceTitle: function () {
-      return {
+      var label = {
         local: 'Local library', qobuz: 'Qobuz', youtube: 'YouTube',
-        remote: 'Remote / streaming', mixed: 'Origens mistas'
-      }[this.albumSource] || 'Origem sendo identificada';
+        remote: 'Remote / streaming', mixed: 'Mixed sources'
+      }[this.albumSource] || 'Identifying source';
+      return this.tr(label);
     },
     displayedRelatedArtists: function () {
       return this.relatedExpanded
@@ -194,6 +195,9 @@ Vue.component('lms-album-block', {
     }
   },
   methods: {
+    tr: function (text) {
+      return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
+    },
     unique: function (values) {
       return values.filter(function (value, index, all) {
         return value && all.indexOf(value) === index;

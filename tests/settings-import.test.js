@@ -74,6 +74,25 @@ test('the accepted colorScheme/fontFamily sets are derived from LmsUi, not a sep
     JSON.stringify({ fontFamily: 'no-such-font' })), /fontFamily/);
 });
 
+test('settings import enum validation stays in parity with ui.js theme, scheme and gauge colour lists', function () {
+  const harness = settingsHarness();
+  const methods = harness.methods;
+  const LmsUi = harness.ctx.LmsUi;
+  const ctx = Object.assign({}, methods);
+
+  LmsUi.THEME_OPTIONS.forEach(function (theme) {
+    assert.equal(methods.validateImportValue.call(ctx, 'echoclassic.ui.v2',
+      JSON.stringify({ theme: theme.key })), null, 'theme ' + theme.key);
+  });
+  LmsUi.COLOR_SCHEMES.forEach(function (scheme) {
+    assert.equal(methods.validateImportValue.call(ctx, 'echoclassic.ui.v2',
+      JSON.stringify({ colorScheme: scheme.key, miniGaugeColor: scheme.key, playerGaugeColor: scheme.key })),
+      null, 'scheme/gauge ' + scheme.key);
+  });
+  assert.match(methods.validateImportValue.call(ctx, 'echoclassic.ui.v2',
+    JSON.stringify({ theme: 'sepia' })), /theme/);
+});
+
 /* A 3.2.5 export simply does not have the nine surface keys -- they did not
    exist yet. It must still validate cleanly: the enum table deliberately
    does not enumerate them (see the next two tests), so their absence is a
@@ -151,4 +170,37 @@ test('the persisted echoclassic.ui.v2 blob export reads from contains all nine s
   });
   assert.equal(blob.miniTheme, 'dark');
   assert.equal(blob.fullFont, 'espy');
+});
+
+test('legacy theme with silver and black accents survives preferences validation and readback', function () {
+  const methods = settingsMethods();
+  const ctx = Object.assign({}, methods);
+  const payload = {
+    theme: 'legacy',
+    colorScheme: 'silver',
+    miniTheme: 'legacy',
+    smallTheme: 'legacy',
+    fullTheme: 'legacy',
+    miniColorScheme: 'black',
+    smallColorScheme: 'silver',
+    fullColorScheme: 'black',
+    miniGaugeColor: 'silver',
+    playerGaugeColor: 'black',
+    legacyMiniGaugeStyle: 'classic',
+    legacyPlayerGaugeStyle: 'classic'
+  };
+  assert.equal(methods.validateImportValue.call(ctx, 'echoclassic.ui.v2', JSON.stringify(payload)), null);
+
+  const store = { 'echoclassic.ui.v2': JSON.stringify(payload) };
+  const reloaded = helpers.uiContext({
+    localStorage: {
+      getItem: function (k) { return k in store ? store[k] : null; },
+      setItem: function (k, v) { store[k] = String(v); },
+      removeItem: function (k) { delete store[k]; }
+    }
+  }).LmsUi;
+  assert.equal(reloaded.state.theme, 'legacy');
+  assert.equal(reloaded.state.colorScheme, 'silver');
+  assert.equal(reloaded.state.miniColorScheme, 'black');
+  assert.equal(reloaded.state.fullTheme, 'legacy');
 });
