@@ -1748,6 +1748,66 @@ ECHOCLASSIC_UI_THIS_STATION
 	EN	this station
 	PT	esta estação
 
+ECHOCLASSIC_UI_LAYOUT
+	EN	Layout
+	PT	Layout
+
+ECHOCLASSIC_UI_PANEL_POSITION
+	EN	Panel position
+	PT	Posição do painel
+
+ECHOCLASSIC_UI_SIDE_PANEL
+	EN	Side panel
+	PT	Painel lateral
+
+ECHOCLASSIC_UI_BOTTOM_BAR
+	EN	Bottom bar
+	PT	Barra inferior
+
+ECHOCLASSIC_UI_PLAYER_SURFACE
+	EN	Player surface
+	PT	Superfície do player
+
+ECHOCLASSIC_UI_CUSTOMIZE_PLAYER_APPEARANCE
+	EN	Customize player appearance
+	PT	Personalizar a aparência do player
+
+ECHOCLASSIC_UI_USE_APP_APPEARANCE
+	EN	Use app appearance
+	PT	Usar a aparência do app
+
+ECHOCLASSIC_UI_MATCH_APP_APPEARANCE_ALL
+	EN	Match app appearance on every player surface
+	PT	Seguir a aparência do app em todas as superfícies do player
+
+ECHOCLASSIC_UI_ALL_SURFACES_FOLLOW_APP
+	EN	All player surfaces use the app theme, accent and font.
+	PT	Todas as superfícies do player usam o tema, o destaque e a fonte do app.
+
+ECHOCLASSIC_UI_SOME_SURFACES_CUSTOM
+	EN	Some player surfaces use custom appearance.
+	PT	Algumas superfícies do player têm aparência própria.
+
+ECHOCLASSIC_UI_PRESENTATION_ADAPTIVE_HELP
+	EN	Uses a side panel on larger screens and full screen on phones.
+	PT	Usa um painel lateral em telas maiores e tela cheia no celular.
+
+ECHOCLASSIC_UI_PRESENTATION_FULLSCREEN_HELP
+	EN	Always opens over the app.
+	PT	Abre sempre por cima do app.
+
+ECHOCLASSIC_UI_ALSO_APPLIES_SIDE_PANEL
+	EN	Also applies to the side panel.
+	PT	Vale também para o painel lateral.
+
+ECHOCLASSIC_UI_PROGRESS_SHARED_WITH_FULL
+	EN	Progress bar settings are shared with Full player.
+	PT	As opções da barra de progresso são as mesmas do Player cheio.
+
+ECHOCLASSIC_UI_BOTTOM_BAR_COLOUR
+	EN	Bottom bar colour
+	PT	Cor da barra inferior
+
 ECHOCLASSIC_UI_SERVICE_CHECK_AND_RETRY
 	EN	Check the connection or the service status and try again.
 	PT	Confira a conexão ou o estado do serviço e tente de novo.
