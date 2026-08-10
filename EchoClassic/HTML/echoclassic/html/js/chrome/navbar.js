@@ -46,9 +46,10 @@ Vue.component('lms-navbar', {
     </button>
 
     <div class="center">
-	      <button v-if="pickable" class="pickttl pointer"
+	      <button v-if="pickable" id="picker-trigger" class="pickttl pointer"
+	              aria-haspopup="listbox" :aria-expanded="String(ui.picker)"
 	              :aria-label="'Choose a My Music root. Current: ' + title"
-	              @click="$emit('picker')">
+	              @click="$emit('picker', $event.currentTarget)">
         {{ title }}
         <svg class="ic sm" viewBox="0 0 12 12"><path d="M1.5 4L6 8.5 10.5 4"/></svg>
       </button>
