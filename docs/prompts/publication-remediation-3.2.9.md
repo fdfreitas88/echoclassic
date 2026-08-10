@@ -1,6 +1,6 @@
 # Echo Classic — remediação final para publicação 3.2.9
 
-Leia `CLAUDE.md` e execute este prompt. O objetivo terminal é deixar a skin
+Leia o brief do projeto e execute este prompt. O objetivo terminal é deixar a skin
 pronta para publicação oficial ainda hoje, sem publicar um artefato diferente
 do que foi testado.
 
@@ -184,7 +184,7 @@ Também rode testes focados que provem:
 
 Somente após gates verdes e autorização para o comando exato:
 
-1. Declare antes a recuperação de silent-death exigida por `CLAUDE.md`.
+1. Declare antes a recuperação de silent-death exigida pelo brief do projeto.
 2. Execute `tools/deploy.sh -n` e revise o diff.
 3. Com autorização separada, execute o deploy real; use `-r` somente se os
    arquivos alterados exigirem restart.
