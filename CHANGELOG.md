@@ -87,6 +87,24 @@ what was announced.
 
 ### Changed
 
+- Settings > Player layout is one short screen instead of three repeated
+  forms. It used to show Full player, Small player and Mini player one after
+  another, each with its own `Match app appearance` switch announced by the
+  same name; with only Full customization open it held 4 switches, 9
+  radiogroups, 40 visible radio choices and 16 colour swatches -- 1,723 px of
+  content in a 656 px scroller at 390x844, with Small and Mini several screens
+  below the fold. Now Layout comes first (Presentation, and Panel position only
+  when Adaptive, since position is a consequence of that choice), then one
+  master `Match app appearance` switch with a summary of whether anything is
+  customized, then a single `Customize player appearance` disclosure holding a
+  Full player / Side panel / Bottom bar selector that renders one surface's
+  controls at a time. Every stored key, setter and 3.2.8 export is unchanged.
+  [code]
+- The Player layout previews are removed rather than hidden. Each strip showed
+  an accent circle, a surface name and a two-pixel line -- no presentation,
+  panel position, font, chrome, album art or real progress-bar style -- and was
+  `aria-hidden`, so it supported no decision and read to nobody. The real
+  players update immediately and are the authoritative feedback. [code]
 - `tools/release.sh` refuses a package that is not the tree that produced it,
   and a descriptor that is not publishable. The 3.2.8 descriptor was ready to
   publish while declaring itself a private QA candidate and pointing at a local
