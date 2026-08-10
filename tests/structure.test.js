@@ -83,3 +83,39 @@ test('todo SVG servido como arquivo e XML bem formado', function () {
       f + ': dois hifens fora de comentario tambem quebram parsers estritos');
   });
 });
+
+/* PUB-01: the 3.2.8 descriptor arrived ready to publish while saying, in its
+   own words, "PRIVATE 3.2.8 QA CANDIDATE ... Do not publish", pointing at
+   private-candidate/EchoClassic-3.2.8.zip. Every gate passed: check-version
+   only compares numbers, and the packaging step only counted files -- and the
+   file count was right, because the stale zip had the same files with older
+   contents (its ios9.css and actions.js hashed differently from the tree).
+
+   These pin the two gates that would have caught it. The release script itself
+   is shell; what a test can hold is that the checks are declared and wired to
+   the one URL the descriptor is allowed to carry. */
+
+test('PUB-01: release.sh derives the public asset URL and rewrites the descriptor to it', function () {
+  const release = helpers.read('tools/release.sh');
+  assert.match(release, /EXPECTED_URL="https:\/\/github\.com\/fdfreitas88\/echoclassic\/releases\/download\/\$TAG\/EchoClassic-\$VERSION\.zip"/,
+    'the URL has to be derived from the version, so the bump and the gate cannot disagree');
+  assert.match(release, /sed -i '' "s\|<url>\[\^<\]\*<\/url>\|<url>\$EXPECTED_URL<\/url>\|" repo\.xml/,
+    'the old sed only matched a URL that was already public, so private-candidate/... passed the bump untouched');
+  assert.doesNotMatch(release, /s\|releases\/download\/v\[0-9\.\]\*/,
+    'that narrower substitution is the hole PUB-01 came through');
+});
+
+test('PUB-01: release.sh refuses a descriptor that still calls itself private', function () {
+  const release = helpers.read('tools/release.sh');
+  assert.match(release, /grep -qi 'private-candidate\\\|do not publish\\\|nao publique' repo\.xml/,
+    'a descriptor that says not to publish it cannot be the published descriptor');
+  assert.match(release, /grep -q "<url>\$EXPECTED_URL<\/url>" repo\.xml/);
+});
+
+test('PUB-01: release.sh compares the package against the tree that produced it, not just the file count', function () {
+  const release = helpers.read('tools/release.sh');
+  assert.match(release, /unzip -qq "\$ZIP" -d "\$VERIFY"/);
+  assert.match(release, /diff -r "\$SRC" "\$VERIFY\/\$SRC"/,
+    'the 3.2.8 zip had the right number of files and the wrong contents -- only a content comparison sees that');
+  assert.match(release, /o pacote nao e a arvore que o gerou/);
+});
