@@ -16,6 +16,11 @@
 
   var state = Vue.observable({
     players: [], playerId: null, connected: false, fixedVolume: false,
+    /* Ha destino para um comando de transporte. Nao e o mesmo que `connected`:
+       o aviso de conexao pode estar na tela com a faixa anterior ainda em
+       cache, e nesse estado tocar Play nao alcanca ninguem. Quem decide e o
+       store, num lugar so -- o componente le, nao reconstroi a regra. */
+    commandable: false,
     volumeModeSynced: false, volumeModeBusy: false, volumeDragging: false,
     initialized: false, reconnecting: false, lastError: '', lastSuccess: 0,
     mode: 'stop', time: 0, duration: 0, volume: 0,
@@ -165,16 +170,37 @@
       chosen = await resurrectHint(preferredPlayerId, ps);
     }
 
-    state.playerId = chosen ? chosen.id : null;
-    state.connected = !!chosen;
     if (!chosen) {
-      state.lastError = ps.length
+      reconcileNoPlayer(ps.length
         ? 'No player is connected.'
-        : 'No player was found on LMS.';
+        : 'No player was found on LMS.');
       return false;
     }
+    state.playerId = chosen.id;
+    state.connected = true;
+    state.commandable = true;
     state.lastError = '';
     return true;
+  }
+
+  /* STATE-01: ficar sem player e uma transicao, nao so um indicador. A tela
+     chegou a mostrar `No player was found on LMS` ao lado de Take on Me, com
+     progresso correndo e Previous/Play/Stop/Next habilitados -- tres respostas
+     diferentes para a mesma pergunta, e nenhuma delas atendia. Retry nao
+     resolvia; so recarregar limpava.
+
+     Aqui a transicao acontece inteira de uma vez. A faixa em cache fica de
+     proposito: e o "last known track" que o aviso promete. O que nao fica e a
+     ideia de reproducao em curso -- sem modo tocando e sem posicao, a barra de
+     progresso para -- nem a de comando com destino. */
+  function reconcileNoPlayer(reason) {
+    state.playerId = null;
+    state.connected = false;
+    state.commandable = false;
+    state.lastError = reason;
+    state.mode = 'stop';
+    state.time = 0;
+    state.duration = 0;
   }
 
   async function loadVolumeMode(playerId) {
@@ -235,6 +261,7 @@
       var found = await discoverPlayer();
     } catch (e) {
       state.connected = false;
+      state.commandable = false;
       state.lastError = friendlyError(e, 'Could not find the server.');
       state.initialized = true;
       return;
@@ -264,6 +291,7 @@
         await loadCapabilities();
       } catch (e) {
         state.connected = false;
+        state.commandable = false;
         state.lastError = friendlyError(e, 'Could not find the server.');
         state.initialized = true;
         return;
@@ -277,14 +305,17 @@
       st = await api.status(playerId);
     } catch (e) {
       if (state.playerId !== playerId) return;
-      // keep the last screen; only the connection indicator changes
+      /* Keep the last screen; the connection indicator changes -- and with
+         it the right to command, because nothing is reaching the player. */
       state.connected = false;
+      state.commandable = false;
       state.lastError = friendlyError(e, 'The connection to the player was lost.');
       state.initialized = true;
       return;
     }
     if (state.playerId !== playerId) return;
     state.connected = true;
+    state.commandable = true;
     state.lastError = '';
     state.lastSuccess = Date.now();
     state.initialized = true;
@@ -693,6 +724,7 @@
     // escolha explicita: e a unica coisa que muda a preferencia guardada
     preferredPlayerId = playerId;
     state.connected = !!found.connected;
+    state.commandable = !!found.connected;
     state.volumeModeSynced = false;
     saveSession();
     await loadPlayerSettings();
@@ -918,6 +950,7 @@
       } catch (e) {
         if (e && (e.kind === 'network' || e.kind === 'timeout')) {
           state.connected = false;
+          state.commandable = false;
           state.lastError = friendlyError(e, 'The operation did not complete.');
         }
         /* Montada por concatenacao, entao o envelope do notify nunca casaria a

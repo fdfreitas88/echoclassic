@@ -478,3 +478,109 @@ test('EC-014 uma fila que cabe inteira na janela nao produz aviso de truncamento
   assert.deepEqual(truncationNotes(notes), []);
   assert.equal(ctx.store.state.queueUndo.length, 3);
 });
+
+/* STATE-01: losing the player was treated as an indicator, not a transition.
+   The screen showed `No player was found on LMS` next to the track Take on Me,
+   with the progress bar running and Previous/Play/Stop/Next enabled -- three
+   different answers to the same question. Retry did not settle it; only a
+   reload did, and it settled it by wiping everything to `Nothing playing`.
+
+   The transition now happens in one place and all at once. The cached track
+   stays -- it is the "last known track" the banner promises -- while the idea
+   of playback in progress, and of a command with somewhere to go, does not. */
+
+function playingStatus(mode) {
+  return {
+    mode: mode || 'play', time: 96, duration: 227, volume: 40,
+    track: {
+      id: 771, title: 'Take on Me', artist: 'a-ha', album: 'Hunting High and Low',
+      albumId: 12, trackNum: 1, coverId: 771, url: 'file:///take.flac'
+    },
+    sampleRate: 44100, sampleSize: 16, format: 'flc',
+    queue: [], queueIndex: 0, queueTotal: 0, shuffle: 0, repeat: 0
+  };
+}
+
+async function playingThenGone(remaining) {
+  let players = [{ id: 'p1', name: 'Kitchen', connected: true, power: true }];
+  let gone = false;
+  const ctx = storeContext({
+    players: async function () { return players; },
+    status: async function () {
+      /* How it happens for real: the player stops answering first, which only
+         flips the connection indicator, and the next refresh rediscovers and
+         finds nobody. That second step is where the contradiction lived. */
+      if (gone) { const e = new Error('down'); e.kind = 'network'; throw e; }
+      return playingStatus('play');
+    },
+    songInfo: async function () { return { id: 771 }; },
+    favoritesLevel: async function () { return []; },
+    queue: async function () { return { items: [], total: 0 }; }
+  });
+  await ctx.store.init();
+  await ctx.store.refresh();
+  gone = true;
+  players = remaining;
+  await ctx.store.refresh();
+  return ctx;
+}
+
+test('STATE-01: the transition to zero players updates connection, track and commands together', async function () {
+  const ctx = await playingThenGone([]);
+  const state = ctx.store.state;
+
+  assert.equal(state.np.title, 'Take on Me', 'sanity: the track is still on screen');
+
+  await ctx.store.refresh();
+
+  assert.equal(state.playerId, null);
+  assert.equal(state.connected, false);
+  assert.equal(state.lastError, 'No player was found on LMS.');
+  assert.equal(state.commandable, false,
+    'Previous/Play/Stop/Next had no destination and were still enabled -- that is the contradiction');
+  assert.equal(state.mode, 'stop', 'a running mode with no player is what kept the progress bar moving');
+  assert.equal(state.time, 0);
+  assert.equal(state.duration, 0);
+  assert.equal(state.np.title, 'Take on Me',
+    'the cached track is kept on purpose: the banner offers it as the last known track');
+});
+
+test('STATE-01: it settles without a reload -- a second refresh changes nothing further', async function () {
+  const ctx = await playingThenGone([]);
+  await ctx.store.refresh();
+  const first = JSON.stringify(ctx.store.state);
+  await ctx.store.refresh();
+  assert.equal(JSON.stringify(ctx.store.state), first,
+    'Retry left a mixed state that only a reload cleared; the transition has to be idempotent');
+});
+
+test('STATE-01: players present but none connected reads differently and is equally disarmed', async function () {
+  const ctx = await playingThenGone([{ id: 'p1', name: 'Kitchen', connected: false, power: false }]);
+  await ctx.store.refresh();
+  assert.equal(ctx.store.state.lastError, 'No player is connected.');
+  assert.equal(ctx.store.state.commandable, false);
+  assert.equal(ctx.store.state.mode, 'stop');
+});
+
+test('STATE-01: a player that stops answering keeps the screen but loses the right to command', async function () {
+  let fail = false;
+  const ctx = storeContext({
+    players: async function () { return [{ id: 'p1', name: 'Kitchen', connected: true, power: true }]; },
+    status: async function () {
+      if (fail) { const e = new Error('down'); e.kind = 'network'; throw e; }
+      return playingStatus('play');
+    },
+    songInfo: async function () { return { id: 771 }; },
+    favoritesLevel: async function () { return []; },
+    queue: async function () { return { items: [], total: 0 }; }
+  });
+  await ctx.store.init();
+  await ctx.store.refresh();
+  fail = true;
+  await ctx.store.refresh();
+
+  assert.equal(ctx.store.state.connected, false);
+  assert.equal(ctx.store.state.commandable, false,
+    'nothing is reaching the player, so a transport command has nowhere to land');
+  assert.equal(ctx.store.state.np.title, 'Take on Me', 'the last screen is deliberately kept here');
+});
