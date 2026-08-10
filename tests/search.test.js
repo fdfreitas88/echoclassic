@@ -73,3 +73,156 @@ test('search ranks exact matches first and enriches album and track context', as
     return cmd[0] === 'albums' && cmd.indexOf('tags:jlay') >= 0;
   }));
 });
+
+/* NAV-01: the search had no navigation frame of its own. Searching for
+   `Beatles` gave 2 artists and 5 albums; opening `The Beatles` closed the
+   search and wiped the query, and `Back to Artists` landed on the Artists root
+   with no term, no results and no scroll -- seeing the same result again cost
+   typing the whole thing over.
+
+   The suspended search now lives in LmsUi, which outlives the component, and
+   the frame pushed for the result carries the mark Back reads. */
+
+const SEARCH = 'EchoClassic/HTML/echoclassic/html/js/search.js';
+
+function searchInstance(extra) {
+  let definition = null;
+  const pushed = [];
+  const searches = [];
+  const ctx = helpers.uiContext(Object.assign({
+    document: {
+      addEventListener: function () {},
+      removeEventListener: function () {},
+      querySelector: function () { return null; },
+      activeElement: null,
+      documentElement: {
+        style: { setProperty: function () {} },
+        classList: { add: function () {}, remove: function () {}, toggle: function () {} }
+      },
+      body: {
+        setAttribute: function () {}, removeAttribute: function () {},
+        classList: { add: function () {}, remove: function () {}, toggle: function () {} }
+      }
+    },
+    Vue: {
+      observable: function (o) { return o; },
+      component: function (name, def) { definition = def; },
+      nextTick: function (f) { if (f) f(); }
+    },
+    LmsApi: {
+      search: async function (player, query, limit) {
+        searches.push([query, limit]);
+        return { artists: [{ id: 1, name: 'The Beatles' }], albums: [], tracks: [], playlists: [] };
+      }
+    },
+    LmsStore: { state: { playerId: 'p1' }, friendlyError: function (e, f) { return f; } },
+    LmsNav: {
+      reset: function () {},
+      push: function (tab, frame) { pushed.push([tab, frame]); },
+      top: function () { return null; }
+    }
+  }, extra || {}));
+  helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/format.js');
+  helpers.runInContext(ctx, SEARCH);
+
+  function mount(el) {
+    const self = definition.data();
+    self.$nextTick = function (f) { if (f) f.call(self); };
+    self.$el = el || { scrollTop: 0 };
+    self.$refs = {};
+    Object.keys(definition.methods).forEach(function (name) {
+      self[name] = definition.methods[name].bind(self);
+    });
+    Object.keys(definition.computed).forEach(function (name) {
+      Object.defineProperty(self, name, { get: definition.computed[name].bind(self) });
+    });
+    definition.created.call(self);
+    definition.mounted.call(self);
+    return self;
+  }
+
+  return { ctx: ctx, ui: ctx.LmsUi, mount: mount, pushed: pushed, searches: searches };
+}
+
+const BEATLES = {
+  artists: [{ id: 1, name: 'The Beatles' }, { id: 2, name: 'Beatles Tribute' }],
+  albums: [{ id: 9, title: 'Revolver' }],
+  tracks: [],
+  playlists: []
+};
+
+test('NAV-01: opening a result suspends the search instead of discarding it', function () {
+  const harness = searchInstance();
+  harness.ui.openSearch();
+  harness.ui.state.query = 'Beatles';
+  const view = harness.mount({ scrollTop: 420 });
+  view.results = BEATLES;
+
+  view.openArtist({ id: 1, name: 'The Beatles', ids: null });
+
+  assert.equal(harness.ui.state.searching, false, 'the search screen closes -- the artist takes the screen');
+  assert.equal(harness.ui.state.query, '', 'the visible field empties; the term lives in the snapshot now');
+  assert.equal(harness.ui.hasSuspendedSearch('music'), true);
+  assert.equal(harness.ui.state.searchReturn, true, 'the Back label is computed, so the flag has to be reactive state');
+
+  assert.equal(harness.pushed.length, 1);
+  assert.equal(harness.pushed[0][0], 'music');
+  assert.equal(harness.pushed[0][1].fromSearch, true,
+    'without the mark on the frame, Back cannot tell this drill came from a search');
+});
+
+test('NAV-01: coming back restores term, results, limit and scroll without a new query', function () {
+  const harness = searchInstance();
+  harness.ui.openSearch();
+  harness.ui.state.query = 'Beatles';
+  const first = harness.mount({ scrollTop: 420 });
+  first.results = BEATLES;
+  first.limit = 100;
+  first.openArtist({ id: 1, name: 'The Beatles', ids: null });
+
+  assert.equal(harness.ui.resumeSearch('music'), true);
+  assert.equal(harness.ui.state.searching, true);
+  assert.equal(harness.ui.state.query, 'Beatles', 'the term is back in the field, not retyped');
+
+  const el = { scrollTop: 0 };
+  const second = harness.mount(el);
+  assert.deepEqual(JSON.parse(JSON.stringify(second.results)), BEATLES, 'the same 2 artists and 1 album, not a second round trip');
+  assert.equal(second.limit, 100, 'Show more results had already grown the page; returning must not shrink it');
+  assert.equal(el.scrollTop, 420);
+  assert.deepEqual(harness.searches, [], 'no call to LmsApi.search: returning is not a new search');
+  assert.equal(harness.ui.state.searchReturn, false, 'consumed -- the Back label stops offering a return that already happened');
+});
+
+test('NAV-01: the snapshot is handed over once, so a fresh search never inherits the old list', function () {
+  const harness = searchInstance();
+  harness.ui.openSearch();
+  harness.ui.state.query = 'Beatles';
+  const first = harness.mount({ scrollTop: 420 });
+  first.results = BEATLES;
+  first.openArtist({ id: 1, name: 'The Beatles', ids: null });
+
+  harness.ui.openSearch();
+  assert.equal(harness.ui.hasSuspendedSearch(), false,
+    'opening the search anew drops the suspension: otherwise the next mount would show another query\'s results as if they were this one\'s');
+
+  harness.ui.state.query = 'Beatles';
+  const fresh = harness.mount({ scrollTop: 0 });
+  assert.deepEqual(JSON.parse(JSON.stringify(fresh.results)),
+    { artists: [], albums: [], tracks: [], playlists: [] });
+});
+
+test('NAV-01: a suspension belongs to the tab that consumed it', function () {
+  const harness = searchInstance();
+  harness.ui.openSearch();
+  harness.ui.state.query = 'Beatles';
+  const view = harness.mount({ scrollTop: 0 });
+  view.results = BEATLES;
+
+  view.openPlaylist({ id: 7, name: 'Fab four' });
+
+  assert.equal(harness.pushed[0][0], 'playlists');
+  assert.equal(harness.pushed[0][1].fromSearch, true);
+  assert.equal(harness.ui.hasSuspendedSearch('playlists'), true);
+  assert.equal(harness.ui.hasSuspendedSearch('music'), false,
+    'resuming from the wrong stack is how a Back in one tab would hijack another tab\'s screen');
+});

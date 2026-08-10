@@ -89,7 +89,8 @@ Vue.component('lms-search', {
     return {
       ui: LmsUi.state, store: LmsStore.state,
       results: { artists: [], albums: [], tracks: [], playlists: [] },
-      loading: false, error: '', timer: null, request: 0, limit: 50
+      loading: false, error: '', timer: null, request: 0, limit: 50,
+      restoreScroll: 0
     };
   },
   computed: {
@@ -160,7 +161,23 @@ Vue.component('lms-search', {
       this.limit += 50;
       this.run();
     },
+    /* NAV-01: sair para um resultado nao pode custar a consulta. O termo, a
+       lista e a rolagem ficam guardados no LmsUi -- que sobrevive a este
+       componente, destruido no instante em que a busca fecha -- e o frame
+       empilhado leva a marca que o Back usa para voltar para ca. */
+    suspend: function (tab, frame) {
+      frame.fromSearch = true;
+      LmsUi.suspendSearch({
+        tab: tab,
+        query: this.ui.query,
+        results: this.results,
+        scroll: this.$el ? this.$el.scrollTop : 0,
+        limit: this.limit
+      });
+      return frame;
+    },
     enterMusic: function (view, frame) {
+      this.suspend('music', frame);
       LmsUi.setTab('music');
       LmsUi.setMusicView(view);
       LmsNav.reset('music');
@@ -200,12 +217,31 @@ Vue.component('lms-search', {
       }, event && event.currentTarget);
     },
     openPlaylist: function (p) {
+      var frame = this.suspend('playlists', { kind: 'playlist', id: p.id, label: p.name });
       LmsUi.setTab('playlists');
       LmsNav.reset('playlists');
       this.$nextTick(function () {
-        LmsNav.push('playlists', { kind: 'playlist', id: p.id, label: p.name });
+        LmsNav.push('playlists', frame);
       });
     }
+  },
+  /* Voltar de um resultado remonta este componente com o termo ja no lugar. O
+     instantaneo devolve a lista e a rolagem, e a consulta nao e refeita: a
+     rede so entra de novo quando o termo muda. */
+  created: function () {
+    var snapshot = LmsUi.takeSearchSnapshot ? LmsUi.takeSearchSnapshot() : null;
+    if (!snapshot || snapshot.query !== this.ui.query) return;
+    if (snapshot.results) this.results = snapshot.results;
+    if (snapshot.limit) this.limit = snapshot.limit;
+    this.restoreScroll = snapshot.scroll || 0;
+  },
+  mounted: function () {
+    if (!this.restoreScroll) return;
+    var self = this;
+    this.$nextTick(function () {
+      if (self.$el) self.$el.scrollTop = self.restoreScroll;
+      self.restoreScroll = 0;
+    });
   },
   beforeDestroy: function () { clearTimeout(this.timer); }
 });
