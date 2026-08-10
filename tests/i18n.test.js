@@ -114,3 +114,75 @@ test('todo rotulo de interface montado em JavaScript pode ser traduzido', functi
 
   assert.deepEqual(faltando, [], 'rotulos sem entrada no strings.txt');
 });
+
+/* I18N-01: the action sheet shipped three Portuguese commands in an English
+   session. `Reproduzir agora`, `Reproduzir a seguir` and `Fixar no Echo
+   Classic` are template literals, so i18n.js could never translate them: the
+   dictionary is keyed by the English phrase, and there was no English phrase.
+   Everyone saw them in Portuguese, in every language.
+
+   This pins both halves of the fix -- English in the source, Portuguese in
+   strings.txt -- because either one alone silently reintroduces the defect. */
+
+function stringsEntries() {
+  const text = helpers.read('EchoClassic/strings.txt');
+  const entries = {};
+  let key = '';
+  text.split(/\r?\n/).forEach(function (line) {
+    const top = line.match(/^([A-Z0-9_]+)$/);
+    if (top) { key = top[1]; entries[key] = {}; return; }
+    const value = line.match(/^\t([A-Z]{2})\t([\s\S]*)$/);
+    if (value && key) entries[key][value[1]] = value[2];
+  });
+  return entries;
+}
+
+test('I18N-01: the action sheet commands are English in the source', function () {
+  const actions = helpers.read('EchoClassic/HTML/echoclassic/html/js/actions.js');
+  ['Reproduzir agora', 'Reproduzir a seguir', 'Fixar no Echo Classic'].forEach(function (pt) {
+    assert.ok(actions.indexOf(pt) < 0,
+      'a Portuguese template literal cannot be translated -- ' + pt + ' would show in every language');
+  });
+  assert.match(actions, />Play now</);
+  assert.match(actions, />Play next</);
+  assert.match(actions, /'Remove from pinned items' : 'Pin to Echo Classic'/,
+    'the pin label is an expression, so it is $t() at runtime -- it still has to hold the English phrase to look up');
+});
+
+test('I18N-01: each action-sheet command has its Portuguese translation', function () {
+  const entries = stringsEntries();
+  const expected = {
+    ECHOCLASSIC_UI_PLAY_NOW: ['Play now', 'Reproduzir agora'],
+    ECHOCLASSIC_UI_PLAY_NEXT: ['Play next', 'Reproduzir a seguir'],
+    ECHOCLASSIC_UI_PIN_TO_ECHO_CLASSIC: ['Pin to Echo Classic', 'Fixar no Echo Classic']
+  };
+  Object.keys(expected).forEach(function (key) {
+    assert.ok(entries[key], key + ' missing from strings.txt');
+    assert.equal(entries[key].EN, expected[key][0]);
+    assert.equal(entries[key].PT, expected[key][1]);
+  });
+});
+
+test('I18N-01: the sheet is fully translated in PT -- no command falls back to English', function () {
+  const actions = helpers.read('EchoClassic/HTML/echoclassic/html/js/actions.js');
+  const entries = stringsEntries();
+  const dictionary = {};
+  Object.keys(entries).forEach(function (key) {
+    if (/^ECHOCLASSIC_UI_/.test(key) && entries[key].EN && entries[key].PT) {
+      dictionary[entries[key].EN] = entries[key].PT;
+    }
+  });
+  const ctx = helpers.runBrowserFile('EchoClassic/HTML/echoclassic/html/js/i18n.js', {
+    LMS_LANG: 'PT',
+    LMS_STRINGS_BY_LANG: { PT: dictionary },
+    LMS_LANG_NAMES: { EN: 'English', PT: 'Português' },
+    Vue: { prototype: {}, component: function () {} },
+    document: { readyState: 'complete' }
+  });
+  const template = actions.match(/template:\s*`([\s\S]*?)`\s*,\n/)[1];
+  const translated = ctx.LmsStr.translateTemplate(template);
+  assert.match(translated, />Reproduzir agora</);
+  assert.match(translated, />Reproduzir a seguir</);
+  assert.equal(ctx.LmsStr.t('Pin to Echo Classic'), 'Fixar no Echo Classic',
+    'the pin label goes through $t() at runtime rather than the template rewrite');
+});
