@@ -195,47 +195,6 @@ const SHOTS = {
       await api.sleep(1200);
     }
   },
-  /* As telas nativas do LMS, reconstruidas na 3.2.9. Nao e um iframe cru: a
-     pagina do servidor entra num quadro de mesma origem dentro dos Ajustes, com
-     a barra da skin e o Save em volta. Aberta pelo caminho do usuario -- o
-     clique na linha --, pelo mesmo motivo do preset playerlayout. */
-  advancedlms: {
-    width: 1440, height: 900, wait: 60000,
-    setup: async function (api) {
-      await api.ready();
-      api.reset();
-      window.LmsUi.setTab('settings');
-      await api.sleep(2500);
-      const row = Array.prototype.find.call(
-        document.querySelectorAll('.settings-scroller button'),
-        (el) => /advanced lms|avancad/i.test(el.textContent || ''));
-      if (!row) throw new Error('Advanced LMS settings row not found');
-      row.click();
-      await api.frameReady(/basic\.html/);
-      await api.sleep(1200);
-    }
-  },
-  /* A gestao de plugins em grade. Trocar o src do quadro em vez de procurar o
-     link na barra lateral: a barra vive dentro do quadro, entao depender dela e
-     depender de duas arvores de DOM em vez de uma. */
-  plugins: {
-    width: 1440, height: 1050, wait: 70000,
-    setup: async function (api) {
-      await api.ready();
-      api.reset();
-      window.LmsUi.setTab('settings');
-      await api.sleep(2500);
-      const row = Array.prototype.find.call(
-        document.querySelectorAll('.settings-scroller button'),
-        (el) => /advanced lms|avancad/i.test(el.textContent || ''));
-      if (!row) throw new Error('Advanced LMS settings row not found');
-      row.click();
-      await api.frameReady(/basic\.html/);
-      document.querySelector('iframe').src = '/echoclassic/settings/server/plugins.html';
-      await api.frameReady(/plugins\.html/);
-      await api.sleep(2000);
-    }
-  },
   dark: {
     width: 1440, height: 900, wait: 45000,
     setup: async function (api) {
@@ -290,18 +249,6 @@ const HELPERS = `
        observadores de filtro e grupo, e o recarregamento seguinte apagava a
        navegacao logo depois de o album ser aberto -- o painel direito saia
        vazio na foto. */
-  /* O quadro dos Ajustes avancados e de mesma origem -- o proxy serve tudo pela
-     mesma porta --, entao da para esperar o documento de dentro ficar pronto em
-     vez de dormir um tempo fixo. O `re` existe porque, logo depois de trocar o
-     src, o documento antigo ainda responde 'complete' por alguns quadros. */
-  frameReady: (re) => api.until(() => {
-    const f = document.querySelector('iframe');
-    if (!f || !f.contentDocument) return false;
-    const d = f.contentDocument;
-    if (d.readyState !== 'complete') return false;
-    if (re && !re.test(d.location.pathname)) return false;
-    return !!(d.body && d.body.children.length);
-  }),
     reset: () => {
       const vm = api.browse();
       if (vm && vm.setPaneWidth) vm.setPaneWidth(window.__paneWidth || 560);
