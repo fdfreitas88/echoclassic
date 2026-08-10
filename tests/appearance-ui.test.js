@@ -916,3 +916,107 @@ test('the app-level Theme control calls LmsUi.setTheme and never assigns state.d
   assert.equal(calls, 2);
   assert.equal(self.ui.theme, 'legacy');
 });
+
+/* SPL-4: the quantitative bar the rebuild had to clear. The 3.2.8 screen put
+   4 switches, 9 radiogroups, 40 visible radio choices and 16 colour swatches
+   in front of someone whose whole task was "where does the player open". The
+   budget is at most 8 visible interactive choices with every surface following
+   the app and the disclosure closed. Counted from the same lists the template
+   iterates, so it cannot drift from what actually renders. */
+test('SPL-4: the basic screen stays inside its visible-control budget', function () {
+  const players = screenBranch('players');
+  const basic = players.split('v-if="advancedAppearance"')[0];
+  const buttons = basic.match(/<button /g) || [];
+  assert.equal(buttons.length, 4,
+    'four control sources: Presentation, Panel position, the master switch and the disclosure');
+
+  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
+  const self = inst.self;
+  self.ui.playerPresentation = 'adaptive';
+  const choices = self.playerPresentations.length + self.playerPositions.length + 1 + 1;
+  assert.ok(choices <= 8, 'visible interactive choices: ' + choices);
+  assert.equal(choices, 7);
+
+  /* Full screen presentation drops Panel position entirely -- it has no
+     meaning there, and hiding it is what keeps the group honest. */
+  self.ui.playerPresentation = 'fullscreen';
+  assert.equal(self.presentationHelp, 'Always opens over the app.');
+  assert.match(basic, /v-if="ui\.playerPresentation === 'adaptive'"/);
+});
+
+test('SPL-4: no swatch row or font list reaches the basic screen', function () {
+  const players = screenBranch('players');
+  const basic = players.split('v-if="advancedAppearance"')[0];
+  assert.ok(basic.indexOf('swatch-row') < 0, '16 colour swatches were the bulk of the old first screen');
+  assert.ok(basic.indexOf('font-option-group') < 0);
+  assert.ok(basic.indexOf('Progress bar') < 0,
+    'progress styling is customization, not the layout decision the screen opens on');
+});
+
+/* SPL-4: the surface selector is a real radiogroup with roving tabindex --
+   exactly one 0 at a time -- and arrow keys move the selection through the
+   shared radioKey handler, the same contract every other segmented control on
+   this screen keeps. */
+test('SPL-4: the surface selector rolls its tabindex and answers arrow keys', function () {
+  const players = screenBranch('players');
+  const group = players.match(/<div class="segmented" role="radiogroup" aria-label="Player surface">[\s\S]*?<\/div>/)[0];
+  assert.match(group, /:tabindex="appearanceSurface === surface\.key \? 0 : -1"/,
+    'roving tabindex: only the selected option is in the tab order');
+  assert.match(group, /:aria-checked="appearanceSurface === surface\.key \? 'true' : 'false'"/);
+  assert.match(group, /@keydown="radioKey\(\$event, playerSurfaces, appearanceSurface, setAppearanceSurface\)"/);
+
+  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
+  const self = inst.self;
+  function arrow(key) {
+    self.radioKey({
+      key: key,
+      preventDefault: function () {},
+      currentTarget: { parentNode: null }
+    }, self.playerSurfaces, self.appearanceSurface, self.setAppearanceSurface);
+  }
+  assert.equal(self.appearanceSurface, 'full');
+  arrow('ArrowRight');
+  assert.equal(self.appearanceSurface, 'small');
+  arrow('ArrowRight');
+  assert.equal(self.appearanceSurface, 'mini');
+  arrow('ArrowRight');
+  assert.equal(self.appearanceSurface, 'full', 'the group wraps, like every other radiogroup here');
+  arrow('ArrowLeft');
+  assert.equal(self.appearanceSurface, 'mini');
+  arrow('Home');
+  assert.equal(self.appearanceSurface, 'mini', 'a key the handler does not own changes nothing');
+});
+
+/* SPL-4: the persisted contract. A 3.2.8 export names nine appearance keys,
+   two layout keys and four gauge keys; the rebuilt screen edits exactly those
+   and introduces none. */
+test('SPL-4: a 3.2.8 payload still imports into every control the screen offers', function () {
+  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
+  const self = inst.self;
+  const payload = {
+    playerPresentation: 'adaptive', playerPosition: 'left',
+    fullTheme: 'dark', fullColorScheme: 'crimson', fullFont: 'espy',
+    smallTheme: 'light', smallColorScheme: 'teal', smallFont: 'helvetica',
+    miniTheme: 'legacy', miniColorScheme: 'amber', miniFont: 'chicago',
+    playerGaugeStyle: 'classic', playerGaugeColor: 'indigo',
+    miniGaugeStyle: 'flat', miniGaugeColor: 'silver'
+  };
+  Object.keys(payload).forEach(function (key) { self.ui[key] = payload[key]; });
+
+  assert.equal(self.allSurfacesFollowApp, false);
+  assert.equal(self.appearanceSummary, 'Some player surfaces use custom appearance.');
+
+  [['full', 'dark', 'crimson', 'espy'],
+   ['small', 'light', 'teal', 'helvetica'],
+   ['mini', 'legacy', 'amber', 'chicago']].forEach(function (row) {
+    self.setAppearanceSurface(row[0]);
+    assert.equal(self.surfaceFollowsApp, false, row[0] + ' should read as customized');
+    assert.equal(self.surfaceTheme, row[1], row[0] + ' theme');
+    assert.equal(self.surfaceScheme, row[2], row[0] + ' scheme');
+    assert.equal(self.surfaceFont, row[3], row[0] + ' font');
+  });
+
+  Object.keys(payload).forEach(function (key) {
+    assert.equal(self.ui[key], payload[key], key + ' must survive the round trip untouched');
+  });
+});
