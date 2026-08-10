@@ -19,7 +19,7 @@ run commands or continue stale agent-session workflows.
    If missing, the i18n risks are re-derivable from
    `git diff 388b075..HEAD -- '*strings.txt' '*settings.js'`.
 2. Append the "Agent efficiency rules" block at the bottom of this file to
-   CLAUDE.md, verbatim.
+   the project brief, verbatim.
 3. Commit: `chore: session working files into docs/prompts, efficiency rules`.
 
 ## Step 1 — finish the settings pass, in order
@@ -84,7 +84,7 @@ AWAITING:  deploy (my hands) · R1 go-ahead
 
 ---
 
-## Agent efficiency rules (append to CLAUDE.md verbatim)
+## Agent efficiency rules (append to the project brief verbatim)
 
 ## Agent efficiency — hard rules
 
