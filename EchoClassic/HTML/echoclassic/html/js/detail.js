@@ -78,6 +78,17 @@ Vue.component('lms-detail', {
     frame: function () { this.load(); }
   },
   methods: {
+    tr: function (text) {
+      return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
+    },
+    /* Mesma familia do ERR-01 que a tela de Apps mostrava: aqui o catch
+       tambem entregava e.message inteiro, com o marcador do tipo de falha e o
+       comando RPC. friendlyError deixa a string do protocolo no console; a
+       tela recebe a familia da falha e a acao humana. */
+    serviceError: function (e) {
+      return this.tr(LmsStore.friendlyError(e, 'This screen did not load.')) + ' ' +
+        this.tr('Check the connection or the service status and try again.');
+    },
     largeArt: function (url) { return (url || '').replace('_50x50', ''); },
     hasArt: function (album) { return !!album.art && !this.failedArt[album.id]; },
     markArtFailed: function (album) { this.$set(this.failedArt, album.id, true); },
@@ -221,10 +232,10 @@ Vue.component('lms-detail', {
         /* Um erro depois de o bloco do album ja estar na tela nao pode apagar o
            que carregou certo: o pedido secundario falhou, o album nao. */
         if (this.blocks.length || this.albums.length) {
-          LmsUi.notify('Part of this screen could not be loaded. ' +
-            (e && e.message ? e.message : String(e)), 'error', 6500);
+          LmsUi.notify(this.tr('Part of this screen could not be loaded. ') +
+            this.serviceError(e), 'error', 6500);
         } else {
-          this.error = e && e.message ? e.message : String(e);
+          this.error = this.serviceError(e);
         }
       }
       if (token !== this.requestToken) return;
