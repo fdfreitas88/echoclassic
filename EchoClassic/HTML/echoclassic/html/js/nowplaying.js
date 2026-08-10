@@ -61,7 +61,7 @@ Vue.component('lms-nowplaying', {
       <div class="bar">
         <i :style="{width: pct + '%'}"></i><b :style="{left: 'calc(' + pct + '% - 12px)'}"></b>
         <input class="range-hit" type="range" min="0" :max="store.duration || 1"
-               step="1" :value="seekValue" :disabled="np.live || !store.duration"
+               step="1" :value="seekValue" :disabled="np.live || !store.duration || !store.commandable"
                aria-label="Track position" @input="previewSeek"
                @pointercancel="cancelSeek" @change="commitSeek">
       </div>
@@ -72,19 +72,25 @@ Vue.component('lms-nowplaying', {
       </div>
     </div>
 
+    <!-- STATE-01: mesma regra do mini player -- a faixa fica como ultima
+         conhecida, o comando sem destino nao. -->
     <div v-if="hasTrack" class="transport">
-	      <button type="button" class="np-action previous pointer" title="Previous" aria-label="Previous track" @click="prev">
+	      <button type="button" class="np-action previous pointer" title="Previous" aria-label="Previous track"
+	              :disabled="!store.commandable" @click="prev">
         <svg viewBox="0 0 32 32"><path d="M15 16L28 7v18zM4 16l11-9v18z"/></svg>
       </button>
 	      <button type="button" class="np-action playpause pointer" :title="playing ? 'Pause' : 'Play'"
-	              :aria-label="playing ? 'Pause' : 'Play'" @click="toggle">
+	              :aria-label="playing ? 'Pause' : 'Play'"
+	              :disabled="!store.commandable" @click="toggle">
         <svg v-if="playing" viewBox="0 0 32 32"><rect x="6" y="4" width="7" height="24" rx="1"/><rect x="19" y="4" width="7" height="24" rx="1"/></svg>
         <svg v-else viewBox="0 0 32 32"><path d="M8 4l20 12L8 28z"/></svg>
       </button>
-	      <button type="button" class="np-action stop pointer" title="Stop" aria-label="Stop" @click="stop">
+	      <button type="button" class="np-action stop pointer" title="Stop" aria-label="Stop"
+	              :disabled="!store.commandable" @click="stop">
         <svg viewBox="0 0 32 32"><rect x="7" y="7" width="18" height="18" rx="1"/></svg>
       </button>
-	      <button type="button" class="np-action next pointer" title="Next" aria-label="Next track" @click="next">
+	      <button type="button" class="np-action next pointer" title="Next" aria-label="Next track"
+	              :disabled="!store.commandable" @click="next">
         <svg viewBox="0 0 32 32"><path d="M17 16L4 25V7zM28 16l-11 9V7z"/></svg>
       </button>
     </div>

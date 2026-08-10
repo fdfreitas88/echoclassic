@@ -91,3 +91,47 @@ test('RESP-10 leak guard: the inline-queue .head margin does not bleed into mode
     'without this, the >=900px grid rule\'s margin-left leaks into the mode-adaptive card and the docked workspace.player-adaptive column, both display:flex, where margin still applies');
   assert.match(reset, /margin-right:0/);
 });
+
+/* STATE-01, the reading half. The store now owns the transition to zero
+   players and publishes state.commandable; the two transports have to read it
+   rather than each deciding for itself what "no player" means -- that
+   duplication is how the mini player and the full player would drift apart. */
+
+function transportButtons(source, klass) {
+  const template = source.match(/template:\s*`([\s\S]*?)`\s*,\n/)[1];
+  const block = template.match(new RegExp('<div v-if="[^"]*" class="' + klass + '">([\\s\\S]*?)</div>'))[1];
+  return block.match(/<button[\s\S]*?>/g) || [];
+}
+
+test('STATE-01: every mini-player transport command is disabled without a destination', function () {
+  const buttons = transportButtons(
+    helpers.read('EchoClassic/HTML/echoclassic/html/js/chrome/miniplayer.js'), 'transport');
+  assert.equal(buttons.length, 4, 'sanity: Previous, Play/Pause, Stop, Next');
+  buttons.forEach(function (button) {
+    assert.match(button, /:disabled="!store\.commandable"/,
+      'this button was enabled next to "No player was found on LMS": ' + button.replace(/\s+/g, ' '));
+  });
+});
+
+test('STATE-01: the full player transports follow the same flag', function () {
+  const buttons = transportButtons(
+    helpers.read('EchoClassic/HTML/echoclassic/html/js/nowplaying.js'), 'transport');
+  assert.equal(buttons.length, 4);
+  buttons.forEach(function (button) {
+    assert.match(button, /:disabled="!store\.commandable"/);
+  });
+});
+
+test('STATE-01: seeking is a command too -- the scrubber cannot stay live without a player', function () {
+  const np = helpers.read('EchoClassic/HTML/echoclassic/html/js/nowplaying.js');
+  assert.match(np, /:disabled="np\.live \|\| !store\.duration \|\| !store\.commandable"/);
+});
+
+test('STATE-01: neither component rebuilds the rule the store owns', function () {
+  ['EchoClassic/HTML/echoclassic/html/js/chrome/miniplayer.js',
+   'EchoClassic/HTML/echoclassic/html/js/nowplaying.js'].forEach(function (file) {
+    const source = helpers.read(file);
+    assert.doesNotMatch(source, /!store\.playerId/,
+      file + ' must not re-derive "is there a player" -- the store answers that in one place');
+  });
+});
