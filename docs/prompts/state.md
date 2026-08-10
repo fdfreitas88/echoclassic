@@ -36,3 +36,4 @@ deployed to the LMS HTTP server; the local `file://` fixture was blocked by the
 browser automation policy.
 
 - c3b3d23 · UX-01: connection banner became a row of the .app column; it no longer covers the list toolbar or the root picker · [code]
+- 40dc172 · I18N-01: action sheet commands are English in the source, Portuguese lives in strings.txt · [measured]
