@@ -34,3 +34,5 @@ Gates at f8893ab: 278 tests · 4/4 · contrast 155/155 · check-version 3.2.8.
 [measured] Visual acceptance remains [unverified] until the updated tree is
 deployed to the LMS HTTP server; the local `file://` fixture was blocked by the
 browser automation policy.
+
+- c3b3d23 · UX-01: connection banner became a row of the .app column; it no longer covers the list toolbar or the root picker · [code]
