@@ -47,3 +47,4 @@ browser automation policy.
 - fe32f4e · ERR-01: Apps/Qobuz errors go through friendlyError and end with a human action; no RPC on screen · [measured]
 - 45f6e01 · ERR-01 (2/2): detail.js used the same raw-message pattern; now friendlyError plus the action · [measured]
 - 520b92f · PUB-01 (1/2): release.sh gains the public-URL rewrite, the private-candidate refusal and a zip-vs-tree diff; it dies on the current descriptor · [measured]
+- 475f50d · PUB-01 (2/2): repo.xml is a publishable descriptor again -- public asset URL, no candidate marker · [measured]
