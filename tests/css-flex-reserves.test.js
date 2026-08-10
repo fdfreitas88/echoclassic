@@ -188,6 +188,53 @@ test('EC-003: .selection-bar no longer needs the sheet stacking context it used 
     'a flow row does not compete with sheets for stacking order; keeping --z-sheet would re-raise it over the footer it now sits beside');
 });
 
+/* ---------- UX-01: the connection banner reserves its own space instead of
+   covering the list toolbar ----------
+
+   `.connection-banner` was `position:fixed;top:70px`, which put it exactly over
+   the row of list commands: at 390x844 the centres of Filter artists, Filters,
+   Sort and Select all landed under it and a hit-test returned the alert's text
+   instead of the control. The root picker's first option, Recent, was covered
+   the same way. The fix is EC-003's: make the banner a real row of `.app`'s
+   flex column, which is why it also has to move above `<main class="workspace">`
+   in the template.
+
+   Regex-over-source-text, like the suites above: it proves the declared
+   structure, not rendered geometry. The overlap was reproduced [live]; the
+   corrected geometry needs its own live check. */
+
+test('UX-01: .connection-banner is a flow row of the app column, not a fixed overlay', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const banner = css.match(/\.connection-banner\{([^}]*)\}/)[1];
+  assert.match(banner, /flex:0 0 auto/,
+    'the banner has to reserve its own height in the column -- that reservation is what stops it covering the toolbar');
+  assert.doesNotMatch(banner, /position:fixed/,
+    'position:fixed is the defect: out of flow, the banner sits on top of whatever the workspace renders at that y');
+  assert.doesNotMatch(banner, /top:70px/,
+    '70px was measured against the header height; it is the offset that put the banner over the toolbar');
+  assert.doesNotMatch(banner, /transform:translateX/,
+    'a centred, viewport-width-capped box only makes sense for an overlay; a column row spans the column');
+});
+
+test('UX-01: the banner no longer shares the fixed-overlay rule with .operation-banner/.notice', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const shared = css.match(/^(.*)\{position:fixed;z-index:var\(--z-notice\);/m)[1];
+  assert.doesNotMatch(shared, /\.connection-banner/,
+    'inheriting position:fixed from the grouped rule would undo the fix even with the banner-specific rule corrected');
+  assert.match(shared, /\.operation-banner/, 'sanity: the transient banners stay overlays');
+  assert.match(shared, /\.notice/);
+});
+
+test('UX-01: the banner markup sits between the header and the workspace', function () {
+  const app = helpers.read('EchoClassic/HTML/echoclassic/html/js/app.js');
+  const header = app.indexOf('</header>');
+  const banner = app.indexOf('class="connection-banner"');
+  const main = app.indexOf('<main class="workspace"');
+  assert.ok(header > -1 && banner > -1 && main > -1, 'sanity: all three are still rendered');
+  assert.ok(banner > header && banner < main,
+    '.app-header is display:contents, so source order is what places the row: after the navbar, above the list that must not be covered');
+});
+
 test('EC-003: <lms-selection-bar> sits inside the app column, above the footer', function () {
   const app = helpers.read('EchoClassic/HTML/echoclassic/html/js/app.js');
   const bar = app.indexOf('<lms-selection-bar>');
