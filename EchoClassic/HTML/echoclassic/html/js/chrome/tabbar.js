@@ -15,14 +15,24 @@ Vue.component('lms-tabbar', {
   },
   methods: {
     pick: function (key) {
-      if (key === 'settings' && this.ui.tab === 'settings' && this.ui.advancedSettings) {
-        if (LmsUi.canLeaveAdvancedSettings && !LmsUi.canLeaveAdvancedSettings()) return;
-        if (window.LmsNav && LmsNav.top && LmsNav.top('settings') && LmsNav.top('settings').advanced) {
-          LmsNav.pop('settings');
-        } else {
-          this.ui.advancedSettings = false;
+      if (key === 'settings' && this.ui.tab === 'settings') {
+        if (this.ui.advancedSettings) {
+          if (LmsUi.canLeaveAdvancedSettings && !LmsUi.canLeaveAdvancedSettings()) return;
+          if (window.LmsNav && LmsNav.top && LmsNav.top('settings') && LmsNav.top('settings').advanced) {
+            LmsNav.pop('settings');
+          } else {
+            this.ui.advancedSettings = false;
+          }
+          return;
         }
-        return;
+        if (this.ui.appearanceScreen) {
+          if (window.LmsNav && LmsNav.top && LmsNav.top('settings') && LmsNav.top('settings').screen) {
+            LmsNav.pop('settings');
+          } else {
+            this.ui.appearanceScreen = null;
+          }
+          return;
+        }
       }
       LmsUi.setTab(key);
     },

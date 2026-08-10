@@ -30,6 +30,15 @@ test('templates keep structural accessibility gates closed', function () {
   assert.doesNotMatch(helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js'), /'Filter' \+ viewLabel/);
 });
 
+test('a disconnected player identifies cached playback data instead of contradicting it', function () {
+  const app = helpers.read('EchoClassic/HTML/echoclassic/html/js/app.js');
+  assert.match(app, /\{\{ connectionMessage \}\}/);
+  assert.match(app, /this\.store\.lastSuccess && this\.store\.np && this\.store\.np\.id/);
+  assert.match(app, /Player connection lost\. Showing the last known track\./);
+  assert.match(app, /Reconnecting…/);
+  assert.doesNotMatch(app, /Reconectando…/);
+});
+
 test('dark footer tokens and tablet single-column breakpoint are explicit', function () {
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
   const dark = css.match(/body\.dark,\s*\[data-surface-theme="dark"\]\{([\s\S]*?)\n\}/);

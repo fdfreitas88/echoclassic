@@ -63,7 +63,7 @@ Vue.component('lms-navbar', {
 
     <span class="sp"></span>
     <span class="r">
-      <button v-if="ui.advancedSettings" class="nav-apply pointer" @click="applyAdvanced">Apply</button>
+      <button v-if="ui.advancedSettings" class="nav-apply pointer" @click="applyAdvanced">Save</button>
       <button v-else ref="searchButton" class="search pointer" title="Search" aria-label="Search" @click="open">
         <svg class="ic" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="M16 16l5.5 5.5"/></svg>
       </button>

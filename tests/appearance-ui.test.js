@@ -484,12 +484,12 @@ test('Advanced LMS settings uses a Material-style iframe controller over the rea
   assert.doesNotMatch(src, /this\.adaptAdvancedFrame\(doc\)/);
 });
 
-test('Advanced LMS settings exposes an App Store plugin pane and bridges navbar Apply to the real form', function () {
+test('Advanced LMS settings exposes an App Store plugin pane and bridges navbar Save to the real form', function () {
   const settings = settingsSrc();
   const navbar = helpers.read('EchoClassic/HTML/echoclassic/html/js/chrome/navbar.js');
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
   assert.match(settings, /id = 'echoclassic-advanced-rail'/);
-  assert.match(settings, /placeholder="Search"/);
+  assert.match(settings, /placeholder="Search settings pages"/);
   assert.match(settings, /oldHero[\s\S]*removeChild\(oldHero\)/);
   assert.match(settings, /advancedIsPluginStore/);
   assert.match(settings, /enhanceNativePluginStore/);
@@ -508,9 +508,49 @@ test('Advanced LMS settings exposes an App Store plugin pane and bridges navbar 
   assert.match(settings, /server settings\$/i);
   assert.match(settings, /selector\.value = option\.value[\s\S]*advancedDispatchChange\(doc, selector\)/);
   assert.match(settings, /querySelector\('#saveSettings,#save,input\[type="submit"\],button\[type="submit"\]'\)/);
-  assert.match(navbar, /v-if="ui\.advancedSettings" class="nav-apply pointer"[\s\S]*Apply/);
+  assert.match(navbar, /v-if="ui\.advancedSettings" class="nav-apply pointer"[\s\S]*Save/);
   assert.match(navbar, /applyAdvanced: function \(\) \{[\s\S]*LmsUi\.applyAdvancedSettings/);
   assert.match(css, /\.navbar \.nav-apply/);
+});
+
+test('Advanced LMS settings search is one scoped control with a clear action and AA focus ring', function () {
+  const settings = settingsSrc();
+  assert.match(settings, /aria-label="Search settings pages"/);
+  assert.match(settings, /aria-label="Clear settings search"/);
+  assert.match(settings, /\.ec-rail-search:focus-within\{outline:3px solid var\(--accent\)/);
+  assert.match(settings, /#echoclassic-advanced-rail \.ec-rail-search input\[type="search"\][\s\S]*border:0!important[\s\S]*border-radius:0!important/);
+  assert.match(settings, /search\.value = ''[\s\S]*search\.focus\(\)/);
+});
+
+test('native Advanced LMS checkboxes keep submission wiring but gain labels and skin switches', function () {
+  const settings = settingsSrc();
+  assert.match(settings, /decorateAdvancedCheckboxes: function/);
+  assert.match(settings, /input\.setAttribute\('aria-label', self\.advancedCheckboxName\(doc, input\)\)/);
+  assert.match(settings, /input\.classList\.add\('ec-native-checkbox'\)/);
+  assert.match(settings, /hit\.setAttribute\('for', input\.id\)/);
+  assert.match(settings, /\.ec-native-switch-hit\{box-sizing:border-box;display:inline-flex!important;width:44px;height:44px/);
+  assert.match(settings, /input\.ec-native-checkbox:focus-visible\+\.ec-native-switch-hit \.ec-native-switch\{outline:3px/);
+  assert.match(settings, /this\.decorateAdvancedCheckboxes\(doc\)/);
+});
+
+test('Advanced LMS has one primary Save action and a responsive settings drawer', function () {
+  const settings = settingsSrc();
+  assert.match(settings, /body:not\(\.ec-plugin-store\) #prefsSubmit\{display:none!important/);
+  assert.match(settings, /\.ec-plugin-store #prefsSubmit #saveSettings[\s\S]*display:none!important/);
+  assert.match(settings, /id = 'echoclassic-rail-toggle'/);
+  assert.match(settings, /aria-controls', 'echoclassic-advanced-rail'/);
+  assert.match(settings, /body\.classList\.toggle\('ec-rail-open', open\)/);
+  assert.match(settings, /drawerSearch[\s\S]*drawerSearch\.focus\(\)/);
+  assert.match(settings, /doc\.__echoclassicRailKeyboard[\s\S]*event\.key !== 'Escape'[\s\S]*toggle\.focus\(\)/);
+  assert.match(settings, /@media \(max-width:860px\)[\s\S]*body\.ec-rail-open #echoclassic-advanced-rail\{transform:translateX\(0\)/);
+});
+
+test('Manage Plugins defaults to Active on narrow frames without removing native rows', function () {
+  const settings = settingsSrc();
+  assert.match(settings, /doc\.defaultView && doc\.defaultView\.innerWidth <= 860 \? 'active' : 'all'/);
+  assert.match(settings, /menu\.setAttribute\('data-ec-plugin-filter', initialMode\)/);
+  assert.match(settings, /row\.classList\.toggle\('ec-plugin-filtered'/);
+  assert.doesNotMatch(settings, /removeChild\(row\)/);
 });
 
 test('plugin switches preserve native checkboxes and use the skin switch tokens', function () {
@@ -653,6 +693,14 @@ test('Escape closes Advanced LMS settings through the Settings navigation stack'
   assert.match(advancedEscape[0], /LmsNav\.top\('settings'\)[\s\S]*LmsNav\.pop\('settings'\)/);
   assert.doesNotMatch(advancedEscape[0], /LmsNav\.back\('settings'\)/);
   assert.match(advancedEscape[0], /state\.advancedSettings = false/);
+});
+
+test('Escape and the active Settings tab also close Player layout', function () {
+  const ui = uiSrc();
+  const tabbar = helpers.read('EchoClassic/HTML/echoclassic/html/js/chrome/tabbar.js');
+  assert.match(ui, /if \(state\.appearanceScreen\) \{[\s\S]*LmsNav\.top\('settings'\)[\s\S]*LmsNav\.pop\('settings'\)/);
+  assert.match(tabbar, /if \(this\.ui\.appearanceScreen\) \{[\s\S]*LmsNav\.top\('settings'\)[\s\S]*LmsNav\.pop\('settings'\)/);
+  assert.match(tabbar, /this\.ui\.appearanceScreen = null/);
 });
 
 test('Advanced LMS settings exits never use browser history-backed LmsNav.back', function () {

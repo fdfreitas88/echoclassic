@@ -216,6 +216,10 @@ ECHOCLASSIC_UI_CLEAR_FILTER
 	EN	Clear filter
 	PT	Limpar filtro
 
+ECHOCLASSIC_UI_CLEAR_SETTINGS_SEARCH
+	EN	Clear settings search
+	PT	Limpar busca de ajustes
+
 ECHOCLASSIC_UI_CLEAR_THE_WHOLE_QUEUE
 	EN	Clear the whole queue?
 	PT	Limpar a fila inteira?
@@ -227,6 +231,10 @@ ECHOCLASSIC_UI_CLEAR_UPCOMING
 ECHOCLASSIC_UI_CLOSE
 	EN	Close
 	PT	Fechar
+
+ECHOCLASSIC_UI_CLOSE_SETTINGS_PAGES
+	EN	Close settings pages
+	PT	Fechar páginas de ajustes
 
 ECHOCLASSIC_UI_CLOSE_QUEUE
 	EN	Close queue
@@ -708,6 +716,10 @@ ECHOCLASSIC_UI_PLAYER
 	EN	Player
 	PT	Player
 
+ECHOCLASSIC_UI_PLAYER_CONNECTION_LOST_SHOWING_THE_LAST_KN
+	EN	Player connection lost. Showing the last known track.
+	PT	Conexão com o player perdida. Exibindo a última faixa conhecida.
+
 ECHOCLASSIC_UI_PLAYER_SESSION
 	EN	Player session
 	PT	Sessão do player
@@ -784,6 +796,10 @@ ECHOCLASSIC_UI_RECENT_SHOWS_THE_250_NEWEST_ALBUMS_USE_THE_F
 	EN	Recent shows the 250 newest albums. Use the filter to narrow it down.
 	PT	Recentes mostra os 250 álbuns mais novos. Use o filtro para refinar.
 
+ECHOCLASSIC_UI_RECONNECTING
+	EN	Reconnecting…
+	PT	Reconectando…
+
 ECHOCLASSIC_UI_RELATED_ARTIST
 	EN	Related artist
 	PT	Artista relacionado
@@ -844,6 +860,10 @@ ECHOCLASSIC_UI_SAVE
 	EN	Save
 	PT	Salvar
 
+ECHOCLASSIC_UI_SCAN_FOLDER_FOR_MUSIC
+	EN	Scan {folder} for music
+	PT	Escanear {folder} para música
+
 ECHOCLASSIC_UI_SEARCH
 	EN	Search
 	PT	Buscar
@@ -851,6 +871,10 @@ ECHOCLASSIC_UI_SEARCH
 ECHOCLASSIC_UI_SEARCH_FAILED
 	EN	Search failed
 	PT	Não deu para buscar
+
+ECHOCLASSIC_UI_SEARCH_SETTINGS_PAGES
+	EN	Search settings pages
+	PT	Buscar páginas de ajustes
 
 ECHOCLASSIC_UI_SEARCH_THE_LIBRARY
 	EN	Search the library
@@ -867,6 +891,14 @@ ECHOCLASSIC_UI_SERVER_VERSION
 ECHOCLASSIC_UI_SETTINGS
 	EN	Settings
 	PT	Ajustes
+
+ECHOCLASSIC_UI_SETTING
+	EN	Setting
+	PT	Ajuste
+
+ECHOCLASSIC_UI_SETTINGS_PAGES
+	EN	Settings pages
+	PT	Páginas de ajustes
 
 ECHOCLASSIC_UI_SHOW_FULL_SCREEN
 	EN	Show full screen
