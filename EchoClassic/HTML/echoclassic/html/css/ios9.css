@@ -591,6 +591,11 @@ button:disabled{opacity:.35}
 .pane-left>.rail{grid-column:2;grid-row:6}
 .pane-right{flex:1;min-width:0;overflow-y:auto;background:var(--content)}
 .scroller{flex:1;overflow-y:auto;min-width:0}
+/* Every vertical region uses native momentum scrolling and contains its
+   overscroll. This keeps a drawer, queue or sheet from handing the gesture to
+   the page behind it when its own top/bottom edge is reached. */
+:where(.pane-right,.scroller,.npfull,.queue .qbody,.action-sheet,.sheet-choices,.filter-body){
+  -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 
 /* O componente de Minha Musica precisa de uma raiz unica (Vue 2 nao tem
    fragmentos), entao ela mesma vira a linha flex que o .body seria. As regras
