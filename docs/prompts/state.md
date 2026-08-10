@@ -49,3 +49,4 @@ browser automation policy.
 - 520b92f · PUB-01 (1/2): release.sh gains the public-URL rewrite, the private-candidate refusal and a zip-vs-tree diff; it dies on the current descriptor · [measured]
 - 475f50d · PUB-01 (2/2): repo.xml is a publishable descriptor again -- public asset URL, no candidate marker · [measured]
 - 94818e4 · SPL-1: Player layout previews deleted -- markup, state, computeds and CSS · [measured]
+- 72e3bc8 · SPL-2: LmsUi.surfaceValues exposes a surface stored theme/scheme/font, app included · [measured]
