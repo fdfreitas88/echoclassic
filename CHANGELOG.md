@@ -13,6 +13,24 @@ language at the time. They are left as they were: they describe releases that
 were already published under those notes, and rewriting them would misreport
 what was announced.
 
+## [Unreleased]
+
+### Changed
+
+- Manage Plugins now presents the native LMS plugin form as a three-column,
+  iOS-style App Store pane with live status filters, plugin and active counts,
+  native search/category controls, banded groups, metadata tiles and the same
+  switches used elsewhere in Echo Classic. [code]
+
+### Fixed
+
+- Advanced LMS pages no longer show the residual native header block, the
+  settings search no longer carries a decorative microphone, and plugin group
+  headings no longer render as unnamed green plugin tiles. [code]
+- Plugin switches preserve the native checkbox names and submission semantics,
+  expose a keyboard focus ring, update group counts and pending-change copy,
+  and keep the native Save Settings control. [code]
+
 ## [3.2.8] — 2026-08-09
 
 ### Added

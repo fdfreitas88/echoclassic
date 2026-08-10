@@ -451,11 +451,12 @@ test('Advanced LMS settings iframe receives Echo Classic theme tokens and CSS on
   assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#echoclassic-advanced-rail') >= 0);
   assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-rail-search') >= 0);
   assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-lms-chrome-hidden{display:none') >= 0);
-  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#echoclassic-advanced-hero{display:none') >= 0);
-  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#echoclassic-plugin-store-tools') >= 0);
-  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#echoclassic-plugin-store-grid') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#topGraphicBox,#echoclassic-advanced-hero{display:none') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#pluginButtonBar') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#pluginListPanel') >= 0);
   assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-plugin-search') >= 0);
-  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-plugin-store .ec-advanced-content{display:none') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-plugin-switch-hit') >= 0);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('background:var(--sw-on)') >= 0);
   assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('ul.tabs,.tabs,#tabs,#settingsTabs,#choose_setting{display:none') >= 0);
   assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('background:var(--group-page)') >= 0);
   assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('form>table:not(.tabs):not(#tabs):not(#settingsTabs)') >= 0);
@@ -483,7 +484,7 @@ test('Advanced LMS settings uses a Material-style iframe controller over the rea
   assert.doesNotMatch(src, /this\.adaptAdvancedFrame\(doc\)/);
 });
 
-test('Advanced LMS settings exposes iPad-style search rail and bridges navbar Apply to the real form', function () {
+test('Advanced LMS settings exposes an App Store plugin pane and bridges navbar Apply to the real form', function () {
   const settings = settingsSrc();
   const navbar = helpers.read('EchoClassic/HTML/echoclassic/html/js/chrome/navbar.js');
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
@@ -492,16 +493,15 @@ test('Advanced LMS settings exposes iPad-style search rail and bridges navbar Ap
   assert.match(settings, /oldHero[\s\S]*removeChild\(oldHero\)/);
   assert.match(settings, /advancedIsPluginStore/);
   assert.match(settings, /enhanceNativePluginStore/);
-  assert.match(settings, /this\.removeAdvancedPluginStore\(doc\);[\s\S]*if \(pluginStore\) this\.enhanceNativePluginStore\(doc\)/);
-  assert.match(settings, /id = 'echoclassic-native-plugin-title'/);
-  assert.match(settings, /\.ec-plugin-store #topGraphicBox\{display:none/);
+  assert.match(settings, /if \(pluginStore\) this\.enhanceNativePluginStore\(doc\)/);
+  assert.match(settings, /#topGraphicBox,#echoclassic-advanced-hero\{display:none/);
   assert.match(settings, /\.ec-plugin-store #homeMenu\{display:block/);
-  assert.match(settings, /buildAdvancedPluginStore/);
-  assert.match(settings, /renderAdvancedPluginCard/);
-  assert.match(settings, /id = 'echoclassic-plugin-store-grid'/);
-  assert.match(settings, /placeholder="Search Plugins"/);
+  assert.match(settings, /doc\.getElementById\('filterInput'\)/);
+  assert.match(settings, /bar\.querySelector\('#filterChooser select'\)/);
+  assert.match(settings, /#pluginListPanel li\.thumbwrap\.selectorMarker/);
+  assert.match(settings, /#settingsForm input,#settingsForm textarea,#settingsForm select/);
+  assert.doesNotMatch(settings, /ec-rail-mic/);
   assert.match(settings, /self\.advancedClosest\(input, '#echoclassic-advanced-rail'\)/);
-  assert.match(settings, /self\.advancedClosest\(input, '#echoclassic-plugin-store-tools'\)/);
   assert.match(settings, /hideAdvancedLmsChrome\(doc, root\)/);
   assert.match(settings, /server settings\$/i);
   assert.match(settings, /selector\.value = option\.value[\s\S]*advancedDispatchChange\(doc, selector\)/);
@@ -509,6 +509,86 @@ test('Advanced LMS settings exposes iPad-style search rail and bridges navbar Ap
   assert.match(navbar, /v-if="ui\.advancedSettings" class="nav-apply pointer"[\s\S]*Apply/);
   assert.match(navbar, /applyAdvanced: function \(\) \{[\s\S]*LmsUi\.applyAdvancedSettings/);
   assert.match(css, /\.navbar \.nav-apply/);
+});
+
+test('plugin switches preserve native checkboxes and use the skin switch tokens', function () {
+  const settings = settingsSrc();
+  assert.match(settings, /position:absolute!important;opacity:0!important;pointer-events:none!important/);
+  assert.doesNotMatch(settings, /ec-plugin-card input\[type="checkbox"\][^']*display:none/);
+  assert.match(settings, /input\[type="checkbox"\]:checked~\.ec-plugin-switch-hit \.ec-plugin-switch\{background:var\(--sw-on\)/);
+  assert.match(settings, /input\[type="checkbox"\]:focus-visible~\.ec-plugin-switch-hit \.ec-plugin-switch/);
+  assert.match(settings, /\.ec-plugin-switch-hit\{display:flex;width:44px;height:44px/);
+  assert.match(settings, /\.ec-plugin-switch\{box-sizing:border-box;position:relative;display:block;width:44px;height:26px/);
+  assert.match(settings, /checkbox\.addEventListener\('change'/);
+  assert.match(settings, /group\.appendChild\(row\)/);
+});
+
+test('plugin metadata parsing separates the LMS version suffix and keeps stable initials', function () {
+  const self = helpers.settingsInstance().self;
+  const echo = self.advancedPluginLabel('Echo Classic (v3.2.8)');
+  const cd = self.advancedPluginLabel('CDplayer (v1.11)');
+  assert.equal(echo.name, 'Echo Classic');
+  assert.equal(echo.version, '3.2.8');
+  assert.equal(cd.name, 'CDplayer');
+  assert.equal(cd.version, '1.11');
+  assert.equal(self.pluginIconText('Advanced Tag View'), 'AT');
+  assert.equal(self.pluginIconText('Qobuz'), 'QO');
+  assert.equal(self.advancedPluginTone('EchoClassic'), self.advancedPluginTone('EchoClassic'));
+  assert.ok(self.advancedPluginTone('EchoClassic') >= 0 && self.advancedPluginTone('EchoClassic') < 6);
+});
+
+test('plugin status and search filters update counts and empty group bands', function () {
+  const self = helpers.settingsInstance().self;
+  function classList() {
+    const values = new Set();
+    return {
+      contains: function (value) { return values.has(value); },
+      toggle: function (value, on) { if (on) values.add(value); else values.delete(value); },
+      add: function (value) { values.add(value); }
+    };
+  }
+  function row(checked, label) {
+    const attrs = { 'data-ec-plugin-label': label };
+    return {
+      classList: classList(),
+      querySelector: function () { return { checked: checked }; },
+      getAttribute: function (key) { return attrs[key] || ''; },
+      setAttribute: function (key, value) { attrs[key] = value; }
+    };
+  }
+  const rows = [row(true, 'echo classic felipe freitas'), row(false, 'qobuz lyrion community')];
+  const menu = {
+    getAttribute: function () { return 'active'; }
+  };
+  const count = { textContent: '' };
+  const activeHolder = { classList: classList() };
+  const inactiveHolder = { classList: classList() };
+  const activeHeader = { textContent: '', parentNode: activeHolder };
+  const inactiveHeader = { textContent: '', parentNode: inactiveHolder };
+  const activeList = { classList: classList() };
+  const inactiveList = { classList: classList() };
+  const nodes = {
+    homeMenu: menu,
+    filterInput: { value: '' },
+    activePlugins_Header: activeHeader,
+    inactivePlugins_Header: inactiveHeader,
+    activePlugins: activeList,
+    inactivePlugins: inactiveList
+  };
+  const doc = {
+    defaultView: { getComputedStyle: function () { return { display: 'block' }; } },
+    getElementById: function (id) { return nodes[id] || null; },
+    querySelectorAll: function () { return rows; },
+    querySelector: function () { return count; }
+  };
+
+  self.applyAdvancedPluginFilters(doc);
+  assert.equal(count.textContent, '2 plugins · 1 active');
+  assert.equal(rows[0].classList.contains('ec-plugin-filtered'), false);
+  assert.equal(rows[1].classList.contains('ec-plugin-filtered'), true);
+  assert.equal(activeHeader.textContent, 'Active · 1');
+  assert.equal(inactiveHeader.textContent, 'Inactive · 1');
+  assert.equal(inactiveHolder.classList.contains('ec-plugin-band-empty'), true);
 });
 
 test('Player layout explains inherited controls and gives touch controls 44px hit areas', function () {
