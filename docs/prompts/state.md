@@ -45,3 +45,4 @@ browser automation policy.
 - 561c564 · STATE-01: store owns the zero-player transition; connection, track and commandability move together · [measured]
 - 9c26fc4 · STATE-01: mini and full transports read store.commandable; no component re-derives the rule · [measured]
 - fe32f4e · ERR-01: Apps/Qobuz errors go through friendlyError and end with a human action; no RPC on screen · [measured]
+- 45f6e01 · ERR-01 (2/2): detail.js used the same raw-message pattern; now friendlyError plus the action · [measured]
