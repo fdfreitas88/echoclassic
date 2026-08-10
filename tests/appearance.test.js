@@ -226,23 +226,24 @@ test('toda classe do branch appearanceScreen tem regra correspondente em ios9.cs
   });
 });
 
-/* O ponto inteiro de .surface-preview e nunca mentir sobre a superficie: toda
-   cor tem que vir de --content/--chrome/--text/--text2/--accent, nunca de um
-   hex literal (que so estaria certo para UM esquema/tema por acidente). */
+/* SPL-1: as tiras de preview estao saindo da tela de Player layout -- elas
+   nao mostravam apresentacao, posicao do painel, fonte, cromo, capa nem o
+   estilo real da barra de progresso, e eram aria-hidden. Enquanto alguma
+   regra existir, a exigencia antiga continua valendo: toda cor tem que vir de
+   --content/--chrome/--text/--text2/--accent, nunca de um hex literal (que so
+   estaria certo para UM esquema/tema por acidente). Zero regras e o estado
+   final esperado, e por isso a contagem nao e mais cobrada aqui. */
 test('nenhuma regra de .surface-preview* usa uma cor hexadecimal literal', function () {
   const sheet = css();
   const ruleRe = /([^{}]+)\{([^{}]*)\}/g;
   let match;
-  let checked = 0;
   while ((match = ruleRe.exec(sheet))) {
     const selectors = match[1].split(',').map(function (s) { return s.trim(); });
     const touchesSurfacePreview = selectors.some(function (sel) {
       return sel.indexOf('.surface-preview') >= 0;
     });
     if (!touchesSurfacePreview) continue;
-    checked += 1;
     assert.doesNotMatch(match[2], /#[0-9a-fA-F]{3,8}\b/,
       'regra de .surface-preview com hex literal: ' + match[1].trim());
   }
-  assert.ok(checked > 0, 'esperava encontrar pelo menos uma regra de .surface-preview em ios9.css');
 });
