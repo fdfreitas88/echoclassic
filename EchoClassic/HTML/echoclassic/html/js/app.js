@@ -12,7 +12,7 @@
   <lms-statusbar></lms-statusbar>
   <lms-navbar :title="title" :back="back" :pickable="pickable"
               :segments="segments" :segment="ui.albumMode"
-              @back="goBack" @picker="ui.picker = true"
+              @back="goBack" @picker="openPicker"
               @segment="LmsUi.setAlbumMode($event)"></lms-navbar>
   </header>
 
@@ -63,17 +63,49 @@
   <lms-info-sheet></lms-info-sheet>
   <lms-filter-panel></lms-filter-panel>
 
+  <!-- Seletor de raiz de Minha Musica, como listbox do ARIA APG (A11Y-01). Era
+       uma pilha de botoes sem papel nenhum, com o foco parado no gatilho: o
+       leitor de tela nao anunciava lista nem opcao selecionada, e o Tab saia
+       dali para a busca -- para chegar a uma opcao era preciso atravessar a
+       lista da biblioteca inteira. O rotulo vem do proprio gatilho
+       (aria-labelledby), que ja diz qual raiz esta em uso. -->
   <template v-if="ui.picker">
-    <div class="pickerback" @click="ui.picker = false"></div>
-    <div class="picker">
-      <button v-for="v in views" :key="v.key" class="p pointer"
+    <div class="pickerback" @click="closePicker"></div>
+    <div ref="picker" class="picker" role="listbox" tabindex="-1"
+         aria-labelledby="picker-trigger"
+         @keydown.esc.stop.prevent="closePicker"
+         @keydown.tab="trapPicker"
+         @keydown.down.prevent="stepPicker(1)"
+         @keydown.up.prevent="stepPicker(-1)"
+         @keydown.home.prevent="jumpPicker(0)"
+         @keydown.end.prevent="jumpPicker(-1)">
+      <button v-for="v in views" :key="v.key" type="button" role="option" class="p pointer"
+           :aria-selected="String(ui.musicView === v.key)"
            :class="{on: ui.musicView === v.key}" @click="pickView(v.key)">{{ v.label }}</button>
     </div>
   </template>
 </div>`,
     data: function () {
       return { ui: LmsUi.state, store: LmsStore.state, views: LmsUi.MUSIC_VIEWS,
-               nav: LmsNav.stacks, LmsUi: LmsUi };
+               nav: LmsNav.stacks, LmsUi: LmsUi, pickerTriggerEl: null };
+    },
+    watch: {
+      /* Abrir e um evento de teclado tanto quanto de ponteiro: o foco vai para
+         a opcao em uso, e nao para o topo da lista, para quem navega por
+         teclado comecar de onde ja esta. */
+      'ui.picker': function (open) {
+        if (!open) return;
+        var self = this;
+        this.$nextTick(function () {
+          var nodes = self.pickerOptions();
+          var at = 0;
+          for (var i = 0; i < self.views.length; i++) {
+            if (self.views[i].key === self.ui.musicView) { at = i; break; }
+          }
+          if (nodes[at]) nodes[at].focus();
+          else if (self.$refs.picker && self.$refs.picker.focus) self.$refs.picker.focus();
+        });
+      }
     },
     computed: {
 	      tabLabel: function () {
@@ -148,9 +180,56 @@
         LmsNav.back(this.ui.tab);
       },
       reconnect: function () { LmsStore.reconnect(); },
+      /* O gatilho chega junto do evento porque e para ele que o foco volta.
+         Mesmo acordo que o menu de ordenacao faz por LmsUi.sortTrigger(); aqui
+         o dono e o proprio componente, que ja renderiza o popup. */
+      openPicker: function (trigger) {
+        this.pickerTriggerEl = trigger && trigger.focus ? trigger : null;
+        this.ui.picker = true;
+      },
+      closePicker: function () {
+        this.ui.picker = false;
+        this.restorePickerFocus();
+      },
+      restorePickerFocus: function () {
+        var trigger = this.pickerTriggerEl;
+        if (!trigger || !trigger.focus) return;
+        this.$nextTick(function () { trigger.focus(); });
+      },
+      pickerOptions: function () {
+        if (!this.$refs.picker || !this.$refs.picker.querySelectorAll) return [];
+        return Array.prototype.slice.call(
+          this.$refs.picker.querySelectorAll('[role="option"]')
+        );
+      },
+      stepPicker: function (delta) {
+        var nodes = this.pickerOptions();
+        if (!nodes.length) return;
+        var at = nodes.indexOf(document.activeElement);
+        var next = at < 0 ? (delta > 0 ? 0 : nodes.length - 1)
+                          : (at + delta + nodes.length) % nodes.length;
+        nodes[next].focus();
+      },
+      jumpPicker: function (index) {
+        var nodes = this.pickerOptions();
+        if (!nodes.length) return;
+        nodes[index < 0 ? nodes.length - 1 : index].focus();
+      },
+      /* Sem isto o Tab levava o foco para a busca e dali para a lista da
+         biblioteca, com o popup ainda aberto por cima. */
+      trapPicker: function (event) {
+        var nodes = this.pickerOptions();
+        if (!nodes.length) return;
+        if (event.shiftKey && document.activeElement === nodes[0]) {
+          event.preventDefault(); nodes[nodes.length - 1].focus();
+        } else if (!event.shiftKey && document.activeElement === nodes[nodes.length - 1]) {
+          event.preventDefault(); nodes[0].focus();
+        }
+      },
       pickView: function (key) {
         LmsUi.setMusicView(key);
         LmsNav.reset('music');
+        this.restorePickerFocus();
       }
     }
   });
