@@ -1115,8 +1115,15 @@
     }
     if (!added) return false;
     clearSelection();
-    notify(added + (added === 1 ? ' item adicionado' : ' itens adicionados') +
-      ' to the playback queue.', 'success', 3500);
+    /* O numero entra por {n}, depois da traducao. i18n.js embrulha notify() e
+       traduz a mensagem inteira, mas uma frase com o total concatenado nunca
+       casa com chave nenhuma -- foi assim que "N itens adicionados" ficou em
+       portugues numa sessao em ingles. Mesma regra das notas de lista do
+       browse.js. */
+    notify(tr(added === 1
+      ? 'One item added to the playback queue.'
+      : '{n} items added to the playback queue.'
+    ).replace('{n}', added), 'success', 3500);
     return true;
   }
 
@@ -1138,6 +1145,12 @@
   }
 
   function setBusy(message) { state.busyMessage = message || ''; }
+
+  /* Traducao explicita, para o texto que nasce em JavaScript e nao passa pelo
+     rewrite de template do i18n.js. */
+  function tr(text) {
+    return global.LmsStr && global.LmsStr.t ? global.LmsStr.t(text) : text;
+  }
 
   function notify(message, kind, duration) {
     if (noticeTimer) clearTimeout(noticeTimer);
