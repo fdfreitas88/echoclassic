@@ -692,6 +692,10 @@ ECHOCLASSIC_UI_PINNED_ITEMS
 	EN	Pinned items
 	PT	Itens fixados
 
+ECHOCLASSIC_UI_PIN_TO_ECHO_CLASSIC
+	EN	Pin to Echo Classic
+	PT	Fixar no Echo Classic
+
 ECHOCLASSIC_UI_PLAY
 	EN	Play
 	PT	Tocar
@@ -743,6 +747,14 @@ ECHOCLASSIC_UI_PLAYS
 ECHOCLASSIC_UI_PLAYS_2
 	EN	plays
 	PT	reproduções
+
+ECHOCLASSIC_UI_PLAY_NEXT
+	EN	Play next
+	PT	Reproduzir a seguir
+
+ECHOCLASSIC_UI_PLAY_NOW
+	EN	Play now
+	PT	Reproduzir agora
 
 ECHOCLASSIC_UI_PLAY_WILL_START
 	EN	Play will start:

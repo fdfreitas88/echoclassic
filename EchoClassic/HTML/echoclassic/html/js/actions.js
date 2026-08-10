@@ -31,8 +31,8 @@
       <span>{{ item.editions.length }}</span>
       <span>editions of this work in the library. The preference picks the first one and the others stay visible in the list.</span>
     </div>
-    <button v-if="ctl" @click="playNow">Reproduzir agora</button>
-    <button v-if="ctl" @click="next">Reproduzir a seguir</button>
+    <button v-if="ctl" @click="playNow">Play now</button>
+    <button v-if="ctl" @click="next">Play next</button>
     <button v-if="ctl" @click="later">Add to end of queue</button>
     <button v-if="item.url" @click="showPlaylists = !showPlaylists">Add to playlist…</button>
     <div v-if="showPlaylists" class="sheet-choices">
@@ -51,7 +51,7 @@
       </button>
       <div v-if="!players.length" class="sheet-note">No players found.</div>
     </div>
-    <button v-if="item.kind !== 'player-picker'" @click="pin">{{ pinned ? 'Remove from pinned items' : 'Fixar no Echo Classic' }}</button>
+    <button v-if="item.kind !== 'player-picker'" @click="pin">{{ pinned ? 'Remove from pinned items' : 'Pin to Echo Classic' }}</button>
     <button v-if="item.kind === 'track' || item.type === 'track'" @click="info">Credits and information</button>
     <button v-if="!anchor" class="cancel" @click="close">Cancel</button>
   </div>
