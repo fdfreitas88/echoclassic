@@ -1,7 +1,7 @@
 # Notes for the i18n-ui sweep at the end of Phase 2
 
-Accumulated while reviewing each skin-dev commit. Do not lose these — CLAUDE.md names this
-exact class as what consumed releases 3.2.2 and 3.2.5.
+Accumulated while reviewing each commit of the sweep. Do not lose these — the project
+brief names this exact class as what consumed releases 3.2.2 and 3.2.5.
 
 ## From C3 (crossfade / duration)
 

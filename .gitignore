@@ -10,8 +10,14 @@
 *.swp
 *~
 
-# configuracao local de agentes
-.claude/settings.local.json
+# rascunhos de desenho: mockups HTML e as imagens que saem deles. Ficam no
+# disco enquanto servem de referencia, mas nao entram no repositorio -- um
+# mockup publicado e lido como se fosse o produto.
+docs/*mock*.html
+docs/settings-mockup.html
+docs/gaps-mockup.html
+docs/echoclassic-legacy-theme.html
+docs/img/*-mock.png
 
 # artefatos de trabalho
 node_modules/
