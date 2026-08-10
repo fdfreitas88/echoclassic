@@ -1432,6 +1432,14 @@ ECHOCLASSIC_UI_UNKNOWN_MEDIA_MANY
 	EN	{n} albums were left out because they have no media information.
 	PT	{n} álbuns ficaram de fora por não terem informação de mídia.
 
+ECHOCLASSIC_UI_QUEUE_ADDED_ONE
+	EN	One item added to the playback queue.
+	PT	Um item adicionado à fila de reprodução.
+
+ECHOCLASSIC_UI_QUEUE_ADDED_MANY
+	EN	{n} items added to the playback queue.
+	PT	{n} itens adicionados à fila de reprodução.
+
 ECHOCLASSIC_UI_SECTION_OVERLAP
 	EN	Some albums appear in more than one section.
 	PT	Alguns álbuns aparecem em mais de uma seção.

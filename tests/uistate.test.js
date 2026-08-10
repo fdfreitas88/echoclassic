@@ -551,3 +551,59 @@ test('appearanceScreen nasce null e nao sobrevive a recarga', function () {
   const b = fresh();
   assert.equal(b.state.appearanceScreen, null, 'uma instancia nova sempre comeca fechada');
 });
+
+/* I18N-01: the queue-selection notice was built by concatenation --
+   `added + ' item adicionado' + ' to the playback queue.'` -- so it was half
+   Portuguese in an English session and untranslatable in any session: i18n.js
+   wraps notify() and translates the whole message, and a message carrying a
+   number never matches a dictionary key. The phrase is now translated first
+   and the count goes into {n} after. */
+
+function queueingUi(extra) {
+  /* queueSelection() calls the module-local notify(), so the notice is read
+     back from state rather than by wrapping LmsUi.notify. */
+  return helpers.uiContext(Object.assign({
+    LmsStore: {
+      state: {},
+      addToQueue: async function () { return true; }
+    }
+  }, extra || {})).LmsUi;
+}
+
+function selection(n) {
+  const out = {};
+  for (let i = 1; i <= n; i++) out['track:' + i] = { kind: 'track', id: i, title: 't' + i };
+  return out;
+}
+
+test('I18N-01: the queue notice is one translatable English phrase with the count in {n}', async function () {
+  const one = queueingUi();
+  one.state.selected = selection(1);
+  assert.equal(await one.queueSelection(), true);
+  assert.equal(one.state.notice, 'One item added to the playback queue.');
+
+  const many = queueingUi();
+  many.state.selected = selection(2);
+  assert.equal(await many.queueSelection(), true);
+  assert.equal(many.state.notice, '2 items added to the playback queue.');
+});
+
+test('I18N-01: with a PT dictionary the notice arrives fully in Portuguese', async function () {
+  const ptStrings = {
+    'One item added to the playback queue.': 'Um item adicionado à fila de reprodução.',
+    '{n} items added to the playback queue.': '{n} itens adicionados à fila de reprodução.'
+  };
+  const u = queueingUi({
+    LmsStr: { t: function (text) { return ptStrings[text] || text; } }
+  });
+  u.state.selected = selection(3);
+  assert.equal(await u.queueSelection(), true);
+  assert.equal(u.state.notice, '3 itens adicionados à fila de reprodução.',
+    'the number is substituted after translation, so the whole sentence follows the language');
+});
+
+test('I18N-01: both phrases carry a Portuguese translation in strings.txt', function () {
+  const strings = helpers.read('EchoClassic/strings.txt');
+  assert.match(strings, /\tEN\tOne item added to the playback queue\.\n\tPT\tUm item adicionado à fila de reprodução\./);
+  assert.match(strings, /\tEN\t\{n\} items added to the playback queue\.\n\tPT\t\{n\} itens adicionados à fila de reprodução\./);
+});
