@@ -134,3 +134,20 @@ test('ERR-01: every phrase the view adds is translatable', function () {
     assert.ok(strings.indexOf('\tEN\t' + phrase) >= 0, 'missing from strings.txt: ' + phrase);
   });
 });
+
+/* ERR-01, same class in the album screen. `rg "Could not open|Failed to fetch"`
+   turned up a second catch printing e.message whole -- the marker and the RPC
+   verb again, on the screen an artist or album lands on. */
+
+test('ERR-01: the album screen reports a failure the same way Apps does', function () {
+  const detail = helpers.read('EchoClassic/HTML/echoclassic/html/js/detail.js');
+  assert.doesNotMatch(detail, /e && e\.message \? e\.message : String\(e\)/,
+    'handing the raw message to the screen is the defect, wherever it appears');
+  assert.match(detail, /this\.error = this\.serviceError\(e\);/);
+  assert.match(detail, /LmsStore\.friendlyError\(e, 'This screen did not load\.'\)/,
+    'friendlyError is what keeps the protocol string in the console instead of on screen');
+  assert.match(detail, /this\.tr\('Check the connection or the service status and try again\.'\)/,
+    'the action is the half a person can act on');
+  const strings = helpers.read('EchoClassic/strings.txt');
+  assert.ok(strings.indexOf('\tEN\tThis screen did not load.') >= 0);
+});

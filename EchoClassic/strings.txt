@@ -1756,6 +1756,10 @@ ECHOCLASSIC_UI_SERVICE_NO_ANSWER
 	EN	This service did not answer.
 	PT	Este serviço não respondeu.
 
+ECHOCLASSIC_UI_SCREEN_NO_ANSWER
+	EN	This screen did not load.
+	PT	Esta tela não carregou.
+
 ECHOCLASSIC_UI_STATION_NO_ANSWER
 	EN	The station did not answer.
 	PT	A estação não respondeu.
