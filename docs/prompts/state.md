@@ -50,3 +50,4 @@ browser automation policy.
 - 475f50d · PUB-01 (2/2): repo.xml is a publishable descriptor again -- public asset URL, no candidate marker · [measured]
 - 94818e4 · SPL-1: Player layout previews deleted -- markup, state, computeds and CSS · [measured]
 - 72e3bc8 · SPL-2: LmsUi.surfaceValues exposes a surface stored theme/scheme/font, app included · [measured]
+- 6a5da22 · SPL-3: Player layout is Layout + Appearance summary + one disclosure; no stored key renamed · [measured]
