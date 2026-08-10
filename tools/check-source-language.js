@@ -21,7 +21,25 @@ const JS_DIR = path.join(ROOT, 'EchoClassic', 'HTML', 'echoclassic', 'html', 'js
 /* Marcas de portugues que praticamente nao aparecem em ingles. Palavras curtas
    e ambiguas ("da", "do", "no") ficam de fora de proposito: elas existem em
    ingles e so gerariam ruido. */
-const PT_WORDS = /\b(n[ãa]o|voc[êe]|para|com|uma|dos|das|pela|pelo|est[áa]|s[ãa]o|foi|ser[áa]|nenhum[a]?|todos|tocar|fila|busca|ajustes|idioma|reprodu[çc][ãa]o|biblioteca|configura[çc][ãa]o|erro|aviso|carregando|salvar|apagar|renomear|nome|editar|criar|filtrar|limpar|adicionar|remover|mover|escolher|tentar|novamente|conte[úu]do|arquivo|tela|telas|faixa|faixas|álbum|álbuns|m[úu]sica|estat[íi]stica|pilha|grupo|grupos|lista|listas)\b/i;
+/* O infinitivo sozinho nao cobria o caso real. "Reproduzir agora" nao tem
+   acento, e `reprodu[çc][ãa]o` so casa o substantivo; "itens adicionados" e o
+   particIpio de um verbo que estava listado apenas no infinitivo. Os tres
+   comandos da folha de acoes e o aviso da fila atravessaram o portao inteiros
+   por causa dessas duas lacunas (I18N-01), entao os verbos entram com as
+   formas que a interface realmente usa: infinitivo, gerundio e participio. */
+const PT_VERBS =
+  'reproduzir|reproduzindo|fixar|fixad[oa]s?|adicionar|adicionad[oa]s?' +
+  '|selecionar|selecionad[oa]s?|remover|removid[oa]s?|renomear|renomead[oa]s?' +
+  '|criar|criad[oa]s?|salvar|salvand?o|salvad[oa]s?|apagar|apagad[oa]s?' +
+  '|atualizar|atualizad[oa]s?|conectad[oa]s?|desconectad[oa]s?' +
+  '|carregando|carregad[oa]s?|tocar|tocando|editar|filtrar|limpar|mover' +
+  '|escolher|tentar|abrir|fechar|voltar|enviar|desfazer|seguir';
+const PT_WORDS = new RegExp(
+  '\\b(n[ãa]o|voc[êe]|para|com|uma|dos|das|pela|pelo|est[áa]|s[ãa]o|foi|ser[áa]' +
+  '|nenhum[a]?|todos|itens|agora|fila|busca|ajustes|idioma|reprodu[çc][ãa]o' +
+  '|biblioteca|configura[çc][ãa]o|erro|aviso|nome|novamente|conte[úu]do' +
+  '|arquivo|tela|telas|faixa|faixas|álbum|álbuns|m[úu]sica|estat[íi]stica' +
+  '|pilha|grupo|grupos|lista|listas|' + PT_VERBS + ')\\b', 'i');
 const PT_CHARS = /[ãõçáéíóúâêôàÃÕÇÁÉÍÓÚÂÊÔÀ]/;
 
 function stripComments(src) {
@@ -42,24 +60,42 @@ function jsFiles(dir) {
   return out;
 }
 
-const findings = [];
-for (const file of jsFiles(JS_DIR)) {
-  const lines = stripComments(fs.readFileSync(file, 'utf8')).split('\n');
-  lines.forEach((line, i) => {
-    if (!PT_CHARS.test(line) && !PT_WORDS.test(line)) return;
-    /* Acento sozinho nao basta: nome proprio e dado da biblioteca passam por
-       aqui. Exige indicio de palavra portuguesa, ou acento dentro de texto
-       literal com mais de uma palavra. */
-    const hasWord = PT_WORDS.test(line);
-    const accentedPhrase = PT_CHARS.test(line) && /['"`>][^'"`<]*[ãõçáéíóúâêôà][^'"`<]*\s[^'"`<]*['"`<]/i.test(line);
-    if (!hasWord && !accentedPhrase) return;
-    findings.push({
-      file: path.relative(ROOT, file),
-      line: i + 1,
-      text: line.trim().slice(0, 100)
-    });
-  });
+/* Uma linha de cada vez, exposta a parte: e o que permite ao teste de
+   regressao cobrar o portao pelos literais que ele deixou passar, sem
+   reescrever a heuristica no teste -- uma copia divergiria em silencio. */
+function flagsLine(line) {
+  if (!PT_CHARS.test(line) && !PT_WORDS.test(line)) return false;
+  /* Acento sozinho nao basta: nome proprio e dado da biblioteca passam por
+     aqui. Exige indicio de palavra portuguesa, ou acento dentro de texto
+     literal com mais de uma palavra. */
+  const hasWord = PT_WORDS.test(line);
+  const accentedPhrase = PT_CHARS.test(line) && /['"`>][^'"`<]*[ãõçáéíóúâêôà][^'"`<]*\s[^'"`<]*['"`<]/i.test(line);
+  return hasWord || accentedPhrase;
 }
+
+function scan() {
+  const out = [];
+  for (const file of jsFiles(JS_DIR)) {
+    const lines = stripComments(fs.readFileSync(file, 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      if (!flagsLine(line)) return;
+      out.push({
+        file: path.relative(ROOT, file),
+        line: i + 1,
+        text: line.trim().slice(0, 100)
+      });
+    });
+  }
+  return out;
+}
+
+module.exports = { PT_WORDS, PT_CHARS, stripComments, flagsLine, scan };
+
+/* Importado por um teste, o arquivo so entrega as funcoes acima; rodado pela
+   linha de comando, ele e o portao. */
+if (require.main !== module) return;
+
+const findings = scan();
 
 if (!findings.length) {
   console.log('  ok    no Portuguese interface text outside strings.txt');

@@ -186,3 +186,48 @@ test('I18N-01: the sheet is fully translated in PT -- no command falls back to E
   assert.equal(ctx.LmsStr.t('Pin to Echo Classic'), 'Fixar no Echo Classic',
     'the pin label goes through $t() at runtime rather than the template rewrite');
 });
+
+/* I18N-01: the gate itself passed on the defect. `node
+   tools/check-source-language.js` reported clean while the action sheet showed
+   three Portuguese commands, because its word list held `reprodução` (the
+   noun) but not `reproduzir`, had no `fixar` at all, and knew `adicionar` only
+   in the infinitive -- never `adicionado`/`adicionados`. A gate that passes on
+   the exact literals it exists to catch is not a gate.
+
+   The check imports the script's own predicate rather than restating the
+   heuristic: a copy in the test would drift from the gate in silence. */
+
+const sourceLanguage = require('../tools/check-source-language.js');
+
+test('I18N-01: the source-language gate flags every literal it let through', function () {
+  const escaped = [
+    "    <button v-if=\"ctl\" @click=\"playNow\">Reproduzir agora</button>",
+    "    <button v-if=\"ctl\" @click=\"next\">Reproduzir a seguir</button>",
+    "    <button @click=\"pin\">{{ pinned ? 'Remove from pinned items' : 'Fixar no Echo Classic' }}</button>",
+    "    notify(added + (added === 1 ? ' item adicionado' : ' itens adicionados') +"
+  ];
+  escaped.forEach(function (line) {
+    assert.equal(sourceLanguage.flagsLine(line), true,
+      'this line shipped in 3.2.8 and the gate reported clean: ' + line.trim());
+  });
+});
+
+test('I18N-01: the hardened gate does not flag the English replacements', function () {
+  [
+    "    <button v-if=\"ctl\" @click=\"playNow\">Play now</button>",
+    "    <button v-if=\"ctl\" @click=\"next\">Play next</button>",
+    "    <button @click=\"pin\">{{ pinned ? 'Remove from pinned items' : 'Pin to Echo Classic' }}</button>",
+    "      ? 'One item added to the playback queue.'",
+    "      : '{n} items added to the playback queue.'",
+    "    var key = keys[item.kind || item.type];",
+    "  <div class=\"sheet-title\">{{ item.title }}</div>"
+  ].forEach(function (line) {
+    assert.equal(sourceLanguage.flagsLine(line), false,
+      'a gate that fires on English is a gate nobody keeps green: ' + line.trim());
+  });
+});
+
+test('I18N-01: the gate is clean over the shipped source', function () {
+  assert.deepEqual(sourceLanguage.scan(), [],
+    'every finding here is Portuguese interface text that no dictionary can reach');
+});
