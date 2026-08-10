@@ -6,21 +6,26 @@
 Vue.component('lms-miniplayer', {
   template: `
 <div class="mini" :class="{empty: !hasTrack, inactive: ui.full}" v-bind="surfaceAttrs">
+  <!-- STATE-01: com o player perdido a faixa continua na tela como ultima
+       conhecida, mas o transporte nao tem para onde mandar comando. Quem sabe
+       disso e o store (state.commandable); aqui so se le. -->
   <div v-if="!ui.full && hasTrack" class="transport">
 	    <button type="button" class="mini-action mini-prev pointer" title="Previous"
-	            aria-label="Previous track" @click="prev">
+	            aria-label="Previous track" :disabled="!store.commandable" @click="prev">
       <svg class="ic fill" viewBox="0 0 24 24"><path d="M11 12L20 6v12zM2 12l9-6v12z"/></svg>
     </button>
 	    <button type="button" class="mini-action pointer" :title="playing ? 'Pause' : 'Play'"
-	            :aria-label="playing ? 'Pause' : 'Play'"
+	            :aria-label="playing ? 'Pause' : 'Play'" :disabled="!store.commandable"
 	            @click="playing ? pause() : play()">
       <svg v-if="playing" class="ic fill" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
       <svg v-else class="ic fill" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg>
     </button>
-	    <button type="button" class="mini-action pointer" title="Stop" aria-label="Stop" @click="stop">
+	    <button type="button" class="mini-action pointer" title="Stop" aria-label="Stop"
+	            :disabled="!store.commandable" @click="stop">
       <svg class="ic fill" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
     </button>
-	    <button type="button" class="mini-action pointer" title="Next" aria-label="Next track" @click="next">
+	    <button type="button" class="mini-action pointer" title="Next" aria-label="Next track"
+	            :disabled="!store.commandable" @click="next">
       <svg class="ic fill" viewBox="0 0 24 24"><path d="M13 12L4 18V6zM22 12l-9 6V6z"/></svg>
     </button>
   </div>
