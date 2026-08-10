@@ -160,6 +160,41 @@ const SHOTS = {
       await api.sleep(900);
     }
   },
+  /* O tema Legacy chegou na 3.2.8 e nunca teve foto: o README anunciava dois
+     temas porque as imagens mostravam dois. Mesma tela do preset `library`,
+     para a diferenca de pintura ficar comparavel lado a lado. */
+  legacy: {
+    width: 1440, height: 900, wait: 45000,
+    setup: async function (api) {
+      await api.ready();
+      api.reset();
+      window.LmsUi.setTheme('legacy');
+      await api.sleep(600);
+      await api.rows();
+      await api.until(() => !document.querySelector('.pane-right .empty'));
+      await api.sleep(1200);
+    }
+  },
+  /* A tela reconstruida na 3.2.9. Aberta pelo proprio caminho do usuario -- o
+     clique na linha -- e nao escrevendo em ui.appearanceScreen: o componente
+     reconcilia esse campo com o topo da pilha de navegacao, entao um estado
+     escrito por fora pode ser desfeito antes do disparo da foto. */
+  playerlayout: {
+    width: 1440, height: 900, wait: 35000,
+    setup: async function (api) {
+      await api.ready();
+      api.reset();
+      window.LmsUi.setTab('settings');
+      await api.sleep(2500);
+      const row = Array.prototype.find.call(
+        document.querySelectorAll('.settings-scroller button'),
+        (el) => /player layout|layout do player/i.test(el.textContent || ''));
+      if (!row) throw new Error('Player layout row not found -- is the server serving this build?');
+      row.click();
+      await api.until(() => /player layout/i.test(document.querySelector('.navbar') ? document.querySelector('.navbar').textContent : ''));
+      await api.sleep(1200);
+    }
+  },
   dark: {
     width: 1440, height: 900, wait: 45000,
     setup: async function (api) {
