@@ -500,6 +500,8 @@ test('Advanced LMS settings exposes an App Store plugin pane and bridges navbar 
   assert.match(settings, /bar\.querySelector\('#filterChooser select'\)/);
   assert.match(settings, /#pluginListPanel li\.thumbwrap\.selectorMarker/);
   assert.match(settings, /#settingsForm input,#settingsForm textarea,#settingsForm select/);
+  assert.doesNotMatch(settings, /candidateAdvancedPluginRows|parseAdvancedPluginRow|renderAdvancedPluginCard|buildAdvancedPluginStore|removeAdvancedPluginStore/);
+  assert.doesNotMatch(settings, /echoclassic-plugin-store-tools|echoclassic-plugin-store-grid/);
   assert.doesNotMatch(settings, /ec-rail-mic/);
   assert.match(settings, /self\.advancedClosest\(input, '#echoclassic-advanced-rail'\)/);
   assert.match(settings, /hideAdvancedLmsChrome\(doc, root\)/);
