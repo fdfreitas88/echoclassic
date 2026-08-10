@@ -1068,6 +1068,13 @@ body.dark .swatch-dot::before{background:var(--scheme-dark)}
    there is never an 'app' entry inside either list any more -- the toggle
    above them (LmsUi.setSurfaceFollowsApp) owns that state instead. */
 .segmented-row{justify-content:space-between}
+/* SPL-3: o seletor de superficie nao tem rotulo a esquerda -- o titulo do
+   grupo ja diz qual superficie esta aberta -- entao ele ocupa a linha inteira
+   e divide os tres segmentos por igual, em vez de encostar a direita com tres
+   rotulos de larguras diferentes. Sem isto "Full player / Side panel /
+   Bottom bar" chega perto do limite de 390px. */
+.surface-select-row .segmented{margin-left:0;width:100%}
+.surface-select-row .segmented button{flex:1;min-width:0;padding:0 8px}
 .segmented{margin-left:auto;display:flex;border:1px solid var(--accent);border-radius:5px;
   overflow:hidden;flex:0 0 auto;background:var(--seg-bg)}
 .segmented button{min-width:44px;height:44px;padding:0 14px;color:var(--accent);
