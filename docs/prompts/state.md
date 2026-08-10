@@ -42,3 +42,4 @@ browser automation policy.
 - 12082f7 · A11Y-01: root picker is an ARIA listbox with focus, arrows, Home/End, Escape and focus restore · [measured]
 - 1c961df · NAV-01 (1/2): LmsUi holds the suspended search; search.js stashes term/results/scroll and marks the frame · [measured]
 - c604806 · NAV-01 (2/2): contextual Back and browser Back both return to the suspended search; label guarded by the snapshot · [measured]
+- 561c564 · STATE-01: store owns the zero-player transition; connection, track and commandability move together · [measured]
