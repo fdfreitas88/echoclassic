@@ -3,7 +3,7 @@
 	<id>cfac2d7e-09a2-43e0-b234-52b2078a3721</id>
 	<name>ECHOCLASSIC_SKIN</name>
 	<module>Plugins::EchoClassic::Plugin</module>
-	<version>3.2.8</version>
+	<version>3.2.9</version>
 	<description>PLUGIN_ECHOCLASSIC_SKIN</description>
 	<creator>Felipe Freitas</creator>
 	<category>skin</category>
