@@ -632,6 +632,19 @@
     return out;
   }
 
+  /* The surface's three stored values, 'app' included. surfaceAttrs above
+     deliberately omits 'app' because it feeds a root binding; a settings form
+     needs the opposite -- the raw value, so it can mark the right radio.
+     Exposed rather than letting the component keep its own copy of
+     SURFACE_KEYS: one screen now renders whichever surface is selected, and a
+     second copy of that mapping is a rename away from silently editing the
+     wrong preference. Unknown surface -> {}. */
+  function surfaceValues(surface) {
+    var map = SURFACE_KEYS[surface];
+    if (!map) return {};
+    return { theme: state[map.theme], scheme: state[map.scheme], font: state[map.font] };
+  }
+
   /* true only when none of the surface's three overrides diverge from the
      app -- drives the Player layout screen's "Match app appearance" toggle
      and setSurfaceFollowsApp's own ON/OFF branch below. Unknown
@@ -1272,7 +1285,8 @@
     THEME_OPTIONS: THEME_OPTIONS, setTheme: setTheme,
     COLOR_SCHEMES: COLOR_SCHEMES, setColorScheme: setColorScheme,
     FONT_OPTIONS: FONT_OPTIONS, setFontFamily: setFontFamily,
-    surfaceAttrs: surfaceAttrs, surfaceFollowsApp: surfaceFollowsApp,
+    surfaceAttrs: surfaceAttrs, surfaceValues: surfaceValues,
+    surfaceFollowsApp: surfaceFollowsApp,
     setSurfaceTheme: setSurfaceTheme, setSurfaceScheme: setSurfaceScheme,
     setSurfaceFont: setSurfaceFont, setSurfaceFollowsApp: setSurfaceFollowsApp,
     canLeaveAdvancedSettings: canLeaveAdvancedSettings,
