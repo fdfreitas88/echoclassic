@@ -27,6 +27,16 @@ what was announced.
 
 ### Fixed
 
+- Selecting an Advanced LMS settings page no longer starts a feedback loop
+  that continuously rebuilds the settings rail and traps its scrollbar. The
+  rail is now updated in place, retains its search and scroll position, and
+  pauses DOM observation while applying skin-owned changes. The pre-fix lock
+  was reproduced on the published server; regression coverage exercises the
+  stable-update path. [live/code]
+- Vertical lists, detail panes, full player, queue, action sheets, nested
+  choices and filters now use momentum scrolling with contained overscroll;
+  the mobile settings drawer also contains touch gestures and prevents the
+  obscured page from scrolling behind it. [code]
 - Advanced LMS pages no longer show the residual native header block, the
   settings search no longer carries a decorative microphone, and plugin group
   headings no longer render as unnamed green plugin tiles. [code]

@@ -748,7 +748,7 @@ Vue.component('lms-settings', {
         'html[data-echoclassic-theme="dark"]{color-scheme:dark;}',
         'body{box-sizing:border-box;margin:0!important;min-height:100vh;background:var(--group-page)!important;',
         'color:var(--text)!important;font:15px/1.35 var(--app-font)!important;-webkit-text-size-adjust:100%;',
-        'padding:18px 20px 110px 342px!important;overflow:auto!important;}',
+        'padding:18px 20px 110px 342px!important;overflow:auto!important;overscroll-behavior-y:contain;}',
         '#header,#headerWrapper,#header-wrapper,#branding,#masthead,#logo,#top,',
         '#browsedbHeader,#skinHeader,#pageHeader,.masthead,.topbar,.logo,',
         '[class*="masthead"],[class*="branding"],#statusarea:empty,body>h1,',
@@ -784,7 +784,8 @@ Vue.component('lms-settings', {
         'linear-gradient(135deg,#50545c,#101216);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--group-bg) 62%,transparent),0 1px 3px rgba(0,0,0,.18);}',
         '.ec-rail-identity b{display:block;font-size:17px;font-weight:700;color:var(--text)!important;}',
         '.ec-rail-identity span{display:block;margin-top:2px;color:var(--text2)!important;font-size:12px;line-height:1.2;}',
-        '.ec-rail-list{min-height:0;overflow:auto;padding:0 12px 16px!important;}',
+        '.ec-rail-list{min-height:0;overflow:auto;padding:0 12px 16px!important;',
+        '-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y;scrollbar-gutter:stable;}',
         '.ec-rail-label{padding:12px 10px 5px!important;color:var(--text2)!important;font-size:12px;text-transform:uppercase;}',
         '.ec-nav-row{appearance:none;border:0!important;width:100%;min-height:44px;display:grid!important;grid-template-columns:28px 1fr auto;',
         'align-items:center;gap:9px;padding:5px 8px!important;border-radius:19px!important;background:transparent!important;',
@@ -999,6 +1000,7 @@ Vue.component('lms-settings', {
         '@media (max-width:1180px){.ec-plugin-store #pluginButtonBar{flex-wrap:wrap!important}.ec-plugin-search{flex:1 1 230px;min-width:200px;}',
         '.ec-plugin-store #filterChooser{margin-left:0!important;}}',
         '@media (max-width:860px){body,body.ec-plugin-store{padding:10px 10px 76px!important;}',
+        'body.ec-rail-open{overflow:hidden!important;}',
         '#echoclassic-rail-toggle{box-sizing:border-box;position:sticky;top:0;z-index:25;display:flex!important;width:100%;height:44px;',
         'align-items:center;justify-content:space-between;margin:0 0 10px!important;padding:0 14px!important;border:.5px solid var(--hair)!important;',
         'border-radius:12px!important;background:var(--chrome)!important;color:var(--text)!important;font:600 16px var(--app-font)!important;}',
@@ -1213,6 +1215,7 @@ Vue.component('lms-settings', {
         'ec-nav-row' + (option.selected || option.value === selector.value ? ' ec-active' : ''), '');
       row.type = 'button';
       row.setAttribute('data-ec-label', label.toLowerCase());
+      row.setAttribute('data-ec-value', String(option.value || ''));
       var glyph = this.advancedCreateEl(doc, 'span', 'ec-glyph ec-g-' + meta.color, meta.glyph);
       var text = this.advancedCreateEl(doc, 'span', '', label);
       var value = this.advancedCreateEl(doc, 'span', 'value', '');
@@ -1222,9 +1225,15 @@ Vue.component('lms-settings', {
       row.addEventListener('click', function () {
         if (doc.body && doc.body.classList) doc.body.classList.remove('ec-rail-open');
         var toggle = doc.getElementById('echoclassic-rail-toggle');
-        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        if (toggle) {
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.textContent = self.tr('Settings pages') + ' · ' + label;
+        }
         if (selector.value !== option.value) {
           selector.value = option.value;
+          Array.prototype.slice.call(doc.querySelectorAll('#echoclassic-advanced-rail .ec-nav-row')).forEach(function (item) {
+            item.classList.toggle('ec-active', item.getAttribute('data-ec-value') === String(selector.value || ''));
+          });
           self.advancedDispatchChange(doc, selector);
         }
       });
@@ -1642,6 +1651,21 @@ Vue.component('lms-settings', {
         rail.id = 'echoclassic-advanced-rail';
         doc.body.insertBefore(rail, doc.body.firstChild);
       }
+      var options = Array.prototype.slice.call(selector.options);
+      var railSignature = options.map(function (option) {
+        return String(option.value || '') + '\u241f' + String(option.text || option.label || '');
+      }).join('\u241e');
+      var selectedValue = String(selector.value || '');
+      if (rail.getAttribute('data-ec-options') === railSignature) {
+        Array.prototype.slice.call(rail.querySelectorAll('.ec-nav-row')).forEach(function (row) {
+          row.classList.toggle('ec-active', row.getAttribute('data-ec-value') === selectedValue);
+        });
+        return;
+      }
+      var previousList = rail.querySelector('.ec-rail-list');
+      var previousScrollTop = previousList ? previousList.scrollTop : 0;
+      var previousSearch = rail.querySelector('input[type="search"]');
+      var previousQuery = previousSearch ? previousSearch.value : '';
       rail.innerHTML = '<div class="ec-rail-top"><div class="ec-rail-search">' +
         '<span class="ec-rail-mag" aria-hidden="true"></span>' +
         '<input type="search" placeholder="Search settings pages" aria-label="Search settings pages">' +
@@ -1649,13 +1673,14 @@ Vue.component('lms-settings', {
         '<div class="ec-rail-identity"><span class="ec-server-dot" aria-hidden="true"></span>' +
         '<span><b>Music Player</b><span>Server settings, plugins, network and library</span></span></div>' +
         '<div class="ec-rail-list"></div>';
+      rail.setAttribute('data-ec-options', railSignature);
 
       var list = rail.querySelector('.ec-rail-list');
       var server = this.advancedCreateEl(doc, 'div', 'ec-rail-label', 'Server');
       var plugins = this.advancedCreateEl(doc, 'div', 'ec-rail-label', 'Plugins');
       var serverRows = [];
       var pluginRows = [];
-      Array.prototype.slice.call(selector.options).forEach(function (option) {
+      options.forEach(function (option) {
         var row = self.advancedBuildRailRow(doc, option, selector);
         if (self.advancedIsPluginSection(option.text || option.label || '')) pluginRows.push(row);
         else serverRows.push(row);
@@ -1687,7 +1712,12 @@ Vue.component('lms-settings', {
           filterRows();
           search.focus();
         });
+        if (previousQuery) {
+          search.value = previousQuery;
+          filterRows();
+        }
       }
+      if (previousScrollTop) list.scrollTop = previousScrollTop;
     },
     remapAdvancedIcons: function (doc) {
       if (!doc.getElementsByTagName) return;
@@ -1805,7 +1835,20 @@ Vue.component('lms-settings', {
           pending = true;
           setTimeout(function () {
             pending = false;
-            self.enhanceAdvancedFrame(frame, doc);
+            var observer = self.advancedThemeObserver;
+            if (!observer) return;
+            /* The enhancer changes the iframe DOM itself (rail, switches and
+               plugin cards). Disconnect while applying those synchronous
+               changes so the observer cannot schedule an endless rebuild of
+               its own output and replace a list while the user is scrolling. */
+            observer.disconnect();
+            try {
+              self.enhanceAdvancedFrame(frame, doc);
+            } finally {
+              if (self.advancedThemeObserver === observer && doc.documentElement) {
+                observer.observe(doc.documentElement, { childList: true, subtree: true });
+              }
+            }
           }, 60);
         }
       });

@@ -545,6 +545,22 @@ test('Advanced LMS has one primary Save action and a responsive settings drawer'
   assert.match(settings, /@media \(max-width:860px\)[\s\S]*body\.ec-rail-open #echoclassic-advanced-rail\{transform:translateX\(0\)/);
 });
 
+test('Advanced LMS rail is stable across native mutations and keeps its scroll context', function () {
+  const settings = settingsSrc();
+  assert.match(settings, /rail\.getAttribute\('data-ec-options'\) === railSignature/);
+  assert.match(settings, /row\.getAttribute\('data-ec-value'\) === selectedValue/);
+  assert.match(settings, /previousScrollTop[\s\S]*list\.scrollTop = previousScrollTop/);
+  assert.match(settings, /previousQuery[\s\S]*search\.value = previousQuery[\s\S]*filterRows\(\)/);
+  assert.match(settings, /observer\.disconnect\(\)[\s\S]*enhanceAdvancedFrame\(frame, doc\)[\s\S]*observer\.observe/);
+  assert.match(settings, /\.ec-rail-list\{[^}]*-webkit-overflow-scrolling:touch[^}]*overscroll-behavior-y:contain[^}]*touch-action:pan-y/);
+  assert.match(settings, /body\.ec-rail-open\{overflow:hidden!important/);
+});
+
+test('all skin-owned vertical scroll regions contain overscroll', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  assert.match(css, /:where\(\.pane-right,\.scroller,\.npfull,\.queue \.qbody,\.action-sheet,\.sheet-choices,\.filter-body\)\{\s*-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain\}/);
+});
+
 test('Manage Plugins defaults to Active on narrow frames without removing native rows', function () {
   const settings = settingsSrc();
   assert.match(settings, /doc\.defaultView && doc\.defaultView\.innerWidth <= 860 \? 'active' : 'all'/);
