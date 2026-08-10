@@ -762,13 +762,20 @@ Vue.component('lms-settings', {
         'z-index:20;display:grid;grid-template-rows:auto auto 1fr;overflow:hidden;border-radius:20px;',
         'background:color-mix(in srgb,var(--chrome) 88%,transparent)!important;',
         'border:.5px solid color-mix(in srgb,var(--group-bg) 86%,var(--hair))!important;}',
+        '#echoclassic-rail-toggle,#echoclassic-rail-scrim{display:none!important;}',
         '.ec-rail-top{padding:18px 14px 10px!important;}',
         '.ec-rail-search{box-sizing:border-box;height:44px;border-radius:22px;background:var(--field)!important;',
-        'color:var(--text2)!important;display:grid;grid-template-columns:24px 1fr;align-items:center;',
+        'color:var(--text2)!important;display:grid;grid-template-columns:24px minmax(0,1fr) 30px;align-items:center;',
         'padding:0 9px!important;font:16px var(--app-font)!important;}',
-        '.ec-rail-search input{border:0!important;background:transparent!important;color:var(--text)!important;',
+        '.ec-rail-search:focus-within{outline:3px solid var(--accent)!important;outline-offset:2px;}',
+        '#echoclassic-advanced-rail .ec-rail-search input[type="search"]{border:0!important;border-radius:0!important;',
+        'background:transparent!important;box-shadow:none!important;outline:0!important;color:var(--text)!important;',
         'height:44px!important;min-height:44px!important;padding:0!important;width:100%!important;font:16px var(--app-font)!important;}',
         '.ec-rail-search input::placeholder{color:var(--text2)!important;opacity:1;}',
+        '.ec-rail-clear{box-sizing:border-box!important;width:30px!important;height:44px!important;min-height:44px!important;',
+        'margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;',
+        'color:var(--text2)!important;font:22px/1 var(--app-font)!important;box-shadow:none!important;}',
+        '.ec-rail-clear[hidden]{display:none!important;}',
         '.ec-rail-mag{width:15px;height:15px;border:1.8px solid currentColor;border-radius:50%;position:relative;}',
         '.ec-rail-mag:after{content:"";position:absolute;width:7px;height:1.8px;right:-5px;bottom:-3px;background:currentColor;transform:rotate(45deg);}',
         '.ec-rail-identity{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;padding:8px 14px 12px!important;}',
@@ -956,6 +963,18 @@ Vue.component('lms-settings', {
         'textarea{min-height:70px;}',
         'input[type="range"]{accent-color:var(--accent);}',
         'input[type="checkbox"],input[type="radio"]{width:24px;height:24px;min-height:24px;accent-color:var(--accent);}',
+        'input.ec-native-checkbox{position:absolute!important;opacity:0!important;width:44px!important;height:44px!important;',
+        'min-height:44px!important;margin:0!important;pointer-events:none!important;}',
+        '.ec-native-switch-hit{box-sizing:border-box;display:inline-flex!important;width:44px;height:44px;',
+        'align-items:center;justify-content:center;vertical-align:middle;cursor:pointer;}',
+        '.ec-native-switch{box-sizing:border-box;position:relative;display:block;width:44px;height:26px;border-radius:13px;',
+        'background:var(--sw-off)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--hair) 72%,transparent);',
+        'transition:background .18s ease;}',
+        '.ec-native-switch:after{content:"";position:absolute;left:2px;top:2px;width:22px;height:22px;border-radius:50%;',
+        'background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.28);transition:transform .18s ease;}',
+        'input.ec-native-checkbox:checked+.ec-native-switch-hit .ec-native-switch{background:var(--sw-on)!important;}',
+        'input.ec-native-checkbox:checked+.ec-native-switch-hit .ec-native-switch:after{transform:translateX(18px);}',
+        'input.ec-native-checkbox:focus-visible+.ec-native-switch-hit .ec-native-switch{outline:3px solid var(--accent)!important;outline-offset:3px;}',
         'button,input[type="button"],input[type="submit"],input[type="reset"],.button,.stdclick{',
         'min-height:44px;border:.5px solid var(--hair)!important;border-radius:9px!important;',
         'background:var(--chrome)!important;color:var(--accent)!important;',
@@ -970,24 +989,38 @@ Vue.component('lms-settings', {
         'background:var(--group-bg)!important;color:var(--text)!important;border-radius:7px!important;}',
         '#saveSettings,#save{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--accent-ink)!important;}',
         '#cancelSettings,#cancel{color:var(--accent)!important;}',
+        'body:not(.ec-plugin-store) #prefsSubmit{display:none!important;}',
+        '.ec-plugin-store #prefsSubmit #saveSettings,.ec-plugin-store #prefsSubmit input[type="submit"],',
+        '.ec-plugin-store #prefsSubmit button[type="submit"]{display:none!important;}',
+        '.ec-plugin-store #prefsSubmit{min-height:44px!important;padding-top:0!important;padding-bottom:0!important;}',
         'pre,code{background:var(--field)!important;color:var(--text)!important;',
         'border-radius:5px;padding:2px 4px;}',
         'img{max-width:100%;}',
         '@media (max-width:1180px){.ec-plugin-store #pluginButtonBar{flex-wrap:wrap!important}.ec-plugin-search{flex:1 1 230px;min-width:200px;}',
         '.ec-plugin-store #filterChooser{margin-left:0!important;}}',
-        '@media (max-width:860px){body{padding:12px 10px 110px!important;}#echoclassic-advanced-rail{position:static;width:auto;max-height:360px;margin:0 0 18px;}',
-        'body.ec-plugin-store{padding:0 10px 84px 342px!important}.ec-plugin-store #echoclassic-advanced-rail{position:fixed;left:20px;top:18px;bottom:24px;',
-        'width:302px;max-height:none;margin:0}.ec-plugin-store #pluginButtonBar{position:static;flex-wrap:wrap!important;}',
+        '@media (max-width:860px){body,body.ec-plugin-store{padding:10px 10px 76px!important;}',
+        '#echoclassic-rail-toggle{box-sizing:border-box;position:sticky;top:0;z-index:25;display:flex!important;width:100%;height:44px;',
+        'align-items:center;justify-content:space-between;margin:0 0 10px!important;padding:0 14px!important;border:.5px solid var(--hair)!important;',
+        'border-radius:12px!important;background:var(--chrome)!important;color:var(--text)!important;font:600 16px var(--app-font)!important;}',
+        '#echoclassic-rail-toggle:after{content:"›";color:var(--accent);font-size:22px;}',
+        '#echoclassic-rail-scrim{position:fixed;z-index:29;inset:0;display:none!important;border:0!important;border-radius:0!important;',
+        'margin:0!important;padding:0!important;background:rgba(0,0,0,.38)!important;}',
+        'body.ec-rail-open #echoclassic-rail-scrim{display:block!important;}',
+        '#echoclassic-advanced-rail,.ec-plugin-store #echoclassic-advanced-rail{position:fixed;z-index:30;left:10px;top:10px;bottom:10px;',
+        'width:min(320px,calc(100% - 20px));max-height:none;margin:0;transform:translateX(calc(-100% - 24px));',
+        'transition:transform .2s ease;box-shadow:0 14px 36px rgba(0,0,0,.28);}',
+        'body.ec-rail-open #echoclassic-advanced-rail{transform:translateX(0);}',
+        '.ec-plugin-store #pluginButtonBar{position:static;flex-wrap:wrap!important;}',
         '.ec-plugin-count{order:2}.ec-plugin-search{order:3;width:100%!important}.ec-plugin-store #filterChooser{order:4;margin-left:0!important;}',
         '.ec-plugin-store .pluginList>ul.thumbwrap{grid-template-columns:repeat(2,minmax(0,1fr));}.ec-plugin-store li.ec-plugin-card:nth-child(3n){border-right:1px solid #ccd0d5!important;}',
-        '.ec-plugin-store li.ec-plugin-card:nth-child(2n){border-right:0!important}.ec-plugin-store #prefsSubmit{left:342px;right:10px;}',
+        '.ec-plugin-store li.ec-plugin-card:nth-child(2n){border-right:0!important}.ec-plugin-store #prefsSubmit{left:10px;right:10px;}',
         '.settingGroup{display:block!important;margin-left:0!important;margin-right:0!important}.prefHead,.prefDesc,.prefs{display:block!important;}',
         '.prefs{display:flex!important;margin-top:7px!important}}',
-        '@media (max-width:620px){body.ec-plugin-store{padding:0 10px 84px!important}.ec-plugin-store #echoclassic-advanced-rail{position:static;',
-        'width:auto;max-height:360px;margin:0 0 18px}.ec-plugin-store #prefsSubmit{left:0;right:0;}.ec-plugin-filter{width:100%}.ec-plugin-filter button{min-width:0!important;flex:1;}',
+        '@media (max-width:620px){.ec-plugin-store #prefsSubmit{left:10px;right:10px;}.ec-plugin-filter{width:100%}.ec-plugin-filter button{min-width:0!important;flex:1;}',
         '.ec-plugin-store #filterChooser,.ec-plugin-store #filterChooser select{width:100%!important}.ec-plugin-store .pluginList>ul.thumbwrap{grid-template-columns:1fr;}',
         '.ec-plugin-store li.ec-plugin-card{border-right:0!important}.ec-plugin-store #prefsSubmit{left:0;right:0;}}',
-        '@media (prefers-reduced-motion:reduce){.ec-plugin-switch,.ec-plugin-switch:after{transition:none!important;}}'
+        '@media (prefers-reduced-motion:reduce){.ec-plugin-switch,.ec-plugin-switch:after,.ec-native-switch,.ec-native-switch:after,',
+        '#echoclassic-advanced-rail{transition:none!important;}}'
       ].join('');
     },
     advancedClosest: function (node, selector) {
@@ -1187,9 +1220,13 @@ Vue.component('lms-settings', {
       row.appendChild(text);
       row.appendChild(value);
       row.addEventListener('click', function () {
-        if (selector.value === option.value) return;
-        selector.value = option.value;
-        self.advancedDispatchChange(doc, selector);
+        if (doc.body && doc.body.classList) doc.body.classList.remove('ec-rail-open');
+        var toggle = doc.getElementById('echoclassic-rail-toggle');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        if (selector.value !== option.value) {
+          selector.value = option.value;
+          self.advancedDispatchChange(doc, selector);
+        }
       });
       return row;
     },
@@ -1199,7 +1236,7 @@ Vue.component('lms-settings', {
     hideAdvancedLmsChrome: function (doc, root) {
       var self = this;
       if (!doc.body || !doc.body.children) return;
-      var generated = /^(echoclassic-advanced-rail|echoclassic-advanced-theme)$/;
+      var generated = /^(echoclassic-advanced-rail|echoclassic-advanced-theme|echoclassic-rail-toggle|echoclassic-rail-scrim)$/;
       var shouldSkip = function (node) {
         if (!node || node === root || generated.test(String(node.id || ''))) return true;
         if (root && node.contains && node.contains(root)) return true;
@@ -1386,17 +1423,23 @@ Vue.component('lms-settings', {
       var self = this;
       var bar = doc.getElementById('pluginButtonBar');
       if (!bar) return;
+      var initialMode = menu.getAttribute('data-ec-plugin-filter');
+      if (!initialMode) {
+        initialMode = doc.defaultView && doc.defaultView.innerWidth <= 860 ? 'active' : 'all';
+        menu.setAttribute('data-ec-plugin-filter', initialMode);
+      }
       var filter = bar.querySelector('.ec-plugin-filter');
       if (!filter) {
         filter = this.advancedCreateEl(doc, 'div', 'ec-plugin-filter', '');
         filter.setAttribute('role', 'group');
         filter.setAttribute('aria-label', 'Filter plugins by status');
         ['all', 'active', 'inactive'].forEach(function (mode) {
-          var button = self.advancedCreateEl(doc, 'button', mode === 'all' ? 'ec-selected' : '',
+          var selected = mode === initialMode;
+          var button = self.advancedCreateEl(doc, 'button', selected ? 'ec-selected' : '',
             mode.charAt(0).toUpperCase() + mode.slice(1));
           button.type = 'button';
           button.setAttribute('data-ec-plugin-filter', mode);
-          button.setAttribute('aria-pressed', mode === 'all' ? 'true' : 'false');
+          button.setAttribute('aria-pressed', selected ? 'true' : 'false');
           button.addEventListener('click', function () {
             menu.setAttribute('data-ec-plugin-filter', mode);
             Array.prototype.slice.call(filter.querySelectorAll('button')).forEach(function (candidate) {
@@ -1492,6 +1535,36 @@ Vue.component('lms-settings', {
       this.enhanceAdvancedPluginFooter(doc);
       this.applyAdvancedPluginFilters(doc);
     },
+    advancedCheckboxName: function (doc, input) {
+      var row = this.advancedClosest(input, 'tr') || this.advancedClosest(input, '.settingGroup') || input.parentNode;
+      var path = row && row.querySelector && row.querySelector('input[type="text"]');
+      if (path && this.cleanAdvancedText(path.value)) {
+        return this.tr('Scan {folder} for music').replace('{folder}', this.cleanAdvancedText(path.value));
+      }
+      var label = row && row.querySelector && row.querySelector('.settingLabel,.prefHead,label,th');
+      var text = this.cleanAdvancedText(label && label.textContent);
+      if (!text && input.name) text = this.advancedTitleCase(String(input.name).replace(/^pref_/, '').replace(/[_-]+/g, ' '));
+      return text || this.tr('Setting');
+    },
+    decorateAdvancedCheckboxes: function (doc) {
+      if (!doc.querySelectorAll) return;
+      var self = this;
+      Array.prototype.slice.call(doc.querySelectorAll('input[type="checkbox"]')).forEach(function (input, index) {
+        if (self.advancedClosest(input, '.ec-plugin-card') || input.__echoclassicNativeSwitch) return;
+        input.__echoclassicNativeSwitch = true;
+        if (!input.id) input.id = 'echoclassic-setting-' + index;
+        if (!input.getAttribute('aria-label') && !(input.labels && input.labels.length)) {
+          input.setAttribute('aria-label', self.advancedCheckboxName(doc, input));
+        }
+        input.classList.add('ec-native-checkbox');
+        var hasLabel = !!(input.labels && input.labels.length);
+        var hit = self.advancedCreateEl(doc, hasLabel ? 'span' : 'label', 'ec-native-switch-hit', '');
+        if (!hasLabel) hit.setAttribute('for', input.id);
+        hit.setAttribute('aria-hidden', 'true');
+        hit.appendChild(self.advancedCreateEl(doc, 'span', 'ec-native-switch', ''));
+        if (input.parentNode) input.parentNode.insertBefore(hit, input.nextSibling);
+      });
+    },
     buildAdvancedIpadShell: function (frame, doc) {
       if (!doc || !doc.body || !doc.createElement || !doc.querySelector) return;
       var self = this;
@@ -1518,15 +1591,61 @@ Vue.component('lms-settings', {
       if (pluginStore) this.enhanceNativePluginStore(doc);
 
       if (!selector || !selector.options || !selector.options.length) return;
+      var toggle = doc.getElementById('echoclassic-rail-toggle');
+      if (!toggle) {
+        toggle = this.advancedCreateEl(doc, 'button', '', this.tr('Settings pages') + ' · ' + selectedLabel);
+        toggle.id = 'echoclassic-rail-toggle';
+        toggle.type = 'button';
+        toggle.setAttribute('aria-controls', 'echoclassic-advanced-rail');
+        toggle.setAttribute('aria-expanded', 'false');
+        doc.body.insertBefore(toggle, doc.body.firstChild);
+        toggle.addEventListener('click', function () {
+          var open = !doc.body.classList.contains('ec-rail-open');
+          doc.body.classList.toggle('ec-rail-open', open);
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+          if (open) {
+            var drawerSearch = doc.querySelector('#echoclassic-advanced-rail input[type="search"]');
+            if (drawerSearch) drawerSearch.focus();
+          }
+        });
+      } else {
+        toggle.textContent = this.tr('Settings pages') + ' · ' + selectedLabel;
+      }
+      var scrim = doc.getElementById('echoclassic-rail-scrim');
+      if (!scrim) {
+        scrim = this.advancedCreateEl(doc, 'button', '', '');
+        scrim.id = 'echoclassic-rail-scrim';
+        scrim.type = 'button';
+        scrim.setAttribute('aria-label', this.tr('Close settings pages'));
+        doc.body.insertBefore(scrim, doc.body.firstChild);
+        scrim.addEventListener('click', function () {
+          doc.body.classList.remove('ec-rail-open');
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.focus();
+        });
+      }
+      if (!doc.__echoclassicRailKeyboard) {
+        doc.__echoclassicRailKeyboard = true;
+        doc.addEventListener('keydown', function (event) {
+          if ((event.key !== 'Escape' && event.key !== 'Esc') ||
+              !doc.body.classList.contains('ec-rail-open')) return;
+          doc.body.classList.remove('ec-rail-open');
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.focus();
+          event.preventDefault();
+          event.stopPropagation();
+        });
+      }
       var rail = doc.getElementById('echoclassic-advanced-rail');
       if (!rail) {
         rail = this.advancedCreateEl(doc, 'aside', '', '');
         rail.id = 'echoclassic-advanced-rail';
         doc.body.insertBefore(rail, doc.body.firstChild);
       }
-      rail.innerHTML = '<div class="ec-rail-top"><label class="ec-rail-search">' +
+      rail.innerHTML = '<div class="ec-rail-top"><div class="ec-rail-search">' +
         '<span class="ec-rail-mag" aria-hidden="true"></span>' +
-        '<input type="search" placeholder="Search" aria-label="Search advanced LMS settings"></label></div>' +
+        '<input type="search" placeholder="Search settings pages" aria-label="Search settings pages">' +
+        '<button type="button" class="ec-rail-clear" aria-label="Clear settings search" hidden>×</button></div></div>' +
         '<div class="ec-rail-identity"><span class="ec-server-dot" aria-hidden="true"></span>' +
         '<span><b>Music Player</b><span>Server settings, plugins, network and library</span></span></div>' +
         '<div class="ec-rail-list"></div>';
@@ -1549,13 +1668,24 @@ Vue.component('lms-settings', {
       }
 
       var search = rail.querySelector('input[type="search"]');
+      var clear = rail.querySelector('.ec-rail-clear');
       if (search) {
+        search.placeholder = this.tr('Search settings pages');
+        search.setAttribute('aria-label', this.tr('Search settings pages'));
+        if (clear) clear.setAttribute('aria-label', this.tr('Clear settings search'));
         search.__echoclassicDirtyTracking = true;
-        search.addEventListener('input', function () {
+        var filterRows = function () {
           var query = String(search.value || '').toLowerCase().trim();
           Array.prototype.slice.call(rail.querySelectorAll('.ec-nav-row')).forEach(function (row) {
             row.classList.toggle('ec-hidden', !!query && String(row.getAttribute('data-ec-label') || '').indexOf(query) < 0);
           });
+          if (clear) clear.hidden = !query;
+        };
+        search.addEventListener('input', filterRows);
+        if (clear) clear.addEventListener('click', function () {
+          search.value = '';
+          filterRows();
+          search.focus();
         });
       }
     },
@@ -1581,6 +1711,7 @@ Vue.component('lms-settings', {
       this.installAdvancedDirtyTracking(doc);
       this.installAdvancedSectionController(frame, doc);
       this.installAdvancedExpanders(doc);
+      this.decorateAdvancedCheckboxes(doc);
       this.remapAdvancedIcons(doc);
     },
     scheduleAdvancedTheme: function (frame) {

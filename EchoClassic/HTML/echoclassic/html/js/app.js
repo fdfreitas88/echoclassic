@@ -32,9 +32,9 @@
   </main>
 
   <div v-if="store.initialized && !store.connected" class="connection-banner" role="alert">
-    <span>{{ store.lastError || 'No connection to the player.' }}</span>
+    <span>{{ connectionMessage }}</span>
     <button :disabled="store.reconnecting" @click="reconnect">
-      {{ store.reconnecting ? 'Reconectando…' : 'Try again' }}
+      {{ reconnectLabel }}
     </button>
   </div>
   <div v-if="ui.busyMessage" class="operation-banner" role="status">{{ ui.busyMessage }}</div>
@@ -117,9 +117,21 @@
       plKey: function () { return 'pl-' + (this.nav.playlists || []).length; },
       radioKey: function () { return 'radio-' + (this.nav.radio || []).length; },
       appsKey: function () { return 'apps-' + (this.nav.apps || []).length; },
-      favKey: function () { return 'fav-' + (this.nav.favourites || []).length; }
+      favKey: function () { return 'fav-' + (this.nav.favourites || []).length; },
+      connectionMessage: function () {
+        if (this.store.lastSuccess && this.store.np && this.store.np.id) {
+          return this.tr('Player connection lost. Showing the last known track.');
+        }
+        return this.store.lastError || this.tr('No connection to the player.');
+      },
+      reconnectLabel: function () {
+        return this.tr(this.store.reconnecting ? 'Reconnecting…' : 'Try again');
+      }
     },
     methods: {
+      tr: function (text) {
+        return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
+      },
       goBack: function () {
         if (this.ui.tab === 'settings' && this.ui.advancedSettings) {
           if (LmsUi.canLeaveAdvancedSettings && !LmsUi.canLeaveAdvancedSettings()) return;

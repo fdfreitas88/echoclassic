@@ -21,6 +21,9 @@ what was announced.
   iOS-style App Store pane with live status filters, plugin and active counts,
   native search/category controls, banded groups, metadata tiles and the same
   switches used elsewhere in Echo Classic. [code]
+- Advanced LMS settings now uses a compact settings-page drawer on tablet and
+  mobile. Manage Plugins opens on Active at those widths while retaining every
+  native checkbox in the authoritative LMS form. [code]
 
 ### Fixed
 
@@ -29,7 +32,15 @@ what was announced.
   headings no longer render as unnamed green plugin tiles. [code]
 - Plugin switches preserve the native checkbox names and submission semantics,
   expose a keyboard focus ring, update group counts and pending-change copy,
-  and keep the native Save Settings control. [code]
+  and submit through the single Save action in the Echo Classic navbar. [code]
+- Native Advanced LMS checkboxes now have programmatic names, 44px switch hit
+  areas and the same visual states as Echo Classic controls. The settings-page
+  search is one scoped field with a clear action and a 3px focus indicator.
+  [code]
+- Player layout now closes through Escape or the active Settings tab, matching
+  Advanced LMS settings. Disconnected playback identifies cached track data
+  instead of claiming that no player exists while showing a current track.
+  [code]
 
 ## [3.2.8] — 2026-08-09
 

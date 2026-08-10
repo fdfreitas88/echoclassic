@@ -1172,6 +1172,15 @@
       event.preventDefault();
       return;
     }
+    if (state.appearanceScreen) {
+      if (global.LmsNav && LmsNav.top && LmsNav.top('settings') && LmsNav.top('settings').screen) {
+        LmsNav.pop('settings');
+      } else {
+        state.appearanceScreen = null;
+      }
+      event.preventDefault();
+      return;
+    }
     if (state.searching) { closeSearch(); event.preventDefault(); }
   });
 
