@@ -32,8 +32,18 @@ function fakeNav() {
   };
 }
 
-test('exactly one sgh "Appearance", and the old sub-headings are gone', function () {
+/* SPL-3: the Player layout screen has an Appearance group of its own now, so
+   "how many Appearance headings exist" has to be asked of one branch at a
+   time. This returns the app-level Settings screen, the v-else branch. */
+function appBranch() {
   const src = settingsSrc();
+  const start = src.indexOf('<div v-else class="settings">');
+  assert.ok(start >= 0, 'the app-level Settings branch moved');
+  return src.slice(start);
+}
+
+test('exactly one sgh "Appearance", and the old sub-headings are gone', function () {
+  const src = appBranch();
   const appearanceHeadings = src.match(/<div class="sgh">Appearance<\/div>/g) || [];
   assert.equal(appearanceHeadings.length, 1);
   assert.doesNotMatch(src, /<div class="sgh">Fonts<\/div>/);
@@ -45,7 +55,7 @@ test('exactly one sgh "Appearance", and the old sub-headings are gone', function
 });
 
 test('the General group does not contain theme controls; Appearance does inline', function () {
-  const src = settingsSrc();
+  const src = appBranch();
   const generalBlock = src.split('<div class="sgh">General</div>')[1].split('<div class="sgh">')[0];
   assert.doesNotMatch(generalBlock, /aria-label="Dark theme"/);
   assert.doesNotMatch(generalBlock, /aria-label="Theme"/);
@@ -156,7 +166,7 @@ test('theme/colorScheme/font/progress no longer exist as appearanceScreen branch
 });
 
 test('the inline Appearance group renders Theme, Accent colour and Font controls', function () {
-  const src = settingsSrc();
+  const src = appBranch();
   const appearanceBlock = src.split('<div class="sgh">Appearance</div>')[1].split('<div class="sgh">Queue</div>')[0];
 
   assert.match(appearanceBlock, /role="radiogroup" aria-label="Theme"/);
@@ -176,29 +186,163 @@ test('the inline Appearance group renders Theme, Accent colour and Font controls
   assert.match(appearanceBlock, /openAppearanceScreen\('players'\)/);
 });
 
-test('the single Player layout screen renders Appearance controls for all three surfaces', function () {
+/* SPL-3: the screen's information architecture. Before, one scroll held three
+   repeated forms -- Full player, Small player, Mini player -- with "Match app
+   appearance" three times, 9 radiogroups, 40 visible radio choices and 16
+   colour swatches before the mini accent row was even reached: 1,723px of
+   content in a 656px scroller at 390x844, with Small and Mini several screens
+   down. After: Layout, then a one-switch Appearance summary, then everything
+   else behind one disclosure. */
+test('SPL-3: the basic screen is Layout then an Appearance summary, and nothing else', function () {
   const players = screenBranch('players');
-  assert.match(players, /ui\.fullTheme/);
-  assert.match(players, /ui\.fullColorScheme/);
-  assert.match(players, /ui\.fullFont/);
-  assert.match(players, /ui\.playerPresentation/);
-  assert.match(players, /ui\.playerGaugeStyle/);
+  const basic = players.split('v-if="advancedAppearance"')[0];
 
-  assert.match(players, /ui\.smallTheme/);
-  assert.match(players, /ui\.smallColorScheme/);
-  assert.match(players, /ui\.smallFont/);
-  assert.match(players, /ui\.playerPosition/);
-  /* D-2 (phase2-decisions.md): the small player has no gauge of its own --
-     Full's Progress bar rows restyle it too, so Small's own section must not
-     invent one. */
-  assert.doesNotMatch(players.split('Small player')[1].split('Mini player')[0], /playerGaugeStyle|playerGaugeColor/);
+  assert.match(basic, /<div class="sgh">Layout<\/div>/);
+  assert.match(basic, /ui\.playerPresentation/);
+  assert.match(basic, /\{\{ presentationHelp \}\}/);
+  assert.match(basic, /<div class="sgh">Appearance<\/div>/);
+  assert.match(basic, /\{\{ appearanceSummary \}\}/);
+  assert.match(basic, /Customize player appearance/);
 
-  assert.match(players, /ui\.miniTheme/);
-  assert.match(players, /ui\.miniColorScheme/);
-  assert.match(players, /ui\.miniFont/);
-  assert.match(players, /ui\.miniGaugeStyle/);
-
+  /* The three internal names must not be section headings any more: the basic
+     layout task has to be doable without knowing them. */
+  ['Full player', 'Small player', 'Mini player'].forEach(function (name) {
+    assert.ok(basic.indexOf('<div class="sgh">' + name + '</div>') < 0,
+      name + ' is still a heading on the basic screen');
+  });
+  assert.equal((basic.match(/role="switch"/g) || []).length, 1,
+    'one Match app appearance switch on the whole basic screen, not one per surface');
+  assert.match(basic, /aria-label="Match app appearance on every player surface"/,
+    'and its accessible name says what it covers, so it is not a fourth ambiguous "Match app appearance"');
+  assert.ok(basic.indexOf('ui.fullTheme') < 0 && basic.indexOf('ui.miniTheme') < 0,
+    'per-surface appearance belongs behind the disclosure, not on the basic screen');
 });
+
+test('SPL-3: Panel position is shown only for Adaptive presentation, and is the existing key', function () {
+  const players = screenBranch('players');
+  const row = players.match(/<div v-if="ui\.playerPresentation === 'adaptive'"[\s\S]*?<\/div>\s*<\/div>/)[0];
+  assert.match(row, /Panel position/);
+  assert.match(row, /ui\.playerPosition/, 'this is the stored playerPosition -- no new state');
+  assert.match(row, /setPlayerPosition\(position\.key\)/);
+  assert.ok(players.indexOf('<div class="sgh">Small player</div>') < 0,
+    'position is a consequence of Adaptive presentation, not a Small player section');
+});
+
+test('SPL-3: the advanced area is a disclosure that defaults closed and is session-only', function () {
+  const players = screenBranch('players');
+  assert.match(players, /:aria-expanded="String\(advancedAppearance\)"/);
+  assert.match(players, /@click="advancedAppearance = !advancedAppearance"/);
+
+  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
+  assert.equal(inst.def.data().advancedAppearance, false, 'closed on every mount');
+  assert.equal(inst.def.data().appearanceSurface, 'full');
+
+  const persisted = helpers.read('EchoClassic/HTML/echoclassic/html/js/ui.js')
+    .match(/localStorage\.setItem\('echoclassic\.ui\.v2', JSON\.stringify\(\{([\s\S]*?)\}\)\)/)[1];
+  assert.ok(persisted.indexOf('advancedAppearance') < 0 && persisted.indexOf('appearanceSurface') < 0,
+    'which panel someone had open is not a preference and must not reach the export');
+});
+
+test('SPL-3: exactly one surface form is in the DOM at a time, and switching surface saves nothing', function () {
+  const players = screenBranch('players');
+  const advanced = players.slice(players.indexOf('v-if="advancedAppearance"'));
+  ['full', 'small', 'mini'].forEach(function (surface) {
+    ['Theme', 'ColorScheme', 'Font'].forEach(function (key) {
+      const marker = 'ui.' + surface + key;
+      assert.ok(advanced.indexOf(marker) < 0,
+        marker + ' is bound directly, so all three forms would render at once');
+    });
+  });
+  assert.match(advanced, /role="radiogroup" aria-label="Player surface"/);
+  assert.match(advanced, /surfaceTheme === option\.key/);
+  assert.match(advanced, /surfaceScheme === scheme\.key/);
+  assert.match(advanced, /surfaceFont === font\.key/);
+
+  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
+  const self = inst.self;
+  self.setSurfaceFollowsApp(false);
+  const before = JSON.stringify([self.ui.fullTheme, self.ui.smallTheme, self.ui.miniTheme,
+                                 self.ui.fullColorScheme, self.ui.smallColorScheme, self.ui.miniColorScheme,
+                                 self.ui.fullFont, self.ui.smallFont, self.ui.miniFont]);
+  self.setAppearanceSurface('small');
+  self.setAppearanceSurface('mini');
+  self.setAppearanceSurface('full');
+  assert.equal(JSON.stringify([self.ui.fullTheme, self.ui.smallTheme, self.ui.miniTheme,
+                               self.ui.fullColorScheme, self.ui.smallColorScheme, self.ui.miniColorScheme,
+                               self.ui.fullFont, self.ui.smallFont, self.ui.miniFont]), before,
+    'selecting a surface is navigation, not a preference change');
+});
+
+test('SPL-3: the surface form reads and writes whichever surface is selected', function () {
+  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
+  const self = inst.self;
+  self.ui.theme = 'dark';
+  self.ui.colorScheme = 'crimson';
+  self.ui.fontFamily = 'espy';
+
+  self.setAppearanceSurface('small');
+  assert.equal(self.surfaceLabel, 'Side panel');
+  assert.equal(self.surfaceFollowsApp, true);
+  assert.equal(self.surfaceTheme, 'app', 'the form sees the stored value, app included');
+
+  self.setSurfaceFollowsApp(false);
+  self.setSurfaceTheme('light');
+  self.setSurfaceScheme('teal');
+  self.setSurfaceFont('helvetica');
+  assert.equal(self.ui.smallTheme, 'light');
+  assert.equal(self.ui.smallColorScheme, 'teal');
+  assert.equal(self.ui.smallFont, 'helvetica');
+  assert.equal(self.ui.fullTheme, 'app', 'the other two surfaces are untouched');
+  assert.equal(self.ui.miniTheme, 'app');
+
+  self.setAppearanceSurface('mini');
+  assert.equal(self.surfaceLabel, 'Bottom bar');
+  assert.equal(self.surfaceTheme, 'app', 'each surface reads back its own value');
+  self.setAppearanceSurface('small');
+  assert.equal(self.surfaceTheme, 'light', 'and the customized values render again on return');
+});
+
+test('SPL-3: progress settings stay shared between Full player and Side panel, Bottom bar independent', function () {
+  const players = screenBranch('players');
+  const advanced = players.slice(players.indexOf('v-if="advancedAppearance"'));
+  const full = advanced.split("appearanceSurface === 'full'")[1].split("appearanceSurface === 'small'")[0];
+  const small = advanced.split("appearanceSurface === 'small'")[1].split('<template v-else>')[0];
+
+  assert.match(full, /ui\.playerGaugeStyle/);
+  assert.match(full, /ui\.playerGaugeColor/);
+  assert.match(full, /Also applies to the side panel\./);
+  assert.match(full, /Bar style is remembered per theme\./);
+
+  assert.doesNotMatch(small, /playerGaugeStyle|playerGaugeColor|miniGaugeStyle/,
+    'the side panel has no gauge of its own -- duplicating the controls would imply it does');
+  assert.match(small, /Progress bar settings are shared with Full player\./);
+  assert.doesNotMatch(small, /Bar style is remembered per theme\./,
+    'that sentence belongs only beside a surface that actually shows a style selector');
+
+  assert.equal((advanced.match(/Bar style is remembered per theme\./g) || []).length, 2,
+    'once for Full player, once for Bottom bar -- the two surfaces with a style selector');
+  assert.match(advanced, /ui\.miniGaugeStyle/);
+  assert.match(advanced, /ui\.miniGaugeColor/);
+});
+
+test('SPL-3: every new English string translates through the real strings.txt', function () {
+  const strings = helpers.read('EchoClassic/strings.txt');
+  ['Layout', 'Panel position', 'Side panel', 'Bottom bar', 'Player surface',
+   'Customize player appearance', 'Use app appearance',
+   'Match app appearance on every player surface',
+   'All player surfaces use the app theme, accent and font.',
+   'Some player surfaces use custom appearance.',
+   'Uses a side panel on larger screens and full screen on phones.',
+   'Always opens over the app.',
+   'Also applies to the side panel.',
+   'Progress bar settings are shared with Full player.',
+   'Bottom bar colour'].forEach(function (phrase) {
+    const at = strings.indexOf('\tEN\t' + phrase + '\n');
+    assert.ok(at > 0, 'no strings.txt entry for: ' + phrase);
+    assert.match(strings.slice(at, at + 400), /\n\tPT\t\S/, 'no Portuguese translation for: ' + phrase);
+  });
+});
+
 
 /* N1 (audit): zero <select> elements anywhere in Settings -- the two gauge-
    colour pickers (mini/full player colour) are Bar colour swatch rows now,
@@ -210,64 +354,64 @@ test('N1: no <select> element remains anywhere in lms-settings', function () {
   assert.doesNotMatch(src, /class="setting-select/);
 });
 
-/* N4 (audit): "Match app appearance" ON writes 'app' to all three of that
-   surface's keys and leaves the other two surfaces alone; OFF seeds the
-   three keys from the app's own currently resolved values, not a hard-coded
-   default -- confirmed here against the real LmsUi (setFullFollowsApp etc.
-   are thin one-line wrappers around LmsUi.setSurfaceFollowsApp, so this also
-   exercises ui.js's half of the contract, not just the wiring). */
-test('N4: Match app appearance ON resets to \'app\', OFF seeds from the app\'s resolved values, one surface at a time', function () {
+/* N4 (audit), rewritten for SPL-3. The contract is unchanged -- ON writes
+   'app' to all three of a surface's keys, OFF seeds them from the app's own
+   currently resolved values rather than a hard-coded default -- but the screen
+   now has one master switch over all three surfaces and one per-surface switch
+   scoped to whichever surface is selected. Both are exercised here against the
+   real LmsUi, so this still covers ui.js's half of the contract. */
+test('N4: the master switch moves all three surfaces; the per-surface switch moves only the selected one', function () {
   const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
   const self = inst.self;
   const ui = self.ui;
 
-  assert.equal(self.fullFollowsApp, true);
-  assert.equal(self.smallFollowsApp, true);
-  assert.equal(self.miniFollowsApp, true);
+  assert.equal(self.allSurfacesFollowApp, true);
+  assert.equal(self.appearanceSummary, 'All player surfaces use the app theme, accent and font.');
 
   ui.theme = 'dark';
   ui.colorScheme = 'crimson';
   ui.fontFamily = 'espy';
 
-  self.setFullFollowsApp(false);
-  assert.equal(ui.fullTheme, 'dark');
-  assert.equal(ui.fullColorScheme, 'crimson');
-  assert.equal(ui.fullFont, 'espy');
-  assert.equal(self.fullFollowsApp, false);
-  /* Only the surface just toggled moves. */
-  assert.equal(self.smallFollowsApp, true);
-  assert.equal(self.miniFollowsApp, true);
-  assert.equal(ui.smallTheme, 'app');
-  assert.equal(ui.miniTheme, 'app');
+  /* Master OFF seeds every surface from the app's resolved values. */
+  self.setAllSurfacesFollowApp(false);
+  ['full', 'small', 'mini'].forEach(function (surface) {
+    assert.equal(ui[surface + 'Theme'], 'dark', surface + ' theme');
+    assert.equal(ui[surface + (surface === 'full' ? 'ColorScheme' : 'ColorScheme')], 'crimson', surface + ' scheme');
+    assert.equal(ui[surface + 'Font'], 'espy', surface + ' font');
+  });
+  assert.equal(self.allSurfacesFollowApp, false);
+  assert.equal(self.appearanceSummary, 'Some player surfaces use custom appearance.');
 
-  /* The app changes AFTER the seed -- the full player keeps its own custom
-     values; it does not track the app live while Match app appearance is off. */
+  self.setAllSurfacesFollowApp(true);
+  ['full', 'small', 'mini'].forEach(function (surface) {
+    assert.equal(ui[surface + 'Theme'], 'app');
+    assert.equal(ui[surface + 'ColorScheme'], 'app');
+    assert.equal(ui[surface + 'Font'], 'app');
+  });
+
+  /* The per-surface switch isolates one surface, and the master reads OFF the
+     moment any single surface diverges -- without an indeterminate state. */
+  self.setAppearanceSurface('mini');
+  self.setSurfaceFollowsApp(false);
+  assert.equal(ui.miniTheme, 'dark');
+  assert.equal(ui.fullTheme, 'app', 'only the selected surface moves');
+  assert.equal(ui.smallTheme, 'app');
+  assert.equal(self.allSurfacesFollowApp, false);
+  assert.equal(self.appearanceSummary, 'Some player surfaces use custom appearance.');
+
+  /* The app changes AFTER the seed -- the bottom bar keeps its own values; it
+     does not track the app live while the switch is off. */
   ui.theme = 'light';
   ui.colorScheme = 'teal';
-  assert.equal(ui.fullTheme, 'dark');
-  assert.equal(ui.fullColorScheme, 'crimson');
+  assert.equal(ui.miniTheme, 'dark');
+  assert.equal(ui.miniColorScheme, 'crimson');
 
-  self.setFullFollowsApp(true);
-  assert.equal(ui.fullTheme, 'app');
-  assert.equal(ui.fullColorScheme, 'app');
-  assert.equal(ui.fullFont, 'app');
-  assert.equal(self.fullFollowsApp, true);
-
-  /* OFF -> ON -> OFF is idempotent: seeding from the (now different) app
-     values again reflects what the app resolves to NOW, not the values from
-     the first OFF above. */
-  self.setSmallFollowsApp(false);
-  assert.equal(ui.smallTheme, 'light');
-  assert.equal(ui.smallColorScheme, 'teal');
-  self.setSmallFollowsApp(true);
-  self.setSmallFollowsApp(false);
-  assert.equal(ui.smallTheme, 'light');
-  assert.equal(ui.smallColorScheme, 'teal');
-
-  self.setMiniFollowsApp(false);
+  /* OFF -> ON -> OFF is idempotent: the second seed reflects what the app
+     resolves to now, not the values from the first OFF. */
+  self.setSurfaceFollowsApp(true);
+  self.setSurfaceFollowsApp(false);
   assert.equal(ui.miniTheme, 'light');
   assert.equal(ui.miniColorScheme, 'teal');
-  assert.equal(ui.miniFont, 'espy');
 });
 
 /* N5 (audit): every segmented control in the Player layout screen is a real
@@ -278,7 +422,11 @@ test('N4: Match app appearance ON resets to \'app\', OFF seeds from the app\'s r
 test('N5: every .segmented control in the players screen is a radiogroup wired to radioKey', function () {
   const players = screenBranch('players');
   const groups = players.match(/<div class="segmented" role="radiogroup"[\s\S]*?<\/div>\s*<\/div>/g) || [];
-  assert.ok(groups.length >= 7, 'expected at least 7 segmented controls (Presentation, Position, 3x Theme, 2x Progress bar)');
+  /* SPL-3 removed the "at least seven" floor: it only ever encoded the
+     cluttered layout -- three repeated Theme controls and two Progress bar
+     sections. What matters is that every segmented control that IS rendered
+     behaves as a radiogroup, however many the selected surface calls for. */
+  assert.ok(groups.length > 0, 'sanity: the screen still uses segmented controls');
   groups.forEach(function (group) {
     assert.match(group, /role="radio"/);
     assert.match(group, /@keydown="radioKey\(/);
@@ -656,7 +804,15 @@ test('plugin status and search filters update counts and empty group bands', fun
 test('Player layout explains inherited controls and gives touch controls 44px hit areas', function () {
   const settings = settingsSrc();
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
-  assert.equal((settings.match(/Uses the app theme, accent and font\./g) || []).length, 3);
+  /* SPL-3: the sentence used to be repeated once per surface section. One
+     summary answers it for the whole screen now, and the disclosure carries
+     the per-surface detail. */
+  assert.ok(settings.indexOf('Uses the app theme, accent and font.') < 0,
+    'the per-surface repetition is what the summary replaces');
+  assert.match(settings, /All player surfaces use the app theme, accent and font\./);
+  assert.match(settings, /Some player surfaces use custom appearance\./);
+  assert.match(css, /\.surface-select-row \.segmented button\{flex:1/,
+    'the surface selector spans the row so three labels fit at 390px without clipping');
   assert.match(css, /\.sw\{width:44px;height:44px/);
   assert.match(css, /\.swatch-dot\{width:44px;height:44px/);
   assert.match(css, /\.swatch-dot::before[\s\S]*width:28px;height:28px/);
