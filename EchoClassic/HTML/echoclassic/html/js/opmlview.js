@@ -145,6 +145,15 @@ Vue.component('lms-opml', {
     tr: function (text) {
       return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
     },
+    /* ERR-01: a tela de Apps mostrava
+       `[network] qobuz items 0 200 menu:qobuz: Failed to fetch` -- o comando
+       RPC, a paginacao e o texto do fetch, tudo cru. Nada ali diz a uma pessoa
+       o que fazer. friendlyError ja traduz a familia da falha e deixa a string
+       do protocolo no console; o que faltava era a acao humana no fim. */
+    serviceError: function (e, fallback) {
+      return this.tr(LmsStore.friendlyError(e, fallback)) + ' ' +
+        this.tr('Check the connection or the service status and try again.');
+    },
     openMusic: function () {
       LmsUi.setTab('music');
       LmsUi.setMusicView('albums');
@@ -183,8 +192,9 @@ Vue.component('lms-opml', {
       } catch (e) {
         /* Falhar ao tocar UMA estacao nao pode apagar a lista inteira: isso e
            recado de notificacao, nao erro fatal de carregamento. */
-        LmsUi.notify('Could not play “' + (it.title || 'this station') + '”. ' +
-          (e && e.message ? e.message : String(e)), 'error', 6500);
+        LmsUi.notify(this.tr('Could not play “') + (it.title || this.tr('this station')) +
+          '”. ' + this.serviceError(e, 'The station did not answer.'),
+          'error', 6500);
       }
     },
     search: async function (it, i) {
@@ -207,7 +217,7 @@ Vue.component('lms-opml', {
         });
       } catch (e) {
         /* A lista atual continua valida; o problema foi desta consulta. */
-        this.setFieldError(i, e && e.message ? e.message : String(e));
+        this.setFieldError(i, this.serviceError(e, 'The search did not complete.'));
       }
       this.loading = false;
     },
@@ -232,7 +242,7 @@ Vue.component('lms-opml', {
            Qobuz com mais de 200 itens terminava sem dizer nada. */
         this.truncated = this.items.length >= 200;
       } catch (e) {
-        this.error = e && e.message ? e.message : String(e);
+        this.error = this.serviceError(e, 'This service did not answer.');
         this.items = [];
       }
       this.loading = false;
