@@ -44,3 +44,4 @@ browser automation policy.
 - c604806 · NAV-01 (2/2): contextual Back and browser Back both return to the suspended search; label guarded by the snapshot · [measured]
 - 561c564 · STATE-01: store owns the zero-player transition; connection, track and commandability move together · [measured]
 - 9c26fc4 · STATE-01: mini and full transports read store.commandable; no component re-derives the rule · [measured]
+- fe32f4e · ERR-01: Apps/Qobuz errors go through friendlyError and end with a human action; no RPC on screen · [measured]
