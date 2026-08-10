@@ -432,6 +432,9 @@
     dark: initialTheme === 'dark',
     searching: false,
     query: '',
+    /* Ha uma busca suspensa a que o Back pode voltar. Fica no estado, e nao so
+       na variavel de modulo abaixo, porque o rotulo do Back e computado. */
+    searchReturn: false,
     full: false,
     playerPresentation: isPlayerPresentation(saved.playerPresentation) ? saved.playerPresentation : 'adaptive',
     playerPosition: isPlayerPosition(saved.playerPosition) ? saved.playerPosition : 'right',
@@ -1046,7 +1049,65 @@
 	    var scroller = currentScroller();
 	    searchReturnFocus = document.activeElement;
 	    searchReturnScroll = scroller ? scroller.scrollTop : 0;
+	    /* Busca nova nao herda a suspensa: sem isto o proximo lms-search
+	       montaria com o resultado antigo e mostraria a lista de outra
+	       consulta como se fosse desta. */
+	    clearSuspendedSearch();
 	    state.searching = true;
+	  }
+
+	  /* NAV-01: a busca nao tinha frame proprio. Abrir um resultado fechava a
+	     busca e apagava a consulta; o Back contextual voltava para a raiz de
+	     Artists, sem termo, sem resultados e sem rolagem -- rever o mesmo
+	     resultado custava digitar tudo de novo.
+
+	     O instantaneo mora aqui e nao no componente porque o componente e
+	     destruido no instante em que a busca fecha. E fica so em memoria de
+	     proposito: recarregar nao precisa preservar resultado de rede, e
+	     persistir a lista inteira convidaria a mostrar resultado velho como se
+	     fosse novo. */
+	  var suspendedSearch = null;
+
+	  function suspendSearch(snapshot) {
+	    if (!snapshot || !snapshot.query) return false;
+	    suspendedSearch = {
+	      tab: snapshot.tab || 'music',
+	      query: snapshot.query,
+	      results: snapshot.results || null,
+	      scroll: snapshot.scroll || 0,
+	      limit: snapshot.limit || 50
+	    };
+	    state.searchReturn = true;
+	    closeSearch();
+	    return true;
+	  }
+
+	  function hasSuspendedSearch(tab) {
+	    if (!suspendedSearch) return false;
+	    return tab === undefined || suspendedSearch.tab === tab;
+	  }
+
+	  function resumeSearch(tab) {
+	    if (!hasSuspendedSearch(tab)) return false;
+	    state.query = suspendedSearch.query;
+	    state.searching = true;
+	    state.searchReturn = false;
+	    return true;
+	  }
+
+	  /* Entregue uma unica vez: o componente monta, consome o instantaneo, e da
+	     por diante a lista e dele. Deixar o instantaneo de pe faria a proxima
+	     montagem sobrescrever uma busca nova com a antiga. */
+	  function takeSearchSnapshot() {
+	    var snapshot = suspendedSearch;
+	    suspendedSearch = null;
+	    state.searchReturn = false;
+	    return snapshot;
+	  }
+
+	  function clearSuspendedSearch() {
+	    suspendedSearch = null;
+	    state.searchReturn = false;
 	  }
 
 	  function closeSearch() {
@@ -1249,6 +1310,10 @@
     filterTrigger: filterTrigger,
     setTab: setTab, restoreTab: restoreTab, toggleTheme: toggleTheme,
     openSearch: openSearch, closeSearch: closeSearch,
+    suspendSearch: suspendSearch, resumeSearch: resumeSearch,
+    hasSuspendedSearch: hasSuspendedSearch,
+    takeSearchSnapshot: takeSearchSnapshot,
+    clearSuspendedSearch: clearSuspendedSearch,
     setSort: setSort, openActions: openActions, closeActions: closeActions,
     toggleSelection: toggleSelection, clearSelection: clearSelection,
     queueSelection: queueSelection,
