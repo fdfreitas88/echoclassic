@@ -1748,6 +1748,18 @@ ECHOCLASSIC_UI_THIS_STATION
 	EN	this station
 	PT	esta estação
 
+ECHOCLASSIC_UI_SERVICE_CHECK_AND_RETRY
+	EN	Check the connection or the service status and try again.
+	PT	Confira a conexão ou o estado do serviço e tente de novo.
+
+ECHOCLASSIC_UI_SERVICE_NO_ANSWER
+	EN	This service did not answer.
+	PT	Este serviço não respondeu.
+
+ECHOCLASSIC_UI_STATION_NO_ANSWER
+	EN	The station did not answer.
+	PT	A estação não respondeu.
+
 ECHOCLASSIC_UI_BACK_TO
 	EN	Back to 
 	PT	Voltar para 
