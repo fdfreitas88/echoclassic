@@ -51,3 +51,4 @@ browser automation policy.
 - 94818e4 · SPL-1: Player layout previews deleted -- markup, state, computeds and CSS · [measured]
 - 72e3bc8 · SPL-2: LmsUi.surfaceValues exposes a surface stored theme/scheme/font, app included · [measured]
 - 6a5da22 · SPL-3: Player layout is Layout + Appearance summary + one disclosure; no stored key renamed · [measured]
+- af4d436 · SPL-4: acceptance pinned -- control budget, roving tabindex, 3.2.8 payload round trip · [measured]
