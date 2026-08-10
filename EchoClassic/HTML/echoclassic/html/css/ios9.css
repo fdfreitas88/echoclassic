@@ -1085,20 +1085,6 @@ body.dark .swatch-dot.gauge-color-theme::before{background:linear-gradient(135de
   .srow:has(>.swatch-row){flex-wrap:wrap;padding-top:5px;padding-bottom:5px}
   .srow>.swatch-row{width:100%;margin-left:0;justify-content:space-between;gap:0}
 }
-/* .surface-preview is the aria-hidden strip at the foot of each player
-   subscreen (v-bind="fullPreviewAttrs" etc., settings.js) -- the element
-   itself carries data-surface-theme/-scheme/-font when that surface
-   overrides the app, so every value in this scope must come from that
-   surface's own tokens (never a literal hex), or the strip would paint the
-   wrong scheme/theme pairing the moment someone chose something other than
-   the default blue. Sized like a slice of a player bar, not a 44px row. */
-.surface-preview{background:var(--chrome);min-height:64px}
-.surface-preview-swatch{width:34px;height:34px;flex:0 0 34px;border-radius:50%;
-  background:var(--accent);box-shadow:inset 0 0 0 1px var(--content)}
-.surface-preview-copy{flex:1;min-width:0;color:var(--text);font-size:13px}
-.surface-preview::after{content:'';flex:0 0 32px;height:2px;border-radius:1px;
-  background:var(--text2);align-self:center}
-
 /* ====== mini player ==================================================== */
 .mini{height:var(--mini);flex:0 0 auto;background:var(--mini-bg);border-top:.5px solid var(--mini-edge);
   display:flex;align-items:center;padding:0 12px;gap:16px;position:relative}

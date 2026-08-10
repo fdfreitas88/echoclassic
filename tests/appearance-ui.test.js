@@ -81,13 +81,23 @@ test('every Appearance drill-in row is a type="button" with a name for its desti
   });
 });
 
-test('every live preview strip carries aria-hidden="true"', function () {
+/* SPL-1: the preview strips are gone, not hidden. Each one showed an accent
+   circle, the words Full player / Small player / Mini player and a two-pixel
+   line -- no presentation, no panel position, no font, no chrome, no album
+   art, no real progress-bar style. It was aria-hidden, so it offered nothing
+   to a screen reader either, and it cost three 64px strips plus three
+   headings of the height the screen could least afford. The real players
+   update immediately and are the authoritative feedback; there is no
+   replacement thumbnail. */
+test('SPL-1: no preview control, markup, state or CSS survives anywhere', function () {
   const src = settingsSrc();
-  const strips = src.match(/class="srow surface-preview"[^>]*/g) || [];
-  assert.equal(strips.length, 3, 'expected one preview strip per player surface');
-  strips.forEach(function (tag) {
-    assert.match(tag, /aria-hidden="true"/);
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  ['Show previews', 'showPreviews', 'surface-preview',
+   'fullPreviewAttrs', 'smallPreviewAttrs', 'miniPreviewAttrs'].forEach(function (token) {
+    assert.ok(src.indexOf(token) < 0, token + ' still appears in settings.js');
   });
+  assert.doesNotMatch(src, />Preview</, 'the PREVIEW section headings go with the strips');
+  assert.ok(css.indexOf('surface-preview') < 0, '.surface-preview* CSS still exists');
 });
 
 /* Extracts the raw markup of the v-if branch keyed on ui.appearanceScreen,
@@ -173,13 +183,11 @@ test('the single Player layout screen renders Appearance controls for all three 
   assert.match(players, /ui\.fullFont/);
   assert.match(players, /ui\.playerPresentation/);
   assert.match(players, /ui\.playerGaugeStyle/);
-  assert.match(players, /v-bind="fullPreviewAttrs"/);
 
   assert.match(players, /ui\.smallTheme/);
   assert.match(players, /ui\.smallColorScheme/);
   assert.match(players, /ui\.smallFont/);
   assert.match(players, /ui\.playerPosition/);
-  assert.match(players, /v-bind="smallPreviewAttrs"/);
   /* D-2 (phase2-decisions.md): the small player has no gauge of its own --
      Full's Progress bar rows restyle it too, so Small's own section must not
      invent one. */
@@ -189,11 +197,7 @@ test('the single Player layout screen renders Appearance controls for all three 
   assert.match(players, /ui\.miniColorScheme/);
   assert.match(players, /ui\.miniFont/);
   assert.match(players, /ui\.miniGaugeStyle/);
-  assert.match(players, /v-bind="miniPreviewAttrs"/);
 
-  /* "Show previews" gates all three preview strips, off by default -- and is
-     genuinely a toggle, not a third value smuggled onto ui.appearanceScreen. */
-  assert.match(players, /showPreviews = !showPreviews/);
 });
 
 /* N1 (audit): zero <select> elements anywhere in Settings -- the two gauge-

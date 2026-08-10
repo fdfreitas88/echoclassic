@@ -20,14 +20,6 @@ Vue.component('lms-settings', {
 </div>
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
   <template v-if="ui.appearanceScreen === 'players'">
-    <div class="sgroup">
-      <div class="srow">Show previews
-        <button type="button" class="sw" :class="{on: showPreviews}" role="switch"
-                :aria-checked="String(showPreviews)" aria-label="Show previews"
-                @click="showPreviews = !showPreviews"><span class="visually-hidden">Show previews</span></button>
-      </div>
-    </div>
-
     <!-- FULL PLAYER -->
     <div class="sgh">Full player</div>
     <div class="sgroup">
@@ -111,15 +103,6 @@ Vue.component('lms-settings', {
     </div>
     <div class="player-help">Also applies to the small player.</div>
     <div class="player-help">Bar style is remembered per theme.</div>
-    <template v-if="showPreviews">
-      <div class="sgh">Preview</div>
-      <div class="sgroup">
-        <div class="srow surface-preview" aria-hidden="true" v-bind="fullPreviewAttrs">
-          <span class="surface-preview-swatch"></span>
-          <span class="surface-preview-copy">Full player</span>
-        </div>
-      </div>
-    </template>
 
     <!-- SMALL PLAYER -->
     <div class="sgh">Small player</div>
@@ -177,15 +160,6 @@ Vue.component('lms-settings', {
         <span class="font-option-check" aria-hidden="true"></span>
       </button>
     </div>
-    <template v-if="showPreviews">
-      <div class="sgh">Preview</div>
-      <div class="sgroup">
-        <div class="srow surface-preview" aria-hidden="true" v-bind="smallPreviewAttrs">
-          <span class="surface-preview-swatch"></span>
-          <span class="surface-preview-copy">Small player</span>
-        </div>
-      </div>
-    </template>
 
     <!-- MINI PLAYER -->
     <div class="sgh">Mini player</div>
@@ -258,15 +232,6 @@ Vue.component('lms-settings', {
       </div>
     </div>
     <div class="player-help">Bar style is remembered per theme.</div>
-    <template v-if="showPreviews">
-      <div class="sgh">Preview</div>
-      <div class="sgroup">
-        <div class="srow surface-preview" aria-hidden="true" v-bind="miniPreviewAttrs">
-          <span class="surface-preview-swatch"></span>
-          <span class="surface-preview-copy">Mini player</span>
-        </div>
-      </div>
-    </template>
   </template>
 </div>
 <div v-else class="settings">
@@ -530,10 +495,6 @@ Vue.component('lms-settings', {
       queueArtModes: LmsUi.QUEUE_ART_MODES,
       info: null, loading: true, error: '', showPlayers: false,
       showDefaultPlayer: false,
-      /* Session-only, like showPlayers/showDefaultPlayer above -- a live
-         sample of each player under its own section is a lot of extra height
-         to default to on, and nothing about it needs to survive a reload. */
-      showPreviews: false,
       pendingImport: null,
       settingsReturnScroll: 0,
       appearanceReturnScroll: 0,
@@ -647,13 +608,7 @@ Vue.component('lms-settings', {
        the moment the toggle goes off (setFullFollowsApp etc., below). */
     fullFollowsApp: function () { return LmsUi.surfaceFollowsApp('full'); },
     smallFollowsApp: function () { return LmsUi.surfaceFollowsApp('small'); },
-    miniFollowsApp: function () { return LmsUi.surfaceFollowsApp('mini'); },
-    /* Same pattern chrome/miniplayer.js and nowplaying.js already use for
-       their own root binding: v-bind="xPreviewAttrs" on the aria-hidden
-       preview strip under each player's section. */
-    fullPreviewAttrs: function () { return LmsUi.surfaceAttrs('full'); },
-    smallPreviewAttrs: function () { return LmsUi.surfaceAttrs('small'); },
-    miniPreviewAttrs: function () { return LmsUi.surfaceAttrs('mini'); }
+    miniFollowsApp: function () { return LmsUi.surfaceFollowsApp('mini'); }
   },
   watch: {
     /* Quando o servidor confirma o valor, o rascunho sai de cena e o controle
