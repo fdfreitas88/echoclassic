@@ -45,6 +45,9 @@ printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' \
 CURRENT="$(local_version)"
 ZIP="dist/EchoClassic-$VERSION.zip"
 TAG="v$VERSION"
+# A unica URL que o repo.xml publicado pode carregar. Fica aqui, calculada da
+# versao, para o bump e o portao de publicacao lerem a mesma coisa.
+EXPECTED_URL="https://github.com/fdfreitas88/echoclassic/releases/download/$TAG/EchoClassic-$VERSION.zip"
 
 # ---------------------------------------------------------------- 1. estado
 bold "1/7  estado do repositorio"
@@ -80,7 +83,14 @@ else
   sed -i '' "s|<version>[^<]*</version>|<version>$VERSION</version>|" "$SRC/install.xml"
   sed -i '' "s|sub getSkinVersion { return '[^']*' }|sub getSkinVersion { return '$VERSION' }|" "$SRC/Plugin.pm"
   sed -i '' "s|<plugin name=\"EchoClassic\" version=\"[^\"]*\"|<plugin name=\"EchoClassic\" version=\"$VERSION\"|" repo.xml
-  sed -i '' "s|releases/download/v[0-9.]*/EchoClassic-[0-9.]*\.zip|releases/download/$TAG/EchoClassic-$VERSION.zip|" repo.xml
+  # A <url> inteira, e nao so o numero dentro dela. O sed anterior casava
+  # apenas uma URL que ja fosse publica, entao um <url> apontando para um zip
+  # local (private-candidate/EchoClassic-3.2.8.zip) atravessava o bump intacto
+  # e chegava ao descritor publicado. Ver PUB-01.
+  PREVIOUS_URL="$(sed -n 's|.*<url>\([^<]*\)</url>.*|\1|p' repo.xml)"
+  [ "$PREVIOUS_URL" = "$EXPECTED_URL" ] \
+    || warn "a <url> era '$PREVIOUS_URL' e foi reescrita. Confira no diff antes de publicar."
+  sed -i '' "s|<url>[^<]*</url>|<url>$EXPECTED_URL</url>|" repo.xml
   info "install.xml, Plugin.pm, repo.xml"
 fi
 
@@ -93,6 +103,27 @@ info "ok    sem <enforce> no install.xml"
 grep -q '<category>skin</category>' repo.xml \
   || die "<category>skin</category> sumiu do repo.xml. Sem ela a pagina de plugins esconde a entrada."
 info "ok    <category>skin</category> presente"
+
+# PUB-01. O descritor de 3.2.8 chegou pronto para publicar dizendo
+# literalmente "PRIVATE 3.2.8 QA CANDIDATE ... Do not publish" e apontando para
+# private-candidate/EchoClassic-3.2.8.zip. Nenhum portao reparou: check-version
+# so compara numeros, e a contagem de arquivos do zip nao olha para a <url>. Um
+# repo.xml assim publicado da erro de download em toda instalacao existente.
+if [ "$DRY" -eq 1 ] && ! grep -q "<url>$EXPECTED_URL</url>" repo.xml; then
+  warn "a <url> ainda nao e a publica; o bump (passo 3) a reescreveria para:"
+  info "$EXPECTED_URL"
+fi
+if [ "$DRY" -eq 0 ]; then
+  grep -q "<url>$EXPECTED_URL</url>" repo.xml \
+    || die "a <url> do repo.xml nao e a URL publica da release $TAG. Esperado:
+  $EXPECTED_URL"
+  info "ok    <url> publica de $TAG"
+fi
+
+grep -qi 'private-candidate\|do not publish\|nao publique' repo.xml \
+  && die "repo.xml ainda carrega marca de candidato privado. Um descritor que diz
+  para nao ser publicado nao pode ser o descritor publicado."
+info "ok    sem marca de candidato privado no repo.xml"
 
 # ---------------------------------------------------------------- 5. portoes
 bold "5/7  portoes"
@@ -117,6 +148,25 @@ else
   [ "$IN_ZIP" = "$EXPECTED" ] \
     || die "o zip tem $IN_ZIP arquivos e a arvore tem $EXPECTED. A diferenca precisa ser explicada antes de publicar."
   info "$ZIP  —  $IN_ZIP arquivos, $(wc -c <"$ZIP" | tr -d ' ') bytes"
+
+  # PUB-01. A contagem nao pega o caso que motivou este portao: o zip de 3.2.8
+  # tinha exatamente o numero certo de arquivos e conteudo anterior ao HEAD --
+  # o ios9.css e o actions.js empacotados nao eram os do repositorio, e o SHA-1
+  # gravado conferia com o pacote errado. So comparacao de conteudo enxerga
+  # isso.
+  VERIFY="$(mktemp -d)"
+  trap 'rm -rf "$VERIFY"' EXIT
+  unzip -qq "$ZIP" -d "$VERIFY"
+  DRIFT="$(diff -r "$SRC" "$VERIFY/$SRC" 2>&1 \
+    | grep -v 'INSTALL.sh' | grep -v '.DS_Store' || true)"
+  if [ -n "$DRIFT" ]; then
+    printf '%s\n' "$DRIFT" | head -40 | sed 's/^/    /'
+    die "o pacote nao e a arvore que o gerou. Publicar assim entrega um artefato
+  diferente do que foi testado -- foi exatamente o que a 3.2.8 fez."
+  fi
+  rm -rf "$VERIFY"
+  trap - EXIT
+  info "ok    pacote identico a arvore"
 fi
 
 # ---------------------------------------------------------------- 7. sha
