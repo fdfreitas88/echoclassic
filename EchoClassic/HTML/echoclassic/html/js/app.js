@@ -140,6 +140,13 @@
         if (!this.depth) return null;
         var root = this.ui.tab === 'music' ? LmsUi.viewLabel() : this.tabLabel;
         var current = LmsNav.top(this.ui.tab);
+        /* NAV-01: quem entrou por um resultado volta para os resultados, nao
+           para a raiz da aba. Depende de haver busca suspensa: a pilha
+           sobrevive a recarga e o instantaneo nao, e oferecer 'Search' sem ter
+           para onde voltar seria pior que o defeito. */
+        if (this.depth === 1 && current && current.fromSearch && this.ui.searchReturn) {
+          return 'Search';
+        }
         if (this.ui.tab === 'music' && current && current.label === root) root = this.tabLabel;
         return LmsNav.parentLabel(this.ui.tab, root);
       },
@@ -177,7 +184,13 @@
           else this.ui.advancedSettings = false;
           return;
         }
+        var leaving = LmsNav.top(this.ui.tab);
         LmsNav.back(this.ui.tab);
+        /* So ao desempilhar o proprio frame da busca: descer artista > album e
+           voltar um nivel continua sendo navegacao dentro da aba. */
+        if (leaving && leaving.fromSearch && !LmsNav.depth(this.ui.tab)) {
+          LmsUi.resumeSearch(this.ui.tab);
+        }
       },
       reconnect: function () { LmsStore.reconnect(); },
       /* O gatilho chega junto do evento porque e para ele que o foco volta.
