@@ -14,12 +14,28 @@ test('ARTMETA-01: artist-only overlay keeps local navigation authoritative', fun
     'the new feature has exactly one New badge');
 });
 
-test('ARTMETA-01: cache is bounded and refuses remote or query-bearing photo URLs', function () {
+test('ARTMETA-01: artist cache is persistent, bounded and refuses remote or query-bearing photo URLs', function () {
   const detail = helpers.read('EchoClassic/HTML/echoclassic/html/js/detail.js');
   assert.match(detail, /ECHOCLASSIC_ARTIST_INFO_CACHE_LIMIT = 40/);
-  assert.match(detail, /ECHOCLASSIC_ARTIST_INFO_CACHE_TTL = 7 \* 24 \* 60 \* 60 \* 1000/);
+  assert.doesNotMatch(detail, /ARTIST_INFO_CACHE_TTL|now - Number\(item\.retrievedAt/,
+    'cached artist information must remain until an explicit refresh');
   assert.match(detail, /rows\.slice\(0, ECHOCLASSIC_ARTIST_INFO_CACHE_LIMIT\)/);
   assert.match(detail, /String\(value\.photoUrl\)\.indexOf\('\?'\) < 0/);
+  assert.doesNotMatch(detail, /removeEnrichment:[\s\S]*?localStorage\.setItem[\s\S]*?enrichmentStatus = 'removed'/,
+    'Hide for now must not discard the persistent artist cache');
+});
+
+test('ARTMETA-01: album information is loaded once and refreshed only on request', function () {
+  const album = helpers.read('EchoClassic/HTML/echoclassic/html/js/albumblock.js');
+  assert.match(album, /ECHOCLASSIC_ALBUM_INFO_CACHE_KEY = 'echoclassic\.album-info\.v1'/);
+  assert.match(album, /ECHOCLASSIC_ALBUM_INFO_CACHE_LIMIT = 60/);
+  assert.match(album, /albumInfoCacheGet: function/);
+  assert.match(album, /var cached = !force && this\.albumInfoCacheGet\(\)/);
+  assert.match(album, /this\.albumInfoCachePut\(this\.albumInfo\)/);
+  assert.match(album, /rows\.slice\(0, ECHOCLASSIC_ALBUM_INFO_CACHE_LIMIT\)/);
+  assert.match(album, /@click="loadAlbumInfo\(true\)"[^>]*>\{\{ tr\('Refresh'\) \}\}/);
+  assert.match(album, /created: function \(\) \{ this\.load\(\); if \(this\.enrich\) this\.loadAlbumInfo\(\); \}/,
+    'automatic album loads must consult the cache instead of forcing a request');
 });
 
 test('ARTMETA-01: unavailable plugin hands off to the native filtered plugin manager', function () {
@@ -51,7 +67,7 @@ test('ARTMETA-01: provenance and user-facing states are translated in EN/PT', fu
   assert.ok(strings.indexOf('\tPT\tInstalar plugin') >= 0);
 });
 
-test('ARTMETA-01: review/remove/refresh and local-versus-connected sections are explicit', function () {
+test('ARTMETA-01: progressive album information and refresh are explicit', function () {
   const detail = helpers.read('EchoClassic/HTML/echoclassic/html/js/detail.js');
   const album = helpers.read('EchoClassic/HTML/echoclassic/html/js/albumblock.js');
   assert.match(detail, /frame\.id == null && !this\.nameMatchAccepted/);
@@ -61,8 +77,18 @@ test('ARTMETA-01: review/remove/refresh and local-versus-connected sections are 
   assert.match(detail, /Also on connected services/);
   assert.match(detail, /removeEnrichment/);
   assert.match(album, /musicAlbumInfo\(this\.store\.playerId \|\| '', this\.album\.id\)/);
-  assert.match(album, /albumInfoStatus === 'removed'.*Find metadata/s);
-  assert.match(album, /album-review.*albumReviewExpanded/);
+  assert.match(album, /albumInfoStatus && albumInfoVisible/);
+  assert.match(album, /albumInfoVisible \? 'Hide album info' : 'Show album info'/);
+  assert.match(album, /albumReviewExpanded \? 'Show less' : 'Show more'/);
+  assert.match(album, /album-review" :class="\{expanded: albumReviewExpanded\}"/);
+  assert.match(helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css'),
+    /\.album-review\{[^}]*-webkit-line-clamp:3\}/,
+    'opening album information must reveal a three-line review preview');
+  assert.match(helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css'),
+    /\.album-enrichment \.retry-command\{margin:4px 0;[^}]*text-align:left\}/,
+    'album information disclosures must stay left aligned');
+  assert.match(album, /albumSourceVisible \? 'Hide source' : 'Show source'/);
+  assert.match(album, /v-if="albumSourceVisible" class="artist-enrichment-source"/);
   assert.match(album, /:enrich="a\.id === frame\.id"|if \(this\.enrich\) this\.loadAlbumInfo/);
   assert.match(album, /<strong>\{\{ tr\('Local library'\) \}\}<\/strong>/);
   assert.doesNotMatch(album, /setArtwork|writeTags|discography|externalRelated/);
@@ -72,7 +98,5 @@ test('ARTMETA-01: review/remove/refresh and local-versus-connected sections are 
     'hide must prevent an in-flight response from restoring the panel');
   assert.match(album, /var token = \+\+this\.albumInfoRequestToken;/);
   assert.match(album, /if \(token !== this\.albumInfoRequestToken\) return;/);
-  assert.match(album, /removeAlbumInfo: function \(\) \{\s*this\.albumInfoRequestToken\+\+;/);
-  assert.match(album, /Hide for now/);
   assert.match(album, /Reference artwork/);
 });

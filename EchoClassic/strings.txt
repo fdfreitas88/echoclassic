@@ -2244,6 +2244,30 @@ ECHOCLASSIC_UI_READ_REVIEW
 	EN	Read review
 	PT	Ler resenha
 
+ECHOCLASSIC_UI_SHOW_ALBUM_INFO
+	EN	Show album info
+	PT	Mostrar informações do álbum
+
+ECHOCLASSIC_UI_HIDE_ALBUM_INFO
+	EN	Hide album info
+	PT	Ocultar informações do álbum
+
+ECHOCLASSIC_UI_SHOW_REVIEW
+	EN	Show review
+	PT	Mostrar resenha
+
+ECHOCLASSIC_UI_HIDE_REVIEW
+	EN	Hide review
+	PT	Ocultar resenha
+
+ECHOCLASSIC_UI_SHOW_SOURCE
+	EN	Show source
+	PT	Mostrar fonte
+
+ECHOCLASSIC_UI_HIDE_SOURCE
+	EN	Hide source
+	PT	Ocultar fonte
+
 ECHOCLASSIC_UI_MIXED_SOURCES
 	EN	Mixed sources
 	PT	Origens mistas
