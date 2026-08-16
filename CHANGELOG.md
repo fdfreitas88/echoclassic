@@ -15,6 +15,15 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.3.1] — 2026-08-16
+
+### Fixed
+
+- Advanced LMS settings pages no longer inherit a fixed-height nested scroller
+  that clipped long forms and left a large empty area above the player. File
+  Types and other long pages now use one continuous responsive scroll area.
+  [live/measured: deployed layout confirmed; 393 tests and validation 4/4 pass]
+
 ## [3.3.0] — 2026-08-16
 
 ### Added

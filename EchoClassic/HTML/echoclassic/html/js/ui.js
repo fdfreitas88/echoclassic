@@ -39,6 +39,17 @@
     Object.freeze({ key: 'legacy', label: 'Legacy' })
   ]);
 
+  /* Os quatro valores de replayGainMode do LMS, nesta ordem: a chave e o
+     numero que vai para a preferencia do player, nao um rotulo traduzido.
+     Fica aqui, e nao em settings.js, porque enum duplicado entre os dois
+     arquivos ja e divida registrada no backlog. */
+  var REPLAY_GAIN_MODES = Object.freeze([
+    Object.freeze({ key: 0, label: 'Off' }),
+    Object.freeze({ key: 1, label: 'Track' }),
+    Object.freeze({ key: 2, label: 'Album' }),
+    Object.freeze({ key: 3, label: 'Smart' })
+  ]);
+
   var FONT_OPTIONS = Object.freeze([
     Object.freeze({ key: 'system', label: 'System (default)' }),
     Object.freeze({ key: 'helvetica', label: 'Helvetica' }),
@@ -1285,6 +1296,7 @@
     THEME_OPTIONS: THEME_OPTIONS, setTheme: setTheme,
     COLOR_SCHEMES: COLOR_SCHEMES, setColorScheme: setColorScheme,
     FONT_OPTIONS: FONT_OPTIONS, setFontFamily: setFontFamily,
+    REPLAY_GAIN_MODES: REPLAY_GAIN_MODES,
     surfaceAttrs: surfaceAttrs, surfaceValues: surfaceValues,
     surfaceFollowsApp: surfaceFollowsApp,
     setSurfaceTheme: setSurfaceTheme, setSurfaceScheme: setSurfaceScheme,

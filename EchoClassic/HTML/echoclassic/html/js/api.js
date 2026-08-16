@@ -81,6 +81,32 @@
     return Math.round(n > 10000 ? n / 1000 : n);
   }
   function txt(v) { return v == null ? '' : String(v); }
+  function plainText(v) {
+    return txt(v).replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
+      .replace(/<br\s*\/?>/gi, '\n').replace(/<\/p\s*>/gi, '\n')
+      .replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&')
+      .replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'").replace(/\n{3,}/g, '\n\n').trim();
+  }
+  function readableText(v) {
+    var value = txt(v);
+    if (!/[<&]/.test(value)) return value;
+    value = value
+      .replace(/<\s*(?:style|script|link)\b[^>]*>(?:[\s\S]*?<\s*\/\s*(?:style|script)\s*>)?/gi, '')
+      .replace(/<\s*br\s*\/?>/gi, '\n')
+      .replace(/<\s*\/?\s*(?:p|div|h[1-6]|li|blockquote|section|article)\b[^>]*>/gi, '\n')
+      .replace(/<[^>]+>/g, '');
+    if (typeof document !== 'undefined' && document.createElement) {
+      var area = document.createElement('textarea');
+      area.innerHTML = value;
+      value = area.value;
+    } else {
+      value = value.replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"')
+        .replace(/&#39;|&apos;/gi, "'");
+    }
+    return value.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
   function pageMeta(items, sourceCount) {
     Object.defineProperty(items, 'sourceCount', {
       value: sourceCount | 0, enumerable: false, configurable: true
@@ -527,7 +553,7 @@
       rating: num(flat.rating), playCount: num(flat.playcount),
       addedTime: num(flat.addedTime), lastUpdated: num(flat.lastUpdated),
       modificationTime: num(flat.modificationTime),
-      comment: txt(flat.comment), url: txt(flat.url),
+      comment: txt(flat.comment), lyrics: txt(flat.lyrics), url: txt(flat.url),
       fileSize: num(flat.filesize), releaseType: txt(flat.release_type),
       sampleRate: num(flat.samplerate), sampleSize: num(flat.samplesize),
       format: txt(flat.type).toUpperCase(), bitrate: kbps(flat.bitrate)
@@ -671,6 +697,64 @@
     return out;
   }
 
+  /* MusicArtistInfo is optional and owns these read-only commands. Keep its
+     wire contract here so the artist view never has to construct JSON-RPC or
+     infer plugin presence from a list of installed packages. */
+  async function musicArtistInfo(playerId, artistId, artistName) {
+    var available = await canCommand(['musicartistinfo', 'biography']).catch(function () {
+      return false;
+    });
+    if (!available) return { available: false };
+
+    var identity = artistId != null && artistId !== ''
+      ? 'artist_id:' + artistId
+      : 'artist:' + encodeURIComponent(txt(artistName));
+    var responses = await Promise.all([
+      rpc(playerId, ['musicartistinfo', 'biography', identity]).catch(function (error) {
+        return { error: error && error.detail ? error.detail : 'Biography unavailable' };
+      }),
+      rpc(playerId, ['musicartistinfo', 'artistphoto', identity]).catch(function (error) {
+        return { error: error && error.detail ? error.detail : 'Artist photo unavailable' };
+      })
+    ]);
+    var biography = responses[0] || {};
+    var photo = responses[1] || {};
+    return {
+      available: true,
+      biography: readableText(biography.biography),
+      portraitId: biography.portraitid || null,
+      biographyError: txt(biography.error),
+      photoUrl: txt(photo.url),
+      photoCredits: txt(photo.credits),
+      photoError: txt(photo.error)
+    };
+  }
+
+  async function musicAlbumInfo(playerId, albumId) {
+    var caps = await canCommands({
+      review: ['musicartistinfo', 'albumreview'],
+      covers: ['musicartistinfo', 'albumcovers']
+    });
+    if (!caps.review && !caps.covers) return { available: false, review: '', covers: [] };
+    var identity = 'album_id:' + albumId;
+    var responses = await Promise.all([
+      caps.review ? rpc(playerId, ['musicartistinfo', 'albumreview', identity]).catch(function (e) {
+        return { error: e && e.detail ? e.detail : 'Album review unavailable' };
+      }) : {},
+      caps.covers ? rpc(playerId, ['musicartistinfo', 'albumcovers', identity]).catch(function (e) {
+        return { error: e && e.detail ? e.detail : 'Album covers unavailable' };
+      }) : {}
+    ]);
+    return {
+      available: true,
+      review: plainText(responses[0].albumreview), reviewError: txt(responses[0].error),
+      covers: loop(responses[1], 'item_loop').map(function (item) {
+        return { url: txt(item.url), credits: txt(item.credits), size: txt(item.size) };
+      }).filter(function (item) { return item.url; }),
+      coversError: txt(responses[1].error)
+    };
+  }
+
   /* Core LMS 'rating' (Slim/Control/Request.pm dispatches
      ['rating','_item','_rating'] to Commands.pm ratingCommand) uses a 0-100
      scale, 100 being 5 stars in units of 20 -- the same scale songinfo hands
@@ -716,7 +800,7 @@
     var params = [];
     var p = go.params || {};
     Object.keys(p).forEach(function (k) { params.push(k + ':' + p[k]); });
-    return { cmd: go.cmd.slice(), params: params, title: txt(item.title) };
+    return { cmd: go.cmd.slice(), params: params, title: txt(item.text || item.title) };
   }
 
   /* LMS offers a playable OPML item either an explicit `play` action or, more
@@ -740,12 +824,56 @@
     return item.image || item.icon || (item['icon-id'] ? String(item['icon-id']) : null);
   }
 
+  /* Page boundaries from service plugins can repeat an item. Title alone is
+     not identity: two stations may legitimately share one title. Prefer the
+     server id, then the complete action contract which is what distinguishes
+     what the row actually does. Text-only rows fall back to their raw shape so
+     a repeated boundary label can still be recognised. */
+  function opmlIdentity(item, kind) {
+    if (item.id != null) return kind + ':id:' + String(item.id);
+    var actions = item.actions || null;
+    if (actions) return kind + ':actions:' + JSON.stringify(actions);
+    return kind + ':item:' + JSON.stringify({
+      type: item.type || '', style: item.style || '',
+      text: item.text || '', title: item.title || '', name: item.name || '',
+      subtext: item.subtext || '', subtitle: item.subtitle || ''
+    });
+  }
+
+  /* Many LMS service plugins keep identical action definitions in
+     result.base.actions and put only the row-specific values in item.params.
+     Treating only item.actions as authoritative leaves those rows visible but
+     inert, and pagination then rejects every later row as unusable. Expand the
+     shared contract at the API boundary while preserving any row override. */
+  function opmlItemWithBase(result, item) {
+    var baseActions = result && result.base && result.base.actions;
+    if (!baseActions) return item;
+    var out = Object.assign({}, item);
+    var ownActions = item.actions || {};
+    out.actions = {};
+    Object.keys(baseActions).forEach(function (name) {
+      var base = baseActions[name] || {};
+      var own = ownActions[name] || {};
+      var action = Object.assign({}, base, own);
+      var itemParamsKey = action.itemsParams;
+      var rowParams = itemParamsKey && item[itemParamsKey] ? item[itemParamsKey] : {};
+      action.params = Object.assign({}, base.params || {}, rowParams, own.params || {});
+      out.actions[name] = action;
+    });
+    Object.keys(ownActions).forEach(function (name) {
+      if (!out.actions[name]) out.actions[name] = ownActions[name];
+    });
+    return out;
+  }
+
   async function opmlRequest(playerId, node, start, count, extra) {
     var cmd = node.cmd.concat([start | 0, count | 0], node.params, extra || []);
     var r = await rpc(playerId, cmd);
-    return loop(r, 'item_loop').map(function (i) {
+    return loop(r, 'item_loop').map(function (raw) {
+      var i = opmlItemWithBase(r, raw);
       var kind = opmlKind(i);
       return {
+        identity: opmlIdentity(i, kind),
         kind: kind,
         title: txt(i.text || i.title || i.name),
         subtitle: txt(i.subtext || i.subtitle),
@@ -882,6 +1010,8 @@
     forgetSongInfo: forgetSongInfo, playerPref: playerPref,
     setPlayerPref: setPlayerPref, sleep: sleep, sleepRemaining: sleepRemaining,
     syncPlayer: syncPlayer, canCommand: canCommand, canCommands: canCommands,
+    musicArtistInfo: musicArtistInfo,
+    musicAlbumInfo: musicAlbumInfo,
     setRating: setRating,
     OPML_ROOTS: OPML_ROOTS, opmlRoot: opmlRoot,
     opmlBrowse: opmlBrowse, opmlSearch: opmlSearch, opmlPlay: opmlPlay,

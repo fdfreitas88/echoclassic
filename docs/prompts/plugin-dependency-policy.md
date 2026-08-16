@@ -7,6 +7,14 @@ itself. Agents follow this instead of re-deciding per feature.
 
 **Detect and degrade. Never install, never bundle, never enable DSP silently.**
 
+**Degrade means a line in place, never a hole.** Whatever the tier, a feature
+whose backend is missing keeps the row it would have had, states its own
+precondition in that row and carries the Install… action. Nothing is hidden and
+nothing is dead: a feature that disappears cannot tell the user why it is gone,
+and a control that does nothing is worse than a sentence. Decided 2026-08-11 for
+3.3; this supersedes the "hide the entry points" treatment the shipped-with-LMS
+tier carried below.
+
 Why each half is non-negotiable:
 
 - LMS has no dependency resolution. `install.xml` cannot require another
@@ -23,8 +31,11 @@ Why each half is non-negotiable:
 detection, no fallback.
 
 **Ships with LMS, can be disabled.** RandomPlay (AUDIT-02), DSTM (AUDIT-03).
-Detect at startup. When disabled: hide the entry points and show one quiet
-Settings hint naming the plugin. Not an error, not a nag.
+Detect at startup. When disabled: the line stays in place — the feature keeps
+its row, the row states what it needs, and it offers the Install… action, the
+same AUDIT-13 plugin-manager surface that is also where a plugin shipped with
+LMS is re-enabled. Entry points are never hidden and no separate hint is shown.
+Not an error, not a nag.
 
 **Third-party.** SqueezeDSP (AUDIT-20), Group Players (AUDIT-16b),
 MusicArtistInfo (AUDIT-18). When absent, the feature's entire surface is ONE

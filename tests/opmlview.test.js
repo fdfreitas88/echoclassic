@@ -65,6 +65,7 @@ function opmlInstance(extra) {
 
   const self = Object.assign(definition.data(), { root: 'apps', tab: 'apps' });
   self.$nextTick = function (f) { if (f) f.call(self); };
+  self.$refs = {};
   Object.keys(definition.methods).forEach(function (name) {
     self[name] = definition.methods[name].bind(self);
   });
@@ -129,10 +130,132 @@ test('ERR-01: every phrase the view adds is translatable', function () {
   [
     'Check the connection or the service status and try again.',
     'This service did not answer.',
-    'The station did not answer.'
+    'The station did not answer.',
+    'New', 'Load next 100', 'Loading next 100…',
+    'Could not load more items', 'The items already loaded are still available.',
+    'No new items were returned. The items already loaded are still available.',
+    'All 1 item loaded.', 'All {count} items loaded.',
+    'Loaded one more item. {total} items loaded.',
+    'Loaded {count} more items. {total} items loaded.'
   ].forEach(function (phrase) {
     assert.ok(strings.indexOf('\tEN\t' + phrase) >= 0, 'missing from strings.txt: ' + phrase);
   });
+});
+
+function pageItem(id, kind) {
+  kind = kind || 'audio';
+  return {
+    identity: kind + ':id:' + id, kind: kind, title: 'Item ' + id,
+    playNode: kind === 'audio' ? { cmd: ['play'], params: ['id:' + id] } : null,
+    node: kind === 'menu' ? { cmd: ['items'], params: ['id:' + id] } : null
+  };
+}
+
+test('LIST-01: first browse uses a 100-item page and offers continuation only for a full page', async function () {
+  const view = opmlInstance();
+  const calls = [];
+  view.ctx.LmsApi.opmlBrowse = async function (player, node, start, count) {
+    calls.push([player, start, count]);
+    return Array.from({ length: 100 }, function (_, i) { return pageItem(i); });
+  };
+
+  await view.self.load();
+
+  assert.deepEqual(calls, [['p1', 0, 100]]);
+  assert.equal(view.self.items.length, 100);
+  assert.equal(view.self.hasMore, true);
+  assert.equal(view.self.nextStart, 100);
+  assert.match(view.def.template, /opml-new-label/);
+  assert.match(view.def.template, /Load next 100/);
+});
+
+test('LIST-01: next page appends unique usable rows, keeps actions and advances by the server page', async function () {
+  const view = opmlInstance();
+  view.ctx.LmsApi.opmlBrowse = async function (player, node, start, count) {
+    if (start === 0) return Array.from({ length: 100 }, function (_, i) { return pageItem(i); });
+    return [pageItem(99), pageItem(100), { identity: 'bad', kind: 'menu', node: null }];
+  };
+  await view.self.load();
+  await view.self.loadMore();
+
+  assert.equal(view.self.items.length, 101, 'boundary duplicate and malformed row are not appended');
+  assert.equal(view.self.items[100].playNode.params[0], 'id:100', 'the appended row keeps its action');
+  assert.equal(view.self.nextStart, 103, 'offset follows server rows, not the deduplicated visible count');
+  assert.equal(view.self.hasMore, false, 'a short server page ends pagination');
+  assert.match(view.self.pageStatus, /one more item.*101 items loaded/);
+});
+
+test('LIST-01: a full duplicate page stops with no progress instead of looping', async function () {
+  const view = opmlInstance();
+  const first = Array.from({ length: 100 }, function (_, i) { return pageItem(i); });
+  view.ctx.LmsApi.opmlBrowse = async function (player, node, start) {
+    return start ? first.slice() : first.slice();
+  };
+  await view.self.load();
+  await view.self.loadMore();
+
+  assert.equal(view.self.items.length, 100);
+  assert.equal(view.self.hasMore, false);
+  assert.equal(view.self.endReached, true);
+  assert.equal(view.self.noProgress, true);
+  assert.match(view.self.endMessage, /No new items/);
+});
+
+test('LIST-01: a recoverable page error preserves rows and retry uses the same offset', async function () {
+  const view = opmlInstance();
+  let failures = 1;
+  const starts = [];
+  view.ctx.LmsApi.opmlBrowse = async function (player, node, start) {
+    starts.push(start);
+    if (!start) return Array.from({ length: 100 }, function (_, i) { return pageItem(i); });
+    if (failures--) throw qobuzFailure();
+    return [pageItem(100)];
+  };
+  await view.self.load();
+  await view.self.loadMore();
+  assert.equal(view.self.items.length, 100);
+  assert.ok(view.self.pageError);
+  await view.self.loadMore();
+
+  assert.deepEqual(starts, [0, 100, 100]);
+  assert.equal(view.self.items.length, 101);
+  assert.equal(view.self.pageError, '');
+});
+
+test('LIST-01: a response for a player that is no longer selected cannot append', async function () {
+  const view = opmlInstance();
+  let resolvePage;
+  view.ctx.LmsApi.opmlBrowse = function (player, node, start) {
+    if (!start) return Promise.resolve(Array.from({ length: 100 }, function (_, i) { return pageItem(i); }));
+    return new Promise(function (resolve) { resolvePage = resolve; });
+  };
+  await view.self.load();
+  const pending = view.self.loadMore();
+  view.ctx.LmsStore.state.playerId = 'p2';
+  resolvePage([pageItem(100)]);
+  await pending;
+
+  assert.equal(view.self.items.length, 100);
+  assert.equal(view.self.items.some(function (it) { return it.identity === 'audio:id:100'; }), false);
+});
+
+test('LIST-01: changing player during the first page restarts loading for the new player', async function () {
+  const view = opmlInstance();
+  let resolveOld;
+  view.ctx.LmsApi.opmlBrowse = function (player) {
+    if (player === 'p1') return new Promise(function (resolve) { resolveOld = resolve; });
+    return Promise.resolve([pageItem(200)]);
+  };
+  const oldLoad = view.self.load();
+  view.ctx.LmsStore.state.playerId = 'p2';
+  const newLoad = view.def.watch.playerId.call(view.self);
+  await newLoad;
+  resolveOld([pageItem(1)]);
+  await oldLoad;
+
+  assert.equal(view.self.loading, false);
+  assert.equal(view.self.items.length, 1);
+  assert.equal(view.self.items[0].identity, 'audio:id:200');
 });
 
 /* ERR-01, same class in the album screen. `rg "Could not open|Failed to fetch"`

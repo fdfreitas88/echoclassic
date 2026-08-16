@@ -24,6 +24,7 @@ node_modules/
 dist/
 *.tgz
 *.log
+.loop-state.md
 
 # backups gerados pelo INSTALL.sh e por copias manuais
 *.backup-*

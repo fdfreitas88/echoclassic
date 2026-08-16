@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Echo Classic · LIST-01 pagination mockup</title>
+<style>
+:root{
+  --accent:#0077B0;--accent-ink:#fff;--chrome:#f6f6f6;--content:#fff;
+  --text:#18181b;--text2:#66666d;--hair:#c8c8cd;--field:#eeeeef;
+  --field-bd:#b8b8be;--group:#f2f2f7;--danger:#b51d32;--ok:#24714e;
+  --shadow:0 14px 40px rgba(0,0,0,.18);--radius:8px
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;background:#dfe4e8;color:var(--text)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.review{min-height:100vh;display:grid;grid-template-rows:auto 1fr}
+.controls{background:#20252b;color:#fff;padding:12px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.24);z-index:3}
+.controls strong{letter-spacing:.02em;margin-right:auto}.controls label{font-size:12px;color:#d7dde3;display:flex;align-items:center;gap:7px}.controls select{height:34px;border:1px solid #717981;border-radius:5px;background:#343a41;color:#fff;padding:0 28px 0 9px}.controls button{height:34px;border:1px solid #8b949e;border-radius:5px;background:#343a41;color:#fff;padding:0 12px}
+.canvas{padding:24px;display:flex;align-items:center;justify-content:center;overflow:auto}
+.device{width:min(100%,880px);height:680px;background:var(--content);border:1px solid #9ea4ab;border-radius:12px;box-shadow:var(--shadow);overflow:hidden;display:grid;grid-template-rows:48px 1fr 52px;transition:width .2s}
+.device.mobile{width:390px;height:720px}
+.navbar{display:flex;align-items:center;background:var(--chrome);border-bottom:.5px solid var(--hair);padding:0 10px;color:var(--accent)}
+.back,.icon{width:44px;height:44px;border:0;background:transparent;color:var(--accent);font-size:22px}.title{flex:1;text-align:center;font-size:17px;font-weight:600}.navbar .spacer{width:44px}
+.viewport{min-height:0;overflow:auto;background:var(--content);position:relative;scroll-behavior:smooth}
+.search{padding:10px 20px;display:flex;align-items:center;gap:9px;border-bottom:.5px solid var(--hair)}
+.search input{height:38px;min-width:0;flex:1;border:.5px solid var(--field-bd);border-radius:7px;background:var(--field);color:var(--text);padding:0 11px;font-size:14px}.search button{min-width:52px;min-height:44px;border:0;background:transparent;color:var(--accent)}
+.row{height:64px;display:flex;align-items:center;gap:14px;padding:0 14px 0 20px;position:relative;background:var(--content)}
+.row+.row:before{content:"";position:absolute;left:68px;right:0;top:0;height:.5px;background:var(--hair)}
+.art{width:34px;height:34px;flex:0 0 34px;border-radius:50%;display:grid;place-items:center;background:var(--field);color:var(--accent);font-size:17px}
+.copy{min-width:0;flex:1}.name{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:12px;color:var(--text2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-action{width:44px;height:44px;border:0;background:transparent;color:var(--accent);font-size:23px;border-radius:50%}.chev{color:var(--text2);font-size:24px;padding:0 5px}
+.page-zone{padding:15px 20px 20px;background:var(--content);border-top:.5px solid var(--hair);text-align:center}
+.proposal{position:relative}.proposal:before{content:"NEW";position:absolute;right:2px;top:-25px;font:700 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.1em;color:var(--accent)}
+.load{width:100%;min-height:46px;border:2px solid var(--accent);border-radius:7px;background:transparent;color:var(--accent);font-weight:600}.load[disabled]{cursor:default;color:var(--text2);border-color:var(--field-bd)}
+.spinner{display:inline-block;width:14px;height:14px;margin-right:8px;border:2px solid var(--hair);border-top-color:var(--accent);border-radius:50%;vertical-align:-2px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.summary{min-height:46px;display:flex;align-items:center;justify-content:center;gap:9px;color:var(--text2);font-size:13px}.summary strong{color:var(--text)}.summary.ok:before{content:"✓";color:var(--ok);font-weight:700}.summary.stop:before{content:"■";color:var(--text2);font-size:9px}.summary.error{display:block;color:var(--danger);line-height:1.4}.summary.error strong{display:block;color:var(--danger);font-size:14px}.retry{margin-top:10px;min-width:120px;min-height:44px;border:2px solid var(--accent);border-radius:7px;background:transparent;color:var(--accent);font-weight:600}
+.insert-marker{min-height:42px;display:flex;align-items:center;justify-content:center;background:var(--group);border-top:.5px solid var(--hair);border-bottom:.5px solid var(--hair);font-size:12px;color:var(--text2)}
+.insert-marker:focus{outline-offset:-3px}.insert-marker strong{margin:0 4px;color:var(--text)}
+.tabs{display:flex;background:var(--chrome);border-top:.5px solid var(--hair)}.tab{flex:1;border:0;background:transparent;color:var(--text2);font-size:11px}.tab.on{color:var(--accent);font-weight:600}.tab span{display:block;font-size:19px;margin-bottom:2px}
+.sheet-scrim{position:absolute;inset:0;background:rgba(0,0,0,.28);display:flex;align-items:flex-end;justify-content:center;padding:14px}.sheet{width:min(94%,440px);filter:drop-shadow(0 8px 20px rgba(0,0,0,.25))}.sheet-head,.sheet button{width:100%;min-height:48px;border:0;border-bottom:.5px solid var(--hair);background:var(--chrome);color:var(--accent)}.sheet-head{padding:12px;text-align:center;color:var(--text2);font-size:12px;border-radius:9px 9px 0 0}.sheet button:last-of-type{border-radius:0 0 9px 9px}.sheet .cancel{margin-top:8px;border-radius:9px;font-weight:600}
+.annotation{position:fixed;left:18px;bottom:18px;max-width:330px;padding:10px 12px;background:#20252b;color:#fff;border-radius:6px;box-shadow:var(--shadow);font-size:12px;line-height:1.4;z-index:4}.annotation b,.annotation summary{color:#8ed6ff}.annotation summary{cursor:pointer;margin-top:7px;font-weight:700}.annotation table{margin-top:7px;border-collapse:collapse}.annotation td{padding:3px 7px 3px 0;vertical-align:top;border-top:1px solid #48515a}.annotation td:first-child{white-space:nowrap;color:#8ed6ff}
+.dark{--accent:#33B5FF;--accent-ink:#000;--chrome:#1c1c1e;--content:#000;--text:#f2f2f7;--text2:#aaaab2;--hair:#3a3a3c;--field:#1c1c1e;--field-bd:#55555b;--group:#151517;--danger:#ff6379;--ok:#61c995}.dark.device{border-color:#555}
+.legacy{--accent:#0B5FD0;--chrome:#e3e6ea;--content:#fff;--text:#20262d;--text2:#59636f;--hair:#abb3bd;--field:#f1f3f5;--field-bd:#9ca6b1;--group:#dfe3e8}.legacy .navbar,.legacy .tabs{background:linear-gradient(#f4f5f7,#d8dde2)}.legacy .load,.legacy .retry{border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+.device.mobile .canvas{padding:0}.device.mobile .row{height:66px;padding-left:14px}.device.mobile .row+.row:before{left:62px}.device.mobile .page-zone{padding:16px 14px 22px}.device.mobile .proposal:before{right:2px}.device.mobile .search{padding:9px 14px}.device.mobile .annotation{display:none}
+@media(max-width:680px){.canvas{padding:8px}.controls{padding:9px 10px;gap:8px}.controls strong{width:100%}.annotation{display:none}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.spinner{animation:none}}
+</style>
+</head>
+<body>
+<main class="review">
+  <header class="controls">
+    <strong>LIST-01 · review states</strong>
+    <label>State <select id="state"></select></label>
+    <label>Appearance <select id="theme"><option value="light">Light</option><option value="dark">Dark</option><option value="legacy">Legacy</option></select></label>
+    <button id="device" type="button">Mobile width</button>
+  </header>
+  <section class="canvas">
+    <div class="device" id="deviceFrame">
+      <nav class="navbar" aria-label="Browse navigation"><button class="back" aria-label="Back">‹</button><div class="title" id="title">Qobuz favourites</div><div class="spacer"></div></nav>
+      <div class="viewport" id="viewport"></div>
+      <nav class="tabs" aria-label="Primary"><button class="tab"><span>♫</span>Music</button><button class="tab"><span>◉</span>Radio</button><button class="tab on"><span>▦</span>Apps</button><button class="tab"><span>▶</span>Player</button></nav>
+    </div>
+  </section>
+</main>
+<aside class="annotation"><b>Design decision</b><br>The page control is separate from every service row. Item actions never turn into pagination, and newly appended rows arrive after a focusable result summary.
+  <details><summary>Acceptance map</summary><table>
+    <tr><td>AC-01/02</td><td>100-item, 101st, 200+, loading, end</td></tr>
+    <tr><td>AC-03/07</td><td>Stable action sheet, row chevrons</td></tr>
+    <tr><td>AC-04</td><td>Retryable error, no progress</td></tr>
+    <tr><td>AC-05</td><td>Back control + preserved-list contract</td></tr>
+    <tr><td>AC-06</td><td>Mobile focus state + live summary</td></tr>
+    <tr><td>AC-08</td><td>Appearance switch + Portuguese</td></tr>
+    <tr><td>AC-09</td><td>Async interaction contract in brief</td></tr>
+    <tr><td>AC-10</td><td>Small NEW label outside full border</td></tr>
+  </table></details>
+</aside>
+<script>
+(function(){
+  var states=[
+    ['page100','100-item page'],['item101','101st item loaded'],['over200','200+ loaded'],
+    ['loading','Loading next page'],['end','End of list'],['error','Retryable error'],
+    ['noprogress','No-progress response'],['mobilefocus','Mobile focus state'],
+    ['portuguese','Long Portuguese labels'],['actions','Stable row action sheet']
+  ];
+  var select=document.getElementById('state');
+  states.forEach(function(s){var o=document.createElement('option');o.value=s[0];o.textContent=s[1];select.appendChild(o)});
+  function esc(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+  function row(n,kind,longLabel){
+    var name=longLabel||(['Quiet Piano','Baroque Essentials','Lisbon After Dark','The Long Road Home','Studio Masters'][n%5]+' · '+String(n).padStart(3,'0'));
+    var audio=kind!=='menu';
+    return '<div class="row"><div class="art">'+(audio?'♪':'▣')+'</div><div class="copy"><div class="name">'+esc(name)+'</div><div class="meta">'+(audio?'Qobuz · Lossless':'Collection · '+(18+n)+' albums')+'</div></div>'+(audio?'<button class="row-action" aria-label="More actions for '+esc(name)+'">•••</button>':'<span class="chev" aria-hidden="true">›</span>')+'</div>';
+  }
+  function rows(from,count,longLabel){var h='';for(var i=from;i<from+count;i++)h+=row(i,i%4===0?'menu':'audio',longLabel&&i===from?longLabel:null);return h}
+  function search(pt){return '<div class="search"><input aria-label="'+(pt?'Pesquisar neste serviço':'Search this service')+'" placeholder="'+(pt?'Pesquisar neste serviço':'Search this service')+'"><button type="button">'+(pt?'Pesquisar':'Search')+'</button></div>'}
+  function button(label,disabled){return '<div class="page-zone proposal"><button class="load" '+(disabled?'disabled aria-disabled="true"':'')+'>'+label+'</button></div>'}
+  function summary(kind,html,tab){return '<div class="insert-marker summary '+kind+'" role="status" aria-live="polite" '+(tab?'tabindex="-1"':'')+'>'+html+'</div>'}
+  function render(){
+    var s=select.value,v=document.getElementById('viewport'),pt=s==='portuguese',h=search(pt);
+    document.getElementById('title').textContent=pt?'Favoritos do Qobuz':'Qobuz favourites';
+    if(s==='page100'){h+=rows(96,4);h+=button('Load next 100');}
+    if(s==='item101'){h+=rows(97,3)+summary('ok','<strong>1 item added</strong> · 101 loaded',true)+rows(101,1)+button('Load next 100');}
+    if(s==='over200'){h+=rows(197,3)+summary('ok','<strong>100 items added</strong> · 300 loaded',true)+rows(297,3)+button('Load next 100');}
+    if(s==='loading'){h+=rows(96,4)+button('<span class="spinner" aria-hidden="true"></span>Loading next 100…',true);}
+    if(s==='end'){h+=rows(197,4)+'<div class="page-zone">'+summary('ok','<strong>All 201 items loaded</strong>',false)+'</div>';}
+    if(s==='error'){h+=rows(96,4)+'<div class="page-zone proposal"><div class="summary error" role="alert"><strong>Could not load more items</strong>The loaded 100 items are still available.</div><button class="retry">Try again</button></div>';}
+    if(s==='noprogress'){h+=rows(196,4)+'<div class="page-zone">'+summary('stop','<strong>No new items were returned.</strong> The 200 loaded items remain available.',false)+'</div>';}
+    if(s==='mobilefocus'){h+=rows(97,3)+summary('ok','<strong>100 items added</strong> · 200 loaded',true)+rows(197,3)+button('Load next 100');}
+    if(s==='portuguese'){h+=rows(96,4,'Estações selecionadas para ouvir durante uma viagem longa')+button('Carregar os próximos 100');}
+    if(s==='actions'){h+=rows(197,4)+button('Load next 100')+'<div class="sheet-scrim"><div class="sheet"><div class="sheet-head">Studio Masters · 199</div><button>Play now</button><button>Add to queue</button><button>Add to favourites</button><button class="cancel">Cancel</button></div></div>';}
+    v.innerHTML=h;
+    if(s==='mobilefocus'){document.getElementById('deviceFrame').classList.add('mobile');document.getElementById('device').textContent='Desktop width';setTimeout(function(){var m=v.querySelector('[tabindex]');if(m)m.focus()},0)}
+  }
+  select.addEventListener('change',render);
+  document.getElementById('theme').addEventListener('change',function(){var d=document.getElementById('deviceFrame');d.classList.remove('dark','legacy');if(this.value!=='light')d.classList.add(this.value)});
+  document.getElementById('device').addEventListener('click',function(){var d=document.getElementById('deviceFrame');d.classList.toggle('mobile');this.textContent=d.classList.contains('mobile')?'Desktop width':'Mobile width'});
+  render();
+}());
+</script>
+</body>
+</html>

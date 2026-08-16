@@ -1,4 +1,7 @@
 
+var OPML_PAGE_SIZE = 100;
+var opmlSnapshots = {};
+
 /* One component for Radio and Favorites, because in LMS they are the same thing:
    an OPML tree where each item carries the command for its own children. Item
    kinds behave differently — `menu` descends, `audio` plays, `search` asks for
@@ -9,7 +12,7 @@ Vue.component('lms-opml', {
     tab: { type: String, required: true }     // which nav stack to use
   },
   template: `
-<div class="scroller">
+<div ref="scroller" class="scroller">
   <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
   <div v-else-if="error" class="empty">
     <div class="h">Could not open</div><div class="p">{{ error }}</div>
@@ -62,16 +65,34 @@ Vue.component('lms-opml', {
       Open My Music
     </button>
   </div>
-  <div v-if="truncated" class="loading-more warning" role="status">
-    This list has more than 200 items and this screen shows the first 200. Use search to reach the rest.
+  <div v-if="showPageStatus" ref="pageStatus" class="opml-page-status" role="status"
+       aria-live="polite" tabindex="-1">{{ pageStatus }}</div>
+  <div v-if="hasMore || loadingMore || pageError" class="opml-page-zone">
+    <span class="opml-new-label">{{ tr('New') }}</span>
+    <div v-if="pageError" class="opml-page-error" role="alert">
+      <strong>{{ tr('Could not load more items') }}</strong>
+      <span>{{ pageError }}</span>
+      <span>{{ tr('The items already loaded are still available.') }}</span>
+    </div>
+    <button class="opml-page-command" type="button" :disabled="loadingMore"
+            @click="loadMore">
+      {{ loadingMore ? tr('Loading next 100…') : tr(pageError ? 'Try again' : 'Load next 100') }}
+    </button>
+  </div>
+  <div v-else-if="endReached && items.length" class="opml-page-end" role="status">
+    {{ endMessage }}
   </div>
 </div>`,
   data: function () {
     return { items: [], terms: {}, loading: true, error: '',
-             fieldError: '', fieldErrorIndex: null, truncated: false };
+             fieldError: '', fieldErrorIndex: null, hasMore: false,
+             loadingMore: false, pageError: '', pageStatus: '',
+             showPageStatus: false, endReached: false, noProgress: false,
+             nextStart: 0, requestToken: 0, activeKey: '' };
   },
   computed: {
     frame: function () { return LmsNav.top(this.tab); },
+    playerId: function () { return LmsStore.state.playerId || ''; },
     rootLabel: function () {
       if (this.root === 'radio') return 'Radio';
       if (this.root === 'apps') return 'Apps';
@@ -118,15 +139,54 @@ Vue.component('lms-opml', {
         return 'No service is installed. Install a service plugin, such as Qobuz, in Server Settings > Plugins.';
       }
       return 'You have not added any favourites yet. Use “Add to Favourites” in the menu of a track or station.';
+    },
+    endMessage: function () {
+      if (this.noProgress) {
+        return this.tr('No new items were returned. The items already loaded are still available.');
+      }
+      if (this.items.length === 1) return this.tr('All 1 item loaded.');
+      return this.tr('All {count} items loaded.').replace('{count}', String(this.items.length));
     }
   },
   watch: {
-    frame: function () { this.load(); }
+    frame: function () { return this.load(); },
+    playerId: function () { return this.load(); }
   },
   methods: {
     node: function () {
       var f = this.frame;
       return f && f.node ? f.node : LmsApi.opmlRoot(this.root);
+    },
+    stateKey: function () {
+      var f = this.frame;
+      var node = this.node();
+      return [this.tab, this.playerId,
+        JSON.stringify(node || {}), f && f.term ? f.term : ''].join('|');
+    },
+    saveSnapshot: function () {
+      if (!this.activeKey || this.loading) return;
+      opmlSnapshots[this.activeKey] = {
+        items: this.items.slice(), terms: Object.assign({}, this.terms),
+        hasMore: this.hasMore, endReached: this.endReached,
+        noProgress: this.noProgress, nextStart: this.nextStart,
+        scroll: this.$refs.scroller ? this.$refs.scroller.scrollTop : 0
+      };
+    },
+    restoreSnapshot: function (key) {
+      var saved = opmlSnapshots[key];
+      if (!saved) return false;
+      this.items = saved.items.slice();
+      this.terms = Object.assign({}, saved.terms);
+      this.hasMore = saved.hasMore;
+      this.endReached = saved.endReached;
+      this.noProgress = saved.noProgress;
+      this.nextStart = saved.nextStart;
+      this.loading = false;
+      var self = this;
+      this.$nextTick(function () {
+        if (self.$refs.scroller) self.$refs.scroller.scrollTop = saved.scroll || 0;
+      });
+      return true;
     },
     isTuneUrl: function (it) {
       return /\burl\b/i.test((it && it.title) || '');
@@ -180,6 +240,7 @@ Vue.component('lms-opml', {
     activate: function (it) {
       if (!this.actionable(it)) return;
       if (it.kind === 'menu') {
+        this.saveSnapshot();
         LmsNav.push(this.tab, { kind: 'opml', label: it.title, node: it.node });
         return;
       }
@@ -208,12 +269,14 @@ Vue.component('lms-opml', {
         return;
       }
       this.clearFieldError(i);
+      this.saveSnapshot();
       this.loading = true;
       try {
         var hits = await LmsApi.opmlSearch(LmsStore.state.playerId || '',
-                                           it.node || this.node(), term, 0, 200);
+                                           it.node || this.node(), term, 0, OPML_PAGE_SIZE);
         LmsNav.push(this.tab, {
-          kind: 'opml', label: this.tr('Results:') + ' ' + term, term: term, preloaded: hits
+          kind: 'opml', label: this.tr('Results:') + ' ' + term, term: term,
+          node: it.node || this.node(), preloaded: hits
         });
       } catch (e) {
         /* A lista atual continua valida; o problema foi desta consulta. */
@@ -223,30 +286,101 @@ Vue.component('lms-opml', {
     },
     load: async function () {
       var f = this.frame;
+      var key = this.stateKey();
+      var token = ++this.requestToken;
+      var playerId = LmsStore.state.playerId || '';
+      this.activeKey = key;
       this.fieldError = '';
       this.fieldErrorIndex = null;
-      this.truncated = false;
+      this.pageError = '';
+      this.pageStatus = '';
+      this.showPageStatus = false;
+      this.endReached = false;
+      this.noProgress = false;
+      if (this.restoreSnapshot(key)) return;
       if (f && f.preloaded) {
         this.items = f.preloaded;
-        this.truncated = f.preloaded.length >= 200;
+        this.nextStart = f.preloaded.length;
+        this.hasMore = f.preloaded.length >= OPML_PAGE_SIZE;
+        this.endReached = !this.hasMore;
         this.loading = false;
         return;
       }
       this.loading = true;
       this.error = '';
       try {
-        this.items = await LmsApi.opmlBrowse(LmsStore.state.playerId || '', this.node(), 0, 200);
-        /* opmlRequest nao passa por pageMeta, entao nao existe sourceCount a
-           consultar: bater exatamente no teto e o unico sinal disponivel.
-           Importa mais agora que a aba Apps usa esta mesma lista - uma pasta do
-           Qobuz com mais de 200 itens terminava sem dizer nada. */
-        this.truncated = this.items.length >= 200;
+        var first = await LmsApi.opmlBrowse(playerId, this.node(), 0, OPML_PAGE_SIZE);
+        if (token !== this.requestToken || key !== this.activeKey ||
+            playerId !== (LmsStore.state.playerId || '')) return;
+        this.items = first;
+        this.nextStart = first.length;
+        this.hasMore = first.length >= OPML_PAGE_SIZE;
+        this.endReached = !this.hasMore;
       } catch (e) {
+        if (token !== this.requestToken || key !== this.activeKey) return;
         this.error = this.serviceError(e, 'This service did not answer.');
         this.items = [];
       }
       this.loading = false;
+    },
+    pageItemUsable: function (it) {
+      return it && (it.kind === 'text' || it.kind === 'search' || this.actionable(it));
+    },
+    loadMore: async function () {
+      if (this.loadingMore || (!this.hasMore && !this.pageError)) return;
+      var token = ++this.requestToken;
+      var key = this.activeKey;
+      var playerId = LmsStore.state.playerId || '';
+      var start = this.nextStart;
+      var f = this.frame;
+      this.loadingMore = true;
+      this.pageError = '';
+      this.showPageStatus = false;
+      try {
+        var page = f && f.term
+          ? await LmsApi.opmlSearch(playerId, this.node(), f.term, start, OPML_PAGE_SIZE)
+          : await LmsApi.opmlBrowse(playerId, this.node(), start, OPML_PAGE_SIZE);
+        if (token !== this.requestToken || key !== this.activeKey ||
+            playerId !== (LmsStore.state.playerId || '')) return;
+        this.nextStart += page.length;
+        var seen = {};
+        this.items.forEach(function (it) { if (it.identity) seen[it.identity] = true; });
+        var added = [];
+        var self = this;
+        page.forEach(function (it) {
+          if (!self.pageItemUsable(it)) return;
+          if (it.identity && seen[it.identity]) return;
+          if (it.identity) seen[it.identity] = true;
+          added.push(it);
+        });
+        if (added.length) this.items = this.items.concat(added);
+        this.hasMore = page.length >= OPML_PAGE_SIZE && added.length > 0;
+        this.endReached = !this.hasMore;
+        this.noProgress = page.length >= OPML_PAGE_SIZE && !added.length;
+        this.pageStatus = added.length === 1
+          ? this.tr('Loaded one more item. {total} items loaded.')
+              .replace('{total}', String(this.items.length))
+          : this.tr('Loaded {count} more items. {total} items loaded.')
+              .replace('{count}', String(added.length)).replace('{total}', String(this.items.length));
+        this.showPageStatus = added.length > 0;
+        this.saveSnapshot();
+        if (this.showPageStatus) {
+          this.$nextTick(function () {
+            if (self.$refs.pageStatus) self.$refs.pageStatus.focus();
+          });
+        }
+      } catch (e) {
+        if (token !== this.requestToken || key !== this.activeKey) return;
+        this.pageError = this.serviceError(e, 'Could not load more items');
+        this.hasMore = true;
+      } finally {
+        if (token === this.requestToken) this.loadingMore = false;
+      }
     }
   },
-  created: function () { this.load(); }
+  created: function () { this.load(); },
+  beforeDestroy: function () {
+    this.saveSnapshot();
+    this.requestToken++;
+  }
 });

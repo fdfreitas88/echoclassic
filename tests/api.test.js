@@ -126,3 +126,110 @@ test('canCommands nao derruba o mapa inteiro quando uma sonda falha', async func
   assert.equal(caps.rating, false);
   assert.equal(caps.randomplay, true);
 });
+
+test('ARTMETA-01: MusicArtistInfo is capability-gated and uses the canonical artist id', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'can') return { _can: 1 };
+    if (cmd[1] === 'biography') return { biography: 'Local biography', portraitid: 'p7' };
+    if (cmd[1] === 'artistphoto') return { url: 'imageproxy/mai/artist/7/image.png', credits: 'Photographer' };
+    return {};
+  });
+  const info = await ctx.api.musicArtistInfo('p1', 7, 'Ignored fallback');
+  assert.equal(info.available, true);
+  assert.equal(info.biography, 'Local biography');
+  assert.equal(info.photoCredits, 'Photographer');
+  assert.deepEqual(ctx.calls[1], ['musicartistinfo', 'biography', 'artist_id:7']);
+  assert.deepEqual(ctx.calls[2], ['musicartistinfo', 'artistphoto', 'artist_id:7']);
+});
+
+test('ARTMETA-01: plugin biography HTML is normalized to readable text at the API boundary', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'can') return { _can: 1 };
+    if (cmd[1] === 'biography') return { biography: '<link rel="stylesheet"><p>The <b>Beatles</b> &amp; friends.</p><h2>History</h2>' };
+    return {};
+  });
+  const info = await ctx.api.musicArtistInfo('p1', 7, 'The Beatles');
+  assert.equal(info.biography, 'The Beatles & friends.\n\nHistory');
+  assert.doesNotMatch(info.biography, /<[^>]+>/);
+});
+
+test('ARTMETA-01: absent capability avoids enrichment calls', async function () {
+  const ctx = apiContext(function () { return { _can: 0 }; });
+  const info = await ctx.api.musicArtistInfo('p1', 7, 'Artist');
+  assert.equal(info.available, false);
+  assert.equal(ctx.calls.length, 1);
+  assert.deepEqual(ctx.calls[0], ['can', 'musicartistinfo', 'biography', '?']);
+});
+
+test('ARTMETA-01: name fallback is URI escaped only when there is no local id', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'can') return { _can: 1 };
+    return {};
+  });
+  await ctx.api.musicArtistInfo('', null, 'AC/DC & Friends');
+  assert.deepEqual(ctx.calls[1], ['musicartistinfo', 'biography', 'artist:AC%2FDC%20%26%20Friends']);
+});
+
+test('ARTMETA-01: album review and cover candidates use documented album_id calls', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'can') return { _can: 1 };
+    if (cmd[1] === 'albumreview') return { albumreview: '<p>Review &amp; notes</p><script>bad()</script>' };
+    if (cmd[1] === 'albumcovers') return { item_loop: [{ url: 'https://img/1.jpg', credits: 'A', size: '600x600' }] };
+    return {};
+  });
+  const info = await ctx.api.musicAlbumInfo('p1', 42);
+  assert.equal(info.review, 'Review & notes');
+  assert.equal(info.covers[0].credits, 'A');
+  assert.ok(ctx.calls.some(function (cmd) { return cmd.join(' ') === 'musicartistinfo albumreview album_id:42'; }));
+  assert.ok(ctx.calls.some(function (cmd) { return cmd.join(' ') === 'musicartistinfo albumcovers album_id:42'; }));
+});
+
+test('LIST-01: OPML paging carries stable action identity and the requested window', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'apps') {
+      return { item_loop: [
+        { type: 'audio', title: 'Same title', actions: { play: { cmd: ['one'], params: { id: 1 } } } },
+        { type: 'audio', title: 'Same title', actions: { play: { cmd: ['two'], params: { id: 2 } } } }
+      ] };
+    }
+    return {};
+  });
+  const items = await ctx.api.opmlBrowse('p1', ctx.api.opmlRoot('apps'), 100, 100);
+
+  assert.deepEqual(ctx.calls[0], ['apps', 100, 100, 'menu:apps']);
+  assert.equal(items.length, 2);
+  assert.notEqual(items[0].identity, items[1].identity,
+    'same-title rows remain distinct when their actions differ');
+  assert.deepEqual(plain(items[1].playNode), { cmd: ['two'], params: ['id:2'], title: 'Same title' });
+});
+
+test('LIST-01: shared LMS base actions make Qobuz rows actionable on every page', async function () {
+  const ctx = apiContext(function () {
+    return {
+      base: {
+        actions: {
+          go: {
+            cmd: ['qobuz', 'items'],
+            params: { menu: 'qobuz' },
+            itemsParams: 'params'
+          }
+        }
+      },
+      item_loop: [
+        { type: 'playlist', text: 'Second page album', params: { item_id: '2.1.100' } }
+      ]
+    };
+  });
+
+  const items = await ctx.api.opmlBrowse('p1', {
+    cmd: ['qobuz', 'items'], params: ['item_id:2.1'], title: 'Releases'
+  }, 100, 100);
+
+  assert.equal(items[0].kind, 'menu');
+  assert.deepEqual(plain(items[0].node), {
+    cmd: ['qobuz', 'items'],
+    params: ['menu:qobuz', 'item_id:2.1.100'],
+    title: 'Second page album'
+  });
+  assert.match(items[0].identity, /item_id.*2\.1\.100/);
+});

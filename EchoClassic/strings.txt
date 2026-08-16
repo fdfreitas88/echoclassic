@@ -1516,6 +1516,50 @@ ECHOCLASSIC_UI_OPML_LIST_TRUNCATED
 	EN	This list has more than 200 items and this screen shows the first 200. Use search to reach the rest.
 	PT	Esta lista tem mais de 200 itens e esta tela mostra os 200 primeiros. Use a busca para chegar ao resto.
 
+ECHOCLASSIC_UI_NEW
+	EN	New
+	PT	Novo
+
+ECHOCLASSIC_UI_NEW_FEATURE
+	EN	New feature
+	PT	Novo recurso
+
+ECHOCLASSIC_UI_LOAD_NEXT_100
+	EN	Load next 100
+	PT	Carregar os próximos 100
+
+ECHOCLASSIC_UI_LOADING_NEXT_100
+	EN	Loading next 100…
+	PT	Carregando os próximos 100…
+
+ECHOCLASSIC_UI_COULD_NOT_LOAD_MORE_ITEMS
+	EN	Could not load more items
+	PT	Não foi possível carregar mais itens
+
+ECHOCLASSIC_UI_ITEMS_ALREADY_LOADED_AVAILABLE
+	EN	The items already loaded are still available.
+	PT	Os itens já carregados continuam disponíveis.
+
+ECHOCLASSIC_UI_NO_NEW_ITEMS_RETURNED
+	EN	No new items were returned. The items already loaded are still available.
+	PT	Nenhum item novo foi retornado. Os itens já carregados continuam disponíveis.
+
+ECHOCLASSIC_UI_ALL_ONE_ITEM_LOADED
+	EN	All 1 item loaded.
+	PT	O único item foi carregado.
+
+ECHOCLASSIC_UI_ALL_COUNT_ITEMS_LOADED
+	EN	All {count} items loaded.
+	PT	Todos os {count} itens foram carregados.
+
+ECHOCLASSIC_UI_LOADED_ONE_MORE_ITEM
+	EN	Loaded one more item. {total} items loaded.
+	PT	Mais um item carregado. {total} itens carregados.
+
+ECHOCLASSIC_UI_LOADED_COUNT_MORE_ITEMS
+	EN	Loaded {count} more items. {total} items loaded.
+	PT	Mais {count} itens carregados. {total} itens carregados.
+
 ECHOCLASSIC_UI_DISCOGRAPHY_TRUNCATED
 	EN	This artist's discography has more than 200 albums and this screen shows the first 200.
 	PT	A discografia deste artista tem mais de 200 álbuns e esta tela mostra os 200 primeiros.
@@ -2064,6 +2108,46 @@ ECHOCLASSIC_UI_CROSSFADE_ON_HINT
 	EN	On: crossfade — the end of one song blends into the start of the next
 	PT	Ligado: transição — o final de uma faixa se mistura ao início da próxima
 
+ECHOCLASSIC_UI_REPLAY_GAIN
+	EN	Replay gain
+	PT	Ganho de reprodução
+
+ECHOCLASSIC_UI_REPLAY_GAIN_OFF
+	EN	Off
+	PT	Desligado
+
+ECHOCLASSIC_UI_REPLAY_GAIN_TRACK
+	EN	Track
+	PT	Faixa
+
+ECHOCLASSIC_UI_REPLAY_GAIN_ALBUM
+	EN	Album
+	PT	Álbum
+
+ECHOCLASSIC_UI_REPLAY_GAIN_SMART
+	EN	Smart
+	PT	Inteligente
+
+ECHOCLASSIC_UI_REPLAY_GAIN_OFF_HINT
+	EN	Off: every recording plays at the loudness it was mastered at.
+	PT	Desligado: cada gravação toca no volume em que foi masterizada.
+
+ECHOCLASSIC_UI_REPLAY_GAIN_TRACK_HINT
+	EN	Track: every song plays at a similar loudness.
+	PT	Faixa: todas as músicas tocam num volume parecido.
+
+ECHOCLASSIC_UI_REPLAY_GAIN_ALBUM_HINT
+	EN	Album: loudness differences within an album are kept.
+	PT	Álbum: as diferenças de volume dentro de um álbum são preservadas.
+
+ECHOCLASSIC_UI_REPLAY_GAIN_SMART_HINT
+	EN	Smart: album gain for a whole album, track gain when shuffling.
+	PT	Inteligente: ganho de álbum ao ouvir um álbum inteiro, ganho de faixa no modo aleatório.
+
+ECHOCLASSIC_UI_REPLAY_GAIN_NO_PLAYER
+	EN	Available when a player is connected.
+	PT	Disponível quando há um player conectado.
+
 ECHOCLASSIC_UI_ACCENT
 	EN	Accent
 	PT	Destaque
@@ -2156,6 +2240,10 @@ ECHOCLASSIC_UI_SHOW_LESS
 	EN	Show less
 	PT	Mostrar menos
 
+ECHOCLASSIC_UI_READ_REVIEW
+	EN	Read review
+	PT	Ler resenha
+
 ECHOCLASSIC_UI_MIXED_SOURCES
 	EN	Mixed sources
 	PT	Origens mistas
@@ -2203,3 +2291,211 @@ ECHOCLASSIC_UI_SHOW_MORE_RESULTS
 ECHOCLASSIC_UI_USES_APP_APPEARANCE
 	EN	Uses the app theme, accent and font.
 	PT	Usa o tema, o destaque e a fonte do app.
+
+ECHOCLASSIC_UI_LYRICS
+	EN	Lyrics
+	PT	Letra
+
+ECHOCLASSIC_UI_FROM_THE_FILE_S_OWN_TAGS
+	EN	From the file's own tags
+	PT	Das próprias tags do arquivo
+
+ECHOCLASSIC_UI_WORKING
+	EN	Working
+	PT	Em andamento
+
+ECHOCLASSIC_UI_NOW_SCANNING
+	EN	Now scanning
+	PT	Verificando agora
+
+ECHOCLASSIC_UI_THE_SERVER_IS_REPORTING_THIS_ACTIVITY_NOW
+	EN	The server is reporting this activity now.
+	PT	O servidor está informando esta atividade agora.
+
+ECHOCLASSIC_UI_SCAN_ERRORS
+	EN	Scan errors
+	PT	Erros da varredura
+
+ECHOCLASSIC_UI_NONE
+	EN	None
+	PT	Nenhum
+
+ECHOCLASSIC_UI_THE_SCAN_CONTINUES_AUTOMATICALLY_AFTER_RECOVERABLE_ERRORS
+	EN	The scan continues automatically after recoverable errors.
+	PT	A varredura continua automaticamente após erros recuperáveis.
+
+ECHOCLASSIC_UI_NO_SCAN_ERRORS_RECORDED
+	EN	No scan errors recorded.
+	PT	Nenhum erro de varredura registrado.
+
+ECHOCLASSIC_UI_NOT_RETRYABLE_BY_THIS_LMS
+	EN	Not retryable by this LMS
+	PT	Não é possível repetir neste LMS
+
+ECHOCLASSIC_UI_IGNORE
+	EN	Ignore
+	PT	Ignorar
+
+ECHOCLASSIC_UI_CLEAR_IGNORED
+	EN	Clear ignored
+	PT	Limpar ignorados
+
+ECHOCLASSIC_UI_IGNORED_ERRORS
+	EN	Ignored errors
+	PT	Erros ignorados
+
+ECHOCLASSIC_UI_CLEAR_IGNORED_SCAN_ERRORS
+	EN	Clear ignored scan errors?
+	PT	Limpar os erros de varredura ignorados?
+
+ECHOCLASSIC_UI_CONTINUING_AFTER_RECOVERABLE_ERRORS
+	EN	Continuing after recoverable errors.
+	PT	Continuando após erros recuperáveis.
+
+ECHOCLASSIC_UI_RETRY_FOLDER
+	EN	Retry folder
+	PT	Repetir pasta
+
+ECHOCLASSIC_UI_RETRY_ALL
+	EN	Retry all
+	PT	Repetir todos
+
+ECHOCLASSIC_UI_THE_SCAN_STOPPED_START_IT_AGAIN_FROM_LMS_SETTINGS
+	EN	The scan stopped. Start it again from LMS settings.
+	PT	A varredura parou. Inicie-a novamente nos ajustes do LMS.
+
+ECHOCLASSIC_UI_THE_SCAN_STATUS_IS_UNAVAILABLE_WHILE_THE_SERVER_IS_DISCONNECTED
+	EN	The scan status is unavailable while the server is disconnected.
+	PT	O estado da varredura não está disponível enquanto o servidor está desconectado.
+
+ECHOCLASSIC_UI_FILE_FORMAT
+	EN	File format
+	PT	Formato do arquivo
+
+ECHOCLASSIC_UI_VALUE
+	EN	Value
+	PT	Valor
+
+ECHOCLASSIC_UI_ARTIST_INFORMATION
+	EN	Artist information
+	PT	Informações do artista
+
+ECHOCLASSIC_UI_FINDING_ARTIST_INFORMATION
+	EN	Finding artist information…
+	PT	Buscando informações do artista…
+
+ECHOCLASSIC_UI_ARTIST_INFORMATION_REQUIRES_MUSICARTISTINFO
+	EN	Artist information requires MusicArtistInfo.
+	PT	As informações do artista requerem o MusicArtistInfo.
+
+ECHOCLASSIC_UI_INSTALL_PLUGIN
+	EN	Install plugin
+	PT	Instalar plugin
+
+ECHOCLASSIC_UI_MUSICARTISTINFO_IS_TEMPORARILY_UNAVAILABLE_YOUR_LOCAL_LIBRARY_IS_UNCHANGED
+	EN	MusicArtistInfo is temporarily unavailable. Your local library is unchanged.
+	PT	O MusicArtistInfo está temporariamente indisponível. Sua biblioteca local não foi alterada.
+
+ECHOCLASSIC_UI_ARTIST_PHOTO
+	EN	Artist photo
+	PT	Foto do artista
+
+ECHOCLASSIC_UI_NO_ARTIST_BIOGRAPHY_WAS_FOUND
+	EN	No artist biography was found.
+	PT	Nenhuma biografia do artista foi encontrada.
+
+ECHOCLASSIC_UI_PHOTO_CREDIT
+	EN	Photo credit
+	PT	Crédito da foto
+
+ECHOCLASSIC_UI_PROVIDED_BY_MUSICARTISTINFO_FROM_WIKIPEDIA_LASTFM_DISCOGS_AND_MUSICBRAINZ
+	EN	Provided by MusicArtistInfo from Wikipedia, Last.fm, Discogs and MusicBrainz.
+	PT	Fornecido pelo MusicArtistInfo a partir de Wikipedia, Last.fm, Discogs e MusicBrainz.
+
+ECHOCLASSIC_UI_RETRIEVED
+	EN	Retrieved
+	PT	Obtido em
+
+ECHOCLASSIC_UI_MATCHED_BY_STABLE_LOCAL_ARTIST_IDENTITY
+	EN	Matched by stable local artist identity.
+	PT	Correspondência pela identidade local estável do artista.
+
+ECHOCLASSIC_UI_REVIEW_MATCH_ONLY_THE_ARTIST_NAME_IS_AVAILABLE_CONFIRM_BEFORE_LOADING_ENRICHMENT
+	EN	Review match: only the artist name is available. Confirm before loading enrichment.
+	PT	Revise a correspondência: apenas o nome do artista está disponível. Confirme antes de carregar informações adicionais.
+
+ECHOCLASSIC_UI_USE_THIS_MATCH
+	EN	Use this match
+	PT	Usar esta correspondência
+
+ECHOCLASSIC_UI_REFRESH
+	EN	Refresh
+	PT	Atualizar
+
+ECHOCLASSIC_UI_REMOVE
+	EN	Remove
+	PT	Remover
+
+ECHOCLASSIC_UI_ENRICHMENT_REMOVED_YOUR_LOCAL_LIBRARY_IS_UNCHANGED
+	EN	Enrichment removed. Your local library is unchanged.
+	PT	As informações adicionais foram removidas. Sua biblioteca local não foi alterada.
+
+ECHOCLASSIC_UI_FIND_METADATA
+	EN	Find metadata
+	PT	Buscar metadados
+
+ECHOCLASSIC_UI_ALSO_ON_CONNECTED_SERVICES
+	EN	Also on connected services
+	PT	Também em serviços conectados
+
+ECHOCLASSIC_UI_ALBUM_INFORMATION
+	EN	Album information
+	PT	Informações do álbum
+
+ECHOCLASSIC_UI_FINDING_ALBUM_INFORMATION
+	EN	Finding album information…
+	PT	Buscando informações do álbum…
+
+ECHOCLASSIC_UI_COVER_CANDIDATES
+	EN	Cover candidates
+	PT	Opções de capa
+
+ECHOCLASSIC_UI_COVER_CANDIDATE
+	EN	Cover candidate
+	PT	Opção de capa
+
+ECHOCLASSIC_UI_REFERENCE_ARTWORK
+	EN	Reference artwork
+	PT	Capas de referência
+
+ECHOCLASSIC_UI_HIDE_FOR_NOW
+	EN	Hide for now
+	PT	Ocultar por enquanto
+
+ECHOCLASSIC_UI_LANGUAGE
+	EN	Language
+	PT	Idioma
+
+ECHOCLASSIC_UI_CHOOSING_A_LANGUAGE_RELOADS_THE_PAGE_ENGLISH_IS_THE_ORIGINAL_TEXT_THE_OTHERS_ARE_TRANSLATIONS_SHIPPED_WITH_THE_SKIN
+	EN	Choosing a language reloads the page. English is the original text; the others are translations shipped with the skin.
+	PT	Escolher um idioma recarrega a página. O inglês é o texto original; os demais são traduções incluídas na skin.
+
+ECHOCLASSIC_UI_ALBUM_INFORMATION_REQUIRES_MUSICARTISTINFO
+	EN	Album information requires MusicArtistInfo.
+	PT	As informações do álbum requerem o MusicArtistInfo.
+
+ECHOCLASSIC_UI_PROVIDED_BY_MUSICARTISTINFO_FROM_LASTFM_DISCOGS_AND_MUSICBRAINZ
+	EN	Provided by MusicArtistInfo from Last.fm, Discogs and MusicBrainz.
+	PT	Fornecido pelo MusicArtistInfo a partir de Last.fm, Discogs e MusicBrainz.
+
+ECHOCLASSIC_UI_ALBUM_INFORMATION_IS_TEMPORARILY_UNAVAILABLE
+	EN	Album information is temporarily unavailable.
+	PT	As informações do álbum estão temporariamente indisponíveis.
+
+ECHOCLASSIC_UI_READ_BIOGRAPHY
+	EN	Read biography
+	PT	Ler biografia
+
+ECHOCLASSIC_UI_SHOW_LESS
+	EN	Show less
+	PT	Mostrar menos

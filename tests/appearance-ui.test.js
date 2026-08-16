@@ -542,7 +542,11 @@ test('Advanced LMS settings relies on the app navbar, not a duplicate inner sett
     src.indexOf('<div v-else-if="ui.appearanceScreen"')
   );
   assert.match(branch, /<iframe ref="advancedFrame"/);
-  assert.match(branch, /src="\/echoclassic\/settings\/server\/basic\.html"/);
+  assert.match(branch, /:src="advancedFrameSrc"/);
+  assert.match(src, /return \/\^\\\/echoclassic\\\/settings\\\/server/,
+    'dynamic handoffs remain restricted to same-origin LMS server settings pages');
+  assert.match(src, /'\/echoclassic\/settings\/server\/basic\.html'/,
+    'the normal Advanced Settings entry still opens Basic Settings');
   assert.doesNotMatch(branch, /advanced-settings-toolbar/);
   assert.doesNotMatch(branch, /advancedBack/);
   assert.doesNotMatch(branch, />\s*LMS settings\s*</);
@@ -620,6 +624,16 @@ test('Advanced LMS settings iframe receives Echo Classic theme tokens and CSS on
   assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('#saveSettings') >= 0);
   assert.equal(nodes['echoclassic-advanced-theme'].textContent.indexOf('ul.tabs,.tabs,#tabs,#settingsTabs{display:flex'), -1);
   assert.equal(nodes['echoclassic-advanced-theme'].textContent.indexOf('ul.tabs li,.tabs li,#tabs li,#settingsTabs li{display:block'), -1);
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('padding:18px 20px 18px 342px') >= 0,
+    'wide advanced settings must not reserve a second footer-sized blank area');
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-advanced-content{box-sizing:border-box;width:100%!important;max-width:none') >= 0,
+    'advanced content must use the available responsive width');
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-conversion-wrap{box-sizing:border-box;width:100%;max-width:none') >= 0,
+    'conversion tables must not stop at a fixed desktop width');
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('.ec-scan-region{box-sizing:border-box;width:100%!important;max-width:none') >= 0,
+    'scan details must not stop at a fixed desktop width');
+  assert.ok(nodes['echoclassic-advanced-theme'].textContent.indexOf('body:not(.ec-plugin-store) #innerSettingsBlock{height:auto!important') >= 0,
+    'native LMS content must not be trapped in a fixed-height nested scroller');
 });
 
 test('Advanced LMS settings uses a Material-style iframe controller over the real LMS form', function () {
@@ -683,6 +697,91 @@ test('native Advanced LMS checkboxes keep submission wiring but gain labels and 
   assert.match(settings, /\.ec-native-switch-hit\{box-sizing:border-box;display:inline-flex!important;width:44px;height:44px/);
   assert.match(settings, /input\.ec-native-checkbox:focus-visible\+\.ec-native-switch-hit \.ec-native-switch\{outline:3px/);
   assert.match(settings, /this\.decorateAdvancedCheckboxes\(doc\)/);
+});
+
+test('SETVIS-01: Advanced File Types keeps native selects in a responsive Echo table', function () {
+  const settings = settingsSrc();
+  assert.match(settings, /decorateAdvancedConversionTables: function/);
+  assert.match(settings, /headers\.indexOf\('stream format'\)/);
+  assert.match(settings, /headers\.indexOf\('decoder'\)/);
+  assert.match(settings, /table\.classList\.add\('ec-conversion-table'\)/);
+  assert.match(settings, /headerRow\.classList\.add\('ec-conversion-header'\)/,
+    'native tbody-based table headers must be identifiable at narrow widths');
+  assert.match(settings, /wrap\.appendChild\(table\)/);
+  assert.match(settings, /advancedNewLabel\(doc, wrap\.parentNode, 'conversion-table', wrap\)/);
+  assert.match(settings, /\.ec-conversion-wrap\{[^}]*overflow-x:auto!important/);
+  assert.match(settings, /\.ec-advanced-content\{[^}]*max-width:none!important/);
+  assert.match(settings, /\.ec-conversion-wrap\{[^}]*max-width:none/);
+  assert.match(settings, /\.ec-conversion-table thead,\.ec-conversion-table tr\.ec-conversion-header\{display:none!important/);
+  assert.match(settings, /\.ec-conversion-table tr\{display:grid!important/);
+  assert.match(settings, /\.ec-conversion-table tr\.ec-conversion-empty\{display:none!important;\}/,
+    'empty native spacer rows must stay hidden at every viewport width');
+  assert.match(settings, /row\.setAttribute\('data-ec-format', sourceFormat/);
+  assert.match(settings, /\.ec-conversion-table select\{[^}]*width:100%!important/);
+  assert.match(settings, /this\.decorateAdvancedConversionTables\(doc\)/);
+});
+
+test('SETVIS-01: scan details use semantic gauges and a verbose live activity field', function () {
+  const settings = settingsSrc();
+  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
+  assert.deepEqual(JSON.parse(JSON.stringify(inst.self.advancedScanProgress('Qobuz Albums (286 of 431) Scanning 00:01:48'))), {
+    text: 'Qobuz Albums (286 of 431) Scanning 00:01:48',
+    now: 286,
+    total: 431,
+    percent: 66,
+    complete: false,
+    failed: false,
+    active: true
+  });
+  assert.equal(inst.self.advancedScanProgress('Album covers (5 of 5) Complete').percent, 100);
+  assert.match(settings, /decorateAdvancedScanDetails: function/);
+  assert.match(settings, /setAttribute\('role', 'progressbar'\)/);
+  assert.match(settings, /setAttribute\('aria-valuenow', String\(info\.now\)\)/);
+  assert.match(settings, /setAttribute\('aria-live', 'polite'\)/);
+  assert.match(settings, /self\.tr\('Now scanning'\)/);
+  assert.match(settings, /advancedNewLabel\(doc, parent, 'scan-gauges', gauges\[0\]\.node\)/);
+  assert.match(settings, /\.ec-feature-new\{[^}]*border:1px solid var\(--accent\)!important/);
+  assert.match(settings, /\.ec-scan-region\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(settings, /\.ec-native-scan-progress\{display:none!important/);
+  assert.match(settings, /removeAdvancedNativeScanMarks: function/);
+  assert.match(settings, /replace\(\/\[\.\\u2022/);
+  assert.match(settings, /\.ec-scan-gauge\{[^}]*border:0!important[^}]*border-bottom:/);
+  assert.match(settings, /this\.decorateAdvancedScanDetails\(doc\)/);
+});
+
+test('SETVIS-01: inherited alternating cells and scan copy cannot stay white in dark mode', function () {
+  const settings = settingsSrc();
+  assert.match(settings, /td\.even,body:not\(\.ec-plugin-store\) td\.odd\{background:var\(--group-bg\)!important/);
+  assert.match(settings, /\.ec-scan-copy \*\{background:transparent!important;border:0!important;color:inherit!important/);
+  assert.match(settings, /#homeMenu,body:not\(\.ec-plugin-store\) #fileselectorautocomplete\{background:transparent!important/);
+});
+
+test('SCANERR-01: scan journal is bounded, redacts URLs, and only exposes proven retry capabilities', function () {
+  const settings = settingsSrc();
+  const inst = helpers.settingsInstance({ LmsNav: fakeNav() });
+  const self = inst.self;
+  assert.equal(self.scanJournalSafe('file:///music/Beatles?token=secret'), 'file:///music/Beatles');
+  assert.equal(self.scanRetryCapabilities({ body: { getAttribute: function () { return ''; } } }).folder, false);
+  assert.equal(self.scanRetryCapabilities({ body: { getAttribute: function (key) {
+    return key === 'data-echo-retry-folder' ? 'true' : 'false';
+  } } }).folder, true);
+  const entries = Array.from({ length: 130 }, function (_, index) {
+    return { id: String(index), finalState: 'failed' };
+  });
+  self.scanJournalWrite(entries);
+  assert.equal(self.scanJournalRead().length, 100);
+  assert.equal(self.scanJournalRead()[0].id, '30');
+  assert.match(settings, /ECHOCLASSIC_SCAN_JOURNAL_KEY/);
+  assert.match(settings, /The scan continues automatically after recoverable errors/);
+  assert.match(settings, /item\.ignored = true/);
+  assert.match(settings, /Clear ignored scan errors\?/);
+  assert.match(settings, /Ignored errors/);
+  assert.match(settings, /data-echo-retry-folder/);
+  assert.match(settings, /data-echo-retry-all/);
+  assert.match(settings, /scanRetryAll: function/);
+  assert.match(settings, /The scan stopped\. Start it again from LMS settings/);
+  assert.match(settings, /server is disconnected/);
+  assert.doesNotMatch(settings, /Skip current|Resume scan/);
 });
 
 test('Advanced LMS has one primary Save action and a responsive settings drawer', function () {

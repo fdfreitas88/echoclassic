@@ -17,6 +17,9 @@ var ECHOCLASSIC_PLAYER_SURFACES = [
   { key: 'mini', label: 'Bottom bar' }
 ];
 
+var ECHOCLASSIC_SCAN_JOURNAL_KEY = 'echoclassic.scan-errors.v1';
+var ECHOCLASSIC_SCAN_JOURNAL_LIMIT = 100;
+
 /* Ajustes. Everything here is either read live from the server or is a real
    switch that changes the interface immediately. Advanced LMS pages still
    submit through the server's own controls; Echo Classic skins that real form
@@ -27,7 +30,7 @@ Vue.component('lms-settings', {
 <div v-if="ui.advancedSettings" class="settings advanced-settings-shell">
   <iframe ref="advancedFrame" class="advanced-settings-frame" title="" aria-label="Advanced LMS settings"
           @load="themeAdvancedFrame"
-          src="/echoclassic/settings/server/basic.html"></iframe>
+          :src="advancedFrameSrc"></iframe>
 </div>
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
   <template v-if="ui.appearanceScreen === 'players'">
@@ -277,6 +280,19 @@ Vue.component('lms-settings', {
              @change="duration($event.target.value)">
       <span class="v">{{ durationValue }} seconds</span>
     </label>
+    <div class="srow segmented-row">
+      <span>Replay gain</span>
+      <div class="segmented" role="radiogroup" aria-label="Replay gain">
+        <button v-for="option in replayGainModes" :key="'rg-' + option.key" type="button"
+                role="radio" :aria-checked="store.replayGainMode === option.key ? 'true' : 'false'"
+                :tabindex="store.replayGainMode === option.key ? 0 : -1"
+                :class="{on: store.replayGainMode === option.key}"
+                :disabled="!store.playerId"
+                @keydown="radioKey($event, replayGainModes, store.replayGainMode, selectReplayGain)"
+                @click="selectReplayGain(option.key)">{{ tr(option.label) }}</button>
+      </div>
+    </div>
+    <div class="player-help">{{ replayGainHint }}</div>
     <div class="srow sleep-row">
       Sleep timer
       <div class="inline-commands">
@@ -461,6 +477,7 @@ Vue.component('lms-settings', {
       colorSchemes: LmsUi.COLOR_SCHEMES,
       fontOptions: LmsUi.FONT_OPTIONS,
       themeOptions: LmsUi.THEME_OPTIONS,
+      replayGainModes: LmsUi.REPLAY_GAIN_MODES,
       playerPositions: LmsUi.PLAYER_POSITIONS,
       playerPresentations: LmsUi.PLAYER_PRESENTATIONS,
       gaugeStyles: LmsUi.GAUGE_STYLES,
@@ -487,6 +504,11 @@ Vue.component('lms-settings', {
     };
   },
   computed: {
+    advancedFrameSrc: function () {
+      var requested = String(this.ui.advancedSettingsPage || '');
+      return /^\/echoclassic\/settings\/server\/[a-z0-9_-]+\.html$/i.test(requested)
+        ? requested : '/echoclassic/settings/server/basic.html';
+    },
     playerName: function () {
       var id = this.store.playerId;
       var found = (this.store.players || []).filter(function (p) { return p.id === id; })[0];
@@ -551,6 +573,25 @@ Vue.component('lms-settings', {
       return this.tr(this.store.transitionType
         ? 'On: crossfade — the end of one song blends into the start of the next'
         : 'Off: gapless playback — songs join with no gap and no blend');
+    },
+    /* Uma frase inteira por modo, nunca montada por concatenacao: o dicionario
+       e indexado pela frase inglesa completa, entao juntar pedacos deixa o
+       texto permanentemente sem traducao. E o que EC-005/I18N-01 corrigiram
+       em actions.js e na fila. */
+    replayGainHint: function () {
+      if (!this.store.playerId) {
+        return this.tr('Available when a player is connected.');
+      }
+      if (this.store.replayGainMode === 1) {
+        return this.tr('Track: every song plays at a similar loudness.');
+      }
+      if (this.store.replayGainMode === 2) {
+        return this.tr('Album: loudness differences within an album are kept.');
+      }
+      if (this.store.replayGainMode === 3) {
+        return this.tr('Smart: album gain for a whole album, track gain when shuffling.');
+      }
+      return this.tr('Off: every recording plays at the loudness it was mastered at.');
     },
     /* "This song" com nada tocando vira `sleep 1` no store (Math.max(1, 0-0))
        e desliga o player em um segundo. Sem reproducao nao ha "terminar". */
@@ -714,7 +755,7 @@ Vue.component('lms-settings', {
         'html[data-echoclassic-theme="dark"]{color-scheme:dark;}',
         'body{box-sizing:border-box;margin:0!important;min-height:100vh;background:var(--group-page)!important;',
         'color:var(--text)!important;font:15px/1.35 var(--app-font)!important;-webkit-text-size-adjust:100%;',
-        'padding:18px 20px 110px 342px!important;overflow:auto!important;overscroll-behavior-y:contain;}',
+        'padding:18px 20px 18px 342px!important;overflow:auto!important;overscroll-behavior-y:contain;}',
         '#header,#headerWrapper,#header-wrapper,#branding,#masthead,#logo,#top,',
         '#browsedbHeader,#skinHeader,#pageHeader,.masthead,.topbar,.logo,',
         '[class*="masthead"],[class*="branding"],#statusarea:empty,body>h1,',
@@ -864,10 +905,15 @@ Vue.component('lms-settings', {
         'html[data-echoclassic-theme="dark"] .ec-plugin-store .ec-plugin-name,html[data-echoclassic-theme="dark"] .ec-plugin-store .headerLabel{color:var(--text)!important;text-shadow:none!important;}',
         'html[data-echoclassic-theme="legacy"] body.ec-plugin-store #pluginButtonBar,html[data-echoclassic-theme="legacy"] .ec-plugin-store #prefsSubmit{background:var(--chrome)!important;}',
         '#settings,#content,.content,.settingsPage,form,#settingsForm,.ec-advanced-content{box-sizing:border-box;width:100%;',
-        'max-width:none!important;padding:0 0 22px!important;margin:0!important;}',
+        'max-width:none!important;padding:0!important;margin:0!important;}',
+        'body:not(.ec-plugin-store) #settingsRegion,body:not(.ec-plugin-store) #settingsForm,',
+        'body:not(.ec-plugin-store) #innerSettingsBlock{height:auto!important;min-height:0!important;',
+        'max-height:none!important;overflow:visible!important;}',
         'h1,h2,h3,h4,.pageHeader,.sectionHeader,.settingGroupHeader{color:var(--text)!important;font-family:var(--app-font)!important;}',
         'table{max-width:100%;color:var(--text)!important;font-family:var(--app-font)!important;}',
         'td,th{border-color:var(--hair)!important;color:var(--text)!important;}',
+        'body:not(.ec-plugin-store) #homeMenu,body:not(.ec-plugin-store) #fileselectorautocomplete{background:transparent!important;color:var(--text)!important;}',
+        'body:not(.ec-plugin-store) td.even,body:not(.ec-plugin-store) td.odd{background:var(--group-bg)!important;color:var(--text)!important;}',
         'th,label,.label,.prefHead,.settingLabel{color:var(--text)!important;font-weight:400;}',
         '.prefDesc,.smallText,.help,.description,.settingDescription{color:var(--text2)!important;}',
         '#settings table:not(.tabs):not(#tabs):not(#settingsTabs),',
@@ -897,6 +943,7 @@ Vue.component('lms-settings', {
         '.settingSection,.settingsGroup,.prefGroup,.group,fieldset{margin:0 0 30px!important;',
         'padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;',
         'overflow:visible!important;}',
+        '.settingSection:last-child,.settingsGroup:last-child,.prefGroup:last-child,.group:last-child,fieldset:last-child{margin-bottom:0!important;}',
         '.settingGroup{display:grid!important;grid-template-columns:minmax(170px,280px) minmax(0,1fr);',
         'column-gap:24px;align-items:center;min-height:50px;padding:9px 18px!important;',
         'position:relative;border:0!important;background:var(--group-bg)!important;margin:0 12px 14px!important;border-radius:20px!important;overflow:hidden;}',
@@ -962,6 +1009,55 @@ Vue.component('lms-settings', {
         '.ec-plugin-store #prefsSubmit{min-height:44px!important;padding-top:0!important;padding-bottom:0!important;}',
         'pre,code{background:var(--field)!important;color:var(--text)!important;',
         'border-radius:5px;padding:2px 4px;}',
+        '.ec-advanced-content{box-sizing:border-box;width:100%!important;max-width:none!important;margin:0!important;}',
+        '.ec-conversion-wrap{box-sizing:border-box;width:100%;max-width:none;overflow-x:auto!important;margin:0 0 18px!important;',
+        'border:.5px solid var(--hair)!important;border-radius:14px!important;background:var(--group-bg)!important;}',
+        '.ec-feature-new{box-sizing:border-box;display:inline-block!important;margin:0 0 6px 4px!important;padding:2px 5px!important;',
+        'border:1px solid var(--accent)!important;border-radius:4px!important;color:var(--accent)!important;background:transparent!important;',
+        'font:700 9px/1.2 var(--app-font)!important;letter-spacing:.1em;text-transform:uppercase!important;}',
+        '.ec-scan-region>.ec-feature-new{grid-column:1/-1;justify-self:start;}',
+        'table.ec-conversion-table{width:100%!important;min-width:0!important;margin:0!important;border:0!important;',
+        'border-collapse:collapse!important;background:transparent!important;table-layout:auto!important;}',
+        '.ec-conversion-table th{padding:10px 12px!important;background:var(--field)!important;color:var(--text2)!important;',
+        'font:700 12px/1.2 var(--app-font)!important;text-align:left!important;text-transform:uppercase!important;letter-spacing:.04em!important;}',
+        '.ec-conversion-table td{box-sizing:border-box;padding:8px 12px!important;border-top:.5px solid var(--hair)!important;',
+        'background:var(--group-bg)!important;color:var(--text)!important;font:15px/1.25 var(--app-font)!important;vertical-align:middle!important;}',
+        '.ec-conversion-table tr.ec-conversion-empty{display:none!important;}',
+        '.ec-conversion-table select{width:100%!important;min-width:170px!important;height:40px!important;min-height:40px!important;',
+        'font-size:15px!important;background:var(--field)!important;}',
+        '.ec-scan-region{box-sizing:border-box;width:100%!important;max-width:none!important;display:grid!important;',
+        'grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;padding:14px!important;',
+        'background:transparent!important;border:0!important;}',
+        '.ec-scan-gauge{box-sizing:border-box;min-width:0;padding:10px 2px 12px!important;border:0!important;',
+        'border-bottom:.5px solid var(--hair)!important;border-radius:0!important;background:transparent!important;color:var(--text)!important;}',
+        '.ec-scan-copy{display:block!important;min-width:0;overflow-wrap:anywhere;background:transparent!important;',
+        'font:600 15px/1.35 var(--app-font)!important;}',
+        '.ec-scan-copy *{background:transparent!important;border:0!important;color:inherit!important;}',
+        '.ec-scan-track{box-sizing:border-box;display:block!important;height:8px;margin:11px 0 5px!important;overflow:hidden;',
+        'border-radius:4px;background:var(--field)!important;}',
+        '.ec-scan-fill{display:block!important;height:100%;width:var(--ec-scan-progress,0%);border-radius:inherit;background:var(--accent)!important;}',
+        '.ec-scan-complete .ec-scan-fill{background:var(--sw-on)!important;}',
+        '.ec-scan-failed .ec-scan-fill{background:var(--destructive,var(--accent))!important;}',
+        '.ec-scan-activity{box-sizing:border-box;grid-column:1/-1;display:grid!important;grid-template-columns:118px minmax(0,1fr);',
+        'gap:3px 14px;padding:13px 15px!important;border:.5px solid var(--accent)!important;border-left:5px solid var(--accent)!important;',
+        'border-radius:10px!important;background:var(--group-bg)!important;color:var(--text)!important;}',
+        '.ec-scan-activity-label{grid-row:1/3;color:var(--accent)!important;font:700 11px/1.4 var(--app-font)!important;',
+        'letter-spacing:.08em;text-transform:uppercase;}',
+        '.ec-scan-activity-main{min-width:0;font:600 15px/1.35 var(--app-font)!important;overflow-wrap:anywhere;}',
+        '.ec-scan-activity-detail{min-width:0;color:var(--text2)!important;font:12px/1.4 var(--app-font)!important;overflow-wrap:anywhere;}',
+        '.ec-native-scan-progress{display:none!important;}',
+        '.ec-scan-journal{grid-column:1/-1;min-width:0;margin-top:4px;padding:12px 14px;border:.5px solid var(--hair);border-radius:10px;background:var(--group-bg);color:var(--text);}',
+        '.ec-scan-journal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font:600 15px/1.35 var(--app-font);}',
+        '.ec-scan-journal-count{color:var(--text2);font-size:12px;font-weight:400;}',
+        '.ec-scan-journal-note{margin:7px 0;color:var(--text2);font-size:12px;line-height:1.4;overflow-wrap:anywhere;}',
+        '.ec-scan-error-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;padding:10px 0;border-top:.5px solid var(--hair);}',
+        '.ec-scan-error-copy{min-width:0;overflow-wrap:anywhere;font-size:13px;line-height:1.4;}',
+        '.ec-scan-error-copy strong{display:block;font-weight:600;}',
+        '.ec-scan-error-meta{display:block;margin-top:3px;color:var(--text2);font-size:11px;}',
+        '.ec-scan-error-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;}',
+        '.ec-scan-error-actions button{min-height:36px;padding:0 10px;border:1px solid var(--accent);border-radius:6px;background:transparent;color:var(--accent);font:600 12px var(--app-font);}',
+        '.ec-scan-error-actions button:focus-visible{outline:3px solid var(--accent);outline-offset:2px;}',
+        '.ec-scan-journal-clear{min-height:36px;padding:0 10px;border:1px solid var(--hair);border-radius:6px;background:transparent;color:var(--text2);font:600 12px var(--app-font);}',
         'img{max-width:100%;}',
         '@media (max-width:1180px){.ec-plugin-store #pluginButtonBar{flex-wrap:wrap!important}.ec-plugin-search{flex:1 1 230px;min-width:200px;}',
         '.ec-plugin-store #filterChooser{margin-left:0!important;}}',
@@ -983,10 +1079,19 @@ Vue.component('lms-settings', {
         '.ec-plugin-store .pluginList>ul.thumbwrap{grid-template-columns:repeat(2,minmax(0,1fr));}.ec-plugin-store li.ec-plugin-card:nth-child(3n){border-right:1px solid #ccd0d5!important;}',
         '.ec-plugin-store li.ec-plugin-card:nth-child(2n){border-right:0!important}.ec-plugin-store #prefsSubmit{left:10px;right:10px;}',
         '.settingGroup{display:block!important;margin-left:0!important;margin-right:0!important}.prefHead,.prefDesc,.prefs{display:block!important;}',
-        '.prefs{display:flex!important;margin-top:7px!important}}',
+        '.prefs{display:flex!important;margin-top:7px!important}.ec-scan-region{grid-template-columns:1fr!important}',
+        '.ec-scan-activity{grid-template-columns:1fr!important}.ec-scan-activity-label{grid-row:auto!important}',
+        '.ec-conversion-table thead,.ec-conversion-table tr.ec-conversion-header{display:none!important}.ec-conversion-table,.ec-conversion-table tbody{display:block!important}',
+        '.ec-conversion-table tr{display:grid!important;grid-template-columns:minmax(0,1fr) 72px minmax(170px,1.2fr);gap:8px 12px;',
+        'padding:11px 12px!important;border-top:.5px solid var(--hair)!important}',
+        '.ec-conversion-table tr:before{content:attr(data-ec-format);grid-column:1/-1;color:var(--text)!important;font:600 15px/1.3 var(--app-font)!important}',
+        '.ec-conversion-table td{display:block!important;padding:0!important;border:0!important}.ec-conversion-table td:first-child{display:none!important}',
+        '.ec-conversion-table td:before{content:attr(data-ec-label);display:block;margin-bottom:3px;color:var(--text2)!important;',
+        'font:700 10px/1.2 var(--app-font)!important;letter-spacing:.05em;text-transform:uppercase}.ec-conversion-table select{min-width:0!important}}',
         '@media (max-width:620px){.ec-plugin-store #prefsSubmit{left:10px;right:10px;}.ec-plugin-filter{width:100%}.ec-plugin-filter button{min-width:0!important;flex:1;}',
         '.ec-plugin-store #filterChooser,.ec-plugin-store #filterChooser select{width:100%!important}.ec-plugin-store .pluginList>ul.thumbwrap{grid-template-columns:1fr;}',
-        '.ec-plugin-store li.ec-plugin-card{border-right:0!important}.ec-plugin-store #prefsSubmit{left:0;right:0;}}',
+        '.ec-plugin-store li.ec-plugin-card{border-right:0!important}.ec-plugin-store #prefsSubmit{left:0;right:0!important}',
+        '.ec-conversion-table tr{grid-template-columns:1fr!important}.ec-conversion-table tr:before{grid-column:1!important}}',
         '@media (prefers-reduced-motion:reduce){.ec-plugin-switch,.ec-plugin-switch:after,.ec-native-switch,.ec-native-switch:after,',
         '#echoclassic-advanced-rail{transition:none!important;}}'
       ].join('');
@@ -1508,6 +1613,15 @@ Vue.component('lms-settings', {
         }
       });
       this.enhanceAdvancedPluginFooter(doc);
+      try {
+        var requested = sessionStorage.getItem('echoclassic.plugin-search.v1');
+        var search = doc.getElementById('filterInput');
+        if (requested && search) {
+          search.value = requested;
+          menu.setAttribute('data-ec-plugin-filter', 'all');
+          sessionStorage.removeItem('echoclassic.plugin-search.v1');
+        }
+      } catch (e) {}
       this.applyAdvancedPluginFilters(doc);
     },
     advancedCheckboxName: function (doc, input) {
@@ -1539,6 +1653,356 @@ Vue.component('lms-settings', {
         hit.appendChild(self.advancedCreateEl(doc, 'span', 'ec-native-switch', ''));
         if (input.parentNode) input.parentNode.insertBefore(hit, input.nextSibling);
       });
+    },
+    advancedTableHeaders: function (table) {
+      if (!table || !table.querySelectorAll) return [];
+      return Array.prototype.slice.call(table.querySelectorAll('tr:first-child th,tr:first-child td')).map(function (cell) {
+        return String(cell.textContent || '').replace(/\s+/g, ' ').trim();
+      });
+    },
+    advancedNewLabel: function (doc, owner, feature, before) {
+      if (!owner || !owner.querySelector || owner.querySelector('.ec-feature-new[data-ec-feature="' + feature + '"]')) return;
+      var badge = this.advancedCreateEl(doc, 'span', 'ec-feature-new', this.tr('New'));
+      badge.setAttribute('data-ec-feature', feature);
+      badge.setAttribute('aria-label', this.tr('New feature'));
+      owner.insertBefore(badge, before || owner.firstChild);
+    },
+    decorateAdvancedConversionTables: function (doc) {
+      if (!doc.querySelectorAll) return;
+      var self = this;
+      Array.prototype.slice.call(doc.querySelectorAll('table')).forEach(function (table) {
+        if (table.classList.contains('ec-conversion-table')) return;
+        var headers = self.advancedTableHeaders(table).join(' ').toLowerCase();
+        if (!table.querySelector('select') || headers.indexOf('stream format') < 0 || headers.indexOf('decoder') < 0) return;
+        table.classList.add('ec-conversion-table');
+        var headerRow = table.querySelector('tr');
+        if (headerRow) headerRow.classList.add('ec-conversion-header');
+        var wrap = self.advancedCreateEl(doc, 'div', 'ec-conversion-wrap', '');
+        if (table.parentNode) {
+          table.parentNode.insertBefore(wrap, table);
+          wrap.appendChild(table);
+          self.advancedNewLabel(doc, wrap.parentNode, 'conversion-table', wrap);
+        }
+        var labels = self.advancedTableHeaders(table);
+        var sourceFormat = '';
+        Array.prototype.slice.call(table.querySelectorAll('tr')).slice(1).forEach(function (row) {
+          var cells = Array.prototype.slice.call(row.children || []);
+          var rowText = self.cleanAdvancedText(row.textContent);
+          if (!row.querySelector('select') && !rowText) {
+            row.classList.add('ec-conversion-empty');
+            return;
+          }
+          var ownFormat = self.cleanAdvancedText(cells[0] && cells[0].textContent);
+          if (ownFormat) sourceFormat = ownFormat;
+          row.setAttribute('data-ec-format', sourceFormat || self.tr('File format'));
+          cells.forEach(function (cell, index) {
+            if (!cell.getAttribute('data-ec-label')) cell.setAttribute('data-ec-label', labels[index] || self.tr('Value'));
+          });
+        });
+      });
+    },
+    removeAdvancedNativeScanMarks: function (node) {
+      if (!node || !node.childNodes) return;
+      var self = this;
+      Array.prototype.slice.call(node.childNodes).forEach(function (child) {
+        if (child.nodeType === 3) {
+          child.textContent = String(child.textContent || '').replace(/[.\u2022\u25aa\u25ab\u25a0\u25a1\u2580-\u259f]{8,}/g, '');
+          return;
+        }
+        if (child.nodeType !== 1) return;
+        var marker = String((child.id || '') + ' ' + (child.className || '')).toLowerCase();
+        var markerText = self.cleanAdvancedText(child.textContent);
+        if (/\b(?:progressbar|progress-bar|scanprogress|scan-progress)\b/.test(marker) ||
+            (/^[.\u2022\u25aa\u25ab\u25a0\u25a1\u2580-\u259f\s]{8,}$/.test(markerText) && markerText.length >= 8)) {
+          child.classList.add('ec-native-scan-progress');
+          return;
+        }
+        self.removeAdvancedNativeScanMarks(child);
+      });
+    },
+    advancedScanProgress: function (text) {
+      var value = this.cleanAdvancedText(text);
+      var count = value.match(/(?:\(|\b)(\d+)\s+of\s+(\d+)(?:\)|\b)/i);
+      var complete = /\b(?:complete|completed|conclu[ií]do|finished)\b/i.test(value);
+      var failed = /\b(?:failed|error|falh\x6fu|err\x6f)\b/i.test(value);
+      var now = count ? parseInt(count[1], 10) : null;
+      var total = count ? parseInt(count[2], 10) : null;
+      return {
+        text: value,
+        now: now,
+        total: total,
+        percent: total > 0 ? Math.max(0, Math.min(100, Math.round(now * 100 / total))) : null,
+        complete: complete,
+        failed: failed,
+        active: !complete && !failed && (/\b(?:scanning|working|running|processing|indexing|looking|building|procurando|criando|verificando)\b/i.test(value) || (count && now < total))
+      };
+    },
+    scanJournalRead: function () {
+      try {
+        var raw = window.localStorage && window.localStorage.getItem(ECHOCLASSIC_SCAN_JOURNAL_KEY);
+        var value = raw ? JSON.parse(raw) : [];
+        return Array.isArray(value) ? value.slice(-ECHOCLASSIC_SCAN_JOURNAL_LIMIT) : [];
+      } catch (e) { return []; }
+    },
+    scanJournalWrite: function (entries) {
+      try {
+        if (window.localStorage) window.localStorage.setItem(ECHOCLASSIC_SCAN_JOURNAL_KEY,
+          JSON.stringify(entries.slice(-ECHOCLASSIC_SCAN_JOURNAL_LIMIT)));
+      } catch (e) {}
+    },
+    scanJournalSafe: function (text) {
+      return this.cleanAdvancedText(text).replace(/https?:\/\/\S+/ig, '[URL removed]')
+        .replace(/[?&](?:password|pass|token|secret|apikey|api_key)=[^&\s]*/ig, '')
+        .slice(0, 220);
+    },
+    scanJournalHash: function (text) {
+      var hash = 2166136261;
+      String(text || '').split('').forEach(function (ch) {
+        hash ^= ch.charCodeAt(0);
+        hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+      });
+      return (hash >>> 0).toString(16);
+    },
+    scanJournalRun: function (doc) {
+      var marked = doc.body && doc.body.getAttribute && doc.body.getAttribute('data-scan-run');
+      if (marked) return this.scanJournalSafe(marked);
+      var now = new Date();
+      return 'scan-' + now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+    },
+    scanRetryCapabilities: function (doc) {
+      var body = doc.body;
+      return {
+        folder: !!(body && body.getAttribute && body.getAttribute('data-echo-retry-folder') === 'true'),
+        all: !!(body && body.getAttribute && body.getAttribute('data-echo-retry-all') === 'true')
+      };
+    },
+    scanJournalEntries: function (doc, gauges) {
+      var entries = this.scanJournalRead();
+      var run = this.scanJournalRun(doc);
+      var self = this;
+      var capabilities = this.scanRetryCapabilities(doc);
+      gauges.filter(function (entry) { return entry.info.failed; }).forEach(function (entry, index) {
+        var safe = self.scanJournalSafe(entry.info.text);
+        var id = self.scanJournalHash(run + '|' + safe);
+        var found = entries.filter(function (item) { return item.id === id; })[0];
+        if (found) {
+          found.reason = safe;
+          found.lastSeen = new Date().toISOString();
+          return;
+        }
+        entries.push({ id: id, timestamp: new Date().toISOString(), lastSeen: new Date().toISOString(),
+          scanRun: run, stage: 'Media scan', item: safe, reason: safe,
+          retryable: capabilities.folder || capabilities.all, attempts: 0, finalState: 'failed', ignored: false });
+      });
+      this.scanJournalWrite(entries);
+      return entries;
+    },
+    renderScanJournal: function (doc, parent, gauges) {
+      var self = this;
+      var entries = this.scanJournalEntries(doc, gauges);
+      var active = entries.filter(function (item) { return !item.ignored; });
+      var ignored = entries.filter(function (item) { return item.ignored; });
+      var journal = parent.querySelector('.ec-scan-journal');
+      if (!journal) {
+        journal = this.advancedCreateEl(doc, 'section', 'ec-scan-journal', '');
+        journal.setAttribute('aria-labelledby', 'ec-scan-journal-title');
+        parent.appendChild(journal);
+      }
+      while (journal.firstChild) journal.removeChild(journal.firstChild);
+      var head = this.advancedCreateEl(doc, 'div', 'ec-scan-journal-head', '');
+      var title = this.advancedCreateEl(doc, 'strong', '', this.tr('Scan errors'));
+      title.id = 'ec-scan-journal-title';
+      head.appendChild(title);
+      head.appendChild(this.advancedCreateEl(doc, 'span', 'ec-scan-journal-count',
+        active.length ? String(active.length) : this.tr('None')));
+      journal.appendChild(head);
+      var retry = this.scanRetryCapabilities(doc);
+      if (retry.all && active.some(function (item) { return item.retryable; })) {
+        var retryAll = this.advancedCreateEl(doc, 'button', 'ec-scan-journal-clear', this.tr('Retry all'));
+        retryAll.type = 'button';
+        retryAll.addEventListener('click', function () { self.scanRetryAll(doc, active); });
+        journal.appendChild(retryAll);
+      }
+      var serverState = this.cleanAdvancedText((doc.querySelector('#scanStatus,#scanstatus,.scanStatus,.scanstatus,[data-scan-status]') || {}).textContent);
+      var note = this.advancedCreateEl(doc, 'div', 'ec-scan-journal-note', active.length
+        ? this.tr('The scan continues automatically after recoverable errors.')
+        : this.tr('No scan errors recorded.'));
+      if (/\b(?:fatal|stopped|terminated|aborted)\b/i.test(serverState)) {
+        note.textContent = this.tr('The scan stopped. Start it again from LMS settings.');
+      } else if (doc.body && doc.body.getAttribute && doc.body.getAttribute('data-scan-disconnected') === 'true') {
+        note.textContent = this.tr('The scan status is unavailable while the server is disconnected.');
+      }
+      note.setAttribute('role', 'status');
+      journal.appendChild(note);
+      active.forEach(function (item) {
+        var row = self.advancedCreateEl(doc, 'div', 'ec-scan-error-row', '');
+        var copy = self.advancedCreateEl(doc, 'div', 'ec-scan-error-copy', '');
+        copy.appendChild(self.advancedCreateEl(doc, 'strong', '', item.item));
+        copy.appendChild(self.advancedCreateEl(doc, 'span', 'ec-scan-error-meta',
+          item.reason + ' · ' + self.tr('Not retryable by this LMS')));
+        row.appendChild(copy);
+        var actions = self.advancedCreateEl(doc, 'div', 'ec-scan-error-actions', '');
+        var retry = self.scanRetryCapabilities(doc);
+        if (retry.folder && item.retryable) {
+          var folder = self.advancedCreateEl(doc, 'button', '', self.tr('Retry folder'));
+          folder.type = 'button';
+          folder.addEventListener('click', function () { self.scanRetry(doc, item, 'folder'); });
+          actions.appendChild(folder);
+        }
+        var ignore = self.advancedCreateEl(doc, 'button', '', self.tr('Ignore'));
+        ignore.type = 'button';
+        ignore.addEventListener('click', function () {
+          item.ignored = true; item.finalState = 'ignored'; self.scanJournalWrite(entries);
+          self.renderScanJournal(doc, parent, gauges);
+        });
+        actions.appendChild(ignore);
+        row.appendChild(actions);
+        journal.appendChild(row);
+      });
+      if (ignored.length) {
+        var history = this.advancedCreateEl(doc, 'details', 'ec-scan-journal-note', '');
+        var summary = this.advancedCreateEl(doc, 'summary', '',
+          this.tr('Ignored errors') + ' (' + ignored.length + ')');
+        history.appendChild(summary);
+        ignored.forEach(function (item) {
+          history.appendChild(self.advancedCreateEl(doc, 'div', 'ec-scan-error-meta', item.item));
+        });
+        journal.appendChild(history);
+        var clear = this.advancedCreateEl(doc, 'button', 'ec-scan-journal-clear',
+          this.tr('Clear ignored') + ' (' + ignored.length + ')');
+        clear.type = 'button';
+        clear.addEventListener('click', function () {
+          if (window.confirm && !window.confirm(self.tr('Clear ignored scan errors?'))) return;
+          self.scanJournalWrite(entries.filter(function (item) { return !item.ignored; }));
+          self.renderScanJournal(doc, parent, gauges);
+        });
+        journal.appendChild(clear);
+      }
+    },
+    scanRetry: function (doc, item, kind) {
+      var fn = kind === 'folder' && doc.__echoclassicRetryFolder;
+      if (typeof fn !== 'function') return;
+      var entries = this.scanJournalRead();
+      entries.forEach(function (stored) {
+        if (stored.id !== item.id) return;
+        stored.attempts = (stored.attempts || 0) + 1;
+        stored.finalState = 'retrying';
+      });
+      this.scanJournalWrite(entries);
+      fn(item.item);
+    },
+    scanRetryAll: function (doc, entries) {
+      var fn = doc.__echoclassicRetryAll;
+      if (typeof fn !== 'function') return;
+      var retryIds = {};
+      entries.filter(function (item) { return item.retryable && !item.ignored; }).forEach(function (item) {
+        retryIds[item.id] = true;
+      });
+      var stored = this.scanJournalRead();
+      stored.forEach(function (item) {
+        if (!retryIds[item.id]) return;
+        item.attempts = (item.attempts || 0) + 1;
+        item.finalState = 'retrying';
+      });
+      this.scanJournalWrite(stored);
+      fn(entries.filter(function (item) { return item.retryable && !item.ignored; }));
+    },
+    decorateAdvancedScanDetails: function (doc) {
+      if (!doc.querySelectorAll) return;
+      var self = this;
+      var roots = [];
+      Array.prototype.slice.call(doc.querySelectorAll('th,td,h1,h2,h3,.prefHead,.settingLabel,legend')).forEach(function (label) {
+        if (!/media\s+scan\s+details/i.test(self.cleanAdvancedText(label.textContent))) return;
+        var root = self.advancedClosest(label, 'tr') || self.advancedClosest(label, '.settingGroup') ||
+          self.advancedClosest(label, '.settingSection') || self.advancedClosest(label, 'table');
+        if (root && roots.indexOf(root) < 0) roots.push(root);
+      });
+      if (!roots.length) {
+        Array.prototype.slice.call(doc.querySelectorAll('table,.settingGroup,.settingSection')).forEach(function (root) {
+          var text = self.cleanAdvancedText(root.textContent);
+          var counts = text.match(/\b\d+\s+of\s+\d+\b/ig) || [];
+          if (counts.length >= 2 && /\b(?:complete|scanning|processing|finished)\b/i.test(text)) roots.push(root);
+        });
+      }
+      if (!roots.length) return;
+      var candidates = [];
+      roots.forEach(function (root) {
+        Array.prototype.slice.call(root.querySelectorAll('td,li,.prefs>div')).forEach(function (node) {
+          if (candidates.indexOf(node) < 0) candidates.push(node);
+        });
+      });
+      var gauges = [];
+      candidates.forEach(function (node) {
+        if (!node.parentNode || (self.advancedClosest(node, '.ec-scan-gauge') && !node.classList.contains('ec-scan-gauge')) || node.querySelector('.ec-scan-gauge')) return;
+        var existingCopy = node.classList.contains('ec-scan-gauge') && node.querySelector('.ec-scan-copy');
+        var info = self.advancedScanProgress(existingCopy ? existingCopy.textContent : node.textContent);
+        if (!info.text || (!/\b\d+\s+of\s+\d+\b/i.test(info.text) && !/\b(?:complete|scanning|processing|failed)\b/i.test(info.text))) return;
+        if (info.text.length > 240 || node.querySelectorAll('td,li,.settingGroup').length) return;
+        if (existingCopy) {
+          node.classList.toggle('ec-scan-complete', info.complete);
+          node.classList.toggle('ec-scan-failed', info.failed);
+          var existingFill = node.querySelector('.ec-scan-fill');
+          if (existingFill) existingFill.style.setProperty('--ec-scan-progress', info.percent === null ? (info.active ? '34%' : '0%') : info.percent + '%');
+          node.setAttribute('aria-label', info.text);
+          if (info.total !== null) {
+            node.setAttribute('aria-valuemax', String(info.total));
+            node.setAttribute('aria-valuenow', String(info.now));
+            node.removeAttribute('aria-valuetext');
+          }
+          gauges.push({ node: node, info: info });
+          return;
+        }
+        node.classList.add('ec-scan-gauge');
+        if (info.complete) node.classList.add('ec-scan-complete');
+        if (info.failed) node.classList.add('ec-scan-failed');
+        var copy = self.advancedCreateEl(doc, 'span', 'ec-scan-copy', '');
+        while (node.firstChild) copy.appendChild(node.firstChild);
+        self.removeAdvancedNativeScanMarks(copy);
+        node.appendChild(copy);
+        var track = self.advancedCreateEl(doc, 'span', 'ec-scan-track', '');
+        var fill = self.advancedCreateEl(doc, 'span', 'ec-scan-fill', '');
+        fill.style.setProperty('--ec-scan-progress', info.percent === null ? (info.active ? '34%' : '0%') : info.percent + '%');
+        track.appendChild(fill);
+        node.appendChild(track);
+        node.setAttribute('role', 'progressbar');
+        node.setAttribute('aria-label', info.text);
+        node.setAttribute('aria-valuemin', '0');
+        if (info.total !== null) {
+          node.setAttribute('aria-valuemax', String(info.total));
+          node.setAttribute('aria-valuenow', String(info.now));
+        } else {
+          node.setAttribute('aria-valuetext', info.active ? self.tr('Working') : info.text);
+        }
+        Array.prototype.slice.call(copy.querySelectorAll('img,hr,[style*="repeat"],[style*="background"]')).forEach(function (nativeBar) {
+          nativeBar.classList.add('ec-native-scan-progress');
+        });
+        gauges.push({ node: node, info: info });
+      });
+      if (!gauges.length) return;
+      var parent = gauges[0].node.parentNode;
+      if (parent && parent.classList) parent.classList.add('ec-scan-region');
+      if (parent) self.advancedNewLabel(doc, parent, 'scan-gauges', gauges[0].node);
+      if (parent) self.renderScanJournal(doc, parent, gauges);
+      var active = gauges.filter(function (entry) { return entry.info.active; })[0];
+      if (!active || !parent) return;
+      var serverDetail = doc.querySelector('#scanStatus,#scanstatus,.scanStatus,.scanstatus,[data-scan-status]');
+      var detail = this.cleanAdvancedText(serverDetail && serverDetail.textContent);
+      var activity = parent.querySelector('.ec-scan-activity');
+      if (!activity) {
+        activity = self.advancedCreateEl(doc, 'div', 'ec-scan-activity', '');
+        activity.setAttribute('role', 'status');
+        activity.setAttribute('aria-live', 'polite');
+        activity.setAttribute('aria-atomic', 'true');
+        activity.appendChild(self.advancedCreateEl(doc, 'span', 'ec-scan-activity-label', self.tr('Now scanning')));
+        activity.appendChild(self.advancedCreateEl(doc, 'strong', 'ec-scan-activity-main', ''));
+        activity.appendChild(self.advancedCreateEl(doc, 'span', 'ec-scan-activity-detail', ''));
+        parent.insertBefore(activity, gauges[0].node);
+      }
+      activity.querySelector('.ec-scan-activity-main').textContent = active.info.text;
+      var journalCount = self.scanJournalRead().filter(function (item) { return !item.ignored; }).length;
+      activity.querySelector('.ec-scan-activity-detail').textContent = (journalCount
+        ? self.tr('Continuing after recoverable errors.') + ' ' : '') +
+        (detail || self.tr('The server is reporting this activity now.'));
     },
     buildAdvancedIpadShell: function (frame, doc) {
       if (!doc || !doc.body || !doc.createElement || !doc.querySelector) return;
@@ -1708,6 +2172,8 @@ Vue.component('lms-settings', {
       this.installAdvancedSectionController(frame, doc);
       this.installAdvancedExpanders(doc);
       this.decorateAdvancedCheckboxes(doc);
+      this.decorateAdvancedConversionTables(doc);
+      this.decorateAdvancedScanDetails(doc);
       this.remapAdvancedIcons(doc);
     },
     scheduleAdvancedTheme: function (frame) {
@@ -1812,13 +2278,13 @@ Vue.component('lms-settings', {
               self.enhanceAdvancedFrame(frame, doc);
             } finally {
               if (self.advancedThemeObserver === observer && doc.documentElement) {
-                observer.observe(doc.documentElement, { childList: true, subtree: true });
+                observer.observe(doc.documentElement, { childList: true, characterData: true, subtree: true });
               }
             }
           }, 60);
         }
       });
-      this.advancedThemeObserver.observe(doc.documentElement, { childList: true, subtree: true });
+      this.advancedThemeObserver.observe(doc.documentElement, { childList: true, characterData: true, subtree: true });
     },
     /* Padrao ARIA de radiogroup: as setas movem selecao e foco, e so o item
        marcado fica na ordem de tabulacao. Sem isto eram 14 paradas de Tab.
@@ -1933,6 +2399,9 @@ Vue.component('lms-settings', {
     duration: function (value) {
       this.durationDraft = Number(value);
       LmsStore.setTransition(this.store.transitionType, Number(value));
+    },
+    selectReplayGain: function (key) {
+      if (key !== this.store.replayGainMode) LmsStore.setReplayGain(key);
     },
     sleepMinutes: function (minutes) { LmsStore.setSleep(minutes * 60); },
     sleepTrack: function () { LmsStore.sleepAfterTrack(); },
