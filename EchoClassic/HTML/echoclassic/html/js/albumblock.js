@@ -1,4 +1,7 @@
 
+var ECHOCLASSIC_ALBUM_INFO_CACHE_KEY = 'echoclassic.album-info.v1';
+var ECHOCLASSIC_ALBUM_INFO_CACHE_LIMIT = 60;
+
 /* Um album completo: cabecalho, linha de aleatorio e faixas. Existe como
    componente proprio porque a tela de album empilha um bloco destes por album do
    artista — o escolhido primeiro, os outros abaixo — e cada bloco carrega as
@@ -54,7 +57,12 @@ Vue.component('lms-album-block', {
     </div>
   </div>
 
-  <section v-if="albumInfoStatus" class="album-enrichment">
+  <button v-if="albumInfoStatus" type="button" class="album-info-disclosure"
+          :aria-expanded="albumInfoVisible ? 'true' : 'false'"
+          @click="albumInfoVisible = !albumInfoVisible">
+    {{ tr(albumInfoVisible ? 'Hide album info' : 'Show album info') }}
+  </button>
+  <section v-if="albumInfoStatus && albumInfoVisible" class="album-enrichment">
     <span class="opml-new-label">{{ tr('New') }}</span>
     <h3>{{ tr('Album information') }}</h3>
     <div v-if="albumInfoStatus === 'loading'" role="status">{{ tr('Finding album information…') }}</div>
@@ -66,18 +74,21 @@ Vue.component('lms-album-block', {
       <p v-if="albumInfo.review" class="album-review" :class="{expanded: albumReviewExpanded}">{{ albumInfo.review }}</p>
       <button v-if="albumInfo.review" type="button" class="retry-command artist-biography-toggle"
               :aria-expanded="albumReviewExpanded ? 'true' : 'false'" @click="albumReviewExpanded = !albumReviewExpanded">
-        {{ tr(albumReviewExpanded ? 'Show less' : 'Read review') }}
+        {{ tr(albumReviewExpanded ? 'Show less' : 'Show more') }}
       </button>
-      <div v-if="albumInfo.covers.length" class="album-cover-candidates" :aria-label="tr('Reference artwork')">
+      <button type="button" class="retry-command album-source-toggle"
+              :aria-expanded="albumSourceVisible ? 'true' : 'false'" @click="albumSourceVisible = !albumSourceVisible">
+        {{ tr(albumSourceVisible ? 'Hide source' : 'Show source') }}
+      </button>
+      <div v-if="albumSourceVisible && albumInfo.covers.length" class="album-cover-candidates" :aria-label="tr('Reference artwork')">
         <figure v-for="(cover, index) in albumInfo.covers.slice(0, 4)" :key="cover.url + index">
           <img :src="cover.url" :alt="tr('Reference artwork')"><figcaption>{{ cover.credits || cover.size }}</figcaption>
         </figure>
       </div>
-      <p class="artist-enrichment-source">{{ tr('Provided by MusicArtistInfo from Last.fm, Discogs and MusicBrainz.') }} {{ tr('Retrieved') }} {{ albumInfoRetrieved }}</p>
-      <div class="artist-enrichment-actions"><button type="button" @click="loadAlbumInfo">{{ tr('Refresh') }}</button><button type="button" @click="removeAlbumInfo">{{ tr('Hide for now') }}</button></div>
+      <p v-if="albumSourceVisible" class="artist-enrichment-source">{{ tr('Provided by MusicArtistInfo from Last.fm, Discogs and MusicBrainz.') }} {{ tr('Retrieved') }} {{ albumInfoRetrieved }}</p>
+      <div class="artist-enrichment-actions"><button type="button" @click="loadAlbumInfo(true)">{{ tr('Refresh') }}</button></div>
     </template>
-    <div v-else-if="albumInfoStatus === 'removed'" role="status">{{ tr('Enrichment removed. Your local library is unchanged.') }} <button type="button" class="retry-command" @click="loadAlbumInfo">{{ tr('Find metadata') }}</button></div>
-    <div v-else role="status">{{ tr('Album information is temporarily unavailable.') }} <button type="button" class="retry-command" @click="loadAlbumInfo">{{ tr('Try again') }}</button></div>
+    <div v-else role="status">{{ tr('Album information is temporarily unavailable.') }} <button type="button" class="retry-command" @click="loadAlbumInfo(true)">{{ tr('Try again') }}</button></div>
   </section>
 
   <div v-if="relatedArtists.length" ref="relatedRow" class="album-extra album-related"
@@ -146,7 +157,8 @@ Vue.component('lms-album-block', {
   data: function () {
     return { store: LmsStore.state, ui: LmsUi.state, tracks: [], artFailed: false,
 	             relatedArtists: [], relatedVisibleCount: 1, relatedExpanded: false,
-	             tracksHasMore: false, albumInfoStatus: '', albumInfo: { review: '', covers: [] }, albumReviewExpanded: false,
+	             tracksHasMore: false, albumInfoStatus: '', albumInfo: { review: '', covers: [] },
+	             albumInfoVisible: false, albumReviewExpanded: false, albumSourceVisible: false,
 	             albumInfoRequestToken: 0,
 	             relatedObserver: null, loading: true, error: '' };
   },
@@ -303,10 +315,50 @@ Vue.component('lms-album-block', {
         return LmsStore.cycleShuffle();
       });
     },
-    loadAlbumInfo: async function () {
+    albumInfoCacheRead: function () {
+      try {
+        var parsed = JSON.parse(localStorage.getItem(ECHOCLASSIC_ALBUM_INFO_CACHE_KEY) || '[]');
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) { return []; }
+    },
+    albumInfoCacheKey: function () {
+      return String(this.album.id == null
+        ? (this.album.artist || '') + '|' + (this.album.title || '')
+        : this.album.id);
+    },
+    albumInfoCacheGet: function () {
+      var key = this.albumInfoCacheKey();
+      var entry = this.albumInfoCacheRead().filter(function (item) {
+        return item && item.key === key && item.value;
+      })[0];
+      return entry ? entry.value : null;
+    },
+    albumInfoCachePut: function (value) {
+      var key = this.albumInfoCacheKey();
+      var safe = {
+        review: value.review || '',
+        covers: (value.covers || []).slice(0, 4).map(function (cover) {
+          return { url: cover.url || '', credits: cover.credits || '', size: cover.size || '' };
+        }).filter(function (cover) { return cover.url; }),
+        retrievedAt: value.retrievedAt
+      };
+      var rows = this.albumInfoCacheRead().filter(function (item) { return item && item.key !== key; });
+      rows.unshift({ key: key, retrievedAt: value.retrievedAt, value: safe });
+      try { localStorage.setItem(ECHOCLASSIC_ALBUM_INFO_CACHE_KEY,
+        JSON.stringify(rows.slice(0, ECHOCLASSIC_ALBUM_INFO_CACHE_LIMIT))); } catch (e) {}
+    },
+    loadAlbumInfo: async function (force) {
       var token = ++this.albumInfoRequestToken;
+      var cached = !force && this.albumInfoCacheGet();
+      if (cached) {
+        this.albumInfo = cached;
+        this.albumInfoStatus = 'ready';
+        this.albumReviewExpanded = false;
+        return;
+      }
       this.albumInfoStatus = 'loading';
       this.albumReviewExpanded = false;
+      this.albumSourceVisible = false;
       try {
         var info = await LmsApi.musicAlbumInfo(this.store.playerId || '', this.album.id);
         if (token !== this.albumInfoRequestToken) return;
@@ -315,13 +367,9 @@ Vue.component('lms-album-block', {
         else {
           this.albumInfo = { review: info.review || '', covers: info.covers || [], retrievedAt: Date.now() };
           this.albumInfoStatus = 'ready';
+          this.albumInfoCachePut(this.albumInfo);
         }
       } catch (e) { if (token === this.albumInfoRequestToken) this.albumInfoStatus = 'error'; }
-    },
-    removeAlbumInfo: function () {
-      this.albumInfoRequestToken++;
-      this.albumInfo = { review: '', covers: [] };
-      this.albumInfoStatus = 'removed';
     },
     openPluginManager: function () {
       try { sessionStorage.setItem('echoclassic.plugin-search.v1', 'MusicArtistInfo'); } catch (e) {}

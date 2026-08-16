@@ -15,6 +15,19 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.3.2] — 2026-08-16
+
+### Changed
+
+- Artist and album information is fetched once and retained in bounded local
+  caches across page reloads. Only the explicit Refresh action bypasses and
+  replaces cached information. [measured: 394 tests and validation 4/4 pass]
+- Album information now starts collapsed. Opening it shows a three-line review
+  preview with Show more/Show less, while source details and reference artwork
+  have their own disclosure. All controls are left aligned to avoid wasting
+  vertical space. [code/measured: responsive templates compile; UI regression
+  tests cover disclosure states, line clamp and alignment]
+
 ## [3.3.1] — 2026-08-16
 
 ### Fixed

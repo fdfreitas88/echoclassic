@@ -3,7 +3,6 @@
    plugin's optional HTML payload to readable text. */
 var ECHOCLASSIC_ARTIST_INFO_CACHE_KEY = 'echoclassic.artist-info.v2';
 var ECHOCLASSIC_ARTIST_INFO_CACHE_LIMIT = 40;
-var ECHOCLASSIC_ARTIST_INFO_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 /* The right-hand pane of Minha Musica. An artist, a genre or a year all resolve
    to a list of albums; an album resolves to its tracks. Selecting an album from
@@ -174,9 +173,8 @@ Vue.component('lms-detail', {
     },
     artistInfoCacheGet: function (id) {
       var key = String(id == null ? '' : id);
-      var now = Date.now();
       var entry = this.artistInfoCacheRead().filter(function (item) {
-        return item && item.key === key && now - Number(item.retrievedAt || 0) < ECHOCLASSIC_ARTIST_INFO_CACHE_TTL;
+        return item && item.key === key && item.value;
       })[0];
       return entry ? entry.value : null;
     },
@@ -238,9 +236,6 @@ Vue.component('lms-detail', {
     acceptNameMatch: function () { this.nameMatchAccepted = true; this.requestToken++; this.loadEnrichment(this.requestToken, true); },
     removeEnrichment: function () {
       this.requestToken++;
-      var key = String(this.frame.id != null ? this.frame.id : this.frame.label);
-      var rows = this.artistInfoCacheRead().filter(function (item) { return item && item.key !== key; });
-      try { localStorage.setItem(ECHOCLASSIC_ARTIST_INFO_CACHE_KEY, JSON.stringify(rows)); } catch (e) {}
       this.enrichment = {};
       this.enrichmentStatus = 'removed';
     },
