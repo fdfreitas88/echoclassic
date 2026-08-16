@@ -15,6 +15,58 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.3.0] — 2026-08-16
+
+### Added
+
+- Advanced LMS File Types now presents the native conversion rules as a
+  responsive Echo Classic table without replacing its selectors or submission
+  wiring. Media Scan Details replaces dotted server bars with accessible gauges
+  for known, active, complete and failed stages, plus a prominent live “Now
+  scanning” field that uses the server's detailed activity when available. Both
+  treatments carry the requested small translated New marker. [code/measured:
+  393 tests; validation 4/4; Light/Dark/Legacy wide/narrow Chrome matrix passed]
+- Large Radio, Apps and favourites service lists now continue in 100-item pages
+  without replacing loaded rows or their browse/play actions. Repeated page-boundary
+  items are ignored by server identity/action, stalled pages stop instead of looping,
+  recoverable errors keep the loaded list, search and Back restore the prior list and
+  scroll position, and stale player responses cannot append. The continuation ships
+  with the requested small translated New marker outside its full accent border.
+  [live/measured: Qobuz 100→200→300→400→434 with stable actions and terminal state]
+- Media scan failures now have a bounded, deduplicated browser journal with
+  redacted details, Ignore history and capability-gated retry controls. Completed
+  scans retain accessible gauges and an honest empty journal; running scans show
+  the server's current activity without inventing skip or resume commands.
+  [live/measured: 10 gauges and journal in Light, Dark and Legacy; zero overflow]
+- Artist pages can read MusicArtistInfo biography and credited photo data without
+  changing the canonical local contributor or local albums. The panel records its
+  source and retrieval time, caches a bounded safe copy, sends absent installations
+  to the native Plugin Manager, normalizes plugin HTML to readable text and keeps
+  long biographies collapsed until requested. [live/measured: The Beatles positive
+  state, cache migration, expand/collapse and zero overflow]
+
+### Internal
+
+- The EQ design is in the repository, at `docs/prompts/gaps-mockup.html`. It
+  was untracked and named outright by an ignore rule, so it was one `rm` from
+  being a lost record with no copy anywhere. Moved, not rewritten: byte for
+  byte the same file that `59309cc` carries. The 3.3 feature mockup was
+  untracked for the same reason and is tracked now too. [measured]
+- The plugin dependency policy says the same thing for both tiers: an absent or
+  disabled backend leaves the line in place, with the feature's own precondition
+  in the row and an Install… action. The old text told the shipped-with-LMS tier
+  (RandomPlay, DSTM) to hide its entry points and show a separate hint, which
+  contradicted the 3.3 design and would have left the user with no way to learn
+  why a feature had vanished. The project guide carries the same rule. [code]
+- The project guide records two design decisions that until now lived only in a
+  session: how a new feature is marked in a mockup — rows take a left gutter
+  bar, buttons and pills take the whole border in accent with the label outside
+  — and that a button or pill is never marked or selected on a single edge.
+  Full border or an Apple-style selection, as a product rule. [code]
+- AUDIT-20, the equalizer, is written into the gap sheet with the constraints
+  the SqueezeDSP recon found: per-player JSON-RPC, whole-blob writes, a re-seek
+  on every apply, and no state visible to `serverstatus`. [code]
+
 ## [3.2.9] — 2026-08-10
 
 ### Fixed
