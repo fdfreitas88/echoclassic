@@ -266,16 +266,23 @@
 <div v-if="item" class="sheet-stage info-stage">
   <div class="sheet-back" @click="close"></div>
   <section ref="infoDialog" class="info-sheet" role="dialog" aria-modal="true"
-           aria-label="Track information" tabindex="-1"
+           :aria-label="view === 'lyrics' ? tr('Lyrics') : tr('Track information')" tabindex="-1"
            @keydown.esc.stop.prevent="close" @keydown.tab="trapFocus">
     <div class="info-head">
-      <button class="back-command" @click="close">Done</button>
-      <div class="ttl">Information</div>
+      <button class="back-command" @click="headBack">{{ tr(view === 'lyrics' ? 'Back' : 'Done') }}</button>
+      <div class="ttl">{{ tr(view === 'lyrics' ? 'Lyrics' : 'Information') }}</div>
     </div>
     <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
     <div v-else-if="error" class="empty">
       <div class="p">{{ error }}</div>
       <button class="retry-command" @click="load(item)">Try again</button>
+    </div>
+    <div v-else-if="info && view === 'lyrics' && hasLyrics" class="info-content scroller">
+      <div class="sgh">{{ [info.title || item.title, info.artist].filter(Boolean).join(' · ') }}</div>
+      <div class="sgroup">
+        <div class="reading">{{ info.lyrics }}</div>
+        <div class="reading-source">{{ tr("From the file's own tags") }}</div>
+      </div>
     </div>
     <div v-else-if="info" class="info-content scroller">
       <div class="info-title">{{ info.title || item.title }}</div>
@@ -300,10 +307,12 @@
         <div class="srow">Rating <span class="v">{{ stars }}</span></div>
         <div class="srow">Plays <span class="v">{{ info.playCount || 0 }}</span></div>
         <div v-if="info.genre" class="srow">Genre <span class="v">{{ info.genre }}</span></div>
+        <button v-if="hasLyrics" type="button" class="srow settings-command-row pointer"
+                @click="view = 'lyrics'">{{ tr('Lyrics') }} <span class="v">›</span></button>
       </div>
       <div class="sgh">File</div>
       <div class="sgroup">
-        <div class="srow">Format <span class="v">{{ info.format || '—' }}</span></div>
+        <div class="srow">Format <span class="v">{{ formatLabel }}</span></div>
         <div class="srow">Resolution <span class="v">{{ resolution }}</span></div>
         <div v-if="info.bitrate" class="srow">Bitrate <span class="v">{{ Math.round(info.bitrate) }} kbps</span></div>
       </div>
@@ -312,10 +321,17 @@
 </div>`,
     data: function () {
       return { ui: LmsUi.state, info: null, loading: false, error: '',
-               previousFocus: null, requestToken: 0 };
+               previousFocus: null, requestToken: 0, view: 'info' };
     },
     computed: {
       item: function () { return this.ui.infoItem; },
+      /* Whitespace-only tags (a common artifact of buggy taggers) are a
+         non-empty, truthy string -- v-if="info.lyrics" alone would still open
+         the reading surface onto nothing. Trimming is a presentation call,
+         so it lives here, not in api.js's mapper. */
+      hasLyrics: function () {
+        return !!(this.info && this.info.lyrics && this.info.lyrics.trim());
+      },
       stars: function () {
         var rating = Math.max(0, Math.min(5, Math.round((this.info && this.info.rating || 0) / 20)));
         return '★★★★★'.slice(0, rating) + '☆☆☆☆☆'.slice(rating);
@@ -325,6 +341,9 @@
         var rate = LmsFmt.rate(this.info.sampleRate);
         var depth = LmsFmt.depth(this.info.sampleSize);
         return [rate, depth].filter(Boolean).join(' / ') || '—';
+      },
+      formatLabel: function () {
+        return this.info && this.info.format ? LmsFmt.format(this.info.format) : '—';
       }
     },
     watch: {
@@ -337,6 +356,18 @@
             if (button) button.focus();
           });
         }
+      },
+      /* Switching branches (info <-> lyrics) unmounts whichever button
+         triggered the switch -- the Lyrics row only exists in the info
+         branch, so clicking it removes the very node that had focus and
+         leaves it on <body>, outside the dialog trapFocus guards. Same
+         idiom as the item watch above: once the new branch has rendered,
+         move focus back onto the head control that survives both views. */
+      view: function () {
+        this.$nextTick(function () {
+          var button = this.$refs.infoDialog && this.$refs.infoDialog.querySelector('button');
+          if (button) button.focus();
+        });
       }
     },
     methods: {
@@ -344,6 +375,20 @@
         var previous = this.previousFocus;
         this.ui.infoItem = null;
         setTimeout(function () { if (previous && previous.focus) previous.focus(); }, 0);
+      },
+      /* :aria-label is a dynamic binding -- i18n.js's template rewrite only
+         reaches static attributes and text nodes, so the dialog label has to
+         resolve through the dictionary by hand, same idiom as detail.js,
+         opmlview.js, filterpanel.js and browse.js. */
+      tr: function (text) {
+        return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
+      },
+      headBack: function () {
+        /* Never leaves the reading surface without an exit: from lyrics the
+           head button returns to the information list, only closing the
+           sheet once the list itself is showing. */
+        if (this.view === 'lyrics') this.view = 'info';
+        else this.close();
       },
       trapFocus: function (event) {
         if (!this.$refs.infoDialog) return;
@@ -365,6 +410,10 @@
         this.loading = true;
         this.error = '';
         this.info = null;
+        /* Reopening the sheet, whether for the same track after a close or
+           for a different one entirely, always starts on the information
+           list -- never on a previous track's lyrics. */
+        this.view = 'info';
         try {
           var found = await LmsApi.songInfo(LmsStore.state.playerId || '', item.id);
           if (token !== this.requestToken) return;

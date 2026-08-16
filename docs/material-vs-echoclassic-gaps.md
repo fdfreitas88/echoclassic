@@ -115,7 +115,19 @@ AUDIT-18 Artist/album/track information. Integrate the Music and Artist
   Information plugin when present: bio, review, lyrics from context menus.
 AUDIT-19 Update transport. Establish whether LMS push (CometD) is feasible
   for the skin vs current polling; measure the visible lag either way.
+AUDIT-20 Equalizer. Per-player parametric EQ through SqueezeDSP's
+  `squeezedsp.*` commands when the plugin is present — free-form bands with no
+  fixed frequency grid, five filter types, cut-only preamp, presets and WAV
+  convolution; when it is absent, one line stating the requirement with an
+  Install… action and no other EQ surface. Constraints to design around: every
+  change rewrites the whole settings blob, applying one re-seeks the stream,
+  and none of the state reaches `serverstatus`.
 ```
+
+AUDIT-20's constraints were read from the SqueezeDSP sources, never from a
+running plugin — `docs/prompts/audit-20-recon.md`. [code] The plugin is not
+installed on the server, so both the present and the absent branch of its UI
+have to be built against source until someone installs it. [measured]
 
 ## Sources
 

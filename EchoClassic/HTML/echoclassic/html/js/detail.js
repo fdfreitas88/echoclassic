@@ -1,4 +1,10 @@
 
+/* v2 invalidates biographies cached before the API boundary converted the
+   plugin's optional HTML payload to readable text. */
+var ECHOCLASSIC_ARTIST_INFO_CACHE_KEY = 'echoclassic.artist-info.v2';
+var ECHOCLASSIC_ARTIST_INFO_CACHE_LIMIT = 40;
+var ECHOCLASSIC_ARTIST_INFO_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+
 /* The right-hand pane of Minha Musica. An artist, a genre or a year all resolve
    to a list of albums; an album resolves to its tracks. Selecting an album from
    inside an artist pushes a second frame, which is what gives the nav bar its
@@ -14,7 +20,7 @@ Vue.component('lms-detail', {
   </div>
 
   <template v-else-if="frame.kind === 'album'">
-    <lms-album-block v-for="a in visibleBlocks" :key="a.id" :album="a" :artist="artist"></lms-album-block>
+    <lms-album-block v-for="a in visibleBlocks" :key="a.id" :album="a" :artist="artist" :enrich="a.id === frame.id"></lms-album-block>
     <div v-if="discographyTruncated" class="loading-more warning" role="status">
       This artist's discography has more than 200 albums and this screen shows the first 200.
     </div>
@@ -30,14 +36,64 @@ Vue.component('lms-detail', {
       <div class="name ell">{{ frame.label }}</div>
     </div>
 
+    <section v-if="frame.kind === 'artist'" class="artist-enrichment" aria-labelledby="artist-enrichment-title">
+      <span class="opml-new-label">{{ tr('New') }}</span>
+      <h2 id="artist-enrichment-title">{{ tr('Artist information') }}</h2>
+      <p v-if="frame.id != null" class="artist-enrichment-match">{{ tr('Matched by stable local artist identity.') }}</p>
+      <div v-if="enrichmentLoading" class="artist-enrichment-status" role="status">
+        {{ tr('Finding artist information…') }}
+      </div>
+      <div v-else-if="enrichmentStatus === 'unavailable'" class="artist-enrichment-status">
+        <p>{{ tr('Artist information requires MusicArtistInfo.') }}</p>
+        <button type="button" class="retry-command" @click="openPluginManager">{{ tr('Install plugin') }}</button>
+      </div>
+      <div v-else-if="enrichmentStatus === 'error'" class="artist-enrichment-status" role="status">
+        <p>{{ tr('MusicArtistInfo is temporarily unavailable. Your local library is unchanged.') }}</p>
+        <button type="button" class="retry-command" @click="retryEnrichment">{{ tr('Try again') }}</button>
+      </div>
+      <div v-else-if="enrichmentStatus === 'review'" class="artist-enrichment-status">
+        <p>{{ tr('Review match: only the artist name is available. Confirm before loading enrichment.') }}</p>
+        <button type="button" class="retry-command" @click="acceptNameMatch">{{ tr('Use this match') }}</button>
+      </div>
+      <div v-else-if="enrichmentStatus === 'removed'" class="artist-enrichment-status">
+        <p>{{ tr('Enrichment removed. Your local library is unchanged.') }}</p>
+        <button type="button" class="retry-command" @click="retryEnrichment">{{ tr('Find metadata') }}</button>
+      </div>
+      <template v-else-if="enrichmentStatus === 'ready'">
+        <div class="artist-enrichment-content">
+          <img v-if="enrichment.photoUrl" class="artist-enrichment-photo" :src="enrichment.photoUrl"
+               :alt="tr('Artist photo')" @error="enrichment.photoUrl = ''">
+          <p v-if="enrichment.biography" class="artist-biography" :class="{expanded: enrichmentExpanded}">{{ enrichment.biography }}</p>
+          <p v-else class="artist-enrichment-status">{{ tr('No artist biography was found.') }}</p>
+        </div>
+        <button v-if="enrichment.biography" type="button" class="retry-command artist-biography-toggle"
+                :aria-expanded="enrichmentExpanded ? 'true' : 'false'"
+                @click="enrichmentExpanded = !enrichmentExpanded">
+          {{ tr(enrichmentExpanded ? 'Show less' : 'Read biography') }}
+        </button>
+        <p v-if="enrichment.photoCredits" class="artist-enrichment-credit">
+          {{ tr('Photo credit') }}: {{ enrichment.photoCredits }}
+        </p>
+        <p class="artist-enrichment-source">
+          {{ tr('Provided by MusicArtistInfo from Wikipedia, Last.fm, Discogs and MusicBrainz.') }}
+          {{ tr('Retrieved') }} {{ enrichmentRetrieved }}
+        </p>
+        <div class="artist-enrichment-actions">
+          <button type="button" @click="retryEnrichment">{{ tr('Refresh') }}</button>
+          <button type="button" @click="removeEnrichment">{{ tr('Hide for now') }}</button>
+        </div>
+      </template>
+    </section>
+
     <template v-if="ui.albumMode === 'tracks'">
-      <lms-album-block v-for="a in albums" :key="'b' + a.id" :album="a"></lms-album-block>
+      <lms-album-block v-for="a in albums" :key="'b' + a.id" :album="a" :enrich="false"></lms-album-block>
       <div v-if="!albums.length" class="empty"><div class="p">No albums for this item.</div></div>
     </template>
 
     <template v-else>
+      <div class="sectitle">{{ tr('Local library') }} · {{ localAlbums.length }}</div>
       <div class="albumgrid">
-	        <button v-for="a in albums" :key="'g' + a.id" type="button"
+	        <button v-for="a in localAlbums" :key="'g' + a.id" type="button"
 	                class="gcell pointer" @click="openAlbum(a)">
 	          <span class="gart" :class="{placeholder: !hasArt(a)}">
 	            <img v-if="hasArt(a)" :src="largeArt(a.art)" alt="" @error="markArtFailed(a)">
@@ -47,6 +103,15 @@ Vue.component('lms-detail', {
 	          <span class="gsub ell">{{ editionLine(a) }}</span>
 	        </button>
       </div>
+      <template v-if="connectedAlbums.length">
+        <div class="sectitle">{{ tr('Also on connected services') }}</div>
+        <div class="albumgrid">
+          <button v-for="a in connectedAlbums" :key="'remote' + a.id" type="button" class="gcell pointer" @click="openAlbum(a)">
+            <span class="gart" :class="{placeholder: !hasArt(a)}"><img v-if="hasArt(a)" :src="largeArt(a.art)" alt="" @error="markArtFailed(a)"><span v-else class="art-placeholder" aria-hidden="true">♫</span></span>
+            <span class="gtitle ell">{{ a.title }}</span><span class="gsub ell">{{ a.source }}</span>
+          </button>
+        </div>
+      </template>
       <div v-if="!albums.length" class="empty"><div class="p">No albums for this item.</div></div>
     </template>
     <div v-if="listTruncated" class="loading-more warning" role="status">
@@ -58,6 +123,8 @@ Vue.component('lms-detail', {
     return { store: LmsStore.state, ui: LmsUi.state, albums: [], blocks: [],
              artist: null, failedArt: {}, photoFailed: false,
              loading: true, error: '', requestToken: 0,
+             enrichmentLoading: false, enrichmentStatus: '', enrichment: {}, enrichmentExpanded: false,
+             nameMatchAccepted: false,
              discographyTruncated: false, listTruncated: false };
   },
   computed: {
@@ -68,6 +135,13 @@ Vue.component('lms-detail', {
     artistName: function () {
       return this.artist ? this.artist.name : ((this.frame.sub || '').split(' • ')[0] || '—');
     },
+    enrichmentRetrieved: function () {
+      if (!this.enrichment.retrievedAt) return '';
+      try { return new Date(this.enrichment.retrievedAt).toLocaleString(); }
+      catch (e) { return String(this.enrichment.retrievedAt); }
+    },
+    localAlbums: function () { return this.albums.filter(function (a) { return !a.source || a.source === 'Local library'; }); },
+    connectedAlbums: function () { return this.albums.filter(function (a) { return a.source && a.source !== 'Local library'; }); },
     /* No modo Albuns a pagina mostra so o album escolhido; no modo Faixas ela
        empilha a discografia inteira. */
     visibleBlocks: function () {
@@ -92,6 +166,92 @@ Vue.component('lms-detail', {
     largeArt: function (url) { return (url || '').replace('_50x50', ''); },
     hasArt: function (album) { return !!album.art && !this.failedArt[album.id]; },
     markArtFailed: function (album) { this.$set(this.failedArt, album.id, true); },
+    artistInfoCacheRead: function () {
+      try {
+        var parsed = JSON.parse(localStorage.getItem(ECHOCLASSIC_ARTIST_INFO_CACHE_KEY) || '[]');
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) { return []; }
+    },
+    artistInfoCacheGet: function (id) {
+      var key = String(id == null ? '' : id);
+      var now = Date.now();
+      var entry = this.artistInfoCacheRead().filter(function (item) {
+        return item && item.key === key && now - Number(item.retrievedAt || 0) < ECHOCLASSIC_ARTIST_INFO_CACHE_TTL;
+      })[0];
+      return entry ? entry.value : null;
+    },
+    artistInfoCachePut: function (id, value) {
+      var key = String(id == null ? '' : id);
+      var safe = {
+        biography: value.biography || '', photoCredits: value.photoCredits || '',
+        /* Never persist provider query strings or remote URLs. Relative LMS
+           image-proxy paths without a query are safe to retain. */
+        photoUrl: /^\/?(?:imageproxy\/|music\/)/.test(value.photoUrl || '') &&
+          String(value.photoUrl).indexOf('?') < 0 ? value.photoUrl : '',
+        retrievedAt: value.retrievedAt
+      };
+      var rows = this.artistInfoCacheRead().filter(function (item) { return item && item.key !== key; });
+      rows.unshift({ key: key, retrievedAt: value.retrievedAt, value: safe });
+      try { localStorage.setItem(ECHOCLASSIC_ARTIST_INFO_CACHE_KEY,
+        JSON.stringify(rows.slice(0, ECHOCLASSIC_ARTIST_INFO_CACHE_LIMIT))); } catch (e) {}
+    },
+    loadEnrichment: async function (token, force) {
+      if (this.frame.kind !== 'artist') return;
+      if (this.frame.id == null && !this.nameMatchAccepted) {
+        this.enrichmentStatus = 'review';
+        this.enrichmentLoading = false;
+        return;
+      }
+      var cacheKey = this.frame.id != null ? this.frame.id : this.frame.label;
+      var cached = !force && this.artistInfoCacheGet(cacheKey);
+      if (cached) {
+        this.enrichment = cached;
+        this.enrichmentStatus = 'ready';
+        this.enrichmentLoading = false;
+        return;
+      }
+      this.enrichmentLoading = true;
+      this.enrichmentStatus = '';
+      try {
+        var result = await LmsApi.musicArtistInfo(this.store.playerId || '', this.frame.id, this.frame.label);
+        if (token !== this.requestToken) return;
+        if (!result.available) {
+          this.enrichmentStatus = 'unavailable';
+        } else if (!result.biography && !result.photoUrl &&
+                   (result.biographyError || result.photoError)) {
+          this.enrichmentStatus = 'error';
+        } else {
+          this.enrichment = {
+            biography: result.biography || '', photoUrl: result.photoUrl || '',
+            photoCredits: result.photoCredits || '', retrievedAt: Date.now()
+          };
+          this.enrichmentStatus = 'ready';
+          this.artistInfoCachePut(cacheKey, this.enrichment);
+        }
+      } catch (e) {
+        if (token !== this.requestToken) return;
+        this.enrichmentStatus = 'error';
+      }
+      if (token === this.requestToken) this.enrichmentLoading = false;
+    },
+    retryEnrichment: function () { this.requestToken++; this.loadEnrichment(this.requestToken, true); },
+    acceptNameMatch: function () { this.nameMatchAccepted = true; this.requestToken++; this.loadEnrichment(this.requestToken, true); },
+    removeEnrichment: function () {
+      this.requestToken++;
+      var key = String(this.frame.id != null ? this.frame.id : this.frame.label);
+      var rows = this.artistInfoCacheRead().filter(function (item) { return item && item.key !== key; });
+      try { localStorage.setItem(ECHOCLASSIC_ARTIST_INFO_CACHE_KEY, JSON.stringify(rows)); } catch (e) {}
+      this.enrichment = {};
+      this.enrichmentStatus = 'removed';
+    },
+    openPluginManager: function () {
+      try { sessionStorage.setItem('echoclassic.plugin-search.v1', 'MusicArtistInfo'); } catch (e) {}
+      this.ui.advancedSettingsPage = '/echoclassic/settings/server/plugins.html';
+      LmsUi.setTab('settings');
+      LmsNav.push('settings', { label: 'Advanced LMS settings', advanced: true });
+      this.ui.advancedSettings = true;
+      this.ui.advancedSettingsDirty = false;
+    },
     editionLine: function (album) {
       var parts = [];
       if (album.editionCount > 1) parts.push('Edition ' + (album.year || 'Not specified'));
@@ -167,6 +327,11 @@ Vue.component('lms-detail', {
       this.artist = null;
       this.failedArt = {};
       this.photoFailed = false;
+      this.enrichmentLoading = false;
+      this.enrichmentStatus = '';
+      this.enrichment = {};
+      this.enrichmentExpanded = false;
+      this.nameMatchAccepted = false;
       this.discographyTruncated = false;
       this.listTruncated = false;
       var pid = this.store.playerId || '';
@@ -210,6 +375,7 @@ Vue.component('lms-detail', {
         } else {
           var filter = {};
           if (f.kind === 'artist') {
+            this.loadEnrichment(token, false);
             if (f.ids && f.ids.length > 1) filter.artistIds = f.ids;
             else filter.artistId = f.id;
           }
@@ -223,6 +389,7 @@ Vue.component('lms-detail', {
               id: x.id, title: x.title, year: x.year,
               originalYear: x.originalYear, releaseType: x.releaseType,
               artist: x.artist,
+              source: x.source || 'Local library',
               art: LmsFmt.coverUrl(x.artworkTrackId, 50) || null
             };
           }));

@@ -8,7 +8,8 @@
 Vue.component('lms-album-block', {
   props: {
     album: { type: Object, required: true },
-    artist: { type: Object, default: null }
+    artist: { type: Object, default: null },
+    enrich: { type: Boolean, default: true }
   },
   template: `
 <div class="albumblock">
@@ -53,12 +54,39 @@ Vue.component('lms-album-block', {
     </div>
   </div>
 
+  <section v-if="albumInfoStatus" class="album-enrichment">
+    <span class="opml-new-label">{{ tr('New') }}</span>
+    <h3>{{ tr('Album information') }}</h3>
+    <div v-if="albumInfoStatus === 'loading'" role="status">{{ tr('Finding album information…') }}</div>
+    <div v-else-if="albumInfoStatus === 'unavailable'" role="status">
+      <p>{{ tr('Album information requires MusicArtistInfo.') }}</p>
+      <button type="button" class="retry-command" @click="openPluginManager">{{ tr('Install plugin') }}</button>
+    </div>
+    <template v-else-if="albumInfoStatus === 'ready'">
+      <p v-if="albumInfo.review" class="album-review" :class="{expanded: albumReviewExpanded}">{{ albumInfo.review }}</p>
+      <button v-if="albumInfo.review" type="button" class="retry-command artist-biography-toggle"
+              :aria-expanded="albumReviewExpanded ? 'true' : 'false'" @click="albumReviewExpanded = !albumReviewExpanded">
+        {{ tr(albumReviewExpanded ? 'Show less' : 'Read review') }}
+      </button>
+      <div v-if="albumInfo.covers.length" class="album-cover-candidates" :aria-label="tr('Reference artwork')">
+        <figure v-for="(cover, index) in albumInfo.covers.slice(0, 4)" :key="cover.url + index">
+          <img :src="cover.url" :alt="tr('Reference artwork')"><figcaption>{{ cover.credits || cover.size }}</figcaption>
+        </figure>
+      </div>
+      <p class="artist-enrichment-source">{{ tr('Provided by MusicArtistInfo from Last.fm, Discogs and MusicBrainz.') }} {{ tr('Retrieved') }} {{ albumInfoRetrieved }}</p>
+      <div class="artist-enrichment-actions"><button type="button" @click="loadAlbumInfo">{{ tr('Refresh') }}</button><button type="button" @click="removeAlbumInfo">{{ tr('Hide for now') }}</button></div>
+    </template>
+    <div v-else-if="albumInfoStatus === 'removed'" role="status">{{ tr('Enrichment removed. Your local library is unchanged.') }} <button type="button" class="retry-command" @click="loadAlbumInfo">{{ tr('Find metadata') }}</button></div>
+    <div v-else role="status">{{ tr('Album information is temporarily unavailable.') }} <button type="button" class="retry-command" @click="loadAlbumInfo">{{ tr('Try again') }}</button></div>
+  </section>
+
   <div v-if="relatedArtists.length" ref="relatedRow" class="album-extra album-related"
        :class="{expanded: relatedExpanded}">
     <svg class="related-icon" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M16 19.5v-1.3c0-2.1-1.8-3.7-4-3.7H7c-2.2 0-4 1.6-4 3.7v1.3M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM16 8h5M18.5 5.5v5"/>
     </svg>
     <div class="related-links">
+      <strong>{{ tr('Local library') }}</strong>
       <template v-for="(a, index) in displayedRelatedArtists">
         <span v-if="index" :key="'separator-' + a.id" class="related-separator" aria-hidden="true">•</span>
         <button :key="a.id" @click="openRelatedArtist(a)">{{ a.name }}</button>
@@ -118,7 +146,8 @@ Vue.component('lms-album-block', {
   data: function () {
     return { store: LmsStore.state, ui: LmsUi.state, tracks: [], artFailed: false,
 	             relatedArtists: [], relatedVisibleCount: 1, relatedExpanded: false,
-	             tracksHasMore: false,
+	             tracksHasMore: false, albumInfoStatus: '', albumInfo: { review: '', covers: [] }, albumReviewExpanded: false,
+	             albumInfoRequestToken: 0,
 	             relatedObserver: null, loading: true, error: '' };
   },
   computed: {
@@ -185,6 +214,9 @@ Vue.component('lms-album-block', {
         remote: 'Remote / streaming', mixed: 'Mixed sources'
       }[this.albumSource] || 'Identifying source';
       return this.tr(label);
+    },
+    albumInfoRetrieved: function () {
+      return this.albumInfo.retrievedAt ? new Date(this.albumInfo.retrievedAt).toLocaleString() : '';
     },
     displayedRelatedArtists: function () {
       return this.relatedExpanded
@@ -271,6 +303,34 @@ Vue.component('lms-album-block', {
         return LmsStore.cycleShuffle();
       });
     },
+    loadAlbumInfo: async function () {
+      var token = ++this.albumInfoRequestToken;
+      this.albumInfoStatus = 'loading';
+      this.albumReviewExpanded = false;
+      try {
+        var info = await LmsApi.musicAlbumInfo(this.store.playerId || '', this.album.id);
+        if (token !== this.albumInfoRequestToken) return;
+        if (!info.available) this.albumInfoStatus = 'unavailable';
+        else if (!info.review && !info.covers.length && (info.reviewError || info.coversError)) this.albumInfoStatus = 'error';
+        else {
+          this.albumInfo = { review: info.review || '', covers: info.covers || [], retrievedAt: Date.now() };
+          this.albumInfoStatus = 'ready';
+        }
+      } catch (e) { if (token === this.albumInfoRequestToken) this.albumInfoStatus = 'error'; }
+    },
+    removeAlbumInfo: function () {
+      this.albumInfoRequestToken++;
+      this.albumInfo = { review: '', covers: [] };
+      this.albumInfoStatus = 'removed';
+    },
+    openPluginManager: function () {
+      try { sessionStorage.setItem('echoclassic.plugin-search.v1', 'MusicArtistInfo'); } catch (e) {}
+      this.ui.advancedSettingsPage = '/echoclassic/settings/server/plugins.html';
+      LmsUi.setTab('settings');
+      LmsNav.push('settings', { label: 'Advanced LMS settings', advanced: true });
+      this.ui.advancedSettings = true;
+      this.ui.advancedSettingsDirty = false;
+    },
     load: async function () {
 	      this.loading = true;
 	      this.error = '';
@@ -334,7 +394,7 @@ Vue.component('lms-album-block', {
       if (this.relatedVisibleCount !== count) this.relatedVisibleCount = count;
     }
   },
-  created: function () { this.load(); },
+  created: function () { this.load(); if (this.enrich) this.loadAlbumInfo(); },
   mounted: function () {
     this.measureRelatedWidth();
     if (window.ResizeObserver) {

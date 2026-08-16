@@ -29,6 +29,10 @@
        propriedade separada para o desfazer nunca vazar de um player a outro. */
     queueUndo: [], queueUndoPlayerId: null,
     sleepRemaining: 0, transitionType: 0, transitionDuration: 0,
+    /* Ganho de reproducao do LMS, por player: 0 desligado, 1 faixa, 2 album,
+       3 inteligente. Guardado como numero cru porque a interface oferece
+       exatamente esses quatro valores fixos -- nao ha estado derivado aqui. */
+    replayGainMode: 0,
     history: [], trackInfo: null, canRate: false,
     /* Mapa de capacidades, resolvido uma vez no init(): quem precisa saber se
        um comando existe no servidor le daqui em vez de escrever a propria
@@ -220,9 +224,15 @@
       if (state.playerId === playerId) state.volumeModeSynced = false;
     }
     try {
-      state.transitionType = Number(await api.playerPref(playerId, 'transitionType')) || 0;
-      state.transitionDuration = Number(await api.playerPref(playerId, 'transitionDuration')) || 0;
-      state.sleepRemaining = await api.sleepRemaining(playerId);
+      var transitionType = Number(await api.playerPref(playerId, 'transitionType')) || 0;
+      var transitionDuration = Number(await api.playerPref(playerId, 'transitionDuration')) || 0;
+      var replayGainMode = Number(await api.playerPref(playerId, 'replayGainMode')) || 0;
+      var sleepRemaining = await api.sleepRemaining(playerId);
+      if (state.playerId !== playerId) return;
+      state.transitionType = transitionType;
+      state.transitionDuration = transitionDuration;
+      state.replayGainMode = replayGainMode;
+      state.sleepRemaining = sleepRemaining;
     } catch (e) {}
   }
 
@@ -236,13 +246,23 @@
     randomplay: ['randomplay'],
     dontstopthemusicsetting: ['dontstopthemusicsetting']
   };
-  var capabilitiesRequested = false;
+  // latch on SUCCESS, not on attempt: a resolved probe is good for the whole
+  // page and must not be re-fetched, but a rejected one has to be retryable --
+  // otherwise one transient failure disables every capability-gated control
+  // for the life of the page (EC-034). Latching the promise itself (rather
+  // than a boolean) also means concurrent callers (init() and refresh() can
+  // both reach this) await the same in-flight request instead of firing two.
+  var capabilitiesPromise = null;
 
   async function loadCapabilities() {
-    if (capabilitiesRequested) return;
-    capabilitiesRequested = true;
+    if (!capabilitiesPromise) {
+      capabilitiesPromise = api.canCommands(CAPABILITY_PROBES).catch(function (e) {
+        capabilitiesPromise = null;
+        throw e;
+      });
+    }
     try {
-      state.capabilities = await api.canCommands(CAPABILITY_PROBES);
+      state.capabilities = await capabilitiesPromise;
     } catch (e) {
       state.capabilities = {};
     }
@@ -286,8 +306,9 @@
         }
         await loadPlayerSettings();
         // cobre a sessao que comecou sem player: init() nunca chegou a pedir
-        // as capacidades, e capabilitiesRequested torna a chamada de novo aqui
-        // gratis quando ja tiver sido resolvida
+        // as capacidades, e capabilitiesPromise torna a chamada de novo aqui
+        // gratis quando ja tiver sido resolvida (e tenta de novo se a
+        // primeira tentativa tiver falhado)
         await loadCapabilities();
       } catch (e) {
         state.connected = false;
@@ -792,6 +813,34 @@
     state.transitionDuration = Math.max(0, duration | 0);
   }
 
+  /* O player fica num local ANTES do primeiro await, e a escrita so vale se
+     ele ainda for o corrente depois. setTransition acima ainda le
+     state.playerId depois do await -- e a exposicao que EC-014 descreve, aqui
+     nao repetida. Sem a releitura, trocar de player no meio da chamada
+     gravava a preferencia no player errado.
+
+     O LMS devolve a preferencia como string, ou null quando a chave nao
+     existe (ver api.playerPref); o servidor tem historico de reverter
+     valores de player (ver digitalVolumeControl no plano de audio de
+     2026-08-03), entao o valor gravado e relido em vez de assumido. A
+     releitura so substitui o valor otimista quando o servidor de fato
+     devolveu algo -- null, undefined ou string vazia mantem o valor
+     escrito, para "sem resposta" nunca ser lido como um "0" (Off)
+     confirmado. [Unverified] se replayGainMode e a chave certa e se o
+     servidor chega a reverter esse valor; a releitura torna isso visivel
+     em vez de silencioso. */
+  async function setReplayGain(mode) {
+    var playerId = state.playerId;
+    if (!playerId) return;
+    var value = Math.min(3, Math.max(0, mode | 0));
+    await api.setPlayerPref(playerId, 'replayGainMode', value);
+    if (state.playerId !== playerId) return;
+    var raw = await api.playerPref(playerId, 'replayGainMode');
+    if (state.playerId !== playerId) return;
+    var stored = (raw === null || raw === undefined || raw === '') ? NaN : Number(raw);
+    state.replayGainMode = isFinite(stored) ? stored : value;
+  }
+
   async function setSleep(seconds) {
     if (!state.playerId) return;
     await api.sleep(state.playerId, seconds);
@@ -989,6 +1038,7 @@
     handoffTo: guarded('Transferring playback', handoffTo, true),
     syncWith: guarded('Player synchronisation', syncWith, true),
     setTransition: guarded('The crossfade setting', setTransition, false),
+    setReplayGain: guarded('The replay gain setting', setReplayGain, false),
     setSleep: guarded('The sleep timer setting', setSleep, false),
     sleepAfterTrack: guarded('The sleep timer setting', sleepAfterTrack, false),
     sleepAfterQueue: guarded('The sleep timer setting', sleepAfterQueue, false),

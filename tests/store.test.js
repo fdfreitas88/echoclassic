@@ -53,6 +53,26 @@ function storeContext(apiExtra, uiExtra, sharedStore) {
   return { store: ctx.LmsStore, callCount: function () { return canCommandsCalls; }, backing: store };
 }
 
+test('player settings loaded for an old player cannot overwrite the newly selected player', async function () {
+  let resolveFirstPref;
+  const ctx = storeContext({
+    playerPref: async function (playerId, name) {
+      if (name === 'digitalVolumeControl') return 1;
+      if (name === 'transitionType') return new Promise(function (resolve) { resolveFirstPref = resolve; });
+      return 2;
+    }
+  });
+  const loading = ctx.store.init();
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  ctx.store.state.playerId = 'p2';
+  ctx.store.state.transitionType = 9;
+  ctx.store.state.replayGainMode = 9;
+  resolveFirstPref(1);
+  await loading;
+  assert.equal(ctx.store.state.transitionType, 9);
+  assert.equal(ctx.store.state.replayGainMode, 9);
+});
+
 test('init() resolve capabilities uma vez, com rating batido junto de randomplay e dontstopthemusicsetting', async function () {
   const ctx = storeContext();
   await ctx.store.init();
@@ -80,6 +100,83 @@ test('reconectar nao pede capabilities de novo: capabilitiesRequested e um tiro 
   // outra rodada de sondas quando a primeira ja resolveu
   await ctx.store.init();
   assert.equal(ctx.callCount(), 1);
+});
+
+/* EC-034: o guard tinha o formato errado -- travava na TENTATIVA, nao no
+   SUCESSO. Uma falha transitoria na sonda desligava rating/randomplay/
+   dontstopthemusicsetting pelo resto da pagina, porque a segunda chamada
+   (a que o comentario de refresh() promete como "de graca depois de
+   resolvida") batia no guard e voltava sem tentar de novo. */
+test('EC-034: uma sonda que falha e retentavel -- a chamada seguinte tenta de novo e popula capabilities', async function () {
+  let calls = 0;
+  const ctx = storeContext({
+    canCommands: async function (probes) {
+      calls++;
+      if (calls === 1) throw new Error('falha transitoria de rede');
+      const out = {};
+      Object.keys(probes).forEach(function (name) { out[name] = name === 'rating'; });
+      return out;
+    }
+  });
+
+  await ctx.store.init();
+  assert.deepEqual(JSON.parse(JSON.stringify(ctx.store.state.capabilities)), {},
+    'primeira tentativa falhou: nenhuma capacidade parcialmente populada');
+  assert.equal(ctx.store.state.canRate, false);
+
+  // segunda passada (o que refresh() faz quando comeca sem player, ou um
+  // reconnect manual): tem de tentar de novo, nao ficar presa na falha
+  await ctx.store.init();
+  assert.equal(calls, 2, 'a falha nao pode travar o guard para sempre');
+  assert.equal(ctx.store.state.capabilities.rating, true);
+  assert.equal(ctx.store.state.capabilities.randomplay, false);
+  assert.equal(ctx.store.state.canRate, true);
+});
+
+test('EC-034: depois de uma sonda com sucesso, chamadas seguintes continuam batendo o servidor uma unica vez', async function () {
+  const ctx = storeContext();
+  await ctx.store.init();
+  assert.equal(ctx.callCount(), 1);
+  await ctx.store.init();
+  await ctx.store.init();
+  assert.equal(ctx.callCount(), 1, 'sucesso e vale para a pagina inteira -- nao ha o que retentar');
+});
+
+test('EC-034: duas chamadas concorrentes (init() e refresh() podem se cruzar) disparam uma unica sonda e as duas veem o resultado resolvido', async function () {
+  let probeCalls = 0;
+  let resolveProbe;
+  const ctx = storeContext({
+    canCommands: async function () {
+      probeCalls++;
+      return new Promise(function (resolve) { resolveProbe = resolve; });
+    }
+  });
+
+  const p1 = ctx.store.init();
+  const p2 = ctx.store.init();
+  // deixa as duas passadas por discoverPlayer()/loadPlayerSettings() (que
+  // tambem usam await) drenarem antes de resolver a sonda, para garantir que
+  // as duas chegam em loadCapabilities enquanto a primeira ainda esta em voo
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(probeCalls, 1, 'a segunda chamada nao pode disparar uma segunda sonda enquanto a primeira ainda esta em voo');
+  resolveProbe({ rating: true, randomplay: false, dontstopthemusicsetting: false });
+  await Promise.all([p1, p2]);
+
+  assert.equal(probeCalls, 1);
+  assert.equal(ctx.store.state.capabilities.rating, true);
+  assert.equal(ctx.store.state.canRate, true);
+});
+
+test('EC-034: fail-safe -- entre a falha e uma retentativa, canRate fica false e capabilities vazio, nunca parcial', async function () {
+  const ctx = storeContext({
+    canCommands: async function () { throw new Error('server sem can'); }
+  });
+  await ctx.store.init();
+  assert.deepEqual(JSON.parse(JSON.stringify(ctx.store.state.capabilities)), {});
+  assert.equal(ctx.store.state.canRate, false);
+  assert.equal(ctx.store.state.capabilities.rating, undefined);
+  assert.equal(ctx.store.state.capabilities.randomplay, undefined);
+  assert.equal(ctx.store.state.capabilities.dontstopthemusicsetting, undefined);
 });
 
 const SESSION_KEY = 'echoclassic.session.v2';
