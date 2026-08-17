@@ -29,7 +29,7 @@ Album information starts collapsed, so it does not take over the album page. Whe
 
 The screenshot below shows the expanded information during live 3.3 validation; 3.3.2 now starts this panel collapsed and uses the shorter disclosure controls described above.
 
-[IMG]https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/release-3.3.2-album-information.png[/IMG]
+[IMG]https://raw.githubusercontent.com/fdfreitas88/echoclassic/d699c44ed10f3e685ac3fb6fc6bd2e7b3c9052c3/docs/img/release-3.3.2-album-information.png[/IMG]
 
 If Music & Artist Information is not installed, Echo Classic keeps the feature in place, explains the requirement and links to the native Plugin Manager.
 
@@ -39,7 +39,7 @@ If Music & Artist Information is not installed, Echo Classic keeps the feature i
 
 The native File Types page has been restyled as a responsive Echo Classic table. The original LMS selectors and Save behaviour are preserved; this is still the server's own form, only presented in a way that works inside the skin.
 
-[IMG]https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/docs/img/release-3.3.2-file-types.png[/IMG]
+[IMG]https://raw.githubusercontent.com/fdfreitas88/echoclassic/d699c44ed10f3e685ac3fb6fc6bd2e7b3c9052c3/docs/img/release-3.3.2-file-types.png[/IMG]
 
 Long Advanced LMS Settings pages now use one continuous scroll area. File Types and other long forms no longer stop inside a fixed-height box or leave a large empty area above the player.
 
