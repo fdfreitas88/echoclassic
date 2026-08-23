@@ -19,12 +19,23 @@ depth **actually in use after transcoding**—the closest server-side view of wh
 reaches the player's decoder and DAC. Older LMS releases automatically fall back
 to the track metadata.
 
-Echo Classic 3.4.0 uses Vue 2 and has no compilation or bundling step: the files in
+Echo Classic 3.4.1 uses Vue 2 and has no compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
 ![Echo Classic library](docs/img/library.png)
 
 ## Highlights in 3.4
+
+### New in 3.4.1
+
+Version 3.4.1 expands the SqueezeDSP integration from a graphic equalizer into a
+complete responsive DSP control surface. It adds graphic-band Q, signal controls,
+DSP ReplayGain, crossfeed, FIR room correction, editable shelf/pass/notch filters,
+server preset creation and deletion, and separate graphic/full reset actions.
+Legacy Echo EQ documents are migrated to SqueezeDSP's native `Slope` contract,
+and unknown plugin fields are retained so newer SqueezeDSP versions remain safe
+to edit. The release was verified against a running LMS/SqueezeDSP installation,
+including staged changes, reset behaviour and the server-preset lifecycle.
 
 ### Server-side equalizer
 
@@ -34,6 +45,14 @@ When [SqueezeDSP](https://github.com/Foxenfurter/SqueezeDSP) is installed, every
 player gets a full graphic equalizer with preamp control, presets and momentary
 bypass for comparing the processed and original signal. The EQ is available from
 Settings, the player bar, album pages and individual track rows.
+
+The advanced DSP panel also covers graphic-band Q, balance, stereo width, delay,
+loudness, DSP-side ReplayGain, headphone crossfeed and FIR room correction.
+Parametric filters include peak, low/high shelf, low/high pass and notch modes;
+low shelf supplies dynamic-bass shaping and high shelf supplies treble
+enhancement. Presets can be loaded, created and deleted directly from the skin,
+and separate reset actions restore either the graphic bands or the complete DSP
+document.
 
 EQ settings can be remembered contextually for:
 
@@ -113,6 +132,9 @@ throws away the query, result list or scroll position.
   LMS 8.x/9.1.
 - SqueezeDSP equalizer with contextual per-song, album, folder, artist, genre and
   year/epoch rules.
+- Complete SqueezeDSP signal controls, FIR impulse selection and strength,
+  save/delete preset lifecycle, graphic-band Q and peak/shelf/pass/notch filter
+  editing.
 - RandomPlay and Don't Stop The Music provider selection with live active state.
 
 ![Player layout controls](docs/img/playerlayout.png)
@@ -307,9 +329,9 @@ JavaScript file from running beside an older cached stylesheet.
 
 ## Project status
 
-Current release: **3.4.0**.
+Current release: **3.4.1**.
 
-- 416 automated tests passing.
+- 421 automated tests passing.
 - Four validation stages passing.
 - 20 Vue templates compiling.
 - 155/155 tested contrast pairs passing.

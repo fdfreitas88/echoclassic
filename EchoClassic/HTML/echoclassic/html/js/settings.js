@@ -20,6 +20,18 @@ var ECHOCLASSIC_PLAYER_SURFACES = [
 var ECHOCLASSIC_SCAN_JOURNAL_KEY = 'echoclassic.scan-errors.v1';
 var ECHOCLASSIC_SCAN_JOURNAL_LIMIT = 100;
 
+/* Curves transcribed from the supplied SqueezeDSP screenshots. Keep these
+   local so useful starting points exist even when the plugin has no preset
+   files on the server. Every screenshot uses Q 3.00. */
+var ECHOCLASSIC_EQUALIZER_FREQUENCIES = [60, 120, 300, 500, 1000, 2000, 5000, 8000, 10000, 12000, 14000, 16000];
+var ECHOCLASSIC_EQUALIZER_PRESETS = [
+  { name: 'Flat', gains: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+  { name: 'Loudness', gains: [15, 10, 0, 0, -2, 0, -1, -4, 10, 21, 5, 2] },
+  { name: 'Presence', gains: [10, 10, 12, 2, 6, 1, 1, 8, 12, 12, 2, 0] },
+  { name: 'Air', gains: [10, 10, 10, 12, 11, 10, 7, 5, 15, 30, 3, 10] },
+  { name: 'Expansion', gains: [5, 5, 5, 7, 6, 5, 5, 4, 10, 15, 3, 5] }
+];
+
 /* Ajustes. Everything here is either read live from the server or is a real
    switch that changes the interface immediately. Advanced LMS pages still
    submit through the server's own controls; Echo Classic skins that real form
@@ -53,13 +65,17 @@ Vue.component('lms-settings', {
       <div class="player-help">Applied on the server, per player. Release the button to hear the EQ again.</div>
       <div class="sgh">Preset</div>
       <div class="sgroup"><button type="button" class="srow settings-command-row pointer" @click="equalizerPresetsOpen = !equalizerPresetsOpen">Preset <span class="v">{{ equalizerPresetLabel }} {{ equalizerPresetsOpen ? '⌄' : '›' }}</span></button>
-        <button v-if="equalizerPresetsOpen" v-for="preset in store.equalizer.presets" :key="preset" type="button" class="srow settings-command-row pointer" @click="chooseEqualizerPreset(preset)">{{ preset }} <span class="v">{{ equalizerPresetLabel === preset ? '✓' : '' }}</span></button>
+        <button v-if="equalizerPresetsOpen" v-for="preset in equalizerPresetOptions" :key="preset.key" type="button" class="srow settings-command-row pointer" @click="chooseEqualizerPreset(preset)">{{ preset.name }} <span class="v">{{ equalizerPresetLabel === preset.name ? '✓' : '' }}</span></button>
+        <div v-if="equalizerPresetsOpen" class="srow eq-preset-editor"><label for="eq-preset-name">Preset name</label><input id="eq-preset-name" v-model.trim="equalizerPresetName" type="text" maxlength="80" placeholder="My preset"></div>
+        <div v-if="equalizerPresetsOpen" class="srow eq-inline-actions"><button type="button" class="eq-action-button" :disabled="!equalizerPresetName || equalizerSaving" @click="saveEqualizerPreset">Save as new</button><button type="button" class="eq-action-button destructive" :disabled="!equalizerServerPresetSelected || equalizerSaving" @click="deleteEqualizerPreset">Delete selected</button></div>
       </div>
       <div class="sgh">Bands</div>
+      <div class="sgroup"><label class="srow">Q factor <input :value="equalizerGraphicQ" class="setting-range" type="range" min="0.1" max="12" step="0.1" @input="setEqualizerGraphicQ($event.target.value)"><span class="v">{{ equalizerGraphicQ.toFixed(1) }}</span></label></div>
       <div class="sgroup eq-band-panel"><div class="eq-band-bank" aria-label="Graphic equalizer bands">
         <label class="eq-band eq-preamp-band"><span class="eq-band-value">{{ formatEqGain(equalizerDraft.Client.Preamp) }}</span><span class="eq-slider"><input v-model.number="equalizerDraft.Client.Preamp" type="range" min="-30" max="0" step="0.1" aria-label="Preamp"></span><span>Pre</span></label>
-        <label v-for="band in equalizerBands" :key="band.frequency" class="eq-band"><span class="eq-band-value">{{ formatEqGain(band.gain) }}</span><span class="eq-slider"><input :value="band.gain" type="range" min="-12" max="12" step="0.5" :aria-label="band.label + ' hertz'" @input="setEqualizerBand(band.frequency, $event.target.value)"></span><span>{{ band.label }}</span></label>
-      </div><div class="player-help eq-band-help">−12 dB … +12 dB · Pre = preamp headroom</div></div>
+        <label v-for="band in equalizerBands" :key="band.frequency" class="eq-band"><span class="eq-band-value">{{ formatEqGain(band.gain) }}</span><span class="eq-slider"><input :value="band.gain" type="range" min="-30" max="30" step="0.5" :aria-label="band.label + ' hertz'" @input="setEqualizerBand(band.frequency, $event.target.value)"></span><span>{{ band.label }}</span></label>
+      </div><div class="player-help eq-band-help">−30 dB … +30 dB · Pre = preamp headroom</div>
+        <button type="button" class="eq-reset-button" @click="resetEqualizerBands">Reset bands to default</button></div>
       <div class="sgh">{{ equalizerContextTitle }}</div>
       <div class="sgroup"><div class="srow"><span>{{ equalizerContextName }}<small>{{ equalizerContextMeta }}</small></span><span class="eq-status-badge" :class="{on: !equalizerDraft.Client.Bypass}">EQ</span></div>
         <div class="srow"><span>{{ equalizerRememberLabel }}</span><button type="button" class="sw" :class="{on: equalizerContextScope.active}" role="switch" :aria-checked="String(equalizerContextScope.active)" :disabled="equalizerDirty || !equalizerContextScope.key" @click="toggleEqualizerRule(equalizerContextScope.type)"><span class="visually-hidden">{{ equalizerRememberLabel }}</span></button></div>
@@ -68,12 +84,30 @@ Vue.component('lms-settings', {
         <template v-if="equalizerRulesOpen"><div v-if="!equalizerPlayerRules.length" class="player-help">No automatic EQ rules yet.</div><div v-for="rule in equalizerPlayerRules" :key="rule.id" class="srow eq-rule-row"><span>{{ rule.label }}<small>{{ equalizerRuleTypeLabel(rule.type) }}<template v-if="store.equalizer.activeRule && store.equalizer.activeRule.id === rule.id"> · Active</template></small></span><button type="button" class="eq-remove-button" :aria-label="'Remove EQ rule for ' + rule.label" @click="removeEqualizerRule(rule.id)">Remove</button></div><div class="player-help">Rules are saved in this browser for this player.</div></template>
         <button type="button" class="srow settings-command-row pointer" @click="equalizerAdvancedOpen = !equalizerAdvancedOpen">Advanced <span class="v">Filters {{ equalizerAdvancedOpen ? '⌄' : '›' }}</span></button>
       </div>
-      <template v-if="equalizerAdvancedOpen"><div class="sgh">Parametric filters</div><div class="sgroup">
+      <template v-if="equalizerAdvancedOpen">
+      <div class="sgh">Signal processing</div><div class="sgroup">
+        <label class="srow">Balance <input v-model.number="equalizerDraft.Client.Balance" class="setting-range" type="range" min="-12" max="12" step="0.1"><span class="v">{{ formatSigned(equalizerDraft.Client.Balance, ' dB') }}</span></label>
+        <label class="srow">Stereo width <input v-model.number="equalizerDraft.Client.Width" class="setting-range" type="range" min="-12" max="12" step="0.1"><span class="v">{{ formatSigned(equalizerDraft.Client.Width, ' dB') }}</span></label>
+        <label class="srow">Delay <input v-model.number="equalizerDraft.Client.Delay.delay" class="setting-range" type="range" min="-20" max="20" step="0.1"><span class="v">{{ formatSigned(equalizerDraft.Client.Delay.delay, ' ms') }}</span></label>
+        <div class="srow"><span>Loudness<small>Compensate bass and treble at lower listening levels.</small></span><button type="button" class="sw" :class="{on: !!equalizerDraft.Client.Loudness.enabled}" role="switch" :aria-checked="String(!!equalizerDraft.Client.Loudness.enabled)" @click="equalizerDraft.Client.Loudness.enabled = equalizerDraft.Client.Loudness.enabled ? 0 : 1"><span class="visually-hidden">Loudness</span></button></div>
+        <label v-if="equalizerDraft.Client.Loudness.enabled" class="srow">Listening level <input v-model.number="equalizerDraft.Client.Loudness.listening_level" class="setting-range" type="range" min="50" max="85" step="0.1"><span class="v">{{ Number(equalizerDraft.Client.Loudness.listening_level).toFixed(1) }} dB</span></label>
+        <div class="srow"><span>ReplayGain in DSP</span><button type="button" class="sw" :class="{on: !!equalizerDraft.Client.ReplayGain.enabled}" role="switch" :aria-checked="String(!!equalizerDraft.Client.ReplayGain.enabled)" @click="equalizerDraft.Client.ReplayGain.enabled = equalizerDraft.Client.ReplayGain.enabled ? 0 : 1"><span class="visually-hidden">ReplayGain in DSP</span></button></div>
+        <div v-if="equalizerDraft.Client.ReplayGain.enabled" class="srow segmented-row"><span>ReplayGain mode</span><div class="segmented" role="radiogroup" aria-label="DSP ReplayGain mode"><button v-for="mode in equalizerReplayGainModes" :key="mode.value" type="button" role="radio" :aria-checked="equalizerDraft.Client.ReplayGain.mode === mode.value ? 'true' : 'false'" :class="{on: equalizerDraft.Client.ReplayGain.mode === mode.value}" @click="equalizerDraft.Client.ReplayGain.mode = mode.value">{{ mode.label }}</button></div></div>
+        <label v-if="equalizerDraft.Client.ReplayGain.enabled" class="srow">Fallback gain <input v-model.number="equalizerDraft.Client.ReplayGain.fixed_gain" class="setting-range" type="range" min="-20" max="0" step="0.1"><span class="v">{{ formatSigned(equalizerDraft.Client.ReplayGain.fixed_gain, ' dB') }}</span></label>
+        <label v-if="equalizerDraft.Client.ReplayGain.enabled" class="srow">Spotify fallback <input v-model.number="equalizerDraft.Client.ReplayGain.spotify_gain" class="setting-range" type="range" min="-20" max="0" step="0.1"><span class="v">{{ formatSigned(equalizerDraft.Client.ReplayGain.spotify_gain, ' dB') }}</span></label>
+        <div class="srow segmented-row"><span>Headphone crossfeed</span><div class="segmented" role="radiogroup" aria-label="Headphone crossfeed"><button v-for="mode in equalizerCrossfeedModes" :key="mode" type="button" role="radio" :aria-checked="equalizerDraft.Client.Crossfeed === mode ? 'true' : 'false'" :class="{on: equalizerDraft.Client.Crossfeed === mode}" @click="equalizerDraft.Client.Crossfeed = mode">{{ mode }}</button></div></div>
+      </div>
+      <div class="sgh">Convolution</div><div class="sgroup">
+        <button type="button" class="srow settings-command-row pointer" @click="equalizerImpulsesOpen = !equalizerImpulsesOpen">Room correction impulse <span class="v">{{ equalizerDraft.Client.FIRWavFile === '-' ? 'None' : impulseName(equalizerDraft.Client.FIRWavFile) }} {{ equalizerImpulsesOpen ? '⌄' : '›' }}</span></button>
+        <template v-if="equalizerImpulsesOpen"><button type="button" class="srow settings-command-row pointer" @click="chooseEqualizerImpulse('-')">None <span class="v">{{ equalizerDraft.Client.FIRWavFile === '-' ? '✓' : '' }}</span></button><button v-for="impulse in store.equalizer.impulses" :key="impulse" type="button" class="srow settings-command-row pointer" @click="chooseEqualizerImpulse(impulse)">{{ impulseName(impulse) }} <span class="v">{{ equalizerDraft.Client.FIRWavFile === impulse ? '✓' : '' }}</span></button></template>
+        <label v-if="equalizerDraft.Client.FIRWavFile && equalizerDraft.Client.FIRWavFile !== '-'" class="srow">Impulse strength <input v-model.number="equalizerDraft.Client.FIRStrength" class="setting-range" type="range" min="0" max="100" step="1"><span class="v">{{ equalizerDraft.Client.FIRStrength }}%</span></label>
+      </div>
+      <div class="sgh">Parametric filters</div><div class="sgroup">
         <div v-if="!equalizerDraft.Client.Filters.length" class="player-help">No filters configured.</div>
-        <div v-for="(filter, index) in equalizerDraft.Client.Filters" :key="'eq-' + index" class="eq-filter-editor"><div class="srow"><span>{{ index + 1 }}. {{ filter.FilterType }}</span><button type="button" class="eq-remove-button" @click="removeEqualizerFilter(index)">Remove</button></div><label class="srow">Frequency <input v-model.number="filter.Frequency" class="setting-range" type="range" min="20" max="20000" step="1"><span class="v">{{ filter.Frequency }} Hz</span></label><label v-if="filter.FilterType !== 'lowpass' && filter.FilterType !== 'highpass'" class="srow">Gain <input v-model.number="filter.Gain" class="setting-range" type="range" min="-25" max="15" step="0.1"><span class="v">{{ formatEqGain(filter.Gain) }} dB</span></label><label class="srow">Q <input v-model.number="filter.Q" class="setting-range" type="range" min="0.1" max="20" step="0.1"><span class="v">{{ Number(filter.Q || 1.41).toFixed(1) }}</span></label></div>
-        <button type="button" class="srow settings-command-row pointer" @click="addEqualizerFilter">Add filter <span class="v">＋</span></button>
+        <div v-for="(filter, index) in equalizerDraft.Client.Filters" :key="'eq-' + index" class="eq-filter-editor"><div class="srow"><span>{{ index + 1 }}. {{ equalizerFilterLabel(filter.FilterType) }}</span><button type="button" class="eq-remove-button" @click="removeEqualizerFilter(index)">Remove</button></div><div class="srow"><div class="segmented eq-filter-types" role="radiogroup" :aria-label="'Filter type ' + (index + 1)"><button v-for="type in equalizerFilterTypes" :key="type.value" type="button" role="radio" :aria-checked="filter.FilterType === type.value ? 'true' : 'false'" :class="{on: filter.FilterType === type.value}" @click="setEqualizerFilterType(filter, type.value)">{{ type.short }}</button></div></div><label class="srow">Frequency <input v-model.number="filter.Frequency" class="setting-range" type="range" min="20" max="20000" step="1"><span class="v">{{ filter.Frequency }} Hz</span></label><label v-if="filter.FilterType !== 'lowpass' && filter.FilterType !== 'highpass'" class="srow">Gain <input v-model.number="filter.Gain" class="setting-range" type="range" min="-30" max="30" step="0.1"><span class="v">{{ formatEqGain(filter.Gain) }} dB</span></label><label class="srow">{{ filter.SlopeType === 'slope' ? 'Slope' : 'Q' }} <input v-model.number="filter.Slope" class="setting-range" type="range" min="0.1" max="20" step="0.1"><span class="v">{{ Number(filter.Slope || 1.41).toFixed(1) }}</span></label></div>
+        <div class="srow eq-inline-actions"><button v-for="type in equalizerQuickFilters" :key="type.value" type="button" class="eq-action-button" @click="addEqualizerFilter(type.value)">+ {{ type.label }}</button></div>
       </div></template>
-      <div class="sgroup eq-apply-group"><div class="player-help">Changes are staged. Apply may briefly restart the current track.</div><button type="button" class="srow settings-command-row pointer" :disabled="!equalizerDirty || equalizerSaving" @click="applyEqualizer">{{ equalizerSaving ? 'Applying…' : 'Apply changes' }} <span class="v">{{ equalizerDirty ? '›' : '✓' }}</span></button></div>
+      <div class="sgroup eq-apply-group"><div class="player-help">Changes are staged. Apply may briefly restart the current track.</div><button type="button" class="srow settings-command-row pointer" :disabled="!equalizerDirty || equalizerSaving" @click="applyEqualizer">{{ equalizerSaving ? 'Applying…' : 'Apply changes' }} <span class="v">{{ equalizerDirty ? '›' : '✓' }}</span></button><button type="button" class="srow settings-command-row destructive pointer" :disabled="equalizerSaving" @click="resetEqualizerAll">Reset all DSP settings <span class="v">↺</span></button></div>
     </template>
   </template>
   <template v-else-if="ui.appearanceScreen === 'players'">
@@ -563,9 +597,10 @@ Vue.component('lms-settings', {
       /* Rascunho local: o numero ao lado do slider tem de acompanhar o
          arrasto, nao esperar o round-trip com o servidor. */
       durationDraft: null,
-      equalizerDraft: null, equalizerSaving: false, equalizerPreset: '',
+      equalizerDraft: null, equalizerSaving: false, equalizerPreset: '', equalizerPresetName: '',
       equalizerPresetsOpen: false, equalizerRulesOpen: false,
-      equalizerAdvancedOpen: false, equalizerHoldRestore: null
+      equalizerAdvancedOpen: false, equalizerSignalOpen: false, equalizerConvolutionOpen: false, equalizerImpulsesOpen: false,
+      equalizerHoldRestore: null
     };
   },
   computed: {
@@ -744,7 +779,8 @@ Vue.component('lms-settings', {
     surfaceScheme: function () { return LmsUi.surfaceValues(this.appearanceSurface).scheme; },
     surfaceFont: function () { return LmsUi.surfaceValues(this.appearanceSurface).font; },
     equalizerDirty: function () {
-      return !!this.equalizerDraft && JSON.stringify(this.equalizerDraft) !== JSON.stringify(this.store.equalizer.settings);
+      return !!this.equalizerDraft && JSON.stringify(this.equalizerDraft) !==
+        JSON.stringify(this.prepareEqualizerDraft(this.store.equalizer.settings));
     },
     equalizerPlayerRules: function () {
       var playerId = this.store.playerId;
@@ -756,15 +792,57 @@ Vue.component('lms-settings', {
       });
     },
     equalizerPresetLabel: function () { return this.equalizerPreset || (this.equalizerDirty ? 'Custom (edited)' : 'Custom'); },
+    equalizerPresetOptions: function () {
+      var self = this;
+      var builtIn = ECHOCLASSIC_EQUALIZER_PRESETS.map(function (preset) {
+        return { key: 'builtin:' + preset.name, name: preset.name, builtIn: preset };
+      });
+      var names = builtIn.map(function (preset) { return preset.name.toLowerCase(); });
+      return builtIn.concat((this.store.equalizer.presets || []).filter(function (name) {
+        return names.indexOf(self.equalizerPresetDisplayName(name).toLowerCase()) < 0;
+      }).map(function (name) { return { key: 'server:' + name, name: self.equalizerPresetDisplayName(name), server: name }; }));
+    },
     equalizerBands: function () {
       var filters = (this.equalizerDraft && this.equalizerDraft.Client.Filters) || [];
-      return [60, 120, 300, 500, 1000, 2000, 5000, 8000, 10000, 12000, 16000].map(function (frequency) {
+      return ECHOCLASSIC_EQUALIZER_FREQUENCIES.map(function (frequency) {
         var found = filters.filter(function (filter) {
           return String(filter.FilterType || '').toLowerCase() === 'peak' && Number(filter.Frequency) === frequency;
         })[0];
         return { frequency: frequency, label: frequency >= 1000 ? (frequency / 1000) + 'k' : String(frequency), gain: found ? Number(found.Gain || 0) : 0 };
       });
     },
+    equalizerGraphicQ: function () {
+      var graphic = ECHOCLASSIC_EQUALIZER_FREQUENCIES;
+      var filters = (this.equalizerDraft && this.equalizerDraft.Client.Filters) || [];
+      var found = filters.filter(function (filter) {
+        return String(filter.FilterType || '').toLowerCase() === 'peak' && graphic.indexOf(Number(filter.Frequency)) >= 0;
+      })[0];
+      return Number(found && found.Slope || 3);
+    },
+    equalizerServerPresetSelected: function () {
+      var selected = String(this.equalizerPreset || '').toLowerCase();
+      var self = this;
+      return (this.store.equalizer.presets || []).some(function (name) {
+        return self.equalizerPresetDisplayName(name).toLowerCase() === selected;
+      });
+    },
+    equalizerSelectedServerPreset: function () {
+      var selected = String(this.equalizerPreset || '').toLowerCase();
+      var self = this;
+      return (this.store.equalizer.presets || []).filter(function (name) {
+        return self.equalizerPresetDisplayName(name).toLowerCase() === selected;
+      })[0] || '';
+    },
+    equalizerFilterTypes: function () {
+      return [
+        { value: 'peak', label: 'Peak', short: 'Peak' }, { value: 'lowshelf', label: 'Low shelf / Dynamic bass', short: 'Low shelf' },
+        { value: 'highshelf', label: 'High shelf / Treble enhance', short: 'High shelf' }, { value: 'lowpass', label: 'Low pass', short: 'Low pass' },
+        { value: 'highpass', label: 'High pass', short: 'High pass' }, { value: 'notch', label: 'Notch', short: 'Notch' }
+      ];
+    },
+    equalizerQuickFilters: function () { return this.equalizerFilterTypes.slice(1); },
+    equalizerReplayGainModes: function () { return [{ value: 1, label: 'Track' }, { value: 2, label: 'Album' }, { value: 3, label: 'Smart' }]; },
+    equalizerCrossfeedModes: function () { return ['off', 'light', 'medium', 'strong', 'bonkers']; },
     equalizerContextScope: function () {
       var context = this.store.equalizer.context || {};
       var type = /^(song|album|artist|genre|folder|year)$/.test(context.type) ? context.type : 'song';
@@ -2479,22 +2557,65 @@ Vue.component('lms-settings', {
     },
     openEqualizer: function () {
       LmsStore.setEqualizerContext(null);
-      this.equalizerDraft = JSON.parse(JSON.stringify(this.store.equalizer.settings || {}));
+      this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
       this.openAppearanceScreen('equalizer');
     },
     refreshEqualizer: async function () {
       await LmsStore.refreshEqualizer(true);
       if (this.store.equalizer.status === 'ready') {
-        this.equalizerDraft = JSON.parse(JSON.stringify(this.store.equalizer.settings || {}));
+        this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
       }
+    },
+    prepareEqualizerDraft: function (settings) {
+      var draft = JSON.parse(JSON.stringify(settings || { Client: {} }));
+      var client = draft.Client || (draft.Client = {});
+      var numberOr = function (value, fallback) {
+        var number = Number(value);
+        return Number.isFinite(number) ? number : fallback;
+      };
+      if (client.Bypass == null) client.Bypass = 1;
+      if (client.Preamp == null) client.Preamp = 0;
+      if (client.Balance == null) client.Balance = 0;
+      if (client.Width == null) client.Width = 0;
+      if (!client.Delay || typeof client.Delay !== 'object') client.Delay = { delay: 0 };
+      if (client.Delay.delay == null) client.Delay.delay = 0;
+      if (!client.Loudness || typeof client.Loudness !== 'object') client.Loudness = { enabled: 0, listening_level: 85 };
+      if (client.Loudness.enabled == null) client.Loudness.enabled = 0;
+      if (client.Loudness.listening_level == null) client.Loudness.listening_level = 85;
+      if (!client.ReplayGain || typeof client.ReplayGain !== 'object') client.ReplayGain = { enabled: 0, mode: 3, fixed_gain: -6, spotify_gain: -4 };
+      if (client.ReplayGain.enabled == null) client.ReplayGain.enabled = 0;
+      if (client.ReplayGain.mode == null) client.ReplayGain.mode = 3;
+      if (client.ReplayGain.fixed_gain == null) client.ReplayGain.fixed_gain = -6;
+      if (client.ReplayGain.spotify_gain == null) client.ReplayGain.spotify_gain = -4;
+      if (!Array.isArray(client.Filters)) client.Filters = [];
+      if (client.FIRWavFile == null) client.FIRWavFile = '-';
+      if (client.FIRStrength == null) client.FIRStrength = 100;
+      if (!client.Crossfeed) client.Crossfeed = 'off';
+      client.Bypass = numberOr(client.Bypass, 1);
+      client.Preamp = numberOr(client.Preamp, 0);
+      client.Balance = numberOr(client.Balance, 0);
+      client.Width = numberOr(client.Width, 0);
+      client.Delay.delay = numberOr(client.Delay.delay, 0);
+      client.Loudness.enabled = numberOr(client.Loudness.enabled, 0);
+      client.Loudness.listening_level = numberOr(client.Loudness.listening_level, 85);
+      client.ReplayGain.enabled = numberOr(client.ReplayGain.enabled, 0);
+      client.ReplayGain.mode = numberOr(client.ReplayGain.mode, 3);
+      client.ReplayGain.fixed_gain = numberOr(client.ReplayGain.fixed_gain, -6);
+      client.ReplayGain.spotify_gain = numberOr(client.ReplayGain.spotify_gain, -4);
+      client.FIRStrength = numberOr(client.FIRStrength, 100);
+      return draft;
     },
     applyEqualizer: async function () {
       if (!this.equalizerDirty || this.equalizerSaving) return;
       this.equalizerSaving = true;
       try {
         await LmsStore.saveEqualizer(JSON.parse(JSON.stringify(this.equalizerDraft)));
-        this.equalizerDraft = JSON.parse(JSON.stringify(this.store.equalizer.settings || {}));
+        this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
       } finally { this.equalizerSaving = false; }
+    },
+    formatSigned: function (value, suffix) {
+      var number = Number(value || 0);
+      return (number > 0 ? '+' : '') + number.toFixed(number % 1 ? 1 : 0) + (suffix || '');
     },
     formatEqGain: function (value) {
       var n = Number(value || 0);
@@ -2506,27 +2627,143 @@ Vue.component('lms-settings', {
         return String(filter.FilterType || '').toLowerCase() === 'peak' && Number(filter.Frequency) === frequency;
       });
       var gain = Number(value);
-      if (index < 0) filters.push({ FilterType: 'peak', Frequency: frequency, Gain: gain, Q: 1.41 });
+      if (index < 0) filters.push({ FilterType: 'peak', Frequency: frequency, Gain: gain, Slope: 1.41, SlopeType: 'Q' });
       else Vue.set(filters[index], 'Gain', gain);
       this.equalizerPreset = '';
     },
-    addEqualizerFilter: function () {
-      this.equalizerDraft.Client.Filters.push({ FilterType: 'peak', Frequency: 1000, Gain: 0, Q: 1.41 });
+    setEqualizerGraphicQ: function (value) {
+      var self = this;
+      var q = Number(value);
+      ECHOCLASSIC_EQUALIZER_FREQUENCIES.forEach(function (frequency) {
+        var band = self.equalizerDraft.Client.Filters.filter(function (filter) {
+          return String(filter.FilterType || '').toLowerCase() === 'peak' && Number(filter.Frequency) === frequency;
+        })[0];
+        if (!band) {
+          band = { FilterType: 'peak', Frequency: frequency, Gain: 0, Slope: q, SlopeType: 'Q' };
+          self.equalizerDraft.Client.Filters.push(band);
+        } else {
+          Vue.set(band, 'Slope', q);
+          Vue.set(band, 'SlopeType', 'Q');
+        }
+      });
       this.equalizerPreset = '';
+    },
+    addEqualizerFilter: function (type) {
+      var filterType = type || 'peak';
+      var defaults = {
+        peak: [1000, 0, 1.41, 'Q'], lowshelf: [140, 0, 6, 'slope'], highshelf: [8000, 3, 6, 'slope'],
+        lowpass: [20000, 0, 1, 'Q'], highpass: [40, 0, 1.3, 'Q'], notch: [1000, 0, 0.5, 'Q']
+      }[filterType] || [1000, 0, 1.41, 'Q'];
+      this.equalizerDraft.Client.Filters.push({ FilterType: filterType, Frequency: defaults[0], Gain: defaults[1], Slope: defaults[2], SlopeType: defaults[3] });
+      this.equalizerPreset = '';
+    },
+    normalizeEqualizerFilter: function (filter) {
+      if (!filter) return;
+      var shelves = filter.FilterType === 'lowshelf' || filter.FilterType === 'highshelf';
+      Vue.set(filter, 'SlopeType', shelves ? 'slope' : 'Q');
+      if (filter.Slope == null) Vue.set(filter, 'Slope', shelves ? 6 : 1.41);
+      if (filter.Gain == null) Vue.set(filter, 'Gain', 0);
+      this.equalizerPreset = '';
+    },
+    setEqualizerFilterType: function (filter, type) {
+      Vue.set(filter, 'FilterType', type);
+      this.normalizeEqualizerFilter(filter);
+    },
+    equalizerFilterLabel: function (value) {
+      var found = this.equalizerFilterTypes.filter(function (type) { return type.value === value; })[0];
+      return found ? found.label : value;
     },
     removeEqualizerFilter: function (index) {
       this.equalizerDraft.Client.Filters.splice(index, 1);
       this.equalizerPreset = '';
     },
+    applyBuiltInEqualizerPreset: function (preset) {
+      var graphic = {};
+      ECHOCLASSIC_EQUALIZER_FREQUENCIES.forEach(function (frequency) { graphic[frequency] = true; });
+      var preserved = (this.equalizerDraft.Client.Filters || []).filter(function (filter) {
+        return String(filter.FilterType || '').toLowerCase() !== 'peak' || !graphic[Number(filter.Frequency)];
+      });
+      this.equalizerDraft.Client.Preamp = 0;
+      this.equalizerDraft.Client.Filters = preserved.concat(ECHOCLASSIC_EQUALIZER_FREQUENCIES.map(function (frequency, index) {
+        return { FilterType: 'peak', Frequency: frequency, Gain: preset.gains[index], Slope: 3, SlopeType: 'Q' };
+      }));
+      this.equalizerPreset = preset.name;
+      this.equalizerPresetsOpen = false;
+    },
+    resetEqualizerBands: function () {
+      var graphic = {};
+      ECHOCLASSIC_EQUALIZER_FREQUENCIES.forEach(function (frequency) { graphic[frequency] = true; });
+      this.equalizerDraft.Client.Preamp = 0;
+      this.equalizerDraft.Client.Filters = (this.equalizerDraft.Client.Filters || []).filter(function (filter) {
+        return String(filter.FilterType || '').toLowerCase() !== 'peak' || !graphic[Number(filter.Frequency)];
+      });
+      this.equalizerPreset = 'Flat';
+    },
+    resetEqualizerAll: function () {
+      var bypass = this.equalizerDraft && this.equalizerDraft.Client ? this.equalizerDraft.Client.Bypass : 0;
+      this.equalizerDraft = this.prepareEqualizerDraft({ Client: { Bypass: bypass } });
+      this.equalizerPreset = 'Flat';
+      this.equalizerPresetName = '';
+    },
     chooseEqualizerPreset: async function (preset) {
+      if (preset && preset.builtIn) {
+        this.applyBuiltInEqualizerPreset(preset.builtIn);
+        return;
+      }
       this.equalizerSaving = true;
       try {
-        this.equalizerDraft = await LmsApi.squeezeDspLoadPreset(this.store.playerId, preset);
-        this.equalizerPreset = preset;
+        var serverPreset = preset && preset.server ? preset.server : preset;
+        this.equalizerDraft = await LmsApi.squeezeDspLoadPreset(this.store.playerId, serverPreset);
+        this.equalizerDraft = this.prepareEqualizerDraft(this.equalizerDraft);
+        this.equalizerPreset = preset && preset.name ? preset.name : serverPreset;
+        this.equalizerPresetName = this.equalizerPreset;
         this.equalizerPresetsOpen = false;
       } catch (e) {
         LmsUi.notify(LmsStore.friendlyError(e, 'Could not load the equalizer preset.'), 'error', 6500);
       } finally { this.equalizerSaving = false; }
+    },
+    saveEqualizerPreset: async function () {
+      var name = String(this.equalizerPresetName || '').trim();
+      if (!name || !this.store.playerId || this.equalizerSaving) return;
+      this.equalizerSaving = true;
+      try {
+        await LmsStore.saveEqualizer(JSON.parse(JSON.stringify(this.equalizerDraft)));
+        await LmsApi.squeezeDspSavePreset(this.store.playerId, name);
+        await LmsStore.refreshEqualizer(true);
+        this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
+        this.equalizerPreset = name;
+        this.equalizerPresetsOpen = false;
+        LmsUi.notify('Equalizer preset saved.', 'success', 3000);
+      } catch (e) {
+        LmsUi.notify(LmsStore.friendlyError(e, 'Could not save the equalizer preset.'), 'error', 6500);
+      } finally { this.equalizerSaving = false; }
+    },
+    deleteEqualizerPreset: async function () {
+      if (!this.equalizerServerPresetSelected || !this.store.playerId || this.equalizerSaving) return;
+      var preset = this.equalizerSelectedServerPreset;
+      if (!window.confirm('Delete equalizer preset "' + this.equalizerPresetDisplayName(preset) + '"?')) return;
+      this.equalizerSaving = true;
+      try {
+        await LmsApi.squeezeDspDeletePreset(this.store.playerId, preset);
+        await LmsStore.refreshEqualizer(true);
+        this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
+        this.equalizerPreset = '';
+        this.equalizerPresetName = '';
+        LmsUi.notify('Equalizer preset deleted.', 'success', 3000);
+      } catch (e) {
+        LmsUi.notify(LmsStore.friendlyError(e, 'Could not delete the equalizer preset.'), 'error', 6500);
+      } finally { this.equalizerSaving = false; }
+    },
+    impulseName: function (path) {
+      return String(path || '').split(/[\\/]/).pop().replace(/\.wav$/i, '') || 'Impulse';
+    },
+    equalizerPresetDisplayName: function (path) {
+      return String(path || '').split(/[\\/]/).pop().replace(/\.preset\.json$/i, '') || 'Preset';
+    },
+    chooseEqualizerImpulse: function (path) {
+      this.equalizerDraft.Client.FIRWavFile = path;
+      this.equalizerImpulsesOpen = false;
+      this.equalizerPreset = '';
     },
     holdEqualizerBypass: async function (holding) {
       if (!this.equalizerDraft || !this.store.playerId) return;
@@ -2547,7 +2784,7 @@ Vue.component('lms-settings', {
     },
     removeEqualizerRule: async function (ruleId) {
       await LmsStore.removeEqualizerRule(ruleId);
-      this.equalizerDraft = JSON.parse(JSON.stringify(this.store.equalizer.settings || {}));
+      this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
       this.equalizerPreset = '';
     },
     equalizerRuleTypeLabel: function (type) {
@@ -2578,7 +2815,7 @@ Vue.component('lms-settings', {
       this.ui.advancedSettings = advanced;
       this.ui.appearanceScreen = advanced ? null : ((top && top.screen) || null);
       if (!advanced && this.ui['appearanceScreen'] === 'equalizer' && !this.equalizerDraft && this.store.equalizer.settings) {
-        this.equalizerDraft = JSON.parse(JSON.stringify(this.store.equalizer.settings));
+        this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
       }
       if (advanced) LmsUi.applyAdvancedSettings = this.applyAdvancedFrame;
       else if (LmsUi.applyAdvancedSettings === this.applyAdvancedFrame) LmsUi.applyAdvancedSettings = null;

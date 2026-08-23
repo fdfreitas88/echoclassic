@@ -871,6 +871,25 @@
   /* SqueezeDSP is optional and its settings belong to a player, not to the
      server. Keep the plugin's complete JSON document intact: saveall expects
      the whole document and newer revisions may add fields unknown to us. */
+  function normalizeSqueezeDspSettings(settings, applyDefaults) {
+    if (!settings || typeof settings !== 'object' || Array.isArray(settings) ||
+        !settings.Client || typeof settings.Client !== 'object') return settings;
+    if (applyDefaults && settings.Client.Bypass == null) settings.Client.Bypass = 1;
+    if (applyDefaults && settings.Client.Preamp == null) settings.Client.Preamp = 0;
+    if (applyDefaults && !Array.isArray(settings.Client.Filters)) settings.Client.Filters = [];
+    (Array.isArray(settings.Client.Filters) ? settings.Client.Filters : []).forEach(function (filter) {
+      if (!filter || typeof filter !== 'object') return;
+      /* SqueezeDSP calls the width value Slope even when SlopeType is Q.
+         Echo Classic 3.3.x mistakenly emitted a Q property, which the plugin
+         persisted but its DSP engine ignored. Migrate those documents as
+         they are read and never send the unsupported alias again. */
+      if (filter.Slope == null && filter.Q != null) filter.Slope = Number(filter.Q);
+      if (!filter.SlopeType && filter.Slope != null) filter.SlopeType = 'Q';
+      delete filter.Q;
+    });
+    return settings;
+  }
+
   async function squeezeDspRead(playerId) {
     var cmd = ['squeezedsp.readclientSettings'];
     var r = await rpc(playerId, cmd);
@@ -888,9 +907,7 @@
        SqueezeDSP fills the rest in its page JavaScript; a range input without
        an explicit value instead chooses its midpoint, so normalize the two
        fields Echo Classic currently edits before they reach Vue. */
-    if (settings.Client.Bypass == null) settings.Client.Bypass = 1;
-    if (settings.Client.Preamp == null) settings.Client.Preamp = 0;
-    if (!Array.isArray(settings.Client.Filters)) settings.Client.Filters = [];
+    normalizeSqueezeDspSettings(settings, true);
     return {
       settings: settings,
       clientName: txt(r.clientName),
@@ -916,7 +933,17 @@
   }
 
   function squeezeDspSave(playerId, settings) {
-    return rpc(playerId, ['squeezedsp.saveall', 'val:' + JSON.stringify(settings)]);
+    var document = JSON.parse(JSON.stringify(settings || {}));
+    normalizeSqueezeDspSettings(document, false);
+    return rpc(playerId, ['squeezedsp.saveall', 'val:' + JSON.stringify(document)]);
+  }
+
+  function squeezeDspSavePreset(playerId, preset) {
+    return rpc(playerId, ['squeezedsp.saveas', 'preset:' + txt(preset).trim()]);
+  }
+
+  function squeezeDspDeletePreset(playerId, preset) {
+    return rpc(playerId, ['squeezedsp.deletepreset', 'preset:' + txt(preset).trim()]);
   }
 
   async function squeezeDspLoadPreset(playerId, preset) {
@@ -928,8 +955,7 @@
     catch (e) { throw new LmsError(cmd, 'parse', 'Invalid SqueezeDSP preset JSON'); }
     if (!settings || !settings.Client) throw new LmsError(cmd, 'parse', 'Invalid SqueezeDSP preset document');
     if (settings.Client.Bypass == null) settings.Client.Bypass = 0;
-    if (settings.Client.Preamp == null) settings.Client.Preamp = 0;
-    if (!Array.isArray(settings.Client.Filters)) settings.Client.Filters = [];
+    normalizeSqueezeDspSettings(settings, true);
     return settings;
   }
 
@@ -1309,6 +1335,7 @@
     canCommand: canCommand, canCommands: canCommands,
     squeezeDspRead: squeezeDspRead, squeezeDspCatalog: squeezeDspCatalog,
     squeezeDspSave: squeezeDspSave, squeezeDspLoadPreset: squeezeDspLoadPreset,
+    squeezeDspSavePreset: squeezeDspSavePreset, squeezeDspDeletePreset: squeezeDspDeletePreset,
     musicArtistInfo: musicArtistInfo,
     musicAlbumInfo: musicAlbumInfo,
     randomPlayActive: randomPlayActive, randomPlay: randomPlay,

@@ -15,6 +15,39 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.4.1] — 2026-08-23
+
+### Added
+
+- The SqueezeDSP screen now exposes the plugin's complete current signal path:
+  graphic-band Q, balance, stereo width, delay, loudness/listening level,
+  DSP-side ReplayGain modes and fallback gains, headphone crossfeed, FIR room
+  correction and impulse strength. [code/measured: upstream SqueezeDSP settings
+  contract; Vue template compilation and equalizer UI regression tests]
+- Parametric filters can be created and changed between peak, low shelf/dynamic
+  bass, high shelf/treble enhancement, low pass, high pass and notch, with
+  frequency, gain and Q/slope controls. [code/measured: native SqueezeDSP filter
+  schema and 421 automated tests]
+- Server presets can be saved and deleted from Echo Classic through the native
+  `squeezedsp.saveas` and `squeezedsp.deletepreset` commands. Paths returned by
+  the server are shown as friendly preset names. [live/measured: temporary preset
+  created, loaded and removed on the running backend; RPC regression test]
+- Reset now offers two scopes: the graphic bands alone, preserving unrelated DSP
+  filters, or every DSP setting as a staged change that still requires Apply.
+  [code/measured: source review and template validation]
+
+### Fixed
+
+- Equalizer filters use SqueezeDSP's `Slope`/`SlopeType` contract instead of the
+  unsupported `Q` alias. Existing Echo 3.3 documents are migrated when read,
+  while fields introduced by newer plugin releases remain intact. [live/measured:
+  corrected document observed on the running backend; API migration and
+  round-trip tests]
+- Opening the EQ no longer reports a false “Custom (edited)” state merely because
+  compatibility defaults were added to a sparse server document. Apply remains
+  disabled until a real change is staged. [live/measured: clean initial state and
+  reload/discard behaviour verified in Chrome]
+
 ## [3.4.0] — 2026-08-22
 
 ### Added

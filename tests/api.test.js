@@ -350,6 +350,39 @@ test('SqueezeDSP save sends the complete settings document in one explicit savea
   assert.deepEqual(JSON.parse(ctx.calls[0][1].slice(4)), settings);
 });
 
+test('SqueezeDSP preset create and delete use the plugin commands without rewriting the settings document', async function () {
+  const ctx = apiContext(function () { return { _done: 1 }; });
+  await ctx.api.squeezeDspSavePreset('p2', '  Living Room  ');
+  await ctx.api.squeezeDspDeletePreset('p2', '/presets/Living Room.preset.json');
+  assert.deepEqual(ctx.calls, [
+    ['squeezedsp.saveas', 'preset:Living Room'],
+    ['squeezedsp.deletepreset', 'preset:/presets/Living Room.preset.json']
+  ]);
+});
+
+test('SqueezeDSP migrates Echo 3.3 Q filters to the plugin Slope contract', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'squeezedsp.readclientSettings') return {
+      json: JSON.stringify({ Client: { Bypass: 0, Filters: [
+        { FilterType: 'peak', Frequency: 60, Gain: 6, Q: 1.41 }
+      ] } })
+    };
+    return { _done: 1 };
+  });
+
+  const result = await ctx.api.squeezeDspRead('p1');
+  assert.deepEqual(plain(result.settings.Client.Filters[0]), {
+    FilterType: 'peak', Frequency: 60, Gain: 6, Slope: 1.41, SlopeType: 'Q'
+  });
+  await ctx.api.squeezeDspSave('p1', { Client: { Bypass: 0, Filters: [
+    { FilterType: 'peak', Frequency: 120, Gain: -3, Q: 2 }
+  ] } });
+  const saved = JSON.parse(ctx.calls[1][1].slice(4));
+  assert.deepEqual(saved.Client.Filters[0], {
+    FilterType: 'peak', Frequency: 120, Gain: -3, Slope: 2, SlopeType: 'Q'
+  });
+});
+
 test('SqueezeDSP fresh-player settings receive the native defaults Echo edits', async function () {
   const ctx = apiContext(function () {
     return { json: JSON.stringify({ Client: { Bypass: 1 } }) };
