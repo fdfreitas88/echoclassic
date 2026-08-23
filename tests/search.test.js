@@ -24,6 +24,9 @@ function apiWithResponses() {
           albums_loop: [
             { album_id: 1246, album: 'Acqua Fragile', artwork: 'art-a' }
           ],
+          works_loop: [
+            { work_id: 88, work: 'Acqua suite', composer: 'Luciano Basso', composer_id: 44 }
+          ],
           tracks_loop: [
             { track_id: 1, track: 'Water line' },
             { track_id: 2, track: 'Acqua' },
@@ -32,6 +35,10 @@ function apiWithResponses() {
         };
       } else if (cmd[0] === 'playlists') {
         result = { playlists_loop: [] };
+      } else if (cmd[0] === 'libraries') {
+        result = { libraries_loop: [{ id: 'classical', name: 'Classical' }] };
+      } else if (cmd[0] === 'musicfolder') {
+        result = { folder_loop: [{ id: 90, filename: 'Archive', path: '/Music/Archive' }] };
       } else if (cmd[0] === 'albums' && String(cmd[3]) === 'album_id:1246') {
         result = { albums_loop: [{ id: 1246, album: 'Acqua Fragile', artist: 'Acqua Fragile', year: 1973, artwork_track_id: 456 }] };
       } else if (cmd[0] === 'songinfo') {
@@ -63,6 +70,8 @@ test('search ranks exact matches first and enriches album and track context', as
   assert.equal(found.albums[0].artist, 'Acqua Fragile');
   assert.equal(found.albums[0].year, 1973);
   assert.equal(found.albums[0].artworkTrackId, 456);
+  assert.equal(found.works[0].title, 'Acqua suite');
+  assert.equal(found.works[0].composer, 'Luciano Basso');
   assert.equal(found.tracks[0].title, 'Acqua');
   assert.equal(found.tracks[0].artist, 'Exact Artist');
   assert.equal(found.tracks[0].album, 'Exact Album');
@@ -72,6 +81,32 @@ test('search ranks exact matches first and enriches album and track context', as
   assert.ok(harness.calls.some(function (cmd) {
     return cmd[0] === 'albums' && cmd.indexOf('tags:jlay') >= 0;
   }));
+});
+
+test('advanced search carries the selected virtual library to LMS', async function () {
+  const harness = apiWithResponses();
+  harness.api.setLibrary('classical');
+  await harness.api.search('player', 'Acqua', 50);
+  const searchCall = harness.calls.find(function (cmd) { return cmd[0] === 'search'; });
+  assert.ok(searchCall.indexOf('library_id:classical') >= 0);
+});
+
+test('library roots combine all music, virtual libraries and top-level music folders', async function () {
+  const harness = apiWithResponses();
+  const roots = await harness.api.libraryRoots('player');
+  assert.deepEqual(JSON.parse(JSON.stringify(roots.map(function (root) { return root.key; }))),
+    ['all', 'library:classical', 'folder:90']);
+});
+
+test('multi-root search isolates each LMS query and preserves result provenance', async function () {
+  const harness = apiWithResponses();
+  const found = await harness.api.searchRoots('player', 'Acqua', 50, [
+    { type: 'library', id: 'classical', key: 'library:classical', name: 'Classical' },
+    { type: 'folder', id: '90', key: 'folder:90', name: 'Archive' }
+  ]);
+  assert.ok(harness.calls.some(function (cmd) { return cmd[0] === 'search' && cmd.indexOf('library_id:classical') >= 0; }));
+  assert.ok(harness.calls.some(function (cmd) { return cmd[0] === 'search' && cmd.indexOf('folder_id:90') >= 0; }));
+  assert.deepEqual(JSON.parse(JSON.stringify(found.works.map(function (work) { return work.rootName; }))), ['Classical', 'Archive']);
 });
 
 /* NAV-01: the search had no navigation frame of its own. Searching for

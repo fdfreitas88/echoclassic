@@ -7,7 +7,7 @@
 
   Vue.component('lms-app', {
     template: `
-<div class="app">
+<div class="app" :class="{'party-mode':ui.partyMode,'kiosk-mode':ui.kioskMode}">
   <header class="app-header">
   <lms-statusbar></lms-statusbar>
   <lms-navbar :title="title" :back="back" :pickable="pickable"

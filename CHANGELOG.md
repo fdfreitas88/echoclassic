@@ -15,6 +15,64 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.4.0] — 2026-08-22
+
+### Added
+
+- A SqueezeDSP equalizer is available from album, track and player surfaces,
+  with contextual rules for an individual song, folder, artist and epoch. Rules
+  are isolated per player, normalized before storage and serialized so rapid
+  changes cannot overwrite the winning preset. [live/measured: deployed with a
+  running SqueezeDSP backend; automated rule-precedence and persistence tests]
+- Synchronized-player controls now expose group topology, the master, Unsync,
+  group volume and a per-member “Do Not Set Volume” policy. Fixed-output and
+  opted-out members are excluded from group writes. [code/measured: topology,
+  stale-player, unsync and volume-policy tests]
+- Playback intelligence adds capability-gated RandomPlay and Don't Stop The
+  Music controls, including confirmed active state and protection against
+  replacing an existing queue unintentionally. [code/measured: command,
+  confirmation and stale-player tests]
+- My Music gains virtual-library roots, recursive Music Folder navigation,
+  Album Artists, Release Types and classical entry points for composers, works,
+  conductors and ensembles where the server exposes that metadata. Each root
+  keeps its own navigation state. [live/measured: recursive folder and Album
+  Artist navigation on LMS; navigation and API tests]
+- Advanced search can scope one or several library roots and filter by type,
+  year, source, composer, work, format and release type. Results retain root
+  provenance and exact matches rank first. [live/measured: controls rendered in
+  Chrome; multi-root isolation, ranking and navigation-restoration tests]
+- Album track lists divide multi-disc releases into explicit disc sections
+  while retaining the server's track order. [code/measured: template and data
+  normalization validation]
+- Queue and saved-playlist editing adds duplicate removal, direct
+  move-to-position and drag-and-drop reordering. Queue removal and clearing keep
+  player-scoped undo data. [code/measured: queue identity, move, drag and undo
+  regression tests; draggable queue rows confirmed live]
+- Pinned destinations can be reordered. Favourites gain folder creation,
+  renaming and direct movement between folders when the LMS action is available.
+  [code/measured: capability and template validation]
+- Party mode constrains shared playback controls, while Kiosk mode provides a
+  locked presentation surface with an administrator recovery path. [live/code:
+  controls rendered in the deployed Settings interface; state validation]
+- Now Playing prefers LMS 9.2's active-stream format, bitrate, sample rate and
+  bit depth, revealing transcoding results while retaining track metadata as a
+  compatibility fallback for older servers. [code/measured: LMS 9.2 and legacy
+  status-response tests]
+
+### Changed
+
+- Album, queue, search, player and Settings actions use the same capability
+  gates and translated feedback, so unavailable server or plugin operations do
+  not appear to succeed silently. [measured: 416 tests; validation 4/4; all 155
+  tested light, dark and legacy contrast pairs pass]
+
+### Fixed
+
+- Recursive Music Folder pages now leave the loading state after their LMS
+  response, including nested folder navigation and Back restoration.
+  [live/measured: Lossless → Classical Music → country folders in Chrome; no
+  console errors]
+
 ## [3.3.2] — 2026-08-16
 
 ### Changed

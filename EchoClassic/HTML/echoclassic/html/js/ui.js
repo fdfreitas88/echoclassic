@@ -18,9 +18,16 @@
   var MUSIC_VIEWS = Object.freeze([
     Object.freeze({ key: 'recent', label: 'Recent' }),
     Object.freeze({ key: 'artists', label: 'Artists' }),
+    Object.freeze({ key: 'albumartists', label: 'Album Artists' }),
+    Object.freeze({ key: 'composers', label: 'Composers' }),
+    Object.freeze({ key: 'conductors', label: 'Conductors' }),
+    Object.freeze({ key: 'ensembles', label: 'Ensembles' }),
+    Object.freeze({ key: 'works', label: 'Works' }),
     Object.freeze({ key: 'albums', label: 'Albums' }),
     Object.freeze({ key: 'genres', label: 'Genres' }),
     Object.freeze({ key: 'years', label: 'Years' })
+    ,Object.freeze({ key: 'musicfolders', label: 'Music Folder' })
+    ,Object.freeze({ key: 'releasetypes', label: 'Release Types' })
   ]);
 
   var COLOR_SCHEMES = Object.freeze([
@@ -206,7 +213,7 @@
      por data de inclusao e reordenar no cliente apagava justamente o criterio
      que da nome a pagina. */
   var DEFAULT_SORT_BY_VIEW = {
-    artists: 'name', albums: 'name', recent: 'recent', genres: 'name', years: 'year'
+    artists: 'name', albumartists: 'name', composers: 'name', conductors: 'name', ensembles: 'name', works: 'name', albums: 'name', recent: 'recent', genres: 'name', years: 'year', musicfolders: 'name', releasetypes: 'name'
   };
 
   /* So Albuns e Recentes sabem aplicar filtro de midia: sao as duas views cujo
@@ -353,6 +360,7 @@
     if (view === 'recent' && !saved.recentSortMigrated && legacy === 'name') legacy = null;
     byView[view] = migrateSortKey(view, legacy, saved.sortDesc);
   });
+  var rootContexts = plainObject(saved.rootContexts) ? saved.rootContexts : {};
 
   function viewEntry(view) {
     if (!byView[view]) byView[view] = defaultsFor(view);
@@ -443,6 +451,8 @@
     dark: initialTheme === 'dark',
     searching: false,
     query: '',
+    rootKey: saved.rootKey || (saved.libraryId ? 'library:' + saved.libraryId : 'all'),
+    libraryId: saved.libraryId == null ? '' : String(saved.libraryId),
     /* Ha uma busca suspensa a que o Back pode voltar. Fica no estado, e nao so
        na variavel de modulo abaixo, porque o rotulo do Back e computado. */
     searchReturn: false,
@@ -492,6 +502,9 @@
     selectionMode: false,
     selected: {},
     pins: savedPins,
+    partyMode: saved.partyMode === true,
+    kioskMode: saved.kioskMode === true,
+    volumeExclusions: plainObject(saved.volumeExclusions) || {},
     colorScheme: isColorScheme(saved.colorScheme) ? saved.colorScheme : 'blue',
     fontFamily: isFontOption(saved.fontFamily) ? saved.fontFamily : 'system',
     /* Per-surface appearance overrides: 'app' is the sentinel meaning "follow
@@ -540,8 +553,9 @@
   function persist() {
     try {
       localStorage.setItem('echoclassic.ui.v2', JSON.stringify({
-        tab: state.tab, musicView: state.musicView, theme: state.theme, dark: state.theme === 'dark',
-        byView: byView,
+        tab: state.tab, musicView: state.musicView, rootKey: state.rootKey, libraryId: state.libraryId,
+        theme: state.theme, dark: state.theme === 'dark',
+        byView: byView, rootContexts: rootContexts,
         albumMode: state.albumMode, queueArtMode: state.queueArtMode,
         defaultPlayer: state.defaultPlayer,
         showBadges: state.showBadges,
@@ -556,7 +570,8 @@
         legacyMiniGaugeStyle: state.legacyMiniGaugeStyle,
         legacyPlayerGaugeStyle: state.legacyPlayerGaugeStyle,
         miniGaugeColor: state.miniGaugeColor, playerGaugeColor: state.playerGaugeColor,
-        prefer: state.prefer,
+        prefer: state.prefer, partyMode: state.partyMode, kioskMode: state.kioskMode,
+        volumeExclusions: state.volumeExclusions,
         miniTheme: state.miniTheme, miniColorScheme: state.miniColorScheme, miniFont: state.miniFont,
         smallTheme: state.smallTheme, smallColorScheme: state.smallColorScheme, smallFont: state.smallFont,
         fullTheme: state.fullTheme, fullColorScheme: state.fullColorScheme, fullFont: state.fullFont
@@ -806,6 +821,29 @@
       }
     }
   }
+
+  function setLibraryRoot(key) {
+    key = key || 'all';
+    var previous = state.rootKey || 'all';
+    if (previous === key) return;
+    stash();
+    rootContexts[previous] = { musicView: state.musicView, byView: JSON.parse(JSON.stringify(byView)) };
+    var restored = plainObject(rootContexts[key]) ? rootContexts[key] : null;
+    if (restored && plainObject(restored.byView)) {
+      Object.keys(DEFAULT_SORT_BY_VIEW).forEach(function (view) {
+        byView[view] = sanitize(view, restored.byView[view]);
+      });
+    } else {
+      Object.keys(DEFAULT_SORT_BY_VIEW).forEach(function (view) { byView[view] = defaultsFor(view); });
+    }
+    state.musicView = restored && isMusicView(restored.musicView) ? restored.musicView : 'recent';
+    adopt(state.musicView);
+    state.rootKey = key;
+    state.libraryId = key.indexOf('library:') === 0 ? key.slice(8) : '';
+    if (global.LmsApi && LmsApi.setRoot) LmsApi.setRoot(key);
+    persist();
+  }
+  function setLibrary(id) { setLibraryRoot(id ? 'library:' + id : 'all'); }
 
   function setFilters(list) {
     state.filters = sanitize(state.musicView, { filters: list }).filters;
@@ -1057,10 +1095,22 @@
   }
 
   function setPreference(key, value) {
-    if (key !== 'showBadges' && key !== 'markHires') return;
+    if (['showBadges', 'markHires', 'partyMode', 'kioskMode'].indexOf(key) < 0) return;
     state[key] = !!value;
+    if (key === 'kioskMode' && state[key]) {
+      state.full = true;
+      state.playerFullscreen = true;
+    }
     persist();
   }
+
+  function setVolumeExcluded(playerId, excluded) {
+    var next = Object.assign({}, state.volumeExclusions);
+    if (excluded) next[String(playerId)] = true; else delete next[String(playerId)];
+    state.volumeExclusions = next; persist();
+  }
+
+  function volumeExcluded(playerId) { return !!state.volumeExclusions[String(playerId)]; }
 
 	  var searchReturnFocus = null;
 	  var searchReturnScroll = 0;
@@ -1229,6 +1279,18 @@
     catch (e) {}
   }
 
+  function movePin(index, toIndex) {
+    index = Number(index); toIndex = Number(toIndex);
+    if (!Number.isInteger(index) || !Number.isInteger(toIndex) || index < 0 ||
+        toIndex < 0 || index >= state.pins.length || toIndex >= state.pins.length || index === toIndex) return false;
+    var pins = state.pins.slice();
+    var moved = pins.splice(index, 1)[0];
+    pins.splice(toIndex, 0, moved);
+    state.pins = pins;
+    try { localStorage.setItem('echoclassic.pins.v1', JSON.stringify(state.pins)); } catch (e) {}
+    return true;
+  }
+
   function setBusy(message) { state.busyMessage = message || ''; }
 
   /* Traducao explicita, para o texto que nasce em JavaScript e nao passa pelo
@@ -1258,6 +1320,10 @@
   document.addEventListener('keydown', function (event) {
     if (event.key !== 'Escape' && event.key !== 'Esc') return;
     if (event.defaultPrevented) return;
+    if (state.kioskMode) {
+      if (!global.confirm || global.confirm('Exit kiosk mode?')) setPreference('kioskMode', false);
+      event.preventDefault(); return;
+    }
     if (state.picker) { state.picker = false; event.preventDefault(); return; }
     if (state.playerPicker) { state.playerPicker = false; event.preventDefault(); return; }
     if (state.advancedSettings) {
@@ -1315,8 +1381,9 @@
     ALBUM_MODES: ALBUM_MODES, setAlbumMode: setAlbumMode,
     QUEUE_ART_MODES: QUEUE_ART_MODES, setQueueArtMode: setQueueArtMode,
     DEFAULT_PLAYER_LAST: DEFAULT_PLAYER_LAST, setDefaultPlayer: setDefaultPlayer,
-    setPreference: setPreference,
+    setPreference: setPreference, setVolumeExcluded: setVolumeExcluded, volumeExcluded: volumeExcluded,
     viewLabel: viewLabel, setMusicView: setMusicView,
+    setLibraryRoot: setLibraryRoot, setLibrary: setLibrary,
     allowsMediaFilter: allowsMediaFilter,
     validFilter: validFilter, validSortKey: validSortKey, validGroup: validGroup,
     validSection: validSection, validPrefer: validPrefer,
@@ -1343,7 +1410,7 @@
     setSort: setSort, openActions: openActions, closeActions: closeActions,
     toggleSelection: toggleSelection, clearSelection: clearSelection,
     queueSelection: queueSelection,
-    selectionKey: selectionKey, isPinned: isPinned, togglePin: togglePin,
+    selectionKey: selectionKey, isPinned: isPinned, togglePin: togglePin, movePin: movePin,
     setBusy: setBusy, notify: notify, dismissNotice: dismissNotice
   };
 })(window);

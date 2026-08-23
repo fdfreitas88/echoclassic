@@ -2240,6 +2240,198 @@ ECHOCLASSIC_UI_SHOW_LESS
 	EN	Show less
 	PT	Mostrar menos
 
+ECHOCLASSIC_UI_RANDOM_MIX
+	EN	Random mix
+	PT	Mix aleatório
+
+ECHOCLASSIC_UI_CONTINUE
+	EN	Continue
+	PT	Continuar
+
+ECHOCLASSIC_UI_RANDOM_MIX_CHOICES
+	EN	Random mix choices
+	PT	Opções de mix aleatório
+
+ECHOCLASSIC_UI_REPLACES_THE_CURRENT_QUEUE_WITH_A_SERVER_GENERATED_MIX
+	EN	Replaces the current queue with a server-generated mix.
+	PT	Substitui a fila atual por um mix gerado pelo servidor.
+
+ECHOCLASSIC_UI_REPLACE_THE_UNPLAYED_TRACKS_WITH_MODE
+	EN	Replace the unplayed tracks with {{mode}}?
+	PT	Substituir as faixas ainda não reproduzidas por {{mode}}?
+
+ECHOCLASSIC_UI_REPLACE
+	EN	Replace
+	PT	Substituir
+
+ECHOCLASSIC_UI_CLASSICAL_WORKS
+	EN	Classical works
+	PT	Obras clássicas
+
+ECHOCLASSIC_UI_STOP_MIX
+	EN	Stop mix
+	PT	Parar mix
+
+ECHOCLASSIC_UI_DONT_STOP_THE_MUSIC_CHOICES
+	EN	Don't Stop The Music choices
+	PT	Opções do Não Pare a Música
+
+ECHOCLASSIC_UI_DONT_STOP_THE_MUSIC
+	EN	Don’t Stop The Music
+	PT	Não Pare a Música
+
+ECHOCLASSIC_UI_CONTINUATION_PROVIDER
+	EN	Continuation provider
+	PT	Fonte de continuação
+
+ECHOCLASSIC_UI_RANDOM_MIX_MODE
+	EN	Random mix: {{mode}}
+	PT	Mix aleatório: {{mode}}
+
+ECHOCLASSIC_UI_CONTINUES_WITH_PROVIDER
+	EN	Continues with: {{provider}}
+	PT	Continua com: {{provider}}
+
+ECHOCLASSIC_UI_DONT_STOP_THE_MUSIC_IS_ON
+	EN	Don’t Stop The Music is on
+	PT	Não Pare a Música está ativo
+
+ECHOCLASSIC_UI_DSTM_OFF_HELP
+	EN	Off: playback stops when the queue ends.
+	PT	Desligado: a reprodução para quando a fila termina.
+
+ECHOCLASSIC_UI_DSTM_ON_HELP
+	EN	On: playback continues automatically when the queue ends.
+	PT	Ligado: a reprodução continua automaticamente quando a fila termina.
+
+ECHOCLASSIC_UI_EQUALIZER
+	EN	Equalizer
+	PT	Equalizador
+
+ECHOCLASSIC_UI_SQUEEZEDSP
+	EN	SqueezeDSP
+	PT	SqueezeDSP
+
+ECHOCLASSIC_UI_EQUALIZER_SETTINGS_ARE_NOT_AVAILABLE_FOR_THIS_PLAYER
+	EN	Equalizer settings are not available for this player.
+	PT	As configurações do equalizador não estão disponíveis para este player.
+
+ECHOCLASSIC_UI_TRY_AGAIN
+	EN	Try again
+	PT	Tentar novamente
+
+ECHOCLASSIC_UI_BYPASS
+	EN	Bypass
+	PT	Ignorar processamento
+
+ECHOCLASSIC_UI_PREAMP
+	EN	Preamp
+	PT	Pré-amplificação
+
+ECHOCLASSIC_UI_CHANGES_ARE_STAGED_APPLY_MAY_BRIEFLY_RESTART_THE_CURRENT_TRACK
+	EN	Changes are staged. Apply may briefly restart the current track.
+	PT	As alterações ficam pendentes. Aplicar pode reiniciar brevemente a faixa atual.
+
+ECHOCLASSIC_UI_APPLY_CHANGES
+	EN	Apply changes
+	PT	Aplicar alterações
+
+ECHOCLASSIC_UI_APPLYING
+	EN	Applying…
+	PT	Aplicando…
+
+ECHOCLASSIC_UI_PARAMETRIC_FILTERS
+	EN	Parametric filters
+	PT	Filtros paramétricos
+
+ECHOCLASSIC_UI_NO_FILTERS_CONFIGURED
+	EN	No filters configured.
+	PT	Nenhum filtro configurado.
+
+ECHOCLASSIC_UI_CHECKING
+	EN	checking…
+	PT	verificando…
+
+ECHOCLASSIC_UI_INSTALL_SQUEEZEDSP
+	EN	Install SqueezeDSP
+	PT	Instalar SqueezeDSP
+
+ECHOCLASSIC_UI_BYPASSED
+	EN	bypassed
+	PT	ignorado
+
+ECHOCLASSIC_UI_ON
+	EN	on
+	PT	ligado
+
+ECHOCLASSIC_UI_COULD_NOT_LOAD_THE_EQUALIZER
+	EN	Could not load the equalizer.
+	PT	Não foi possível carregar o equalizador.
+
+ECHOCLASSIC_UI_THE_EQUALIZER_SETTINGS
+	EN	The equalizer settings
+	PT	As configurações do equalizador
+
+ECHOCLASSIC_UI_AUTOMATIC_EQ
+	EN	Automatic EQ
+	PT	EQ automático
+
+ECHOCLASSIC_UI_REMEMBER_FOR_THIS_SONG
+	EN	Remember for this song
+	PT	Lembrar para esta música
+
+ECHOCLASSIC_UI_REMEMBER_FOR_THIS_ARTIST
+	EN	Remember for this artist
+	PT	Lembrar para este artista
+
+ECHOCLASSIC_UI_REMEMBER_FOR_THIS_FOLDER
+	EN	Remember for this folder
+	PT	Lembrar para esta pasta
+
+ECHOCLASSIC_UI_REMEMBER_FOR_THIS_YEAR
+	EN	Remember for this year
+	PT	Lembrar para este ano
+
+ECHOCLASSIC_UI_PRIORITY_SONG_ARTIST_FOLDER_THEN_YEAR_RULES_SWITCH_AUTOMATICALLY_WHILE_ECHO_CLASSIC_IS_OPEN
+	EN	Priority: song, artist, folder, then year. Rules switch automatically while Echo Classic is open.
+	PT	Prioridade: música, artista, pasta e, por fim, ano. As regras mudam automaticamente enquanto o Echo Classic estiver aberto.
+
+ECHOCLASSIC_UI_SAVED_RULES
+	EN	Saved rules
+	PT	Regras salvas
+
+ECHOCLASSIC_UI_SONG
+	EN	Song
+	PT	Música
+
+ECHOCLASSIC_UI_ARTIST
+	EN	Artist
+	PT	Artista
+
+ECHOCLASSIC_UI_FOLDER
+	EN	Folder
+	PT	Pasta
+
+ECHOCLASSIC_UI_YEAR
+	EN	Year
+	PT	Ano
+
+ECHOCLASSIC_UI_ACTIVE
+	EN	active
+	PT	ativa
+
+ECHOCLASSIC_UI_SAVED
+	EN	saved
+	PT	salva
+
+ECHOCLASSIC_UI_THE_EQUALIZER_RULE
+	EN	The equalizer rule
+	PT	A regra do equalizador
+
+ECHOCLASSIC_UI_COULD_NOT_APPLY_THE_EQUALIZER_RULE
+	EN	Could not apply the equalizer rule.
+	PT	Não foi possível aplicar a regra do equalizador.
+
 ECHOCLASSIC_UI_READ_REVIEW
 	EN	Read review
 	PT	Ler resenha
@@ -2523,3 +2715,46 @@ ECHOCLASSIC_UI_READ_BIOGRAPHY
 ECHOCLASSIC_UI_SHOW_LESS
 	EN	Show less
 	PT	Mostrar menos
+ECHOCLASSIC_UI_THIS_LIBRARY_HAS_MORE_THAN_2_000_COMPOSERS_USE_THE_FILTER_TO_NARROW_THE_LIST
+	EN	This library has more than 2,000 composers; use the filter to narrow the list.
+	PT	Esta biblioteca tem mais de 2.000 compositores; use o filtro para restringir a lista.
+
+ECHOCLASSIC_UI_THIS_LIBRARY_HAS_MORE_THAN_2_000_WORKS_USE_THE_FILTER_TO_NARROW_THE_LIST
+	EN	This library has more than 2,000 works; use the filter to narrow the list.
+	PT	Esta biblioteca tem mais de 2.000 obras; use o filtro para restringir a lista.
+
+ECHOCLASSIC_UI_LIBRARY_ROOT
+	EN	Library root
+	PT	Raiz da biblioteca
+
+ECHOCLASSIC_UI_CONDUCTORS
+	EN	Conductors
+	PT	Regentes
+
+ECHOCLASSIC_UI_ENSEMBLES
+	EN	Ensembles
+	PT	Conjuntos
+
+ECHOCLASSIC_UI_WORK
+	EN	Work
+	PT	Obra
+
+ECHOCLASSIC_UI_COMPOSER_NAME
+	EN	Composer name
+	PT	Nome do compositor
+
+ECHOCLASSIC_UI_WORK_TITLE
+	EN	Work title
+	PT	Título da obra
+
+ECHOCLASSIC_UI_ALL_MUSIC
+	EN	All music
+	PT	Todas as músicas
+
+ECHOCLASSIC_UI_SEARCH_ARTISTS_ALBUMS_CLASSICAL_WORKS_TRACKS_AND_PLAYLISTS_ACROSS_ONE_OR_MORE_LIBRARY_ROOTS
+	EN	Search artists, albums, classical works, tracks and playlists across one or more library roots.
+	PT	Pesquise artistas, álbuns, obras clássicas, faixas e playlists em uma ou mais raízes da biblioteca.
+
+ECHOCLASSIC_UI_THIS_LIBRARY_HAS_MORE_THAN_2_000_CONTRIBUTORS_IN_THIS_ROLE_USE_THE_FILTER_TO_NARROW_THE_LIST
+	EN	This library has more than 2,000 contributors in this role; use the filter to narrow the list.
+	PT	Esta biblioteca tem mais de 2.000 colaboradores nesta função; use o filtro para restringir a lista.

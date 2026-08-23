@@ -57,6 +57,11 @@ Vue.component('lms-album-block', {
     </div>
   </div>
 
+  <button v-if="store.equalizer.status === 'ready'" type="button" class="album-equalizer-disclosure"
+          @click="openAlbumEqualizer">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M4 2.5v15M10 2.5v15M16 2.5v15"/><circle cx="4" cy="12" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="16" cy="10" r="2.2"/></g></svg>
+    <span>{{ tr('Equalizer') }}</span><span class="album-equalizer-value">{{ albumEqualizerRule ? tr('custom') : tr('Set for this album') }} ›</span>
+  </button>
   <button v-if="albumInfoStatus" type="button" class="album-info-disclosure"
           :aria-expanded="albumInfoVisible ? 'true' : 'false'"
           @click="albumInfoVisible = !albumInfoVisible">
@@ -121,7 +126,12 @@ Vue.component('lms-album-block', {
     <button class="retry-command" @click="load">Try again</button>
   </div>
   <template v-else>
-	    <div v-for="t in tracks" :key="t.id" class="trow"
+	    <template v-for="(t, trackIndex) in tracks">
+      <div v-if="showDiscHeader(t, trackIndex)" :key="'disc-' + discNumber(t)" class="disc-section-heading">
+        <span>{{ tr('Disc') }} {{ discNumber(t) }}</span>
+        <span>{{ discTrackCount(discNumber(t)) }} {{ tr(discTrackCount(discNumber(t)) === 1 ? 'song' : 'songs') }}</span>
+      </div>
+      <div :key="t.id" class="trow"
 	         :class="{playing: isPlaying(t), chosen: selected(t)}"
 	         role="group" :aria-label="trackLabel(t)">
 	      <button type="button" class="trow-main pointer" :aria-label="trackLabel(t)"
@@ -138,6 +148,12 @@ Vue.component('lms-album-block', {
 	        <span v-if="hires(t)" class="spec">{{ shortRate(t) }}</span>
 	        <span class="dur">{{ dur(t.duration) }}</span>
 	      </button>
+	      <button v-if="!ui.selectionMode && store.equalizer.status === 'ready'" type="button"
+	              class="track-equalizer-command" :class="{on: trackEqualizerRule(t)}"
+	              :title="tr('Equalizer')" :aria-label="tr('Equalizer') + ': ' + t.title"
+	              @click.stop="openTrackEqualizer(t)">
+	        <svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M4 2.5v15M10 2.5v15M16 2.5v15"/><circle cx="4" cy="12" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="16" cy="10" r="2.2"/></g></svg>
+	      </button>
 	      <button v-if="!ui.selectionMode" class="more-command" title="More actions"
 	              :aria-label="'More actions for ' + t.title" @click.stop="actions(t, $event)">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -147,7 +163,8 @@ Vue.component('lms-album-block', {
           <circle class="more-dot" cx="15.5" cy="12" r="1"/>
         </svg>
       </button>
-    </div>
+	    </div>
+      </template>
 	    <div v-if="!tracks.length" class="empty"><div class="p">This album returned no tracks.</div></div>
 	    <div v-if="tracksHasMore" class="loading-more warning" role="status">
 	      This album has more tracks than the screen loaded.
@@ -236,9 +253,26 @@ Vue.component('lms-album-block', {
     },
     hasHiddenRelated: function () {
       return this.relatedExpanded || this.relatedVisibleCount < this.relatedArtists.length;
+    },
+    albumEqualizerRule: function () {
+      var playerId = this.store.playerId;
+      var albumId = String(this.album.id);
+      return (this.store.equalizer.rules || []).filter(function (rule) {
+        return rule.playerId === playerId && rule.type === 'album' && rule.key === albumId;
+      })[0] || null;
     }
   },
   methods: {
+    discNumber: function (track) { return Math.max(1, Number(track && track.disc) || 1); },
+    showDiscHeader: function (track, index) {
+      if (!this.tracks.some(function (item) { return Number(item.disc) > 1; })) return false;
+      return index === 0 || this.discNumber(this.tracks[index - 1]) !== this.discNumber(track);
+    },
+    discTrackCount: function (disc) {
+      return this.tracks.filter(function (track) {
+        return Math.max(1, Number(track.disc) || 1) === Number(disc);
+      }).length;
+    },
     tr: function (text) {
       return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
     },
@@ -378,6 +412,37 @@ Vue.component('lms-album-block', {
       LmsNav.push('settings', { label: 'Advanced LMS settings', advanced: true });
       this.ui.advancedSettings = true;
       this.ui.advancedSettingsDirty = false;
+    },
+    openAlbumEqualizer: function () {
+      LmsStore.setEqualizerContext({
+        type: 'album', albumKey: String(this.album.id), albumTitle: this.album.title,
+        artist: this.album.artist || (this.artist && this.artist.name) || '',
+        artistLabel: this.album.artist || (this.artist && this.artist.name) || '',
+        year: this.album.originalYear || this.album.year || ''
+      });
+      LmsUi.setTab('settings');
+      LmsNav.push('settings', { label: 'Equalizer', screen: 'equalizer' });
+      this.ui.appearanceScreen = 'equalizer';
+    },
+    trackEqualizerRule: function (track) {
+      var playerId = this.store.playerId;
+      var songId = String(track.id);
+      return (this.store.equalizer.rules || []).some(function (rule) {
+        return rule.playerId === playerId && rule.type === 'song' && rule.key === songId;
+      });
+    },
+    openTrackEqualizer: function (track) {
+      LmsStore.setEqualizerContext({
+        type: 'song', songKey: String(track.id), songTitle: track.title,
+        albumKey: String(this.album.id), albumTitle: this.album.title,
+        artist: track.artist || this.album.artist || (this.artist && this.artist.name) || '',
+        artistLabel: track.artist || this.album.artist || (this.artist && this.artist.name) || '',
+        genre: track.genre || '', year: track.originalYear || track.year || this.album.originalYear || this.album.year || '',
+        folder: String(track.url || '').replace(/[?#].*$/, '').replace(/\/[^/]*$/, '')
+      });
+      LmsUi.setTab('settings');
+      LmsNav.push('settings', { label: 'Equalizer', screen: 'equalizer' });
+      this.ui.appearanceScreen = 'equalizer';
     },
     load: async function () {
 	      this.loading = true;

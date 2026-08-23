@@ -34,6 +34,12 @@ Vue.component('lms-browse', {
 <div ref="split" class="split-body" :class="{'split-locked': splitLocked}"
      :style="{'--pane-current': paneWidth + 'px'}">
   <div class="pane-left">
+    <label v-if="libraries.length > 1" class="library-root-control">
+      <span>Library root</span>
+      <select :value="ui.rootKey" aria-label="Library root" @change="chooseLibrary($event.target.value)">
+        <option v-for="library in libraries" :key="library.key" :value="library.key">{{ library.name }}</option>
+      </select>
+    </label>
     <div class="library-tools" :class="{tight: toolbarTight}">
       <input v-model="ui.filter" type="search" placeholder="Filter"
              :aria-label="'Filter ' + viewLabel.toLowerCase()">
@@ -217,7 +223,7 @@ Vue.component('lms-browse', {
     var split = LmsSplitPane.load();
     return {
       ui: LmsUi.state, store: LmsStore.state, LmsUi: LmsUi,
-      rows: [], loading: true, error: '',
+      rows: [], libraries: [], loading: true, error: '',
 	      loadingMore: false, limitWarning: '', requestToken: 0, unknownCount: 0,
 	      artistIndexTruncated: false,
       rootSelection: null,
@@ -535,6 +541,7 @@ Vue.component('lms-browse', {
   },
   watch: {
     view: function () { this.reload(false); },
+    'ui.rootKey': function () { this.reload(true); },
     /* Filtrar e agrupar mudam o que e carregado; ordenar so reordena o que ja
        esta na tela, e displayRows cuida disso sozinho. Antes qualquer troca de
        sortKey em Albuns recarregava a biblioteca inteira, inclusive para mudar
@@ -557,6 +564,17 @@ Vue.component('lms-browse', {
     }
   },
   methods: {
+    chooseLibrary: function (key) {
+      LmsNav.switchMusicRoot(key);
+      this.rootSelection = LmsNav.top('music');
+      LmsUi.setLibraryRoot(key);
+    },
+    loadLibraries: async function () {
+      this.libraries = await LmsApi.libraryRoots(this.store.playerId || '');
+      if (!this.libraries.some(function (x) { return x.key === this.ui.rootKey; }, this)) {
+        LmsUi.setLibraryRoot('all');
+      }
+    },
     splitBounds: function () {
       var width = this.$refs.split ? this.$refs.split.clientWidth : window.innerWidth;
       return {
@@ -1352,6 +1370,44 @@ Vue.component('lms-browse', {
       try {
         if (this.view === 'artists' || this.view === 'albums') {
           await this.loadPagedRoot(pid, token);
+        } else if (this.view === 'albumartists') {
+          var albumArtists = await LmsApi.albumArtists(pid, 0, 5000);
+          if (token !== this.requestToken) return;
+          this.rows = albumArtists.map(function (x) {
+            return { key: 'aa' + x.id, kind: 'artist', id: x.id, ids: x.ids, label: x.name, art: null };
+          });
+        } else if (this.view === 'musicfolders') {
+          var folders = await LmsApi.musicFolders(pid, null);
+          if (token !== this.requestToken) return;
+          this.rows = folders.map(function (x) {
+            return { key: x.key, kind: x.type === 'folder' ? 'musicfolder' : 'track', id: x.id,
+              label: x.name, title: x.title, url: x.url, path: x.path, art: null };
+          });
+        } else if (this.view === 'releasetypes') {
+          var releaseTypes = await LmsApi.releaseTypes(pid);
+          if (token !== this.requestToken) return;
+          this.rows = releaseTypes.map(function (x) {
+            return { key: 'rt' + x.id, kind: 'releasetype', id: x.id, label: x.name, art: null };
+          });
+        } else if (this.view === 'composers' || this.view === 'conductors' || this.view === 'ensembles') {
+          var role = this.view === 'composers' ? 2 : this.view === 'conductors' ? 3 : 4;
+          var roleKind = this.view === 'composers' ? 'composer' : this.view === 'conductors' ? 'conductor' : 'ensemble';
+          var composers = await LmsApi.contributors(pid, 0, 2000, role);
+          if (token !== this.requestToken) return;
+          if (composers.length >= 2000) this.limitWarning = 'This library has more than 2,000 contributors in this role; use the filter to narrow the list.';
+          this.rows = composers.map(function (x) {
+            return { key: roleKind.charAt(0) + x.id, kind: roleKind, id: x.id, ids: x.ids,
+                     roleId: x.roleId, label: x.name, art: null };
+          });
+        } else if (this.view === 'works') {
+          var works = await LmsApi.works(pid, 0, 2000, { roleId: 2 });
+          if (token !== this.requestToken) return;
+          if (works.length >= 2000) this.limitWarning = 'This library has more than 2,000 works; use the filter to narrow the list.';
+          this.rows = works.map(function (x) {
+            return { key: 'w' + x.id, kind: 'work', id: x.id, label: x.title,
+                     sub: x.composer, composerId: x.composerId,
+                     art: LmsFmt.coverUrl(x.artworkTrackId, 50) || null };
+          });
         } else if (this.view === 'recent') {
           if (this.needsMediaIndex) {
             await this.loadMediaIndex(pid, token);
@@ -1428,7 +1484,11 @@ Vue.component('lms-browse', {
       });
     }
   },
-  created: function () { this.reload(true); },
+  created: function () {
+    LmsApi.setRoot(this.ui.rootKey);
+    this.loadLibraries();
+    this.reload(true);
+  },
   mounted: function () {
     this.setPaneWidth(this.paneWidth, false);
     window.addEventListener('resize', this.onSplitWindowResize);

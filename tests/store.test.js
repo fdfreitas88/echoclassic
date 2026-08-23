@@ -102,6 +102,175 @@ test('reconectar nao pede capabilities de novo: capabilitiesRequested e um tiro 
   assert.equal(ctx.callCount(), 1);
 });
 
+test('EQ contextual prioriza pasta sobre artista e ano, e remover volta para a regra seguinte', async function () {
+  const writes = [];
+  const ctx = storeContext({
+    squeezeDspSave: async function (playerId, settings) { writes.push({ playerId, settings }); },
+    squeezeDspRead: async function () { return { settings: { Client: { Bypass: 0 } } }; },
+    squeezeDspCatalog: async function () { return { presets: [], impulses: [] }; }
+  });
+  ctx.store.state.playerId = 'p1';
+  ctx.store.state.connected = true;
+  ctx.store.state.equalizer.status = 'ready';
+  ctx.store.state.equalizer.settings = { Client: { Bypass: 0, Preamp: -3 } };
+  ctx.store.state.np = { id: 42, title: 'Blue in Green', artist: 'Miles Davis', url: 'file:///Music/Jazz/blue.flac' };
+  ctx.store.state.trackInfo = { id: 42, artist: 'Miles Davis', year: 1959, url: 'file:///Music/Jazz/blue.flac' };
+
+  await ctx.store.toggleEqualizerRule('year', ctx.store.state.equalizer.settings);
+  assert.equal(ctx.store.state.equalizer.activeRule.type, 'year');
+  await ctx.store.toggleEqualizerRule('folder', ctx.store.state.equalizer.settings);
+  assert.equal(ctx.store.state.equalizer.activeRule.type, 'folder');
+  await ctx.store.toggleEqualizerRule('artist', ctx.store.state.equalizer.settings);
+  assert.equal(ctx.store.state.equalizer.activeRule.type, 'folder');
+  const folder = ctx.store.state.equalizer.rules.find(function (rule) { return rule.type === 'folder'; });
+  await ctx.store.removeEqualizerRule(folder.id);
+  assert.equal(ctx.store.state.equalizer.activeRule.type, 'artist');
+  assert.ok(writes.length >= 3);
+});
+
+test('EQ contextual serializa mudancas rapidas e so grava a regra vencedora', async function () {
+  const writes = [];
+  const ctx = storeContext({
+    squeezeDspSave: async function (playerId, settings) { writes.push({ playerId, settings }); },
+    squeezeDspRead: async function () { return { settings: { Client: { Bypass: 0 } } }; },
+    squeezeDspCatalog: async function () { return { presets: [], impulses: [] }; }
+  });
+  ctx.store.state.playerId = 'p1';
+  ctx.store.state.connected = true;
+  ctx.store.state.equalizer.status = 'ready';
+  ctx.store.state.equalizer.settings = { Client: { Bypass: 0, Preamp: -1 } };
+  ctx.store.state.np = { id: 9, title: 'Fast change', artist: 'Artist', url: 'file:///Music/Set/track.flac' };
+  ctx.store.state.trackInfo = { id: 9, artist: 'Artist', year: 1972, url: 'file:///Music/Set/track.flac' };
+
+  const year = ctx.store.toggleEqualizerRule('year', { Client: { Bypass: 0, Preamp: -2 } });
+  const folder = ctx.store.toggleEqualizerRule('folder', { Client: { Bypass: 0, Preamp: -6 } });
+  await Promise.all([year, folder]);
+
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0].settings.Client.Preamp, -6);
+  assert.equal(ctx.store.state.equalizer.activeRule.type, 'folder');
+});
+
+test('EQ contextual persiste regras por player e normaliza artista e pasta local', async function () {
+  const shared = {};
+  const api = {
+    squeezeDspSave: async function () {},
+    squeezeDspRead: async function () { return { settings: { Client: { Bypass: 1 } } }; },
+    squeezeDspCatalog: async function () { return { presets: [], impulses: [] }; }
+  };
+  const first = storeContext(api, {}, shared);
+  first.store.state.playerId = 'p1';
+  first.store.state.connected = true;
+  first.store.state.equalizer.status = 'ready';
+  first.store.state.equalizer.settings = { Client: { Bypass: 1 } };
+  first.store.state.np = { id: 7, title: 'Track', artist: '  Artist  ', url: 'file:///Music/Set/track.flac' };
+  first.store.state.trackInfo = { id: 7, artist: '  Artist  ', year: 1971, url: 'file:///Music/Set/track.flac' };
+  await first.store.toggleEqualizerRule('artist', first.store.state.equalizer.settings);
+  await first.store.toggleEqualizerRule('folder', first.store.state.equalizer.settings);
+
+  const second = storeContext(api, {}, shared);
+  await second.store.init();
+  const rules = second.store.state.equalizer.rules;
+  assert.equal(rules.length, 2);
+  assert.equal(rules.find(function (r) { return r.type === 'artist'; }).key, 'artist');
+  assert.equal(rules.find(function (r) { return r.type === 'folder'; }).key, 'file:///Music/Set');
+});
+
+test('sync topology marks the master and group volume skips fixed-output members', async function () {
+  const volumeWrites = [];
+  const ctx = storeContext({
+    syncGroups: async function () { return [{
+      id: 'g1', masterId: 'p1', members: [{ id: 'p1', name: 'Living' }, { id: 'p2', name: 'DAC' }]
+    }]; },
+    playerVolume: async function (id) { return id === 'p1' ? 32 : 100; },
+    playerPref: async function (id, key) {
+      if (key === 'digitalVolumeControl') return id === 'p2' ? 0 : 1;
+      return null;
+    },
+    setVolume: async function (id, value) { volumeWrites.push({ id: id, value: value }); }
+  });
+  ctx.store.state.playerId = 'p1';
+  ctx.store.state.players = [
+    { id: 'p1', name: 'Living', connected: true, power: true },
+    { id: 'p2', name: 'DAC', connected: true, power: true }
+  ];
+  await ctx.store.refreshSyncGroup();
+  assert.equal(ctx.store.state.syncGroup.members[0].master, true);
+  assert.equal(ctx.store.state.syncGroup.members[1].fixed, true);
+  await ctx.store.setGroupVolume(55);
+  assert.deepEqual(volumeWrites, [{ id: 'p1', value: 55 }]);
+});
+
+test('playback intelligence loads active RandomPlay and the confirmed DSTM provider', async function () {
+  const ctx = storeContext({
+    canCommands: async function () { return { rating: false, randomplay: true, dontstopthemusicsetting: true }; },
+    randomPlayActive: async function () { return 'year'; },
+    dontStopProviders: async function () { return [
+      { id: '0', name: 'Disabled', selected: false },
+      { id: 'similar', name: 'Similar tracks', selected: true }
+    ]; },
+    playerPref: async function (playerId, name) {
+      if (name === 'plugin.dontstopthemusic:provider') return '1';
+      return null;
+    }
+  });
+  await ctx.store.init();
+  assert.equal(ctx.store.state.randomPlay.active, 'year');
+  assert.equal(ctx.store.state.dontStopMusic.provider, 'similar');
+  assert.equal(ctx.store.state.dontStopMusic.providers[1].name, 'Similar tracks');
+});
+
+test('DSTM write is read back and a stale player confirmation cannot cross players', async function () {
+  let resolvePref;
+  const writes = [];
+  const ctx = storeContext({
+    setPlayerPref: async function (playerId, name, value) { writes.push([playerId, name, value]); },
+    dontStopProviders: async function () { return [{ id: 'similar', name: 'Similar', selected: true }]; },
+    playerPref: async function (playerId, name) {
+      if (name === 'plugin.dontstopthemusic:provider') {
+        return new Promise(function (resolve) { resolvePref = resolve; });
+      }
+      return null;
+    }
+  });
+  ctx.store.state.playerId = 'p1';
+  ctx.store.state.capabilities.dontstopthemusicsetting = true;
+  const pending = ctx.store.setDontStopMusic('similar');
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  ctx.store.state.playerId = 'p2';
+  ctx.store.state.dontStopMusic.provider = '0';
+  resolvePref('similar');
+  await pending;
+  assert.deepEqual(writes[0], ['p1', 'plugin.dontstopthemusic:provider', 'similar']);
+  assert.equal(ctx.store.state.dontStopMusic.provider, '0');
+});
+
+test('unsync addresses the chosen member and clears topology after server confirmation', async function () {
+  const commands = [];
+  let grouped = true;
+  const ctx = storeContext({
+    players: async function () { return [
+      { id: 'p1', name: 'Living', connected: true, power: true },
+      { id: 'p2', name: 'Kitchen', connected: true, power: true }
+    ]; },
+    syncGroups: async function () { return grouped ? [{
+      id: 'g1', masterId: 'p1', members: [{ id: 'p1', name: 'Living' }, { id: 'p2', name: 'Kitchen' }]
+    }] : []; },
+    playerVolume: async function () { return 40; },
+    syncPlayer: async function (id, target) { commands.push([id, target]); grouped = false; }
+  });
+  ctx.store.state.playerId = 'p1';
+  ctx.store.state.connected = true;
+  ctx.store.state.players = [
+    { id: 'p1', name: 'Living', connected: true, power: true },
+    { id: 'p2', name: 'Kitchen', connected: true, power: true }
+  ];
+  await ctx.store.refreshSyncGroup();
+  await ctx.store.unsyncPlayer('p2');
+  assert.deepEqual(commands, [['p2', null]]);
+  assert.equal(ctx.store.state.syncGroup, null);
+});
+
 /* EC-034: o guard tinha o formato errado -- travava na TENTATIVA, nao no
    SUCESSO. Uma falha transitoria na sonda desligava rating/randomplay/
    dontstopthemusicsetting pelo resto da pagina, porque a segunda chamada

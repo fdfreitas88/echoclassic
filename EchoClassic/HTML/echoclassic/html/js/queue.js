@@ -38,13 +38,51 @@ Vue.component('lms-queue', {
 	    <div class="queue-modes">
 	      <button type="button" :class="{on: store.shuffle}" @click="shuffle">{{ shuffleLabel }}</button>
 	      <button type="button" :class="{on: store.repeat}" @click="repeat">{{ repeatLabel }}</button>
+	      <button v-if="store.capabilities.randomplay" type="button"
+	              :class="{on: !!store.randomPlay.active}" @click="toggleRandom">Random mix</button>
+	      <button v-if="store.capabilities.dontstopthemusicsetting" type="button"
+	              :class="{on: store.dontStopMusic.provider !== '0'}" @click="toggleDontStop">Continue</button>
 	    </div>
+	    <div v-if="randomOpen" class="queue-intelligence" aria-label="Random mix choices">
+	      <div class="queue-intelligence-head">
+	        <strong>Random mix</strong><span>Replaces the current queue with a server-generated mix.</span>
+	      </div>
+	      <div v-if="pendingMix" class="queue-intelligence-confirm" role="alert">
+	        <span>Replace the unplayed tracks with {{ randomModeName(pendingMix) }}?</span>
+	        <button type="button" :disabled="store.randomPlay.busy" @click="confirmRandom">Replace</button>
+	        <button type="button" @click="pendingMix = ''">Cancel</button>
+	      </div>
+	      <div v-else class="queue-choice-grid">
+	        <button v-for="mode in randomModes" :key="mode.id" type="button"
+	                :class="{on: store.randomPlay.active === mode.id}"
+	                :disabled="store.randomPlay.busy" @click="chooseRandom(mode.id)">{{ mode.name }}</button>
+	        <button v-if="store.randomPlay.active" type="button" class="destructive"
+	                :disabled="store.randomPlay.busy" @click="chooseRandom('disable')">Stop mix</button>
+	      </div>
+	    </div>
+	    <div v-if="dontStopOpen" class="queue-intelligence" aria-label="Don't Stop The Music choices">
+	      <div class="queue-intelligence-head">
+	        <strong>Don’t Stop The Music</strong>
+	        <span>{{ dontStopHelp }}</span>
+	      </div>
+	      <div class="queue-provider-list" role="radiogroup" aria-label="Continuation provider">
+	        <button v-for="provider in store.dontStopMusic.providers" :key="provider.id" type="button"
+	                role="radio" :aria-checked="String(store.dontStopMusic.provider === provider.id)"
+	                :class="{on: store.dontStopMusic.provider === provider.id}"
+	                :disabled="store.dontStopMusic.busy" @click="chooseProvider(provider.id)">
+	          <span class="queue-radio" aria-hidden="true"></span><span>{{ provider.name }}</span>
+	        </button>
+	      </div>
+	    </div>
+	    <div v-if="playbackModeLabel" class="queue-start" role="status">{{ playbackModeLabel }}</div>
 	    <div v-if="playStartsLabel" class="queue-start" role="status">{{ playStartsLabel }}</div>
 
 	    <div class="qbody" v-if="tracks.length">
 	      <template v-for="(t, i) in tracks">
 	      <div v-if="showCaption(t, i)" :key="'cap-' + t.index" class="qcaption"><span class="ell">{{ t.album }}</span></div>
 	      <div :key="t.index + '-' + t.id" class="qrow"
+	           draggable="true" @dragstart="dragStart(t, $event)" @dragover.prevent
+	           @drop.prevent="dropOn(t)" @dragend="dragIndex = null"
 	           :class="{now: isNow(t), nocover: !showCover(t, i)}" :aria-current="isNow(t) ? 'true' : null"
 	           role="group" :aria-label="trackLabel(t)">
 	        <button type="button" class="qrow-main pointer" :aria-label="trackLabel(t)"
@@ -58,7 +96,9 @@ Vue.component('lms-queue', {
 	          </span>
 	          <span class="dur">{{ dur(t.duration) }}</span>
 	        </button>
-	        <span class="queue-reorder">
+        <span class="queue-reorder">
+          <button type="button" :title="'Move ' + t.title + ' to position'"
+                  :aria-label="'Move ' + t.title + ' to position'" @click.stop="moveTo(t)">#</button>
           <button type="button" :data-move="t.index + ':-1'" :disabled="t.index <= 0"
                   :title="'Move ' + t.title + ' up'" :aria-label="'Move ' + t.title + ' up'"
                   @click.stop="move(t, -1)">↑</button>
@@ -81,7 +121,8 @@ Vue.component('lms-queue', {
 </div>`,
   data: function () {
     return { ui: LmsUi.state, store: LmsStore.state, previousFocus: null,
-             confirmClear: false };
+             confirmClear: false, randomOpen: false, dontStopOpen: false,
+             pendingMix: '', dragIndex: null };
   },
   computed: {
 	    tracks: function () { return this.store.queue; },
@@ -121,6 +162,30 @@ Vue.component('lms-queue', {
     repeatLabel: function () {
       return ['Repeat off', 'Repeat one song', 'Repeat the whole queue'][this.store.repeat] ||
              'Repeat off';
+    },
+    randomModes: function () {
+      return [
+        { id: 'track', name: 'Tracks' }, { id: 'contributor', name: 'Artists' },
+        { id: 'album', name: 'Albums' }, { id: 'year', name: 'Years' },
+        { id: 'work', name: 'Classical works' }
+      ];
+    },
+    playbackModeLabel: function () {
+      if (this.store.randomPlay.active) return LmsStr.t('Random mix: {{mode}}')
+        .replace('{{mode}}', this.randomModeName(this.store.randomPlay.active));
+      if (this.store.dontStopMusic.provider !== '0') {
+        var selected = this.store.dontStopMusic.providers.filter(function (provider) {
+          return provider.id === this.store.dontStopMusic.provider;
+        }, this)[0];
+        return selected ? LmsStr.t('Continues with: {{provider}}').replace('{{provider}}', selected.name)
+          : LmsStr.t('Don’t Stop The Music is on');
+      }
+      return '';
+    },
+    dontStopHelp: function () {
+      return LmsStr.t(this.store.dontStopMusic.provider === '0'
+        ? 'Off: playback stops when the queue ends.'
+        : 'On: playback continues automatically when the queue ends.');
     },
     artMode: function () { return this.ui.queueArtMode; }
   },
@@ -204,6 +269,26 @@ Vue.component('lms-queue', {
         self.$nextTick(function () { self.focusMove(to, delta); });
       });
     },
+    moveTo: function (t) {
+      var answer = window.prompt('Move to position (1–' + this.tracks.length + ')', String(t.index + 1));
+      if (answer === null) return;
+      var to = Math.max(0, Math.min(this.tracks.length - 1, Number(answer) - 1));
+      if (!Number.isFinite(to) || to === t.index) return;
+      LmsStore.moveInQueue(t.index, to);
+    },
+    dragStart: function (t, event) {
+      this.dragIndex = t.index;
+      if (event && event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', String(t.index));
+      }
+    },
+    dropOn: function (t) {
+      var from = Number(this.dragIndex);
+      this.dragIndex = null;
+      if (!Number.isFinite(from) || from === t.index) return;
+      LmsStore.moveInQueue(from, t.index);
+    },
     focusMove: function (index, delta) {
       if (!this.$refs.queue) return;
       var node = this.$refs.queue.querySelector('[data-move="' + index + ':' + delta + '"]');
@@ -215,6 +300,43 @@ Vue.component('lms-queue', {
     },
     shuffle: function () { LmsStore.cycleShuffle(); },
     repeat: function () { LmsStore.cycleRepeat(); },
+    toggleRandom: function () {
+      this.randomOpen = !this.randomOpen;
+      if (this.randomOpen) this.dontStopOpen = false;
+      this.pendingMix = '';
+    },
+    toggleDontStop: function () {
+      this.dontStopOpen = !this.dontStopOpen;
+      if (this.dontStopOpen) this.randomOpen = false;
+    },
+    randomModeName: function (id) {
+      var mode = this.randomModes.filter(function (candidate) { return candidate.id === id; })[0];
+      return mode ? LmsStr.t(mode.name) : id;
+    },
+    hasUnplayedTracks: function () {
+      if (!this.tracks.length) return false;
+      if (this.store.mode === 'stop') return true;
+      return this.tracks.some(function (track) { return track.index > this.store.queueIndex; }, this);
+    },
+    chooseRandom: function (mode) {
+      if (mode !== 'disable' && this.hasUnplayedTracks()) {
+        this.pendingMix = mode;
+        return;
+      }
+      this.runRandom(mode);
+    },
+    confirmRandom: function () {
+      var mode = this.pendingMix;
+      this.pendingMix = '';
+      if (mode) this.runRandom(mode);
+    },
+    runRandom: function (mode) {
+      var self = this;
+      Promise.resolve(LmsStore.setRandomPlay(mode)).then(function () {
+        if (mode === 'disable') self.randomOpen = false;
+      });
+    },
+    chooseProvider: function (provider) { LmsStore.setDontStopMusic(provider); },
     clearUpcoming: function () { LmsStore.clearUpcoming(); },
     undo: function () { LmsStore.undoQueue(); },
     clear: function () {
@@ -222,7 +344,10 @@ Vue.component('lms-queue', {
       LmsStore.clearQueue();
     }
   },
-  created: function () { LmsStore.loadQueue(); },
+  created: function () {
+    LmsStore.loadQueue();
+    LmsStore.refreshPlaybackIntelligence(true);
+  },
   mounted: function () {
     if (this.inline) return;
     this.previousFocus = document.activeElement;

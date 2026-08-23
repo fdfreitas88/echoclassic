@@ -279,6 +279,45 @@ test('RESP-07: longDuration() sem tr() fornecido renderiza em inglês e sem {{',
   assert.equal(hour, '2 h');
 });
 
+test('playback intelligence controls are capability-gated and show active server state', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/queue.js');
+  assert.match(src, /v-if="store\.capabilities\.randomplay"/);
+  assert.match(src, /v-if="store\.capabilities\.dontstopthemusicsetting"/);
+  const q = helpers.queueInstance({ LmsStr: { t: function (key) { return key; } }, LmsStore: {
+    state: {
+      queue: [], queueIndex: 0, queueTotal: 0, mode: 'stop', shuffle: 0, repeat: 0,
+      queueUndo: [], np: { id: null }, capabilities: { randomplay: true, dontstopthemusicsetting: true },
+      randomPlay: { active: 'album', busy: false },
+      dontStopMusic: { provider: 'similar', providers: [{ id: 'similar', name: 'Similar tracks' }], busy: false }
+    },
+    queueRemaining: function () { return 0; }
+  } });
+  assert.equal(q.self.playbackModeLabel, 'Random mix: Albums');
+  q.self.store.randomPlay.active = '';
+  assert.equal(q.self.playbackModeLabel, 'Continues with: Similar tracks');
+});
+
+test('RandomPlay asks before replacing unplayed tracks but starts immediately on an empty queue', function () {
+  const calls = [];
+  const state = {
+    queue: [{ index: 0 }, { index: 1 }], queueIndex: 0, queueTotal: 2, mode: 'play',
+    shuffle: 0, repeat: 0, queueUndo: [], np: { id: 1 }, capabilities: { randomplay: true },
+    randomPlay: { active: '', busy: false }, dontStopMusic: { provider: '0', providers: [], busy: false }
+  };
+  const q = helpers.queueInstance({ LmsStore: {
+    state: state, queueRemaining: function () { return 0; },
+    setRandomPlay: function (mode) { calls.push(mode); }
+  } });
+  q.self.chooseRandom('album');
+  assert.equal(q.self.pendingMix, 'album');
+  assert.deepEqual(calls, []);
+  q.self.confirmRandom();
+  assert.deepEqual(calls, ['album']);
+  state.queue = [];
+  q.self.chooseRandom('track');
+  assert.deepEqual(calls, ['album', 'track']);
+});
+
 test('RESP-07: longDuration() com dicionário português renderiza em português e sem {{', function () {
   const ctx = helpers.runBrowserFile('EchoClassic/HTML/echoclassic/html/js/format.js', {
     LMS_LANG: 'PT',

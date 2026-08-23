@@ -455,14 +455,18 @@
   Vue.component('lms-favorites', {
     template: `
 <div class="favorites-body">
+  <div class="favourite-organize"><button type="button" class="text-command" @click="createFolder">New favourite folder…</button></div>
   <section v-if="ui.pins.length" class="pinned-section">
     <div class="sectitle">Pinned</div>
     <div class="pinned-scroll">
-      <button v-for="p in ui.pins" :key="LmsUi.selectionKey(p)" class="pinned-item"
+	  <div v-for="(p, pinIndex) in ui.pins" :key="LmsUi.selectionKey(p)" class="pinned-item-wrap">
+	    <button class="pinned-item"
               @click="open(p)">
         <span class="pinned-art" :style="art(p)"></span>
         <span class="ell">{{ p.title || p.label || p.name }}</span>
       </button>
+	    <span class="pin-reorder"><button :disabled="pinIndex === 0" @click="movePin(pinIndex, -1)" aria-label="Move pinned item left">←</button><button :disabled="pinIndex === ui.pins.length - 1" @click="movePin(pinIndex, 1)" aria-label="Move pinned item right">→</button></span>
+	  </div>
     </div>
   </section>
   <div class="favorites-list">
@@ -471,12 +475,22 @@
 </div>`,
     data: function () { return { ui: LmsUi.state, LmsUi: LmsUi }; },
     methods: {
+      createFolder: async function () {
+        var name = window.prompt('Favourite folder name');
+        if (!name || !name.trim()) return;
+        try {
+          await LmsApi.favoriteFolderAdd(name.trim());
+          LmsUi.notify('Favourite folder created.', 'success');
+          this.$forceUpdate();
+        } catch (e) { LmsUi.notify('Could not create the favourite folder. ' + e.message, 'error', 6500); }
+      },
       art: function (item) {
         var id = item.coverId || item.artworkTrackId || (item.kind === 'album' ? item.id : null);
         var url = id ? LmsFmt.coverUrl(id, 100) : '';
         return url ? { backgroundImage: 'url(' + url + ')', backgroundSize: 'cover' } : {};
       },
       open: function (item) { LmsUi.openActions(item); }
+      ,movePin: function (index, delta) { LmsUi.movePin(index, index + delta); }
     }
   });
 })();

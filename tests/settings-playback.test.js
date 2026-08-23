@@ -31,9 +31,9 @@ function playbackGroup() {
   return m[0];
 }
 
-test('N2: the Player group has no volume slider and no fixed-volume/volume-mode caption', function () {
+test('N2: the Player group has no single-player volume setting; group volume is topology-gated', function () {
   const group = playerGroup();
-  assert.doesNotMatch(group, /type="range"/);
+  assert.match(group, /v-if="store\.syncGroup"[\s\S]*?class="srow sync-volume-row"/);
   assert.doesNotMatch(group, /store\.fixedVolume/);
   assert.doesNotMatch(group, /store\.volumeModeSynced/);
   /* C4 (3.2.6c) moved Connection into About -- it is the only place a user

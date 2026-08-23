@@ -44,7 +44,8 @@ Vue.component('lms-opml', {
            @click="activate(it)" @keydown.enter.prevent="activate(it)"
            @keydown.space.prevent="activate(it)">
         <div class="favicon">
-          <svg v-if="it.kind === 'audio'" viewBox="0 0 24 24"><circle cx="12" cy="13" r="2.4"/><path d="M7.5 8.5a6 6 0 000 9M16.5 8.5a6 6 0 010 9"/></svg>
+          <span v-if="it.image" class="opml-item-icon" :style="iconStyle(it)"></span>
+          <svg v-else-if="it.kind === 'audio' || it.kind === 'action'" viewBox="0 0 24 24"><circle cx="12" cy="13" r="2.4"/><path d="M7.5 8.5a6 6 0 000 9M16.5 8.5a6 6 0 010 9"/></svg>
           <svg v-else viewBox="0 0 24 24"><path d="M3 7.5h6l2 2.2h10V19a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 19z"/></svg>
         </div>
         <div class="ell">
@@ -52,6 +53,12 @@ Vue.component('lms-opml', {
           <div v-if="it.subtitle" class="s ell">{{ it.subtitle }}</div>
         </div>
         <svg v-if="it.kind === 'menu' && it.node" class="ic chev" style="width:9px;height:15px" viewBox="0 0 9 15"><path d="M1 1l6.5 6.5L1 14"/></svg>
+      </div>
+      <div v-if="root === 'favorites' && it.kind !== 'text' && it.kind !== 'search'" :key="'manage-' + i" class="favourite-row-tools">
+        <button type="button" @click="renameFavourite(it)">Rename</button>
+        <button type="button" :disabled="i === 0" @click="moveFavourite(it, i - 1)">Move up</button>
+        <button type="button" :disabled="i === items.length - 1" @click="moveFavourite(it, i + 1)">Move down</button>
+        <button type="button" class="destructive" @click="deleteFavourite(it)">Remove</button>
       </div>
 
       <div v-if="it.kind === 'search' && fieldErrorIndex === i" :key="'e' + i"
@@ -105,7 +112,7 @@ Vue.component('lms-opml', {
       return this.items.some(function (it) {
         if (it.kind === 'search') return true;
         if (it.kind === 'menu') return !!it.node;
-        if (it.kind === 'audio') return !!it.playNode;
+        if (it.kind === 'audio' || it.kind === 'action') return !!it.playNode;
         return false;
       });
     },
@@ -153,6 +160,22 @@ Vue.component('lms-opml', {
     playerId: function () { return this.load(); }
   },
   methods: {
+    refreshFavourites: function () { opmlSnapshots = {}; return this.load(); },
+    renameFavourite: async function (item) {
+      var name = window.prompt('Favourite name', item.title || '');
+      if (!name || !name.trim()) return;
+      try { await LmsApi.favoriteRename(item.itemId, name.trim()); await this.refreshFavourites(); }
+      catch (e) { LmsUi.notify('Could not rename the favourite. ' + e.message, 'error', 6500); }
+    },
+    moveFavourite: async function (item, toIndex) {
+      try { await LmsApi.favoriteMove(item.itemId, toIndex); await this.refreshFavourites(); }
+      catch (e) { LmsUi.notify('Could not move the favourite. ' + e.message, 'error', 6500); }
+    },
+    deleteFavourite: async function (item) {
+      if (window.confirm && !window.confirm('Remove “' + item.title + '” from favourites?')) return;
+      try { await LmsApi.favoriteRemove(item.itemId); await this.refreshFavourites(); }
+      catch (e) { LmsUi.notify('Could not remove the favourite. ' + e.message, 'error', 6500); }
+    },
     node: function () {
       var f = this.frame;
       return f && f.node ? f.node : LmsApi.opmlRoot(this.root);
@@ -224,7 +247,7 @@ Vue.component('lms-opml', {
        esta checagem o item ganhava role="button" e chevron e nao fazia nada. */
     actionable: function (it) {
       if (it.kind === 'menu') return !!it.node;
-      if (it.kind === 'audio') return !!it.playNode;
+      if (it.kind === 'audio' || it.kind === 'action') return !!it.playNode;
       return false;
     },
     setFieldError: function (i, message) {
@@ -244,7 +267,13 @@ Vue.component('lms-opml', {
         LmsNav.push(this.tab, { kind: 'opml', label: it.title, node: it.node });
         return;
       }
-      if (it.kind === 'audio') this.play(it);
+      if (it.kind === 'audio' || it.kind === 'action') this.play(it);
+    },
+    iconStyle: function (it) {
+      var value = String(it.image || '');
+      if (!value || /["'()\\]/.test(value)) return {};
+      if (!/^(?:https?:|\/)/i.test(value)) value = '/' + value.replace(/^\/+/, '');
+      return { backgroundImage: 'url("' + value + '")' };
     },
     play: async function (it) {
       try {

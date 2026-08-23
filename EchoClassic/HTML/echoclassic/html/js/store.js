@@ -9,6 +9,7 @@
   var POLL_IDLE = 5000;
   var SESSION_KEY = 'echoclassic.session.v2';
   var HISTORY_KEY = 'echoclassic.history.v1';
+  var EQ_RULES_KEY = 'echoclassic.equalizer-rules.v1';
   /* Teto da releitura da fila para transferir de player. Alto o bastante para
      nao alcancar uma fila real; existe para que uma contagem errada do servidor
      nao vire laco infinito. */
@@ -21,6 +22,7 @@
        cache, e nesse estado tocar Play nao alcanca ninguem. Quem decide e o
        store, num lugar so -- o componente le, nao reconstroi a regra. */
     commandable: false,
+    syncGroup: null, syncBusy: false,
     volumeModeSynced: false, volumeModeBusy: false, volumeDragging: false,
     initialized: false, reconnecting: false, lastError: '', lastSuccess: 0,
     mode: 'stop', time: 0, duration: 0, volume: 0,
@@ -33,16 +35,23 @@
        3 inteligente. Guardado como numero cru porque a interface oferece
        exatamente esses quatro valores fixos -- nao ha estado derivado aqui. */
     replayGainMode: 0,
+    equalizer: {
+      playerId: null, status: 'idle', clientName: '', revision: '',
+      settings: null, presets: [], impulses: [], error: '', rules: [],
+      activeRule: null, applyingRule: false, context: null
+    },
     history: [], trackInfo: null, canRate: false,
     /* Mapa de capacidades, resolvido uma vez no init(): quem precisa saber se
        um comando existe no servidor le daqui em vez de escrever a propria
        sonda `can`. Ausencia significa "nao mostrar", nunca "mostrar
        desabilitado" -- por isso comeca vazio, e nao com chaves em false. */
     capabilities: {},
+    randomPlay: { active: '', busy: false },
+    dontStopMusic: { provider: '0', providers: [], busy: false },
     npFavorite: false, npFavoriteIndex: null,
     np: {
       id: null, title: '', artist: '', album: '', coverId: null,
-      sampleRate: 0, sampleSize: 0, format: '', live: false
+      sampleRate: 0, sampleSize: 0, format: '', bitrate: 0, live: false
     }
   });
 
@@ -57,6 +66,15 @@
      variavel guarda so a escolha explicita -- selectPlayer() e a volta de
      handoffTo() -- e nunca e tocada por um fallback automatico. */
   var preferredPlayerId = null;
+  var equalizerCache = Object.create(null);
+  var equalizerManual = Object.create(null);
+  var equalizerAppliedRule = Object.create(null);
+  /* SqueezeDSP rewrites the complete player document. Keep one write lane per
+     player so a fast track change cannot let an older request finish after the
+     newer rule. The sequence also lets queued, now-obsolete work exit before
+     it touches the server. */
+  var equalizerApplyQueue = Object.create(null);
+  var equalizerApplySequence = Object.create(null);
 
   function readJson(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key) || '') || fallback; }
@@ -84,6 +102,165 @@
   function saveHistory() {
     try { localStorage.setItem(HISTORY_KEY, JSON.stringify(state.history)); }
     catch (e) {}
+  }
+
+  function cloneJson(value) { return JSON.parse(JSON.stringify(value)); }
+
+  function loadEqualizerRules() {
+    var rules = readJson(EQ_RULES_KEY, []);
+    state.equalizer.rules = (Array.isArray(rules) ? rules : []).filter(function (rule) {
+      return rule && rule.playerId && /^(song|album|artist|genre|folder|year)$/.test(rule.type) &&
+        rule.key != null && rule.settings && rule.settings.Client;
+    }).slice(0, 500);
+  }
+
+  function saveEqualizerRules() {
+    try { localStorage.setItem(EQ_RULES_KEY, JSON.stringify(state.equalizer.rules)); }
+    catch (e) {}
+  }
+
+  function equalizerFolder(url) {
+    var value = String(url || '').replace(/[?#].*$/, '');
+    if (!/^(?:file:|[a-z]:|\/)/i.test(value)) return '';
+    value = value.replace(/\\/g, '/').replace(/\/+$/, '');
+    return value.slice(0, value.lastIndexOf('/'));
+  }
+
+  function playbackEqualizerContext() {
+    var info = state.trackInfo || {};
+    return {
+      song: state.np.id != null ? String(state.np.id) : '',
+      album: info.albumId != null ? String(info.albumId) :
+        (state.np.albumId != null ? String(state.np.albumId) : ''),
+      artist: String(info.artist || state.np.artist || '').trim().toLocaleLowerCase(),
+      genre: String(info.genre || '').trim().toLocaleLowerCase(),
+      folder: equalizerFolder(info.url || state.np.url),
+      year: String(info.originalYear || info.year || '')
+    };
+  }
+
+  function equalizerContext() {
+    var current = playbackEqualizerContext();
+    var chosen = state.equalizer.context || {};
+    return {
+      song: chosen.songKey || current.song,
+      album: chosen.albumKey || current.album,
+      artist: String(chosen.artist || current.artist).trim().toLocaleLowerCase(),
+      genre: String(chosen.genre || current.genre).trim().toLocaleLowerCase(),
+      folder: chosen.folder || current.folder,
+      year: String(chosen.year || current.year)
+    };
+  }
+
+  function equalizerRuleForCurrent() {
+    var context = playbackEqualizerContext();
+    var priority = ['song', 'album', 'folder', 'artist', 'genre', 'year'];
+    for (var i = 0; i < priority.length; i++) {
+      var type = priority[i];
+      if (!context[type]) continue;
+      var found = state.equalizer.rules.filter(function (rule) {
+        return rule.playerId === state.playerId && rule.type === type && rule.key === context[type];
+      })[0];
+      if (found) return found;
+    }
+    return null;
+  }
+
+  async function applyEqualizerRule() {
+    var playerId = state.playerId;
+    if (!playerId || state.equalizer.status !== 'ready' || !state.trackInfo) return;
+    var request = (equalizerApplySequence[playerId] || 0) + 1;
+    equalizerApplySequence[playerId] = request;
+    var previous = equalizerApplyQueue[playerId] || Promise.resolve();
+    var task = previous.catch(function () {}).then(async function () {
+      if (equalizerApplySequence[playerId] !== request || state.playerId !== playerId) return;
+      var rule = equalizerRuleForCurrent();
+      var ruleId = rule ? rule.id : '';
+      if (equalizerAppliedRule[playerId] === ruleId) {
+        state.equalizer.activeRule = rule;
+        return;
+      }
+      var settings = rule ? rule.settings : equalizerManual[playerId];
+      if (!settings) {
+        equalizerAppliedRule[playerId] = ruleId;
+        state.equalizer.activeRule = rule;
+        return;
+      }
+      state.equalizer.applyingRule = true;
+      try {
+        await api.squeezeDspSave(playerId, cloneJson(settings));
+        if (state.playerId !== playerId) return;
+        equalizerAppliedRule[playerId] = ruleId;
+        state.equalizer.activeRule = rule;
+        equalizerCache[playerId] = null;
+        if (equalizerApplySequence[playerId] === request) await loadEqualizer(true);
+      } catch (e) {
+        if (state.playerId === playerId) {
+          state.equalizer.error = friendlyError(e, 'Could not apply the equalizer rule.');
+        }
+      } finally {
+        if (state.playerId === playerId && equalizerApplySequence[playerId] === request) {
+          state.equalizer.applyingRule = false;
+        }
+      }
+    });
+    equalizerApplyQueue[playerId] = task;
+    return task;
+  }
+
+  function equalizerRuleDescriptor(type) {
+    var context = equalizerContext();
+    var info = state.trackInfo || {};
+    var chosen = state.equalizer.context || {};
+    var labels = {
+      song: chosen.songTitle || state.np.title,
+      album: chosen.albumTitle || info.album || state.np.album,
+      artist: chosen.artistLabel || chosen.artist || info.artist || state.np.artist,
+      genre: chosen.genreLabel || chosen.genre || info.genre,
+      folder: context.folder, year: context.year
+    };
+    return { key: context[type] || '', label: String(labels[type] || '') };
+  }
+
+  async function toggleEqualizerRule(type, settings) {
+    if (!/^(song|album|artist|genre|folder|year)$/.test(type) || !state.playerId) return;
+    var descriptor = equalizerRuleDescriptor(type);
+    if (!descriptor.key) throw new Error('This track has no ' + type + ' information.');
+    var playerId = state.playerId;
+    var index = state.equalizer.rules.findIndex(function (rule) {
+      return rule.playerId === playerId && rule.type === type && rule.key === descriptor.key;
+    });
+    if (index >= 0) state.equalizer.rules.splice(index, 1);
+    else state.equalizer.rules.push({
+      id: playerId + ':' + type + ':' + descriptor.key,
+      playerId: playerId, type: type, key: descriptor.key, label: descriptor.label,
+      settings: cloneJson(settings || state.equalizer.settings), createdAt: Date.now()
+    });
+    saveEqualizerRules();
+    var playback = playbackEqualizerContext();
+    if (playback[type] === descriptor.key) {
+      equalizerAppliedRule[playerId] = null;
+      await applyEqualizerRule();
+    }
+  }
+
+  async function removeEqualizerRule(ruleId) {
+    var playerId = state.playerId;
+    var index = state.equalizer.rules.findIndex(function (rule) {
+      return rule.id === ruleId && rule.playerId === playerId;
+    });
+    if (index < 0) return;
+    var removed = state.equalizer.rules[index];
+    state.equalizer.rules.splice(index, 1);
+    saveEqualizerRules();
+    if (state.equalizer.activeRule && state.equalizer.activeRule.id === removed.id) {
+      equalizerAppliedRule[playerId] = null;
+      await applyEqualizerRule();
+    }
+  }
+
+  function setEqualizerContext(context) {
+    state.equalizer.context = context ? cloneJson(context) : null;
   }
 
   function rememberTrack() {
@@ -120,7 +297,35 @@
       if (kept) ps = [kept].concat(ps);
     }
     state.players = ps;
+    await refreshSyncGroup().catch(function () {});
     return ps;
+  }
+
+  async function refreshSyncGroup() {
+    var playerId = state.playerId;
+    if (!playerId || !api.syncGroups) { state.syncGroup = null; return null; }
+    var groups = await api.syncGroups();
+    if (state.playerId !== playerId) return null;
+    var group = groups.filter(function (candidate) {
+      return candidate.members.some(function (member) { return member.id === playerId; });
+    })[0];
+    if (!group) { state.syncGroup = null; return null; }
+    var members = await Promise.all(group.members.map(async function (member) {
+      var player = state.players.filter(function (p) { return p.id === member.id; })[0] || {};
+      var values = await Promise.all([
+        api.playerVolume(member.id).catch(function () { return null; }),
+        api.playerPref(member.id, 'digitalVolumeControl').catch(function () { return null; })
+      ]);
+      return {
+        id: member.id, name: member.name, connected: player.connected !== false,
+        power: player.power !== false, volume: values[0],
+        fixed: values[1] != null && values[1] !== '' && Number(values[1]) === 0,
+        master: member.id === group.masterId
+      };
+    }));
+    if (state.playerId !== playerId) return null;
+    state.syncGroup = { id: group.id, masterId: group.masterId, members: members };
+    return state.syncGroup;
   }
 
   /* Preferencia configurada em Ajustes ("Default player"). null quando o
@@ -234,6 +439,59 @@
       state.replayGainMode = replayGainMode;
       state.sleepRemaining = sleepRemaining;
     } catch (e) {}
+    await loadEqualizer(false);
+    await refreshSyncGroup().catch(function () {});
+  }
+
+  function setEqualizer(playerId, value) {
+    if (state.playerId !== playerId) return;
+    Object.keys(value).forEach(function (key) { state.equalizer[key] = value[key]; });
+    state.equalizer.playerId = playerId;
+  }
+
+  async function loadEqualizer(force) {
+    var playerId = state.playerId;
+    if (!playerId || !state.connected) {
+      setEqualizer(playerId, { status: 'idle', settings: null, error: '' });
+      return;
+    }
+    if (!force && equalizerCache[playerId]) {
+      setEqualizer(playerId, equalizerCache[playerId]);
+      return;
+    }
+    setEqualizer(playerId, { status: 'loading', settings: null, error: '' });
+    try {
+      var result = await Promise.all([
+        api.squeezeDspRead(playerId), api.squeezeDspCatalog(playerId)
+      ]);
+      var ready = {
+        status: 'ready', clientName: result[0].clientName,
+        revision: result[0].revision, settings: result[0].settings,
+        presets: result[1].presets, impulses: result[1].impulses, error: ''
+      };
+      equalizerCache[playerId] = ready;
+      if (!equalizerManual[playerId]) equalizerManual[playerId] = cloneJson(ready.settings);
+      setEqualizer(playerId, ready);
+    } catch (e) {
+      setEqualizer(playerId, {
+        status: e && e.kind === 'lms' ? 'unavailable' : 'error',
+        settings: null,
+        error: friendlyError(e, 'Could not load the equalizer.')
+      });
+    }
+  }
+
+  async function saveEqualizer(settings) {
+    var playerId = state.playerId;
+    if (!playerId || state.equalizer.status !== 'ready') return;
+    await api.squeezeDspSave(playerId, settings);
+    if (state.playerId !== playerId) return;
+    if (state.equalizer.activeRule) {
+      state.equalizer.activeRule.settings = cloneJson(settings);
+      saveEqualizerRules();
+    } else equalizerManual[playerId] = cloneJson(settings);
+    equalizerCache[playerId] = null;
+    await loadEqualizer(true);
   }
 
   /* `can <cmd> ?` nao depende de player, entao a resposta vale para o servidor
@@ -271,7 +529,67 @@
     state.canRate = !!state.capabilities.rating;
   }
 
+  var playbackIntelligenceChecked = 0;
+  async function refreshPlaybackIntelligence(force) {
+    var playerId = state.playerId;
+    if (!playerId) return;
+    if (!force && Date.now() - playbackIntelligenceChecked < 5000) return;
+    playbackIntelligenceChecked = Date.now();
+    var tasks = [];
+    if (state.capabilities.randomplay && api.randomPlayActive) {
+      tasks.push(api.randomPlayActive(playerId).then(function (mode) {
+        if (state.playerId === playerId) state.randomPlay.active = mode || '';
+      }).catch(function () {}));
+    } else state.randomPlay.active = '';
+    if (state.capabilities.dontstopthemusicsetting && api.dontStopProviders) {
+      tasks.push(Promise.all([
+        api.dontStopProviders(playerId),
+        api.playerPref(playerId, 'plugin.dontstopthemusic:provider')
+      ]).then(function (result) {
+        if (state.playerId !== playerId) return;
+        state.dontStopMusic.providers = result[0];
+        var selected = result[0].filter(function (provider) { return provider.selected; })[0];
+        state.dontStopMusic.provider = selected ? selected.id : String(result[1] || '0');
+      }).catch(function () {}));
+    } else {
+      state.dontStopMusic.providers = [];
+      state.dontStopMusic.provider = '0';
+    }
+    await Promise.all(tasks);
+  }
+
+  async function setRandomPlay(mode) {
+    var playerId = state.playerId;
+    if (!playerId || !state.capabilities.randomplay) return;
+    state.randomPlay.busy = true;
+    try {
+      await api.randomPlay(playerId, mode);
+      if (state.playerId !== playerId) return;
+      await loadQueue();
+      playbackIntelligenceChecked = 0;
+      await refreshPlaybackIntelligence(true);
+    } finally { if (state.playerId === playerId) state.randomPlay.busy = false; }
+  }
+
+  async function setDontStopMusic(provider) {
+    var playerId = state.playerId;
+    if (!playerId || !state.capabilities.dontstopthemusicsetting) return;
+    state.dontStopMusic.busy = true;
+    try {
+      await api.setPlayerPref(playerId, 'plugin.dontstopthemusic:provider', provider || 0);
+      var result = await Promise.all([
+        api.dontStopProviders(playerId),
+        api.playerPref(playerId, 'plugin.dontstopthemusic:provider')
+      ]);
+      if (state.playerId !== playerId) return;
+      state.dontStopMusic.providers = result[0];
+      var selected = result[0].filter(function (candidate) { return candidate.selected; })[0];
+      state.dontStopMusic.provider = selected ? selected.id : String(result[1] || '0');
+    } finally { if (state.playerId === playerId) state.dontStopMusic.busy = false; }
+  }
+
   async function init() {
+    loadEqualizerRules();
     var saved = readJson(SESSION_KEY, {});
     state.history = uniqueHistory(readJson(HISTORY_KEY, []));
     saveHistory();
@@ -292,6 +610,7 @@
     }
     await loadPlayerSettings();
     await loadCapabilities();
+    await refreshPlaybackIntelligence(true);
     state.initialized = true;
     installMediaSession();
   }
@@ -350,7 +669,7 @@
       album: st.track.album, albumId: st.track.albumId, trackNum: st.track.trackNum,
       coverId: st.track.coverId, url: st.track.url,
       sampleRate: st.sampleRate, sampleSize: st.sampleSize,
-      format: st.format, live: st.live
+      format: st.format, bitrate: st.bitrate, live: st.live
     };
     if (oldTrackId !== state.np.id) {
       state.trackInfo = null;
@@ -371,12 +690,14 @@
                 saveHistory();
               }
             }
+            applyEqualizerRule();
           }
         }).catch(function () {});
       }
     }
     saveSession();
     refreshFavorite(false);
+    refreshPlaybackIntelligence(false).catch(function () {});
     updateMediaSession();
     // revalidacao da lista de players pega carona no poll, sem segundo timer
     if (Date.now() - lastPlayersCheck >= PLAYERS_REVALIDATE_MS) {
@@ -408,6 +729,9 @@
     if (state.reconnecting) return;
     state.reconnecting = true;
     state.lastError = '';
+    equalizerCache = Object.create(null);
+    equalizerApplyQueue = Object.create(null);
+    equalizerApplySequence = Object.create(null);
     try {
       await init();
       await refresh();
@@ -800,9 +1124,40 @@
     await selectPlayer(playerId);
   }
 
-  function syncWith(playerId) {
+  async function syncWith(playerId) {
     if (!state.playerId) return Promise.resolve();
-    return api.syncPlayer(state.playerId, playerId);
+    state.syncBusy = true;
+    try {
+      await api.syncPlayer(state.playerId, playerId);
+      await refreshPlayers();
+    } finally { state.syncBusy = false; }
+  }
+
+  async function unsyncPlayer(playerId) {
+    var target = playerId || state.playerId;
+    if (!target) return;
+    state.syncBusy = true;
+    try {
+      await api.syncPlayer(target, null);
+      await refreshPlayers();
+    } finally { state.syncBusy = false; }
+  }
+
+  async function setGroupVolume(volume) {
+    var group = state.syncGroup;
+    if (!group) return;
+    var value = Math.max(0, Math.min(100, Math.round(Number(volume) || 0)));
+    state.syncBusy = true;
+    try {
+      var results = await Promise.all(group.members.filter(function (member) {
+        return member.connected && !member.fixed && !(global.LmsUi &&
+          typeof LmsUi.volumeExcluded === 'function' && LmsUi.volumeExcluded(member.id));
+      }).map(function (member) {
+        return api.setVolume(member.id, value).then(function () { return true; }, function () { return false; });
+      }));
+      await refreshSyncGroup();
+      if (results.some(function (ok) { return !ok; })) throw new Error('Some players did not accept the group volume.');
+    } finally { state.syncBusy = false; }
   }
 
   async function setTransition(type, duration) {
@@ -1037,8 +1392,20 @@
     selectPlayer: guarded('Changing player', selectPlayer, true),
     handoffTo: guarded('Transferring playback', handoffTo, true),
     syncWith: guarded('Player synchronisation', syncWith, true),
+    unsyncPlayer: guarded('Player synchronisation', unsyncPlayer, true),
+    setGroupVolume: guarded('The group volume', setGroupVolume, false),
+    refreshSyncGroup: refreshSyncGroup,
+    refreshPlaybackIntelligence: refreshPlaybackIntelligence,
+    setRandomPlay: guarded('Random mix', setRandomPlay, false),
+    setDontStopMusic: guarded("Don't stop the music", setDontStopMusic, false),
     setTransition: guarded('The crossfade setting', setTransition, false),
     setReplayGain: guarded('The replay gain setting', setReplayGain, false),
+    refreshEqualizer: loadEqualizer,
+    saveEqualizer: guarded('The equalizer settings', saveEqualizer, false),
+    toggleEqualizerRule: guarded('The equalizer rule', toggleEqualizerRule, false),
+    removeEqualizerRule: guarded('The equalizer rule', removeEqualizerRule, false),
+    equalizerRuleDescriptor: equalizerRuleDescriptor,
+    setEqualizerContext: setEqualizerContext,
     setSleep: guarded('The sleep timer setting', setSleep, false),
     sleepAfterTrack: guarded('The sleep timer setting', sleepAfterTrack, false),
     sleepAfterQueue: guarded('The sleep timer setting', sleepAfterQueue, false),

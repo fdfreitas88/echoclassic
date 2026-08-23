@@ -50,6 +50,12 @@ Vue.component('lms-miniplayer', {
     </span>
   </button>
   <div v-if="!ui.full" class="r">
+    <button v-if="hasTrack && store.equalizer.status === 'ready'" type="button"
+            class="mini-action mini-equalizer-command pointer"
+            :class="{on: store.equalizer.settings && !store.equalizer.settings.Client.Bypass}"
+            title="Equalizer" aria-label="Equalizer" @click="openEqualizer">
+      <svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><g><path d="M4 2.5v15M10 2.5v15M16 2.5v15"/><circle cx="4" cy="12" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="16" cy="10" r="2.2"/></g></svg>
+    </button>
     <button type="button" class="mini-action queuebtn pointer" title="Playback queue"
             aria-label="Playback queue" @click="$emit('queue')">
       <svg class="ic" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
@@ -105,6 +111,7 @@ Vue.component('lms-miniplayer', {
       var d = LmsFmt.depth(this.np.sampleSize);
       if (r) out.push({ text: r, hi: mark && LmsFmt.isHiRes(this.np.sampleRate, 0) });
       if (d) out.push({ text: d, hi: mark && LmsFmt.isHiRes(0, this.np.sampleSize) });
+      if (this.np.bitrate) out.push({ text: Math.round(this.np.bitrate) + ' kbps', hi: false });
       if (this.np.format) out.push({ text: LmsFmt.format(this.np.format), hi: false });
       return out;
     }
@@ -118,6 +125,12 @@ Vue.component('lms-miniplayer', {
     pause: function () { LmsStore.pause(); },
     stop: function () { LmsStore.stop(); },
     next: function () { LmsStore.next(); },
-    prev: function () { LmsStore.prev(); }
+    prev: function () { LmsStore.prev(); },
+    openEqualizer: function () {
+      LmsStore.setEqualizerContext(null);
+      LmsUi.setTab('settings');
+      LmsNav.push('settings', { label: 'Equalizer', screen: 'equalizer' });
+      this.ui.appearanceScreen = 'equalizer';
+    }
   }
 });

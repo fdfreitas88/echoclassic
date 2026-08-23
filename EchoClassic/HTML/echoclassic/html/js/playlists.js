@@ -27,10 +27,14 @@ Vue.component('lms-playlists', {
                   @click="toggleEdit">{{ editing ? 'Done' : 'Edit' }}</button>
           <button v-if="editing && selectedCount" class="playlist-command pointer"
                   @click="removeSelected">Remove {{ selectedCount }}</button>
+	      <button v-if="editing && duplicateCount" class="playlist-command pointer"
+	              @click="removeDuplicates">Remove {{ duplicateCount }} duplicates</button>
 	          <button v-if="editing" class="playlist-command destructive pointer"
 	                  @click="confirmDelete = true">Delete playlist</button>
         </div>
-	        <div v-for="t in tracks" :key="t.id" class="trow"
+	        <div v-for="t in tracks" :key="t.index + '-' + t.id" class="trow"
+	             :draggable="editing" @dragstart="dragStart(t, $event)" @dragover.prevent
+	             @drop.prevent="dropOn(t)" @dragend="dragIndex = null"
 	             :class="{playing: store.np.id === t.id, chosen: isSelected(t)}"
 	             role="group" :aria-label="trackLabel(t)">
 	          <button type="button" class="trow-main pointer" :aria-label="trackLabel(t)"
@@ -45,6 +49,8 @@ Vue.component('lms-playlists', {
 	            <span class="dur">{{ dur(t.duration) }}</span>
 	          </button>
 	          <template v-if="editing">
+	            <button class="reorder-command" title="Move to position"
+	                    :aria-label="'Move ' + t.title + ' to position'" @click.stop="moveTo(t)">#</button>
 	            <button class="reorder-command" title="Move up"
 	                    :aria-label="'Move ' + t.title + ' up'" @click.stop="move(t, -1)">↑</button>
 	            <button class="reorder-command" title="Move down"
@@ -116,7 +122,7 @@ Vue.component('lms-playlists', {
 	    return { store: LmsStore.state, lists: [], tracks: [], filter: '', loading: true, error: '',
              creating: false, newName: '', notice: '', editing: false,
              editName: '', selected: {}, tracksHasMore: false,
-             tracksLoadingMore: false, tracksPageSize: 250, confirmDelete: false };
+             tracksLoadingMore: false, tracksPageSize: 250, confirmDelete: false, dragIndex: null };
   },
   computed: {
     frame: function () { return LmsNav.top('playlists'); },
@@ -125,6 +131,14 @@ Vue.component('lms-playlists', {
       return s ? LmsFmt.longDuration(s) : '';
     },
 	    selectedCount: function () { return Object.keys(this.selected).length; },
+	    duplicateCount: function () {
+	      var seen = Object.create(null), count = 0;
+	      this.tracks.forEach(function (track) {
+	        var key = String(track.url || track.id || '');
+	        if (seen[key]) count++; else seen[key] = true;
+	      });
+	      return count;
+	    },
 	    filteredLists: function () {
 	      var q = this.normalize(this.filter);
 	      if (!q) return this.lists;
@@ -230,6 +244,47 @@ Vue.component('lms-playlists', {
       var self = this;
       await this.runOperation('Reordenando playlist…', async function () {
         await LmsApi.editPlaylist(self.frame.id, 'move', { index: t.index, toIndex: to });
+        await self.loadTracks(self.frame);
+      });
+    },
+    moveTo: async function (t) {
+      var answer = window.prompt('Move to position (1–' + this.tracks.length + ')', String(t.index + 1));
+      if (answer === null) return;
+      var to = Math.max(0, Math.min(this.tracks.length - 1, Number(answer) - 1));
+      if (!Number.isFinite(to) || to === t.index) return;
+      var self = this;
+      await this.runOperation('Reordering playlist…', async function () {
+        await LmsApi.editPlaylist(self.frame.id, 'move', { index: t.index, toIndex: to });
+        await self.loadTracks(self.frame);
+      });
+    },
+    dragStart: function (t, event) {
+      if (!this.editing) return;
+      this.dragIndex = t.index;
+      if (event && event.dataTransfer) event.dataTransfer.setData('text/plain', String(t.index));
+    },
+    dropOn: async function (t) {
+      var from = Number(this.dragIndex);
+      this.dragIndex = null;
+      if (!this.editing || !Number.isFinite(from) || from === t.index) return;
+      var self = this;
+      await this.runOperation('Reordering playlist…', async function () {
+        await LmsApi.editPlaylist(self.frame.id, 'move', { index: from, toIndex: t.index });
+        await self.loadTracks(self.frame);
+      });
+    },
+    removeDuplicates: async function () {
+      var seen = Object.create(null), duplicates = [];
+      this.tracks.forEach(function (track) {
+        var key = String(track.url || track.id || '');
+        if (seen[key]) duplicates.push(track.index); else seen[key] = true;
+      });
+      duplicates.sort(function (a, b) { return b - a; });
+      var self = this;
+      await this.runOperation('Removing duplicate songs…', async function () {
+        for (var i = 0; i < duplicates.length; i++) {
+          await LmsApi.editPlaylist(self.frame.id, 'delete', { index: duplicates[i] });
+        }
         await self.loadTracks(self.frame);
       });
     },

@@ -27,12 +27,15 @@
     radio: validFrames(saved.radio), apps: validFrames(saved.apps),
     favourites: validFrames(saved.favourites), settings: []
   });
+  var musicRoots = saved.musicRoots && typeof saved.musicRoots === 'object' ? saved.musicRoots : {};
+  var activeMusicRoot = global.LmsUi && global.LmsUi.state.rootKey || 'all';
 
   function persist() {
     try {
       localStorage.setItem('echoclassic.nav.v1', JSON.stringify({
         music: stacks.music, playlists: stacks.playlists,
-        radio: stacks.radio, apps: stacks.apps, favourites: stacks.favourites
+        radio: stacks.radio, apps: stacks.apps, favourites: stacks.favourites,
+        musicRoots: musicRoots
       }));
     } catch (e) {}
   }
@@ -75,6 +78,18 @@
     stack(tab).splice(0);
     persist();
     if (!applyingHistory && history.replaceState) history.replaceState(historyState(tab), '');
+  }
+
+  function switchMusicRoot(key) {
+    key = key || 'all';
+    musicRoots[activeMusicRoot] = JSON.parse(JSON.stringify(stacks.music));
+    activeMusicRoot = key;
+    var restored = validFrames(musicRoots[key]);
+    stacks.music.splice(0, stacks.music.length);
+    restored.forEach(function (frame) { stacks.music.push(frame); });
+    persist();
+    if (history.replaceState) history.replaceState(historyState('music'), '');
+    return restored;
   }
 
   function markTab(tab) {
@@ -131,6 +146,6 @@
   global.LmsNav = {
     stacks: stacks, push: push, pop: pop, top: top,
     depth: depth, reset: reset, parentLabel: parentLabel,
-    back: back, markTab: markTab
+    back: back, markTab: markTab, switchMusicRoot: switchMusicRoot
   };
 })(window);

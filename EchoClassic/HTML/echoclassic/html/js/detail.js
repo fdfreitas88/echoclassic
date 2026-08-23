@@ -25,6 +25,16 @@ Vue.component('lms-detail', {
     </div>
   </template>
 
+  <template v-else-if="frame.kind === 'musicfolder'">
+    <div class="hero"><div class="photo placeholder"><span aria-hidden="true">⌂</span></div><div class="name ell">{{ frame.label }}</div></div>
+    <button v-for="item in folderItems" :key="item.key" type="button" class="row noart pointer" @click="openFolderItem(item)">
+      <span class="search-kind">{{ item.type === 'folder' ? '⌂' : '♪' }}</span>
+      <span class="ell"><span class="t ell">{{ item.name }}</span><span v-if="item.path" class="s ell">{{ item.path }}</span></span>
+      <svg v-if="item.type === 'folder'" class="ic chev" viewBox="0 0 9 15"><path d="M1 1l6.5 6.5L1 14"/></svg>
+    </button>
+    <div v-if="!folderItems.length" class="empty"><div class="p">This folder is empty.</div></div>
+  </template>
+
   <template v-else>
     <div class="hero">
       <div class="photo" :class="{placeholder: !frame.art || photoFailed}">
@@ -84,6 +94,16 @@ Vue.component('lms-detail', {
       </template>
     </section>
 
+    <section v-if="classicalWorks.length" class="classical-work-list" aria-labelledby="classical-works-title">
+      <h2 id="classical-works-title" class="sectitle">{{ tr('Works') }} · {{ classicalWorks.length }}</h2>
+      <button v-for="work in classicalWorks" :key="'work-' + work.id" type="button"
+              class="row noart pointer" @click="openWork(work)">
+        <span class="search-kind">W</span>
+        <span class="ell"><span class="t ell">{{ work.title }}</span><span v-if="work.composer" class="s ell">{{ work.composer }}</span></span>
+        <svg class="ic chev" viewBox="0 0 9 15"><path d="M1 1l6.5 6.5L1 14"/></svg>
+      </button>
+    </section>
+
     <template v-if="ui.albumMode === 'tracks'">
       <lms-album-block v-for="a in albums" :key="'b' + a.id" :album="a" :enrich="false"></lms-album-block>
       <div v-if="!albums.length" class="empty"><div class="p">No albums for this item.</div></div>
@@ -119,7 +139,7 @@ Vue.component('lms-detail', {
   </template>
 </div>`,
   data: function () {
-    return { store: LmsStore.state, ui: LmsUi.state, albums: [], blocks: [],
+    return { store: LmsStore.state, ui: LmsUi.state, albums: [], blocks: [], classicalWorks: [], folderItems: [],
              artist: null, failedArt: {}, photoFailed: false,
              loading: true, error: '', requestToken: 0,
              enrichmentLoading: false, enrichmentStatus: '', enrichment: {}, enrichmentExpanded: false,
@@ -151,6 +171,13 @@ Vue.component('lms-detail', {
     frame: function () { this.load(); }
   },
   methods: {
+    openFolderItem: function (item) {
+      if (item.type === 'folder') {
+        LmsNav.push('music', { kind: 'musicfolder', id: item.id, label: item.name, path: item.path });
+      } else {
+        LmsUi.openActions({ kind: 'track', id: item.id, title: item.title || item.name, url: item.url });
+      }
+    },
     tr: function (text) {
       return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
     },
@@ -294,6 +321,10 @@ Vue.component('lms-detail', {
         art: a.art, year: a.year, originalYear: a.originalYear
       });
     },
+    openWork: function (work) {
+      LmsNav.push('music', { kind: 'work', id: work.id, label: work.title,
+        sub: work.composer || this.frame.label, composerId: work.composerId });
+    },
     /* Carregar o album inteiro e saltar para a faixa e o que o LMS faz. Mandar
        so a faixa deixava a fila do servidor com um item e sem "proxima". */
     playTrack: function (t) {
@@ -319,6 +350,8 @@ Vue.component('lms-detail', {
       this.error = '';
       this.albums = [];
       this.blocks = [];
+      this.classicalWorks = [];
+      this.folderItems = [];
       this.artist = null;
       this.failedArt = {};
       this.photoFailed = false;
@@ -332,7 +365,12 @@ Vue.component('lms-detail', {
       var pid = this.store.playerId || '';
       var f = this.frame;
       try {
-        if (f.kind === 'album') {
+        if (f.kind === 'musicfolder') {
+          this.folderItems = await LmsApi.musicFolders(pid, f.id);
+          if (token !== this.requestToken) return;
+          this.loading = false;
+          return;
+        } else if (f.kind === 'album') {
           /* O album escolhido vem primeiro e o resto da discografia abaixo, cada
              um como um bloco completo. Cada bloco busca as proprias faixas, entao
              a tela aparece em partes em vez de esperar all os albuns. */
@@ -369,13 +407,20 @@ Vue.component('lms-detail', {
           return;
         } else {
           var filter = {};
-          if (f.kind === 'artist') {
+          if (/^(artist|composer|conductor|ensemble)$/.test(f.kind)) {
             this.loadEnrichment(token, false);
             if (f.ids && f.ids.length > 1) filter.artistIds = f.ids;
             else filter.artistId = f.id;
+            if (f.kind !== 'artist') {
+              var roleId = f.kind === 'composer' ? 2 : f.kind === 'conductor' ? 3 : 4;
+              this.classicalWorks = await LmsApi.works(pid, 0, 1000, { composerId: f.id, roleId: roleId });
+              if (token !== this.requestToken) return;
+            }
           }
           else if (f.kind === 'genre') filter.genreId = f.id;
           else if (f.kind === 'year') filter.year = f.id;
+          else if (f.kind === 'work') filter.workId = f.id;
+          else if (f.kind === 'releasetype') filter.releaseType = f.label;
           var al = await LmsApi.albums(pid, 0, 1000, filter);
           if (token !== this.requestToken) return;
           this.listTruncated = al.length >= 1000;

@@ -33,7 +33,50 @@ Vue.component('lms-settings', {
           :src="advancedFrameSrc"></iframe>
 </div>
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
-  <template v-if="ui.appearanceScreen === 'players'">
+  <template v-if="isSettingsScreen('equalizer')">
+    <div class="sgh">{{ equalizerContextHeading }}</div>
+    <div v-if="!equalizerDraft" class="sgroup">
+      <div class="player-help">Equalizer settings are not available for this player.</div>
+      <button type="button" class="srow settings-command-row pointer" @click="refreshEqualizer">Try again <span class="v">↻</span></button>
+    </div>
+    <template v-else>
+      <div class="sgroup">
+        <div class="srow">Equalizer
+          <button type="button" class="sw" :class="{on: !equalizerDraft.Client.Bypass}" role="switch"
+                  :aria-checked="String(!equalizerDraft.Client.Bypass)" aria-label="Equalizer"
+                  @click="equalizerDraft.Client.Bypass = equalizerDraft.Client.Bypass ? 0 : 1"><span class="visually-hidden">Equalizer</span></button>
+        </div>
+        <div class="srow"><span>Compare with original</span><button type="button" class="eq-hold-button"
+          @pointerdown.prevent="holdEqualizerBypass(true)" @pointerup.prevent="holdEqualizerBypass(false)"
+          @pointercancel="holdEqualizerBypass(false)" @pointerleave="holdEqualizerBypass(false)">Hold to bypass</button></div>
+      </div>
+      <div class="player-help">Applied on the server, per player. Release the button to hear the EQ again.</div>
+      <div class="sgh">Preset</div>
+      <div class="sgroup"><button type="button" class="srow settings-command-row pointer" @click="equalizerPresetsOpen = !equalizerPresetsOpen">Preset <span class="v">{{ equalizerPresetLabel }} {{ equalizerPresetsOpen ? '⌄' : '›' }}</span></button>
+        <button v-if="equalizerPresetsOpen" v-for="preset in store.equalizer.presets" :key="preset" type="button" class="srow settings-command-row pointer" @click="chooseEqualizerPreset(preset)">{{ preset }} <span class="v">{{ equalizerPresetLabel === preset ? '✓' : '' }}</span></button>
+      </div>
+      <div class="sgh">Bands</div>
+      <div class="sgroup eq-band-panel"><div class="eq-band-bank" aria-label="Graphic equalizer bands">
+        <label class="eq-band eq-preamp-band"><span class="eq-band-value">{{ formatEqGain(equalizerDraft.Client.Preamp) }}</span><span class="eq-slider"><input v-model.number="equalizerDraft.Client.Preamp" type="range" min="-30" max="0" step="0.1" aria-label="Preamp"></span><span>Pre</span></label>
+        <label v-for="band in equalizerBands" :key="band.frequency" class="eq-band"><span class="eq-band-value">{{ formatEqGain(band.gain) }}</span><span class="eq-slider"><input :value="band.gain" type="range" min="-12" max="12" step="0.5" :aria-label="band.label + ' hertz'" @input="setEqualizerBand(band.frequency, $event.target.value)"></span><span>{{ band.label }}</span></label>
+      </div><div class="player-help eq-band-help">−12 dB … +12 dB · Pre = preamp headroom</div></div>
+      <div class="sgh">{{ equalizerContextTitle }}</div>
+      <div class="sgroup"><div class="srow"><span>{{ equalizerContextName }}<small>{{ equalizerContextMeta }}</small></span><span class="eq-status-badge" :class="{on: !equalizerDraft.Client.Bypass}">EQ</span></div>
+        <div class="srow"><span>{{ equalizerRememberLabel }}</span><button type="button" class="sw" :class="{on: equalizerContextScope.active}" role="switch" :aria-checked="String(equalizerContextScope.active)" :disabled="equalizerDirty || !equalizerContextScope.key" @click="toggleEqualizerRule(equalizerContextScope.type)"><span class="visually-hidden">{{ equalizerRememberLabel }}</span></button></div>
+      </div><div class="player-help">Priority: song › album › folder › artist › genre › year › manual EQ.</div>
+      <div class="sgroup eq-actions-group"><button type="button" class="srow settings-command-row pointer" @click="equalizerRulesOpen = !equalizerRulesOpen">Set EQ from any album, artist, genre… <span class="v">{{ equalizerRulesOpen ? '⌄' : '›' }}</span></button>
+        <template v-if="equalizerRulesOpen"><div v-if="!equalizerPlayerRules.length" class="player-help">No automatic EQ rules yet.</div><div v-for="rule in equalizerPlayerRules" :key="rule.id" class="srow eq-rule-row"><span>{{ rule.label }}<small>{{ equalizerRuleTypeLabel(rule.type) }}<template v-if="store.equalizer.activeRule && store.equalizer.activeRule.id === rule.id"> · Active</template></small></span><button type="button" class="eq-remove-button" :aria-label="'Remove EQ rule for ' + rule.label" @click="removeEqualizerRule(rule.id)">Remove</button></div><div class="player-help">Rules are saved in this browser for this player.</div></template>
+        <button type="button" class="srow settings-command-row pointer" @click="equalizerAdvancedOpen = !equalizerAdvancedOpen">Advanced <span class="v">Filters {{ equalizerAdvancedOpen ? '⌄' : '›' }}</span></button>
+      </div>
+      <template v-if="equalizerAdvancedOpen"><div class="sgh">Parametric filters</div><div class="sgroup">
+        <div v-if="!equalizerDraft.Client.Filters.length" class="player-help">No filters configured.</div>
+        <div v-for="(filter, index) in equalizerDraft.Client.Filters" :key="'eq-' + index" class="eq-filter-editor"><div class="srow"><span>{{ index + 1 }}. {{ filter.FilterType }}</span><button type="button" class="eq-remove-button" @click="removeEqualizerFilter(index)">Remove</button></div><label class="srow">Frequency <input v-model.number="filter.Frequency" class="setting-range" type="range" min="20" max="20000" step="1"><span class="v">{{ filter.Frequency }} Hz</span></label><label v-if="filter.FilterType !== 'lowpass' && filter.FilterType !== 'highpass'" class="srow">Gain <input v-model.number="filter.Gain" class="setting-range" type="range" min="-25" max="15" step="0.1"><span class="v">{{ formatEqGain(filter.Gain) }} dB</span></label><label class="srow">Q <input v-model.number="filter.Q" class="setting-range" type="range" min="0.1" max="20" step="0.1"><span class="v">{{ Number(filter.Q || 1.41).toFixed(1) }}</span></label></div>
+        <button type="button" class="srow settings-command-row pointer" @click="addEqualizerFilter">Add filter <span class="v">＋</span></button>
+      </div></template>
+      <div class="sgroup eq-apply-group"><div class="player-help">Changes are staged. Apply may briefly restart the current track.</div><button type="button" class="srow settings-command-row pointer" :disabled="!equalizerDirty || equalizerSaving" @click="applyEqualizer">{{ equalizerSaving ? 'Applying…' : 'Apply changes' }} <span class="v">{{ equalizerDirty ? '›' : '✓' }}</span></button></div>
+    </template>
+  </template>
+  <template v-else-if="ui.appearanceScreen === 'players'">
     <!-- SPL-3: uma tela, tres perguntas em ordem de tarefa.
          Antes: tres formularios longos e repetidos (Full player, Small player,
          Mini player), com "Match app appearance" aparecendo tres vezes, 9
@@ -222,6 +265,12 @@ Vue.component('lms-settings', {
         Control changes which player Echo Classic uses. Transfer moves the current playback.
         Sync makes both players play together.
       </div>
+      <div v-if="store.syncGroup" class="sync-group-panel">
+        <div class="srow"><span>{{ syncStatusLabel }}<small>{{ store.syncGroup.members.length }} players</small></span><button type="button" class="eq-remove-button" :disabled="store.syncBusy" @click="unsync(store.playerId)">Unsync</button></div>
+        <label class="srow sync-volume-row"><span>Group volume<small>Sets every adjustable player to the same level.</small></span><input type="range" min="0" max="100" step="1" :value="groupVolume" :disabled="store.syncBusy || !adjustableSyncMembers.length" aria-label="Group volume" @change="setGroupVolume($event.target.value)"><span class="v">{{ groupVolume }}%</span></label>
+        <div v-for="member in store.syncGroup.members" :key="'sync-' + member.id" class="srow sync-member-row"><span>{{ member.name }}<small>{{ member.master ? 'Master' : 'Member' }}<template v-if="member.fixed"> · Fixed output</template><template v-else-if="volumeExcluded(member.id)"> · Do Not Set Volume</template></small></span><span class="v">{{ member.volume == null ? '—' : member.volume + '%' }}</span><button v-if="!member.fixed" type="button" class="eq-remove-button" :aria-pressed="String(volumeExcluded(member.id))" @click="toggleVolumePolicy(member.id)">Do Not Set Volume</button><button v-if="member.id !== store.playerId" type="button" class="eq-remove-button" :disabled="store.syncBusy" :aria-label="'Unsync ' + member.name" @click="unsync(member.id)">Unsync</button></div>
+      </div>
+      <div v-else class="player-help">Not synchronized.</div>
       <div v-for="p in store.players" :key="p.id" class="player-choice">
         <div class="player-name">
           <strong>{{ p.name }}</strong>
@@ -231,7 +280,8 @@ Vue.component('lms-settings', {
         <template v-else-if="p.connected">
           <button title="Use this player in Echo Classic" @click.stop="control(p)">Control</button>
           <button title="Continue playback on this player" @click.stop="handoff(p)">Transfer</button>
-          <button title="Play together with the current player" @click.stop="sync(p)">Sync</button>
+          <button v-if="!syncMember(p.id)" title="Play together with the current player" :disabled="store.syncBusy" @click.stop="sync(p)">Sync</button>
+          <span v-else class="player-current">Synced</span>
         </template>
       </div>
     </template>
@@ -268,6 +318,16 @@ Vue.component('lms-settings', {
 
   <div class="sgh">Playback</div>
   <div class="sgroup">
+    <button v-if="store.equalizer.status === 'ready'" type="button" class="srow settings-command-row pointer" @click="openEqualizer">
+      Equalizer <span class="v">{{ store.equalizer.settings && store.equalizer.settings.Client.Bypass ? 'bypassed' : 'on' }} ›</span>
+    </button>
+    <div v-else-if="store.equalizer.status === 'loading'" class="srow">Equalizer <span class="v">checking…</span></div>
+    <button v-else-if="store.equalizer.status === 'unavailable'" type="button" class="srow settings-command-row pointer" @click="openSqueezeDspPluginManager">
+      Equalizer <span class="v">Install SqueezeDSP ›</span>
+    </button>
+    <button v-else-if="store.equalizer.status === 'error'" type="button" class="srow settings-command-row pointer" @click="refreshEqualizer">
+      Equalizer <span class="v">Retry ›</span>
+    </button>
     <div class="srow">Crossfade
       <button type="button" class="sw" :class="{on: !!store.transitionType}" role="switch"
               :aria-checked="String(!!store.transitionType)" aria-label="Crossfade"
@@ -385,6 +445,8 @@ Vue.component('lms-settings', {
 
   <div class="sgh">General</div>
   <div class="sgroup">
+    <button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.partyMode)" @click="preference('partyMode')"><span>Party mode<small>Hide destructive library and playlist commands.</small></span><span class="switch" :class="{on:ui.partyMode}"></span></button>
+    <button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.kioskMode)" @click="preference('kioskMode')"><span>Kiosk mode<small>Lock Echo Classic to the player presentation.</small></span><span class="switch" :class="{on:ui.kioskMode}"></span></button>
     <div class="srow">Rate and bits in the bottom bar
       <button type="button" class="sw" :class="{on: ui.showBadges}" role="switch"
               :aria-checked="String(ui.showBadges)" aria-label="Rate and bits in the bottom bar"
@@ -500,7 +562,10 @@ Vue.component('lms-settings', {
       advancedThemeObserver: null,
       /* Rascunho local: o numero ao lado do slider tem de acompanhar o
          arrasto, nao esperar o round-trip com o servidor. */
-      durationDraft: null
+      durationDraft: null,
+      equalizerDraft: null, equalizerSaving: false, equalizerPreset: '',
+      equalizerPresetsOpen: false, equalizerRulesOpen: false,
+      equalizerAdvancedOpen: false, equalizerHoldRestore: null
     };
   },
   computed: {
@@ -541,6 +606,23 @@ Vue.component('lms-settings', {
     defaultPlayerNote: function () {
       if (this.ui.defaultPlayer === 'last') return '';
       return this.playerStatusLabel(this.defaultPlayerFound || { connected: false, power: false });
+    },
+    adjustableSyncMembers: function () {
+      return this.store.syncGroup ? this.store.syncGroup.members.filter(function (member) {
+        return member.connected && !member.fixed && !LmsUi.volumeExcluded(member.id);
+      }) : [];
+    },
+    groupVolume: function () {
+      if (!this.adjustableSyncMembers.length) return 0;
+      var total = this.adjustableSyncMembers.reduce(function (sum, member) {
+        return sum + (Number(member.volume) || 0);
+      }, 0);
+      return Math.round(total / this.adjustableSyncMembers.length);
+    },
+    syncStatusLabel: function () {
+      if (!this.store.syncGroup) return 'Not synchronized';
+      var master = this.store.syncGroup.members.filter(function (member) { return member.master; })[0];
+      return 'Synchronized with ' + (master ? master.name : 'other players');
     },
     skinVersion: function () {
       return typeof LMS_SKIN_VERSION === 'string' && LMS_SKIN_VERSION ? LMS_SKIN_VERSION : '—';
@@ -660,7 +742,65 @@ Vue.component('lms-settings', {
     surfaceFollowsApp: function () { return LmsUi.surfaceFollowsApp(this.appearanceSurface); },
     surfaceTheme: function () { return LmsUi.surfaceValues(this.appearanceSurface).theme; },
     surfaceScheme: function () { return LmsUi.surfaceValues(this.appearanceSurface).scheme; },
-    surfaceFont: function () { return LmsUi.surfaceValues(this.appearanceSurface).font; }
+    surfaceFont: function () { return LmsUi.surfaceValues(this.appearanceSurface).font; },
+    equalizerDirty: function () {
+      return !!this.equalizerDraft && JSON.stringify(this.equalizerDraft) !== JSON.stringify(this.store.equalizer.settings);
+    },
+    equalizerPlayerRules: function () {
+      var playerId = this.store.playerId;
+      var priority = { song: 0, album: 1, folder: 2, artist: 3, genre: 4, year: 5 };
+      return (this.store.equalizer.rules || []).filter(function (rule) {
+        return rule.playerId === playerId;
+      }).slice().sort(function (a, b) {
+        return priority[a.type] - priority[b.type] || String(a.label).localeCompare(String(b.label));
+      });
+    },
+    equalizerPresetLabel: function () { return this.equalizerPreset || (this.equalizerDirty ? 'Custom (edited)' : 'Custom'); },
+    equalizerBands: function () {
+      var filters = (this.equalizerDraft && this.equalizerDraft.Client.Filters) || [];
+      return [60, 120, 300, 500, 1000, 2000, 5000, 8000, 10000, 12000, 16000].map(function (frequency) {
+        var found = filters.filter(function (filter) {
+          return String(filter.FilterType || '').toLowerCase() === 'peak' && Number(filter.Frequency) === frequency;
+        })[0];
+        return { frequency: frequency, label: frequency >= 1000 ? (frequency / 1000) + 'k' : String(frequency), gain: found ? Number(found.Gain || 0) : 0 };
+      });
+    },
+    equalizerContextScope: function () {
+      var context = this.store.equalizer.context || {};
+      var type = /^(song|album|artist|genre|folder|year)$/.test(context.type) ? context.type : 'song';
+      return this.equalizerRuleScopes.filter(function (scope) { return scope.type === type; })[0] || { type: type, key: '', active: false };
+    },
+    equalizerContextHeading: function () {
+      var context = this.store.equalizer.context;
+      return context ? (context.type === 'song' ? 'From the track' : 'From the album') : 'Now playing';
+    },
+    equalizerContextTitle: function () { return this.store.equalizer.context && this.store.equalizer.context.type === 'album' ? 'This album' : 'This song'; },
+    equalizerContextName: function () {
+      var context = this.store.equalizer.context || {};
+      return (context.type === 'song' ? context.songTitle : context.albumTitle) || this.store.np.title || 'Current playback';
+    },
+    equalizerContextMeta: function () {
+      var context = this.store.equalizer.context || {};
+      return [context.artistLabel || context.artist || this.store.np.artist, context.year].filter(Boolean).join(' · ');
+    },
+    equalizerRememberLabel: function () { return 'Remember this EQ for ' + (this.equalizerContextScope.type === 'album' ? 'this album' : 'this song'); },
+    equalizerRuleScopes: function () {
+      var self = this;
+      var labels = {
+        song: 'Remember for this song', album: 'Remember for this album',
+        artist: 'Remember for this artist', genre: 'Remember for this genre',
+        folder: 'Remember for this folder', year: 'Remember for this year'
+      };
+      return ['song', 'album', 'artist', 'genre', 'folder', 'year'].map(function (type) {
+        var descriptor = LmsStore.equalizerRuleDescriptor(type);
+        return {
+          type: type, label: labels[type], key: descriptor.key, value: descriptor.label,
+          active: self.equalizerPlayerRules.some(function (rule) {
+            return rule.type === type && rule.key === descriptor.key;
+          })
+        };
+      });
+    }
   },
   watch: {
     /* Quando o servidor confirma o valor, o rascunho sai de cena e o controle
@@ -700,6 +840,7 @@ Vue.component('lms-settings', {
     if (LmsUi.applyAdvancedSettings === this.applyAdvancedFrame) LmsUi.applyAdvancedSettings = null;
   },
   methods: {
+    isSettingsScreen: function (screen) { return this.ui['appearanceScreen'] === screen; },
     stopAdvancedThemeObserver: function () {
       if (this.advancedThemeObserver && this.advancedThemeObserver.disconnect) {
         this.advancedThemeObserver.disconnect();
@@ -2323,7 +2464,7 @@ Vue.component('lms-settings', {
        needs nothing extra to make Back work, hardware or on-screen. */
     appearanceScreenLabel: function (screen) {
       var labels = {
-        players: 'Player layout'
+        players: 'Player layout', equalizer: 'Equalizer'
       };
       return labels[screen] || '';
     },
@@ -2335,6 +2476,87 @@ Vue.component('lms-settings', {
       this.$nextTick(function () {
         if (self.$el) self.$el.scrollTop = 0;
       });
+    },
+    openEqualizer: function () {
+      LmsStore.setEqualizerContext(null);
+      this.equalizerDraft = JSON.parse(JSON.stringify(this.store.equalizer.settings || {}));
+      this.openAppearanceScreen('equalizer');
+    },
+    refreshEqualizer: async function () {
+      await LmsStore.refreshEqualizer(true);
+      if (this.store.equalizer.status === 'ready') {
+        this.equalizerDraft = JSON.parse(JSON.stringify(this.store.equalizer.settings || {}));
+      }
+    },
+    applyEqualizer: async function () {
+      if (!this.equalizerDirty || this.equalizerSaving) return;
+      this.equalizerSaving = true;
+      try {
+        await LmsStore.saveEqualizer(JSON.parse(JSON.stringify(this.equalizerDraft)));
+        this.equalizerDraft = JSON.parse(JSON.stringify(this.store.equalizer.settings || {}));
+      } finally { this.equalizerSaving = false; }
+    },
+    formatEqGain: function (value) {
+      var n = Number(value || 0);
+      return (n > 0 ? '+' : '') + n.toFixed(n % 1 ? 1 : 0);
+    },
+    setEqualizerBand: function (frequency, value) {
+      var filters = this.equalizerDraft.Client.Filters;
+      var index = filters.findIndex(function (filter) {
+        return String(filter.FilterType || '').toLowerCase() === 'peak' && Number(filter.Frequency) === frequency;
+      });
+      var gain = Number(value);
+      if (index < 0) filters.push({ FilterType: 'peak', Frequency: frequency, Gain: gain, Q: 1.41 });
+      else Vue.set(filters[index], 'Gain', gain);
+      this.equalizerPreset = '';
+    },
+    addEqualizerFilter: function () {
+      this.equalizerDraft.Client.Filters.push({ FilterType: 'peak', Frequency: 1000, Gain: 0, Q: 1.41 });
+      this.equalizerPreset = '';
+    },
+    removeEqualizerFilter: function (index) {
+      this.equalizerDraft.Client.Filters.splice(index, 1);
+      this.equalizerPreset = '';
+    },
+    chooseEqualizerPreset: async function (preset) {
+      this.equalizerSaving = true;
+      try {
+        this.equalizerDraft = await LmsApi.squeezeDspLoadPreset(this.store.playerId, preset);
+        this.equalizerPreset = preset;
+        this.equalizerPresetsOpen = false;
+      } catch (e) {
+        LmsUi.notify(LmsStore.friendlyError(e, 'Could not load the equalizer preset.'), 'error', 6500);
+      } finally { this.equalizerSaving = false; }
+    },
+    holdEqualizerBypass: async function (holding) {
+      if (!this.equalizerDraft || !this.store.playerId) return;
+      if (holding) {
+        if (this.equalizerHoldRestore) return;
+        this.equalizerHoldRestore = JSON.parse(JSON.stringify(this.equalizerDraft));
+        var bypassed = JSON.parse(JSON.stringify(this.equalizerDraft));
+        bypassed.Client.Bypass = 1;
+        await LmsApi.squeezeDspSave(this.store.playerId, bypassed).catch(function () {});
+      } else if (this.equalizerHoldRestore) {
+        var restore = this.equalizerHoldRestore;
+        this.equalizerHoldRestore = null;
+        await LmsApi.squeezeDspSave(this.store.playerId, restore).catch(function () {});
+      }
+    },
+    toggleEqualizerRule: function (type) {
+      return LmsStore.toggleEqualizerRule(type, JSON.parse(JSON.stringify(this.equalizerDraft)));
+    },
+    removeEqualizerRule: async function (ruleId) {
+      await LmsStore.removeEqualizerRule(ruleId);
+      this.equalizerDraft = JSON.parse(JSON.stringify(this.store.equalizer.settings || {}));
+      this.equalizerPreset = '';
+    },
+    equalizerRuleTypeLabel: function (type) {
+      return { song: 'Song', album: 'Album', artist: 'Artist', genre: 'Genre', folder: 'Folder', year: 'Year' }[type] || type;
+    },
+    openSqueezeDspPluginManager: function () {
+      try { sessionStorage.setItem('echoclassic.plugin-search.v1', 'SqueezeDSP'); } catch (e) {}
+      this.ui.advancedSettingsPage = '/echoclassic/settings/server/plugins.html';
+      this.openAdvanced();
     },
     /* Reconciles ui.appearanceScreen with LmsNav.top('settings'); factored
        out of the 'nav.settings.length' watch (immediate:true) so it also
@@ -2355,6 +2577,9 @@ Vue.component('lms-settings', {
       var wasAppearance = !!this.ui.appearanceScreen;
       this.ui.advancedSettings = advanced;
       this.ui.appearanceScreen = advanced ? null : ((top && top.screen) || null);
+      if (!advanced && this.ui['appearanceScreen'] === 'equalizer' && !this.equalizerDraft && this.store.equalizer.settings) {
+        this.equalizerDraft = JSON.parse(JSON.stringify(this.store.equalizer.settings));
+      }
       if (advanced) LmsUi.applyAdvancedSettings = this.applyAdvancedFrame;
       else if (LmsUi.applyAdvancedSettings === this.applyAdvancedFrame) LmsUi.applyAdvancedSettings = null;
       if (wasAdvanced && !advanced) this.restoreSettingsScroll();
@@ -2393,6 +2618,15 @@ Vue.component('lms-settings', {
     control: function (p) { LmsStore.selectPlayer(p.id); },
     handoff: function (p) { LmsStore.handoffTo(p.id); },
     sync: function (p) { LmsStore.syncWith(p.id); },
+    unsync: function (playerId) { LmsStore.unsyncPlayer(playerId); },
+    setGroupVolume: function (value) { LmsStore.setGroupVolume(value); },
+    volumeExcluded: function (playerId) { return LmsUi.volumeExcluded(playerId); },
+    toggleVolumePolicy: function (playerId) { LmsUi.setVolumeExcluded(playerId, !LmsUi.volumeExcluded(playerId)); },
+    syncMember: function (playerId) {
+      return !!this.store.syncGroup && this.store.syncGroup.members.some(function (member) {
+        return member.id === playerId;
+      });
+    },
     toggleCrossfade: function () {
       LmsStore.setTransition(this.store.transitionType ? 0 : 1, this.store.transitionDuration || 4);
     },

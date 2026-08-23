@@ -78,6 +78,53 @@ test('status pede album_id e tracknum para reconstruir playback de uma faixa lem
   assert.equal(st.track.trackNum, 10);
 });
 
+test('status usa os atributos do stream ativo devolvidos pelo LMS 9.2', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'status') {
+      return {
+        mode: 'play', samplerate: 48000, samplesize: 24,
+        type: 'mp3', bitrate: '256kbps',
+        playlist_loop: [{
+          id: 42, title: 'Hi-res source', duration: 123,
+          samplerate: 192000, samplesize: 24, type: 'flc', bitrate: '5641kbps'
+        }]
+      };
+    }
+    return {};
+  });
+
+  const st = await ctx.api.status('p1');
+  const tags = ctx.calls[0][3];
+  ['b', 'o', 'T', 'I'].forEach(function (tag) {
+    assert.ok(tags.indexOf(tag) >= 0, 'status tags need ' + tag + ': ' + tags);
+  });
+  assert.equal(st.sampleRate, 48000);
+  assert.equal(st.sampleSize, 24);
+  assert.equal(st.format, 'MP3');
+  assert.equal(st.bitrate, 256);
+});
+
+test('status mantem os metadados como compatibilidade com LMS anterior ao 9.2', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'status') {
+      return {
+        mode: 'play',
+        playlist_loop: [{
+          id: 42, title: 'Source', duration: 123,
+          samplerate: 44100, samplesize: 16, type: 'flc', bitrate: '900kbps'
+        }]
+      };
+    }
+    return {};
+  });
+
+  const st = await ctx.api.status('p1');
+  assert.equal(st.sampleRate, 44100);
+  assert.equal(st.sampleSize, 16);
+  assert.equal(st.format, 'FLC');
+  assert.equal(st.bitrate, 900);
+});
+
 /* 2b: trackstat e um plugin de terceiros, ausente num servidor padrao. O core
    despacha ['rating','_item','_rating'] (Commands.pm ratingCommand), numa
    escala 0-100 -- a mesma que songinfo devolve em trackInfo.rating. */
@@ -200,7 +247,45 @@ test('LIST-01: OPML paging carries stable action identity and the requested wind
   assert.equal(items.length, 2);
   assert.notEqual(items[0].identity, items[1].identity,
     'same-title rows remain distinct when their actions differ');
-  assert.deepEqual(plain(items[1].playNode), { cmd: ['two'], params: ['id:2'], title: 'Same title' });
+  assert.deepEqual(plain(items[1].playNode), {
+    cmd: ['two'], params: ['id:2'], title: 'Same title', verb: 'play'
+  });
+});
+
+test('OPML widens do, playall, add and insert rows into executable actions', async function () {
+  const verbs = ['do', 'playall', 'add', 'insert'];
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] !== 'apps') return {};
+    return { item_loop: verbs.map(function (verb, index) {
+      const actions = {};
+      actions[verb] = { cmd: ['plugin', verb], params: { id: index + 1 } };
+      return { type: 'text', text: verb, actions: actions };
+    }) };
+  });
+  const items = await ctx.api.opmlBrowse('p1', ctx.api.opmlRoot('apps'), 0, 20);
+  assert.deepEqual(items.map(function (item) { return item.kind; }), ['action', 'action', 'action', 'action']);
+  assert.deepEqual(items.map(function (item) { return item.playNode.verb; }), verbs);
+
+  await ctx.api.opmlPlay('p1', items[0].playNode);
+  await ctx.api.opmlPlay('p1', items[1].playNode);
+  assert.deepEqual(ctx.calls[1], ['plugin', 'do', 'id:1'], 'do is a direct command with no synthetic paging');
+  assert.deepEqual(ctx.calls[2], ['plugin', 'playall', 0, 1, 'id:2']);
+});
+
+test('RandomPlay active state and Don’t Stop providers preserve LMS semantics', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'randomplayisactive') return { _randomplayisactive: '0' };
+    if (cmd[0] === 'dontstopthemusicsetting') return { item_loop: [
+      { text: 'Disabled', radio: 1, actions: { do: { cmd: ['playerpref', 'plugin.dontstopthemusic:provider', 0] } } },
+      { text: 'Music Similarity', radio: 0, actions: { do: { cmd: ['playerpref', 'plugin.dontstopthemusic:provider', 'musicsimilarity'] } } }
+    ] };
+    return {};
+  });
+  assert.equal(await ctx.api.randomPlayActive('p1'), '');
+  assert.deepEqual(plain(await ctx.api.dontStopProviders('p1')), [
+    { id: '0', name: 'Disabled', selected: true },
+    { id: 'musicsimilarity', name: 'Music Similarity', selected: false }
+  ]);
 });
 
 test('LIST-01: shared LMS base actions make Qobuz rows actionable on every page', async function () {
@@ -232,4 +317,66 @@ test('LIST-01: shared LMS base actions make Qobuz rows actionable on every page'
     title: 'Second page album'
   });
   assert.match(items[0].identity, /item_id.*2\.1\.100/);
+});
+
+test('SqueezeDSP settings and catalog are normalized without dropping plugin fields', async function () {
+  const document = { Client: {
+    Bypass: 0, Preamp: -2.5, Filters: [{ FilterType: 'peak', Frequency: 120 }],
+    FutureSetting: { preserved: true }
+  } };
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'squeezedsp.readclientSettings') {
+      return { json: JSON.stringify(document), clientName: 'Kitchen', revision: '1.8', fresh_player: 1 };
+    }
+    if (cmd[0] === 'squeezedsp.filters') {
+      return { Preset_loop: [{ 0: 'Flat' }], FIRWavFile_loop: [{ 0: 'room.wav' }] };
+    }
+    return {};
+  });
+
+  const settings = await ctx.api.squeezeDspRead('p1');
+  const catalog = await ctx.api.squeezeDspCatalog('p1');
+  assert.deepEqual(plain(settings.settings), document);
+  assert.equal(settings.fresh, true);
+  assert.deepEqual(plain(catalog), { presets: ['Flat'], impulses: ['room.wav'] });
+});
+
+test('SqueezeDSP save sends the complete settings document in one explicit saveall', async function () {
+  const ctx = apiContext(function () { return { _done: 1 }; });
+  const settings = { Client: { Bypass: 1, Preamp: 3, FutureSetting: 'keep' } };
+  await ctx.api.squeezeDspSave('p2', settings);
+  assert.equal(ctx.calls.length, 1);
+  assert.equal(ctx.calls[0][0], 'squeezedsp.saveall');
+  assert.deepEqual(JSON.parse(ctx.calls[0][1].slice(4)), settings);
+});
+
+test('SqueezeDSP fresh-player settings receive the native defaults Echo edits', async function () {
+  const ctx = apiContext(function () {
+    return { json: JSON.stringify({ Client: { Bypass: 1 } }) };
+  });
+  const result = await ctx.api.squeezeDspRead('p1');
+  assert.equal(result.settings.Client.Preamp, 0);
+  assert.deepEqual(plain(result.settings.Client.Filters), []);
+});
+
+test('syncgroups keeps the LMS master-first topology and member names', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'syncgroups') return { syncgroups_loop: [{
+      sync_members: 'master,member', sync_member_names: 'Living Room,Kitchen'
+    }] };
+    return {};
+  });
+  const groups = await ctx.api.syncGroups();
+  assert.equal(groups[0].masterId, 'master');
+  assert.deepEqual(plain(groups[0].members), [
+    { id: 'master', name: 'Living Room' }, { id: 'member', name: 'Kitchen' }
+  ]);
+});
+
+test('playerVolume reads and clamps the mixer volume query', async function () {
+  const ctx = apiContext(function (cmd) {
+    return cmd[0] === 'mixer' ? { _volume: '-47' } : {};
+  });
+  assert.equal(await ctx.api.playerVolume('p1'), 47);
+  assert.deepEqual(ctx.calls[0], ['mixer', 'volume', '?']);
 });

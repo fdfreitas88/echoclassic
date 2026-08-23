@@ -37,6 +37,26 @@ test('contextual Back pops only the current tab stack', function () {
   assert.equal(history.state.depth, 0);
 });
 
+test('each library root restores its own My Music navigation stack', function () {
+  const values = {};
+  const ctx = helpers.browserContext({
+    localStorage: { getItem: function () { return null; }, setItem: function (k, v) { values[k] = v; } },
+    history: { state: null, pushState: function () {}, replaceState: function () {} },
+    addEventListener: function () {},
+    Vue: { observable: function (v) { return v; }, set: function (o, k, v) { o[k] = v; } },
+    LmsUi: { state: { tab: 'music', rootKey: 'all' }, restoreTab: function () {} }
+  });
+  helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/nav.js');
+  ctx.LmsNav.push('music', { label: 'Miles Davis', kind: 'artist' });
+  ctx.LmsNav.switchMusicRoot('library:classical');
+  assert.equal(ctx.LmsNav.depth('music'), 0);
+  ctx.LmsNav.push('music', { label: 'Gustav Mahler', kind: 'composer' });
+  ctx.LmsNav.switchMusicRoot('all');
+  assert.equal(ctx.LmsNav.top('music').label, 'Miles Davis');
+  ctx.LmsNav.switchMusicRoot('library:classical');
+  assert.equal(ctx.LmsNav.top('music').label, 'Gustav Mahler');
+});
+
 
 /* A11Y-01: the My Music root picker was a bare stack of buttons. The trigger
    carried no aria-haspopup and no aria-expanded, `.picker` had no role, the
