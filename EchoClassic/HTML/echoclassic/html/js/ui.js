@@ -205,6 +205,7 @@
   }
 
   var saved = readObject('echoclassic.ui.v2');
+  var savedVolumeStep = Number(saved.volumeStep);
   var savedPins = readArray('echoclassic.pins.v1').filter(function (pin) {
     return !!plainObject(pin);
   });
@@ -503,6 +504,7 @@
     selected: {},
     pins: savedPins,
     partyMode: saved.partyMode === true,
+    volumeStep: [1, 2, 5, 10].indexOf(savedVolumeStep) >= 0 ? savedVolumeStep : 2,
     kioskMode: saved.kioskMode === true,
     volumeExclusions: plainObject(saved.volumeExclusions) || {},
     colorScheme: isColorScheme(saved.colorScheme) ? saved.colorScheme : 'blue',
@@ -571,6 +573,7 @@
         legacyPlayerGaugeStyle: state.legacyPlayerGaugeStyle,
         miniGaugeColor: state.miniGaugeColor, playerGaugeColor: state.playerGaugeColor,
         prefer: state.prefer, partyMode: state.partyMode, kioskMode: state.kioskMode,
+        volumeStep: state.volumeStep,
         volumeExclusions: state.volumeExclusions,
         miniTheme: state.miniTheme, miniColorScheme: state.miniColorScheme, miniFont: state.miniFont,
         smallTheme: state.smallTheme, smallColorScheme: state.smallColorScheme, smallFont: state.smallFont,
@@ -1104,6 +1107,13 @@
     persist();
   }
 
+  function setVolumeStep(value) {
+    value = Number(value);
+    if ([1, 2, 5, 10].indexOf(value) < 0) return;
+    state.volumeStep = value;
+    persist();
+  }
+
   function setVolumeExcluded(playerId, excluded) {
     var next = Object.assign({}, state.volumeExclusions);
     if (excluded) next[String(playerId)] = true; else delete next[String(playerId)];
@@ -1381,7 +1391,8 @@
     ALBUM_MODES: ALBUM_MODES, setAlbumMode: setAlbumMode,
     QUEUE_ART_MODES: QUEUE_ART_MODES, setQueueArtMode: setQueueArtMode,
     DEFAULT_PLAYER_LAST: DEFAULT_PLAYER_LAST, setDefaultPlayer: setDefaultPlayer,
-    setPreference: setPreference, setVolumeExcluded: setVolumeExcluded, volumeExcluded: volumeExcluded,
+    setPreference: setPreference, setVolumeStep: setVolumeStep,
+    setVolumeExcluded: setVolumeExcluded, volumeExcluded: volumeExcluded,
     viewLabel: viewLabel, setMusicView: setMusicView,
     setLibraryRoot: setLibraryRoot, setLibrary: setLibrary,
     allowsMediaFilter: allowsMediaFilter,

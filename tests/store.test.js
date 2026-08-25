@@ -201,6 +201,29 @@ test('sync topology marks the master and group volume skips fixed-output members
   assert.deepEqual(volumeWrites, [{ id: 'p1', value: 55 }]);
 });
 
+test('use_volume_control keeps a fixed-output player controllable for AVR plugins', async function () {
+  const writes = [];
+  const ctx = storeContext({
+    playerPref: async function (id, key) { return key === 'digitalVolumeControl' ? 0 : 0; },
+    status: async function () { return {
+      mode: 'play', time: 1, duration: 10, volume: 37,
+      useVolumeControl: true, replayGain: -4.5,
+      track: { id: null, title: '', artist: '', album: '' },
+      sampleRate: 44100, sampleSize: 16, format: 'FLAC', bitrate: 900,
+      sourceStream: {}, activeStream: {}, isTranscoded: false, live: false
+    }; },
+    setVolume: async function (id, value) { writes.push({ id: id, value: value }); }
+  });
+  await ctx.store.init();
+  await ctx.store.refresh();
+  assert.equal(ctx.store.state.fixedVolume, true);
+  assert.equal(ctx.store.state.useVolumeControl, true);
+  assert.equal(ctx.store.state.volumeControllable, true);
+  assert.equal(ctx.store.state.replayGainApplied, -4.5);
+  await ctx.store.setVolume(38);
+  assert.deepEqual(writes, [{ id: 'p1', value: 38 }]);
+});
+
 test('playback intelligence loads active RandomPlay and the confirmed DSTM provider', async function () {
   const ctx = storeContext({
     canCommands: async function () { return { rating: false, randomplay: true, dontstopthemusicsetting: true }; },

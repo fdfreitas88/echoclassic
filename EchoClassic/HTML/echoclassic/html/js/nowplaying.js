@@ -96,20 +96,22 @@ Vue.component('lms-nowplaying', {
     </div>
 
     <div class="bottom">
-      <div class="vol" :class="{fixed: store.fixedVolume}" :title="volumeTitle">
-        <svg class="mono quiet" viewBox="0 0 24 24"><path d="M4 9v6h3l5 4V5L7 9z"/></svg>
+      <div class="vol" :class="{fixed: !store.volumeControllable}" :title="volumeTitle">
+        <button type="button" class="volume-step quiet pointer" aria-label="Volume down"
+                :disabled="!store.volumeControllable" @click="stepVolume(-ui.volumeStep)"><svg class="mono" viewBox="0 0 24 24"><path d="M4 9v6h3l5 4V5L7 9z"/></svg></button>
         <div class="vbar">
           <i :style="{width: volPct + '%'}"></i>
           <b :style="{left: 'calc(' + volPct + '% - 12px)'}"></b>
           <input class="range-hit" type="range" min="0" max="100" step="1"
-                 :value="volumeValue" :disabled="store.fixedVolume"
-                 :title="store.fixedVolume ? 'Disabled: set the volume on the DAC' : 'Volume'"
+                 :value="volumeValue" :disabled="!store.volumeControllable"
+                 :title="store.volumeControllable ? 'Volume' : 'Disabled: set the volume on the DAC'"
                  aria-label="Volume" @pointerdown="beginVolume"
                  @pointercancel="cancelVolume" @pointerup="releaseVolume"
                  @lostpointercapture="releaseVolume"
                  @input="previewVolume" @change="commitVolume">
         </div>
-        <svg class="mono loud" viewBox="0 0 24 24"><path d="M3 9v6h3l5 4V5L6 9zM15 9a4 4 0 010 6M18 6.5a8 8 0 010 11"/></svg>
+        <button type="button" class="volume-step loud pointer" aria-label="Volume up"
+                :disabled="!store.volumeControllable" @click="stepVolume(ui.volumeStep)"><svg class="mono" viewBox="0 0 24 24"><path d="M3 9v6h3l5 4V5L6 9zM15 9a4 4 0 010 6M18 6.5a8 8 0 010 11"/></svg></button>
       </div>
       <button type="button" class="volume-mode pointer"
 	              :class="{fixed: store.fixedVolume, unsynced: !store.volumeModeSynced}"
@@ -132,8 +134,16 @@ Vue.component('lms-nowplaying', {
         <svg class="heart" :class="{on: store.npFavorite}" aria-hidden="true"
              viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-9.3A3.8 3.8 0 0112 8a3.8 3.8 0 017 2.7c0 4.7-7 9.3-7 9.3z"/></svg>
       </button>
-      <div class="specs" v-if="badges.length">
-        <span v-for="b in badges" :key="b.text" class="badge" :class="{hi: b.hi}">{{ b.text }}</span>
+      <div class="np-signal" v-if="badges.length || signalPathText || replayGainText"
+           aria-live="polite" :title="signalPathTitle">
+        <div class="specs" v-if="badges.length" aria-label="Output stream">
+          <span v-for="b in badges" :key="b.text" class="badge" :class="{hi: b.hi}">{{ b.text }}</span>
+        </div>
+        <div class="signal-path" v-if="signalPathText">
+          <span v-if="np.isTranscoded" class="transcoded">Transcoded</span>
+          <span>{{ signalPathText }}</span>
+          <span v-if="replayGainText">{{ replayGainText }}</span>
+        </div>
       </div>
       <button v-if="store.equalizer.status === 'ready'" type="button"
               class="secondary-action player-equalizer-command pointer"
@@ -218,9 +228,10 @@ Vue.component('lms-nowplaying', {
     volumeValue: function () {
       return this.dragVolume === null ? this.store.volume : this.dragVolume;
     },
-    volPct: function () { return this.store.fixedVolume ? 100 : this.volumeValue; },
+    volPct: function () { return this.store.volumeControllable ? this.volumeValue : 100; },
     volumeTitle: function () {
-      return this.tr(this.store.fixedVolume ? 'Fixed volume on server' : 'Volume');
+      if (this.store.fixedVolume && this.store.useVolumeControl) return this.tr('External amplifier volume');
+      return this.tr(this.store.volumeControllable ? 'Volume' : 'Fixed volume on server');
     },
     volumeModeTitle: function () {
       if (this.store.volumeModeBusy) return 'Confirming volume mode…';
@@ -247,6 +258,26 @@ Vue.component('lms-nowplaying', {
       if (this.np.bitrate) out.push({ text: Math.round(this.np.bitrate) + ' kbps', hi: false });
       if (this.np.format) out.push({ text: LmsFmt.format(this.np.format), hi: false });
       return out;
+    },
+    signalPathText: function () {
+      var output = this.streamLabel(this.np.activeStream);
+      var source = this.streamLabel(this.np.sourceStream);
+      if (this.np.isTranscoded && source && output) return source + ' → ' + output;
+      return output ? 'Output ' + output : '';
+    },
+    replayGainText: function () {
+      if (this.store.replayGainApplied == null || !isFinite(Number(this.store.replayGainApplied))) return '';
+      var gain = Number(this.store.replayGainApplied);
+      return 'Replay Gain ' + (gain > 0 ? '+' : '') + gain.toFixed(2).replace(/\.00$/, '') + ' dB';
+    },
+    signalPathTitle: function () {
+      var source = this.streamLabel(this.np.sourceStream);
+      var output = this.streamLabel(this.np.activeStream);
+      var parts = [];
+      if (source) parts.push('Source: ' + source);
+      if (output) parts.push('Output to player: ' + output);
+      if (this.replayGainText) parts.push(this.replayGainText);
+      return parts.join('. ');
     },
     rating: function () {
       return Math.round((this.store.trackInfo && this.store.trackInfo.rating || 0) / 20);
@@ -289,6 +320,18 @@ Vue.component('lms-nowplaying', {
     },
     ratingLabel: function (rating) {
       return rating + ' ' + this.tr(rating === 1 ? 'star' : 'stars');
+    },
+    streamLabel: function (stream) {
+      if (!stream) return '';
+      var parts = [];
+      var rate = LmsFmt.rate(stream.sampleRate);
+      var depth = LmsFmt.depth(stream.sampleSize);
+      if (rate) parts.push(rate);
+      // Lossy streams intentionally have no bit depth in LMS 9.2.
+      if (depth) parts.push(depth);
+      if (stream.bitrate) parts.push(Math.round(stream.bitrate) + ' kbps');
+      if (stream.format) parts.push(LmsFmt.format(stream.format));
+      return parts.join(' · ');
     },
     close: function () {
       LmsUi.closePlayer();
@@ -362,6 +405,7 @@ Vue.component('lms-nowplaying', {
       this.dragVolume = null;
       LmsStore.setVolumeDragging(false);
     },
+    stepVolume: function (amount) { LmsStore.setVolume(this.volumeValue + amount); },
     toggleVolumeMode: function () { LmsStore.setFixedVolume(!this.store.fixedVolume); },
     favorite: function () { LmsStore.toggleFavorite(); },
     shuffle: function () { LmsStore.cycleShuffle(); },

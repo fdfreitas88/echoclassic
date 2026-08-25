@@ -87,6 +87,9 @@
 
   function loop(res, key) { return (res && res[key]) || []; }
   function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function owns(object, key) {
+    return !!object && Object.prototype.hasOwnProperty.call(object, key);
+  }
 
   /* O LMS nao tem uma unidade so para bitrate. No tag do `titles` ele manda a
      string pronta -- "5641kbps VBR" --, e em outros caminhos manda numero em
@@ -727,6 +730,22 @@
     var r = await rpc(playerId, ['status', '-', 1, 'tags:alueKNcdtboTI']);
     var cur = loop(r, 'playlist_loop')[0] || {};
     var duration = num(cur.duration) || num(r.duration);
+    var activeHasRate = owns(r, 'samplerate');
+    var activeHasSize = owns(r, 'samplesize');
+    var activeHasType = owns(r, 'type');
+    var activeHasBitrate = owns(r, 'bitrate');
+    var sourceStream = {
+      sampleRate: num(cur.samplerate), sampleSize: num(cur.samplesize),
+      format: txt(cur.type).toUpperCase(), bitrate: kbps(cur.bitrate)
+    };
+    var activeStream = {
+      sampleRate: activeHasRate ? num(r.samplerate) : sourceStream.sampleRate,
+      // LMS 9.2 deliberately returns an empty sample size for lossy output.
+      // Presence, rather than truthiness, decides whether metadata may fill it.
+      sampleSize: activeHasSize ? num(r.samplesize) : sourceStream.sampleSize,
+      format: activeHasType ? txt(r.type).toUpperCase() : sourceStream.format,
+      bitrate: activeHasBitrate ? kbps(r.bitrate) : sourceStream.bitrate
+    };
     var st = {
       mode: txt(r.mode) || 'stop',
       time: num(r.time),
@@ -741,20 +760,32 @@
         coverId: cur.coverid || null,
         url: txt(cur.url)
       },
-      sampleRate: num(r.samplerate) || num(cur.samplerate),
-      sampleSize: num(r.samplesize) || num(cur.samplesize),
-      format: txt(r.type || cur.type).toUpperCase(),
-      bitrate: kbps(r.bitrate || cur.bitrate),
+      sampleRate: activeStream.sampleRate,
+      sampleSize: activeStream.sampleSize,
+      format: activeStream.format,
+      bitrate: activeStream.bitrate,
+      sourceStream: sourceStream,
+      activeStream: activeStream,
+      replayGain: owns(r, 'replay_gain') ? num(r.replay_gain) : null,
+      useVolumeControl: owns(r, 'use_volume_control')
+        ? String(r.use_volume_control) === '1'
+        : null,
       live: duration === 0
     };
     // Older servers do not reliably carry these fields; fill only the gaps so
     // a partial active-stream response can never be overwritten by metadata.
-    if (st.track.id != null && (!st.sampleRate || !st.sampleSize || !st.format)) {
+    if (st.track.id != null && ((!activeHasRate && !st.sampleRate) ||
+        (!activeHasSize && !st.sampleSize) || (!activeHasType && !st.format))) {
       var info = await songInfo(playerId, st.track.id);
-      if (!st.sampleRate) st.sampleRate = info.sampleRate;
-      if (!st.sampleSize) st.sampleSize = info.sampleSize;
-      if (!st.format) st.format = info.format;
+      if (!activeHasRate && !st.sampleRate) st.sampleRate = st.activeStream.sampleRate = info.sampleRate;
+      if (!activeHasSize && !st.sampleSize) st.sampleSize = st.activeStream.sampleSize = info.sampleSize;
+      if (!activeHasType && !st.format) st.format = st.activeStream.format = info.format;
     }
+    st.isTranscoded = !!(activeHasRate || activeHasSize || activeHasType || activeHasBitrate) &&
+      (st.activeStream.sampleRate !== st.sourceStream.sampleRate ||
+       st.activeStream.sampleSize !== st.sourceStream.sampleSize ||
+       st.activeStream.format !== st.sourceStream.format ||
+       st.activeStream.bitrate !== st.sourceStream.bitrate);
     return st;
   }
 
@@ -1307,6 +1338,138 @@
     await rpc(playerId, ['playlistcontrol', 'cmd:load', key + ':' + id]);
   }
 
+  var appleSqueezerWire = null;
+  var appleSqueezerStatusCache = {};
+  var APPLE_SQUEEZER_STATUS_TTL = 2000;
+
+  async function appleSqueezerWireContract() {
+    if (appleSqueezerWire) return appleSqueezerWire;
+    var v2 = await canCommand(['applesqueezer', 'status']).catch(function () { return false; });
+    if (v2) return (appleSqueezerWire = { namespace: 'applesqueezer', apiVersion: 2 });
+    var published = await canCommand(['apple_squeezer', 'status']).catch(function () { return false; });
+    if (published) return (appleSqueezerWire = { namespace: 'apple_squeezer', apiVersion: 1 });
+    return null;
+  }
+
+  function normalizePublishedAppleSqueezer(state, dsp) {
+    state = state || {}; dsp = dsp || {};
+    return Object.assign({}, state, {
+      available: 1,
+      apiVersion: 1,
+      lifecycle: Number(state.running) ? 'running' : 'stopped',
+      capabilities: { lifecycle: true, telemetry: true, dsp: true, response: true },
+      upsampleRate: state.upsample_rate || 'auto',
+      resampleFilter: state.resample_filter || 'linear',
+      dspConfig: dsp.configuration || '',
+      dspTelemetry: dsp.telemetry || state.dsp_telemetry || '',
+      diagnostics: state.coreaudio_telemetry || ''
+    });
+  }
+
+  async function appleSqueezerStatus(playerId, fresh) {
+    var cacheKey = String(playerId || 'server');
+    var cached = appleSqueezerStatusCache[cacheKey];
+    if (!fresh && cached && Date.now() - cached.at < APPLE_SQUEEZER_STATUS_TTL) return Object.assign({}, cached.value);
+    var wire = await appleSqueezerWireContract();
+    if (!wire) return { available: 0, lifecycle: 'not-installed', apiVersion: 0, capabilities: {} };
+    var normalized;
+    if (wire.apiVersion >= 2) {
+      var state = await rpc('', [wire.namespace, 'status'].concat(appleSqueezerPlayerArgs(playerId)));
+      state.available = 1;
+      normalized = state;
+    } else {
+      var values = await Promise.all([
+        rpc('', [wire.namespace, 'status']),
+        rpc('', [wire.namespace, 'dsp_status']).catch(function () { return {}; })
+      ]);
+      normalized = normalizePublishedAppleSqueezer(values[0], values[1]);
+    }
+    appleSqueezerStatusCache[cacheKey] = { at: Date.now(), value: Object.assign({}, normalized) };
+    return normalized;
+  }
+
+  function invalidateAppleSqueezerStatus() { appleSqueezerStatusCache = {}; }
+
+  function appleSqueezerPlayerArgs(playerId) {
+    return playerId ? ['player_id:' + String(playerId)] : [];
+  }
+
+  async function appleSqueezerLifecycle(action) {
+    var wire = await appleSqueezerWireContract();
+    if (!wire) throw new LmsError(['apple_squeezer'], 'unavailable', 'Apple Squeezer is not installed');
+    var result = wire.apiVersion >= 2
+      ? await rpc('', [wire.namespace, 'lifecycle', String(action)], { timeout: 30000 })
+      : await rpc('', [wire.namespace, action === 'recover' ? 'restart' : String(action)], { timeout: 30000 });
+    invalidateAppleSqueezerStatus();
+    return result;
+  }
+
+  async function appleSqueezerTelemetry(playerId) {
+    var wire = await appleSqueezerWireContract();
+    if (wire && wire.apiVersion >= 2) return rpc('', [wire.namespace, 'telemetry'].concat(appleSqueezerPlayerArgs(playerId)));
+    return appleSqueezerStatus(playerId);
+  }
+
+  async function setAppleSqueezerDspOwner(playerId, owner) {
+    return rpc('', ['applesqueezer', 'dsp-owner'].concat(appleSqueezerPlayerArgs(playerId), [
+      'owner:' + String(owner)
+    ]), { timeout: 20000 });
+  }
+
+  async function setAppleSqueezerMode(mode) {
+    var wire = await appleSqueezerWireContract();
+    return rpc('', [wire.namespace, 'mode', mode], { timeout: 20000 });
+  }
+
+  async function setAppleSqueezerUpsampleRate(rate) {
+    var wire = await appleSqueezerWireContract();
+    return rpc('', [wire.namespace, wire.apiVersion >= 2 ? 'upsample-rate' : 'upsample_rate', String(rate)], { timeout: 20000 });
+  }
+
+  async function setAppleSqueezerResampleFilter(filter) {
+    var wire = await appleSqueezerWireContract();
+    return rpc('', [wire.namespace, wire.apiVersion >= 2 ? 'resample-filter' : 'resample_filter', String(filter)], { timeout: 20000 });
+  }
+  async function setAppleSqueezerResampleExpert(precision, passband, stopband, phase) {
+    return rpc('', ['applesqueezer', 'resample-expert', String(precision), String(passband), String(stopband), String(phase)], { timeout: 20000 });
+  }
+
+  async function applyAppleSqueezerDsp(playerId, config, expectedRevision) {
+    var wire = await appleSqueezerWireContract();
+    if (!playerId || !config || typeof config !== 'object' || Array.isArray(config)) throw new LmsError(['applesqueezer', 'dsp-apply'], 'invalid-parameters', 'A player and DSP configuration are required');
+    var encoded = JSON.stringify(config);
+    if (encoded.length > 65536) throw new LmsError(['applesqueezer', 'dsp-apply'], 'invalid-parameters', 'DSP configuration exceeds 64 KiB');
+    if (wire.apiVersion < 2) return rpc('', [wire.namespace, 'dsp_apply', encoded], { timeout: 30000 });
+    var args = [wire.namespace, 'dsp-apply'].concat(appleSqueezerPlayerArgs(playerId));
+    if (expectedRevision != null) args.push('expected_revision:' + String(expectedRevision));
+    args.push('config:' + encoded);
+    return rpc('', args, { timeout: 30000 });
+  }
+
+  async function bypassAppleSqueezerDsp(playerId, enabled) {
+    var wire = await appleSqueezerWireContract();
+    if (wire.apiVersion < 2) return rpc('', [wire.namespace, 'dsp_bypass', enabled ? 'true' : 'false'], { timeout: 20000 });
+    return rpc('', [wire.namespace, 'dsp-bypass'].concat(appleSqueezerPlayerArgs(playerId), [
+      'enabled:' + (enabled ? '1' : '0')
+    ]), { timeout: 20000 });
+  }
+
+  async function rollbackAppleSqueezerDsp(playerId, revision) {
+    var wire = await appleSqueezerWireContract();
+    if (wire.apiVersion < 2) return rpc('', [wire.namespace, 'dsp_rollback'], { timeout: 20000 });
+    var args = [wire.namespace, 'dsp-rollback'].concat(appleSqueezerPlayerArgs(playerId));
+    if (revision != null) args.push('revision:' + String(revision));
+    return rpc('', args, { timeout: 20000 });
+  }
+
+  async function appleSqueezerDspResponse(playerId, rate, points) {
+    var wire = await appleSqueezerWireContract();
+    if (wire.apiVersion < 2) return rpc('', [wire.namespace, 'response', String(rate || 48000), String(points || 128)]);
+    return rpc('', [wire.namespace, 'dsp-response'].concat(appleSqueezerPlayerArgs(playerId), [
+      'rate:' + String(rate || 48000), 'points:' + String(points || 128)
+    ]));
+  }
+
   global.LmsApi = {
     rpc: rpc, LmsError: LmsError,
     serverInfo: serverInfo, playlists: playlists,
@@ -1329,6 +1492,17 @@
     artistOfAlbum: artistOfAlbum, artistsOfAlbum: artistsOfAlbum,
     genres: genres, years: years,
     players: players, status: status, songInfo: songInfo,
+    appleSqueezerStatus: appleSqueezerStatus, setAppleSqueezerMode: setAppleSqueezerMode,
+    appleSqueezerLifecycle: appleSqueezerLifecycle,
+    appleSqueezerTelemetry: appleSqueezerTelemetry,
+    setAppleSqueezerDspOwner: setAppleSqueezerDspOwner,
+    setAppleSqueezerUpsampleRate: setAppleSqueezerUpsampleRate,
+    setAppleSqueezerResampleFilter: setAppleSqueezerResampleFilter,
+    setAppleSqueezerResampleExpert: setAppleSqueezerResampleExpert,
+    applyAppleSqueezerDsp: applyAppleSqueezerDsp,
+    bypassAppleSqueezerDsp: bypassAppleSqueezerDsp,
+    rollbackAppleSqueezerDsp: rollbackAppleSqueezerDsp,
+    appleSqueezerDspResponse: appleSqueezerDspResponse,
     forgetSongInfo: forgetSongInfo, playerPref: playerPref,
     setPlayerPref: setPlayerPref, sleep: sleep, sleepRemaining: sleepRemaining,
     syncPlayer: syncPlayer, syncGroups: syncGroups, playerVolume: playerVolume,

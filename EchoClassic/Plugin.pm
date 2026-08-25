@@ -25,6 +25,7 @@ use File::Basename qw(dirname);
 use File::Spec::Functions qw(catdir catfile);
 
 use Slim::Player::Client;
+use Slim::Control::Request;
 use Slim::Utils::Log;
 use Slim::Utils::Strings;
 
@@ -88,6 +89,12 @@ sub initPlugin {
 
 	Slim::Web::Pages->addPageFunction($URL_RE, $serve);
 
+	# Apple Squeezer is an independent LMS Store plugin. It owns the
+	# `applesqueezer` CLI/JSON-RPC namespace; a skin must never register proxy
+	# commands, inspect its private files, or assume that LMS and the audio
+	# engine run under the same operating-system user. The browser discovers the
+	# plugin through LMS's `can` command and talks to that public contract.
+
 	# A partial or half-extracted install can leave Settings.pm missing or
 	# broken. That must not take the skin down with it: the route above is
 	# already registered and serves fine without a settings page.
@@ -104,7 +111,7 @@ sub initPlugin {
 
 sub getDisplayName { return 'ECHOCLASSIC_SKIN' }
 
-sub getSkinVersion { return '3.4.1' }
+sub getSkinVersion { return '3.5.0' }
 
 # Escapes a value for use inside a double-quoted JavaScript string literal.
 #

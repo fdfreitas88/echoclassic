@@ -24,6 +24,7 @@ var ECHOCLASSIC_SCAN_JOURNAL_LIMIT = 100;
    local so useful starting points exist even when the plugin has no preset
    files on the server. Every screenshot uses Q 3.00. */
 var ECHOCLASSIC_EQUALIZER_FREQUENCIES = [60, 120, 300, 500, 1000, 2000, 5000, 8000, 10000, 12000, 14000, 16000];
+var APPLE_SQUEEZER_EQ_FREQUENCIES = [31.25, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 12000, 16000, 20000];
 var ECHOCLASSIC_EQUALIZER_PRESETS = [
   { name: 'Flat', gains: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
   { name: 'Loudness', gains: [15, 10, 0, 0, -2, 0, -1, -4, 10, 21, 5, 2] },
@@ -47,6 +48,98 @@ Vue.component('lms-settings', {
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
   <template v-if="isSettingsScreen('equalizer')">
     <div class="sgh">{{ equalizerContextHeading }}</div>
+    <div v-if="appleSqueezer.available" class="sgroup apple-squeezer-contract">
+      <div class="srow"><span>Apple Squeezer Store plugin<small>API {{ appleSqueezer.apiVersion || 'legacy' }} · {{ appleSqueezer.lifecycle }}</small></span><span class="v">{{ appleSqueezerCompatible ? 'Connected' : 'Update required' }}</span></div>
+      <div v-if="appleSqueezerCanLifecycle" class="srow eq-inline-actions">
+        <button v-if="!appleSqueezer.running" type="button" class="eq-action-button" :disabled="appleSqueezer.busy" @click="changeAppleSqueezerLifecycle('start')">Start</button>
+        <button type="button" class="eq-action-button" :disabled="appleSqueezer.busy" @click="changeAppleSqueezerLifecycle('restart')">Restart</button>
+        <button v-if="appleSqueezer.lifecycle === 'error'" type="button" class="eq-action-button" :disabled="appleSqueezer.busy" @click="changeAppleSqueezerLifecycle('recover')">Recover</button>
+      </div>
+      <div v-if="!appleSqueezerCompatible" class="player-help">Native DSP requires Apple Squeezer Store API v2 or later. Playback remains available.</div>
+    </div>
+    <template v-if="appleSqueezer.running">
+      <div class="sgh apple-squeezer-section-heading">{{ tr('Playback mode') }}</div>
+      <div class="sgroup apple-squeezer-panel">
+        <div class="srow apple-squeezer-heading">
+          <span>{{ tr('Apple Squeezer mode') }}<small>{{ tr('The player restarts when the mode changes.') }}</small></span>
+          <span class="v">{{ appleSqueezer.busy ? tr('Switching…') : appleSqueezerModeLabel }}</span>
+        </div>
+        <div class="apple-squeezer-modes" role="radiogroup" aria-label="Apple Squeezer mode">
+          <button v-for="mode in appleSqueezerModes" :key="mode.key" type="button"
+                  :class="{ on: appleSqueezer.mode === mode.key }"
+                  :aria-checked="appleSqueezer.mode === mode.key ? 'true' : 'false'"
+                  :disabled="appleSqueezer.busy" role="radio" @click="changeAppleSqueezerMode(mode.key)">
+            {{ tr(mode.label) }}
+          </button>
+        </div>
+        <div v-if="['osf','csf','pcm-studio'].indexOf(appleSqueezer.mode) >= 0" class="apple-squeezer-rate">
+          <span>{{ tr('Upsample rate') }}<small>{{ tr('Automatic preserves the source clock family.') }}</small></span>
+          <div class="apple-squeezer-rates" role="radiogroup" :aria-label="tr('Upsample rate')">
+            <button v-for="rate in appleSqueezerRates" :key="rate.key" type="button" role="radio"
+                    :class="{ on: appleSqueezer.upsampleRate === rate.key }"
+                    :aria-checked="appleSqueezer.upsampleRate === rate.key ? 'true' : 'false'"
+                    :disabled="appleSqueezer.busy" @click="changeAppleSqueezerUpsampleRate(rate.key)">
+              {{ rate.label }}
+            </button>
+          </div>
+        </div>
+        <div v-if="appleSqueezer.mode === 'csf'" class="apple-squeezer-expert">
+          <label>Precision <input v-model.number="appleSqueezer.expert.precision" type="range" min="16" max="32" step="1"><span>{{ appleSqueezer.expert.precision }} bit</span></label>
+          <label>Passband <input v-model.number="appleSqueezer.expert.passband" type="range" min="80" max="99" step="0.1"><span>{{ appleSqueezer.expert.passband }}%</span></label>
+          <label>Stopband <input v-model.number="appleSqueezer.expert.stopband" type="range" :min="Math.min(100,appleSqueezer.expert.passband+0.1)" max="100" step="0.1"><span>{{ appleSqueezer.expert.stopband }}%</span></label>
+          <label>Phase <input v-model.number="appleSqueezer.expert.phase" type="range" min="0" max="100" step="1"><span>{{ appleSqueezer.expert.phase }}%</span></label>
+          <button type="button" class="eq-action-button" :disabled="appleSqueezer.busy" @click="applyAppleSqueezerExpert">Apply expert filter</button>
+        </div>
+        <div v-if="['osf','csf','pcm-studio'].indexOf(appleSqueezer.mode) >= 0" class="apple-squeezer-rate">
+          <span>{{ tr('Sampling filter') }}<small>{{ tr('CSF exposes the complete phase and roll-off library.') }}</small></span>
+          <div class="apple-squeezer-filters" role="radiogroup" :aria-label="tr('Sampling filter')">
+            <button v-for="filter in appleSqueezerFilters" :key="filter" type="button" role="radio" :class="{on: appleSqueezer.resampleFilter === filter}" :aria-checked="String(appleSqueezer.resampleFilter === filter)" :disabled="appleSqueezer.busy || (appleSqueezer.mode === 'osf' && filter !== 'linear')" @click="changeAppleSqueezerResampleFilter(filter)">{{ filter }}</button>
+          </div>
+        </div>
+        <div class="player-help apple-squeezer-path" aria-live="polite">
+          {{ appleSqueezerPath }}
+          <span class="apple-path-proof">Physical {{ appleSqueezer.diagnostics.physical_status || 'unverified' }} · Volume {{ appleSqueezer.diagnostics.volume_status || 'unverified' }} · Exclusive {{ appleSqueezer.diagnostics.exclusive_status || 'not requested' }}</span>
+        </div>
+      </div>
+    </template>
+    <div class="sgh">DSP owner</div>
+    <div class="sgroup"><div class="srow segmented-row"><span>Processing engine<small>Stored by the server for this player.</small></span><div class="segmented" role="radiogroup" aria-label="DSP owner"><button type="button" :class="{on:dspOwner==='apple-squeezer'}" :disabled="!appleSqueezerCompatible" @click="selectDspOwner('apple-squeezer')">Apple Squeezer</button><button type="button" :class="{on:dspOwner==='squeezedsp'}" @click="selectDspOwner('squeezedsp')">SqueezeDSP</button></div></div></div>
+    <template v-if="dspOwner === 'apple-squeezer' && appleSqueezerCompatible && nativeDspDraft">
+      <div class="native-signal-console">
+        <div class="native-signal-head"><span>Native signal response<small>{{ appleSqueezer.diagnostics.rate || 48000 }} Hz · {{ appleSqueezer.telemetry.latency_frames || 0 }} DSP frames</small></span><span class="eq-status-badge" :class="{on:!nativeDspDraft.bypass}">{{ nativeDspDraft.bypass ? 'Bypass' : 'Native' }}</span></div>
+        <svg class="native-response" viewBox="0 0 320 76" role="img" aria-label="Native DSP frequency response"><path class="native-response-zero" d="M0 64 L320 64"></path><path v-if="nativeDspResponsePath" class="native-response-line" :d="nativeDspResponsePath"></path></svg>
+        <div class="native-meter"><span>Peak {{ appleSqueezer.telemetry.peak_dbfs == null ? '—' : Number(appleSqueezer.telemetry.peak_dbfs).toFixed(1) + ' dBFS' }}</span><span>True peak {{ appleSqueezer.telemetry.true_peak_dbfs == null ? '—' : Number(appleSqueezer.telemetry.true_peak_dbfs).toFixed(1) + ' dBTP' }}</span><span :class="{warn:Number(appleSqueezer.telemetry.clipped_samples)>0}">Clips {{ appleSqueezer.telemetry.clipped_samples || 0 }}</span></div>
+      </div>
+      <div class="sgroup"><div class="srow">Native DSP<button type="button" class="sw" :class="{on:!nativeDspDraft.bypass}" role="switch" :aria-checked="String(!nativeDspDraft.bypass)" @click="nativeDspDraft.bypass=!nativeDspDraft.bypass"><span class="visually-hidden">Native DSP</span></button></div>
+        <div class="srow segmented-row"><span>Compare</span><div class="segmented"><button type="button" :class="{on:nativeDspAB==='A'}" @click="loadNativeAB('A')">A</button><button type="button" :class="{on:nativeDspAB==='B'}" @click="loadNativeAB('B')">B</button><button type="button" @click="saveNativeAB(nativeDspAB)">Save {{ nativeDspAB }}</button></div></div>
+        <button v-if="equalizerDraft" type="button" class="srow settings-command-row pointer" @click="importSqueezeDspToNative">Import compatible SqueezeDSP settings <span class="v">›</span></button>
+      </div>
+      <div class="sgh">Headroom and protection</div><div class="sgroup">
+        <label class="srow">Preamp <input v-model.number="nativeDspDraft.preamp_db" class="setting-range" type="range" min="-30" max="12" step="0.1"><span class="v">{{ formatSigned(nativeDspDraft.preamp_db,' dB') }}</span></label>
+        <div class="srow"><span>Automatic response headroom</span><button type="button" class="sw" :class="{on:nativeDspDraft.headroom_db===null}" @click="nativeDspDraft.headroom_db=nativeDspDraft.headroom_db===null?3:null"></button></div>
+        <label v-if="nativeDspDraft.headroom_db!==null" class="srow">Manual headroom <input v-model.number="nativeDspDraft.headroom_db" class="setting-range" type="range" min="0" max="24" step="0.1"><span class="v">{{ Number(nativeDspDraft.headroom_db).toFixed(1) }} dB</span></label>
+        <div class="srow"><span>Apply LMS ReplayGain inside DSP</span><button type="button" class="sw" :class="{on:nativeDspDraft.replaygain_managed}" @click="nativeDspDraft.replaygain_managed=!nativeDspDraft.replaygain_managed"></button></div><label class="srow">ReplayGain trim <input v-model.number="nativeDspDraft.replaygain_db" class="setting-range" type="range" min="-30" max="12" step="0.1"><span class="v">{{ Number(nativeDspDraft.replaygain_db).toFixed(1) }} dB</span></label><div class="srow"><span>Reserve positive ReplayGain headroom</span><button type="button" class="sw" :class="{on:nativeDspDraft.replaygain_headroom}" @click="nativeDspDraft.replaygain_headroom=!nativeDspDraft.replaygain_headroom"></button></div>
+        <div class="srow"><span>4× true-peak protection</span><button type="button" class="sw" :class="{on:nativeDspDraft.true_peak}" @click="nativeDspDraft.true_peak=!nativeDspDraft.true_peak"></button></div>
+        <div class="srow"><span>True-peak limiter</span><button type="button" class="sw" :class="{on:nativeDspDraft.limiter}" @click="nativeDspDraft.limiter=!nativeDspDraft.limiter"></button></div>
+        <label v-if="nativeDspDraft.limiter" class="srow">Limiter ceiling <input v-model.number="nativeDspDraft.limiter_ceiling_db" class="setting-range" type="range" min="-6" max="0" step="0.1"><span class="v">{{ Number(nativeDspDraft.limiter_ceiling_db).toFixed(1) }} dBTP</span></label>
+      </div>
+      <div class="sgh">12-band equalizer</div><div class="sgroup"><div class="srow"><span>Graphic stage</span><button type="button" class="sw" :class="{on:!nativeDspDraft.eq_bypass}" @click="nativeDspDraft.eq_bypass=!nativeDspDraft.eq_bypass"></button></div></div>
+      <div class="sgroup"><div class="srow eq-inline-actions"><button v-for="preset in ['flat','warm','presence','air']" type="button" class="eq-action-button" @click="applyNativePreset(preset)">{{ preset }}</button></div></div>
+      <div class="sgroup eq-band-panel"><div class="eq-band-bank" aria-label="Native 12-band equalizer"><label v-for="band in nativeDspBands" :key="band.frequency" class="eq-band" :class="{disabled:!band.enabled}"><span class="eq-band-value">{{ formatEqGain(band.gain) }}</span><span class="eq-slider"><input :value="band.gain" type="range" min="-24" max="24" step="0.5" :disabled="!band.enabled" :aria-label="band.label+' hertz'" @input="setNativeBand(band.index,$event.target.value)"></span><button type="button" class="native-band-toggle" :aria-pressed="String(band.enabled)" @click.prevent="nativeDspDraft.graphic_eq_enabled.splice(band.index,1,!band.enabled)">{{ band.label }}</button></label></div></div>
+      <div class="sgh">Parametric filters</div><div class="sgroup"><div class="srow"><span>Parametric stage</span><button type="button" class="sw" :class="{on:!nativeDspDraft.parametric_bypass}" @click="nativeDspDraft.parametric_bypass=!nativeDspDraft.parametric_bypass"></button></div>
+        <div class="srow eq-inline-actions"><button v-for="preset in ['subsonic','bass shelf','dialog clarity','room notch']" type="button" class="eq-action-button" @click="applyNativeFilterPreset(preset)">{{ preset }}</button></div>
+        <div v-for="(filter,index) in nativeDspDraft.parametric_filters" :key="'native-filter-'+index" class="eq-filter-editor"><div class="srow"><button type="button" class="eq-action-button" :aria-label="'Filter type: '+nativeFilterTypeLabel(filter.type)" @click="cycleNativeFilterType(filter)">{{ nativeFilterTypeLabel(filter.type) }} ›</button><button type="button" class="eq-remove-button" @click="removeNativeFilter(index)">Remove</button><button type="button" class="sw" :class="{on:filter.enabled}" @click="filter.enabled=!filter.enabled"></button></div><label class="srow">Frequency <input v-model.number="filter.frequency" class="setting-range" type="range" min="20" max="20000" step="1"><span class="v">{{ filter.frequency }} Hz</span></label><label class="srow">Q <input v-model.number="filter.q" class="setting-range" type="range" min="0.1" max="20" step="0.1"><span class="v">{{ Number(filter.q).toFixed(1) }}</span></label><label v-if="['notch','lowpass','highpass'].indexOf(filter.type)<0" class="srow">Gain <input v-model.number="filter.gain" class="setting-range" type="range" min="-24" max="24" step="0.1"><span class="v">{{ formatSigned(filter.gain,' dB') }}</span></label></div>
+        <button type="button" class="srow settings-command-row pointer" @click="addNativeFilter">Add parametric filter <span class="v">＋</span></button></div>
+      <div class="sgh">Room and spatial processing</div><div class="sgroup"><div class="srow"><span>Spatial stage</span><button type="button" class="sw" :class="{on:!nativeDspDraft.spatial_bypass}" @click="nativeDspDraft.spatial_bypass=!nativeDspDraft.spatial_bypass"></button></div>
+        <label class="srow">Stereo width <input v-model.number="nativeDspDraft.stereo_width" class="setting-range" type="range" min="0" max="2" step="0.01"><span class="v">{{ Number(nativeDspDraft.stereo_width).toFixed(2) }}×</span></label><label class="srow">Balance <input v-model.number="nativeDspDraft.balance" class="setting-range" type="range" min="-1" max="1" step="0.01"><span class="v">{{ Number(nativeDspDraft.balance).toFixed(2) }}</span></label>
+        <label class="srow">Left delay <input v-model.number="nativeDspDraft.delay_left_ms" class="setting-range" type="range" min="0" max="100" step="0.01"><span class="v">{{ Number(nativeDspDraft.delay_left_ms).toFixed(2) }} ms</span></label><label class="srow">Right delay <input v-model.number="nativeDspDraft.delay_right_ms" class="setting-range" type="range" min="0" max="100" step="0.01"><span class="v">{{ Number(nativeDspDraft.delay_right_ms).toFixed(2) }} ms</span></label>
+        <div class="srow segmented-row"><span>Crossfeed</span><div class="segmented" role="radiogroup" aria-label="Crossfeed"><button v-for="mode in ['off','light','medium','strong']" type="button" :class="{on:nativeDspDraft.crossfeed===mode}" @click="nativeDspDraft.crossfeed=mode">{{ mode }}</button></div></div><div class="srow segmented-row"><span>Polarity</span><div class="segmented" role="radiogroup" aria-label="Polarity"><button v-for="mode in ['none','left','right','both']" type="button" :class="{on:nativeDspDraft.polarity===mode}" @click="nativeDspDraft.polarity=mode">{{ mode }}</button></div></div>
+        <div class="srow"><span>Mono</span><button type="button" class="sw" :class="{on:nativeDspDraft.mono}" @click="nativeDspDraft.mono=!nativeDspDraft.mono"></button></div><label class="srow">Loudness <input v-model.number="nativeDspDraft.loudness_db" class="setting-range" type="range" min="0" max="12" step="0.1"><span class="v">{{ Number(nativeDspDraft.loudness_db).toFixed(1) }} dB</span></label>
+      </div>
+      <div class="sgh">FIR room correction</div><div class="sgroup"><div class="srow"><span>Convolution stage</span><button type="button" class="sw" :class="{on:!nativeDspDraft.fir_bypass}" @click="nativeDspDraft.fir_bypass=!nativeDspDraft.fir_bypass"></button></div><label class="srow eq-preset-editor">WAV or AIFF path<input v-model.trim="nativeDspDraft.fir_file" type="text" placeholder="/path/to/room.wav"></label><label class="srow">FIR gain <input v-model.number="nativeDspDraft.fir_gain_db" class="setting-range" type="range" min="-30" max="12" step="0.1"><span class="v">{{ Number(nativeDspDraft.fir_gain_db).toFixed(1) }} dB</span></label><div class="srow"><span>Normalize impulse<small>Scales the imported impulse to unity peak before FIR gain.</small></span><button type="button" class="sw" :class="{on:nativeDspDraft.fir_normalize}" role="switch" :aria-checked="String(nativeDspDraft.fir_normalize)" @click="nativeDspDraft.fir_normalize=!nativeDspDraft.fir_normalize"></button></div></div>
+      <div class="sgroup eq-apply-group"><div class="player-help">A/B slots use automatic response-peak headroom for gain-matched comparison. Changes are validated, backed up, and applied per player. DSD/DoP bypasses PCM DSP.</div><button type="button" class="srow settings-command-row pointer" :disabled="!nativeDspDirty||nativeDspSaving" @click="applyNativeDsp">{{ nativeDspSaving?'Applying…':'Apply native DSP' }} <span class="v">{{ nativeDspDirty?'›':'✓' }}</span></button><button type="button" class="srow settings-command-row destructive pointer" :disabled="nativeDspSaving" @click="rollbackNativeDsp">Restore previous native DSP <span class="v">↺</span></button></div>
+    </template>
+    <template v-else>
     <div v-if="!equalizerDraft" class="sgroup">
       <div class="player-help">Equalizer settings are not available for this player.</div>
       <button type="button" class="srow settings-command-row pointer" @click="refreshEqualizer">Try again <span class="v">↻</span></button>
@@ -108,6 +201,7 @@ Vue.component('lms-settings', {
         <div class="srow eq-inline-actions"><button v-for="type in equalizerQuickFilters" :key="type.value" type="button" class="eq-action-button" @click="addEqualizerFilter(type.value)">+ {{ type.label }}</button></div>
       </div></template>
       <div class="sgroup eq-apply-group"><div class="player-help">Changes are staged. Apply may briefly restart the current track.</div><button type="button" class="srow settings-command-row pointer" :disabled="!equalizerDirty || equalizerSaving" @click="applyEqualizer">{{ equalizerSaving ? 'Applying…' : 'Apply changes' }} <span class="v">{{ equalizerDirty ? '›' : '✓' }}</span></button><button type="button" class="srow settings-command-row destructive pointer" :disabled="equalizerSaving" @click="resetEqualizerAll">Reset all DSP settings <span class="v">↺</span></button></div>
+    </template>
     </template>
   </template>
   <template v-else-if="ui.appearanceScreen === 'players'">
@@ -352,10 +446,10 @@ Vue.component('lms-settings', {
 
   <div class="sgh">Playback</div>
   <div class="sgroup">
-    <button v-if="store.equalizer.status === 'ready'" type="button" class="srow settings-command-row pointer" @click="openEqualizer">
-      Equalizer <span class="v">{{ store.equalizer.settings && store.equalizer.settings.Client.Bypass ? 'bypassed' : 'on' }} ›</span>
+    <button v-if="appleSqueezer.available || store.equalizer.status === 'ready'" type="button" class="srow settings-command-row pointer" @click="openEqualizer">
+      Equalizer <span class="v">{{ dspOwner === 'apple-squeezer' && appleSqueezer.available ? 'Apple Squeezer' : (store.equalizer.settings && store.equalizer.settings.Client.Bypass ? 'bypassed' : 'SqueezeDSP') }} ›</span>
     </button>
-    <div v-else-if="store.equalizer.status === 'loading'" class="srow">Equalizer <span class="v">checking…</span></div>
+    <div v-else-if="store.equalizer.status === 'loading' && !appleSqueezer.available" class="srow">Equalizer <span class="v">checking…</span></div>
     <button v-else-if="store.equalizer.status === 'unavailable'" type="button" class="srow settings-command-row pointer" @click="openSqueezeDspPluginManager">
       Equalizer <span class="v">Install SqueezeDSP ›</span>
     </button>
@@ -384,6 +478,14 @@ Vue.component('lms-settings', {
                 :disabled="!store.playerId"
                 @keydown="radioKey($event, replayGainModes, store.replayGainMode, selectReplayGain)"
                 @click="selectReplayGain(option.key)">{{ tr(option.label) }}</button>
+      </div>
+    </div>
+    <div class="srow segmented-row">
+      <span>Volume button step<small>Amount changed by each speaker-button press.</small></span>
+      <div class="segmented" role="radiogroup" aria-label="Volume button step">
+        <button v-for="step in [1,2,5,10]" :key="'volume-step-'+step" type="button" role="radio"
+                :class="{on:ui.volumeStep===step}" :aria-checked="String(ui.volumeStep===step)"
+                @click="setVolumeStep(step)">{{ step }}%</button>
       </div>
     </div>
     <div class="player-help">{{ replayGainHint }}</div>
@@ -580,6 +682,28 @@ Vue.component('lms-settings', {
       gaugeColors: LmsUi.GAUGE_COLORS,
       queueArtModes: LmsUi.QUEUE_ART_MODES,
       info: null, loading: true, error: '', showPlayers: false,
+      appleSqueezer: { available: false, running: false, lifecycle: 'not-installed', apiVersion: 0, capabilities: {}, revision: null, mode: 'native', upsampleRate: 'auto', resampleFilter: 'linear', expert: {precision:28,passband:95,stopband:100,phase:50}, busy: false, diagnostics: {}, telemetry: {} },
+      appleSqueezerTelemetryTimer: null,
+      appleSqueezerModes: [
+        { key: 'dac-priority', label: 'DAC Priority' },
+        { key: 'equalizer', label: 'Equalizer' },
+        { key: 'osf', label: 'OSF' },
+        { key: 'csf', label: 'CSF' }
+      ],
+      appleSqueezerFilters: ['linear', 'minimum', 'intermediate', 'gentle', 'steep', 'apodizing'],
+      appleSqueezerRates: [
+        { key: 'auto', label: 'Automatic' },
+        { key: '44100', label: '44.1 kHz' },
+        { key: '48000', label: '48 kHz' },
+        { key: '88200', label: '88.2 kHz' },
+        { key: '96000', label: '96 kHz' },
+        { key: '176400', label: '176.4 kHz' },
+        { key: '192000', label: '192 kHz' },
+        { key: '352800', label: '352.8 kHz' },
+        { key: '384000', label: '384 kHz' },
+        { key: '705600', label: '705.6 kHz' },
+        { key: '768000', label: '768 kHz' }
+      ],
       showDefaultPlayer: false,
       playerSurfaces: ECHOCLASSIC_PLAYER_SURFACES,
       /* Session-only, like showPlayers/showDefaultPlayer above, and
@@ -601,9 +725,32 @@ Vue.component('lms-settings', {
       equalizerPresetsOpen: false, equalizerRulesOpen: false,
       equalizerAdvancedOpen: false, equalizerSignalOpen: false, equalizerConvolutionOpen: false, equalizerImpulsesOpen: false,
       equalizerHoldRestore: null
+      ,dspOwner: 'apple-squeezer', nativeDspDraft: null, nativeDspSaved: '', nativeDspResponse: [], nativeDspSaving: false, nativeDspAB: 'A'
     };
   },
   computed: {
+	appleSqueezerCompatible: function () { return this.appleSqueezer.available && (this.appleSqueezer.apiVersion >= 2 || this.appleCapability('dsp')); },
+	appleSqueezerCanLifecycle: function () { return this.appleCapability('lifecycle'); },
+	appleSqueezerPath: function () {
+		if (this.appleSqueezer.mode === 'dac-priority' || this.appleSqueezer.mode === 'audiophile') return this.tr('Source rate · DSP bypassed · fixed unity volume · exclusive CoreAudio');
+		if (this.appleSqueezer.mode === 'osf' || this.appleSqueezer.mode === 'csf' || this.appleSqueezer.mode === 'pcm-studio') {
+			var rate = this.appleSqueezer.upsampleRate === 'auto' ? this.tr('Automatic rate') : this.appleSqueezerRateLabel;
+			return this.tr('VHQ upsampling · 1 dB headroom · TPDF dither · exclusive CoreAudio') + ' · ' + rate + ' · ' + this.appleSqueezer.resampleFilter;
+		}
+		return this.appleSqueezer.mode === 'equalizer' ? this.tr('Source rate · native DSP · exclusive CoreAudio') : this.tr('Native rate · LMS volume · shared CoreAudio');
+	},
+	appleSqueezerModeLabel: function () {
+		var selected = this.appleSqueezerModes.filter(function (mode) {
+			return mode.key === this.appleSqueezer.mode;
+		}, this)[0];
+		return selected ? this.tr(selected.label) : this.appleSqueezer.mode;
+	},
+	appleSqueezerRateLabel: function () {
+		var selected = this.appleSqueezerRates.filter(function (rate) {
+			return rate.key === this.appleSqueezer.upsampleRate;
+		}, this)[0];
+		return selected ? this.tr(selected.label) : this.appleSqueezer.upsampleRate;
+	},
     advancedFrameSrc: function () {
       var requested = String(this.ui.advancedSettingsPage || '');
       return /^\/echoclassic\/settings\/server\/[a-z0-9_-]+\.html$/i.test(requested)
@@ -782,6 +929,22 @@ Vue.component('lms-settings', {
       return !!this.equalizerDraft && JSON.stringify(this.equalizerDraft) !==
         JSON.stringify(this.prepareEqualizerDraft(this.store.equalizer.settings));
     },
+    nativeDspDirty: function () { return !!this.nativeDspDraft && JSON.stringify(this.nativeDspDraft) !== this.nativeDspSaved; },
+    nativeDspBands: function () {
+      var gains = this.nativeDspDraft ? this.nativeDspDraft.graphic_eq_db : [];
+      return APPLE_SQUEEZER_EQ_FREQUENCIES.map(function (frequency, index) {
+        return { frequency: frequency, label: frequency >= 1000 ? (frequency / 1000) + 'k' : String(frequency), gain: Number(gains[index] || 0), enabled: this.nativeDspDraft.graphic_eq_enabled[index] !== false, index: index };
+      }, this);
+    },
+    nativeDspResponsePath: function () {
+      var points = this.nativeDspResponse || []; if (points.length < 2) return '';
+      var min = Math.log(10), max = Math.log(24000);
+      return points.map(function (point, index) {
+        var x = ((Math.log(Math.max(10, Number(point.hz))) - min) / (max - min)) * 320;
+        var y = 64 - Math.max(-18, Math.min(18, Number(point.db))) / 18 * 52;
+        return (index ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+      }).join(' ');
+    },
     equalizerPlayerRules: function () {
       var playerId = this.store.playerId;
       var priority = { song: 0, album: 1, folder: 2, artist: 3, genre: 4, year: 5 };
@@ -910,10 +1073,14 @@ Vue.component('lms-settings', {
     'ui.fontFamily': function () { this.themeAdvancedFrame(); }
   },
   beforeDestroy: function () {
+    if (this.appleSqueezerTelemetryTimer) clearInterval(this.appleSqueezerTelemetryTimer);
+    this.appleSqueezerTelemetryTimer = null;
     this.stopAdvancedThemeObserver();
     if (LmsUi.applyAdvancedSettings === this.applyAdvancedFrame) LmsUi.applyAdvancedSettings = null;
   },
   destroyed: function () {
+    if (this.appleSqueezerTelemetryTimer) clearInterval(this.appleSqueezerTelemetryTimer);
+    this.appleSqueezerTelemetryTimer = null;
     this.stopAdvancedThemeObserver();
     if (LmsUi.applyAdvancedSettings === this.applyAdvancedFrame) LmsUi.applyAdvancedSettings = null;
   },
@@ -2852,8 +3019,272 @@ Vue.component('lms-settings', {
       });
     },
     preference: function (key) { LmsUi.setPreference(key, !this.ui[key]); },
+    setVolumeStep: function (value) { LmsUi.setVolumeStep(value); },
     control: function (p) { LmsStore.selectPlayer(p.id); },
     handoff: function (p) { LmsStore.handoffTo(p.id); },
+    defaultNativeDsp: function () {
+      return { version: 2, player_id: (this.appleSqueezer.telemetry && this.appleSqueezer.telemetry.player_id) || this.store.playerId || '',
+        bypass: false, preamp_db: 0, headroom_db: null, graphic_eq_db: [0,0,0,0,0,0,0,0,0,0,0,0], graphic_eq_enabled: [true,true,true,true,true,true,true,true,true,true,true,true], parametric: '',
+        parametric_filters: [], eq_bypass: false, parametric_bypass: false, fir_bypass: true, spatial_bypass: false,
+        fir_file: '', fir_gain_db: 0, fir_normalize: true, balance: 0, stereo_width: 1, mono: false, polarity: 'none', delay_left_ms: 0,
+        delay_right_ms: 0, crossfeed: 'off', loudness_db: 0, true_peak: true, limiter: true,
+        limiter_ceiling_db: -1, replaygain_db: 0, replaygain_managed: true, replaygain_headroom: true };
+    },
+    parseAppleObject: function (value) {
+      if (value && typeof value === 'object') return value;
+      try { var parsed = JSON.parse(value || '{}'); return parsed && typeof parsed === 'object' ? parsed : {}; }
+      catch (e) { return {}; }
+    },
+    appleCapability: function (name) {
+      var capabilities = this.appleSqueezer.capabilities || {};
+      if (Array.isArray(capabilities)) return capabilities.indexOf(name) >= 0;
+      return capabilities[name] === true || Number(capabilities[name]) === 1;
+    },
+    parseNativeFilters: function (value) {
+      if (!value) return [];
+      return String(value).split(';').filter(Boolean).map(function (entry) {
+        var pair = entry.split('='), values = (pair[1] || '').split(':');
+        return { type: pair[0] || 'peak', frequency: Number(values[0] || 1000), q: Number(values[1] || 1), gain: Number(values[2] || 0), enabled: values[3] !== 'off' };
+      });
+    },
+    prepareNativeDsp: function (config) {
+      var value = Object.assign(this.defaultNativeDsp(), config || {}); value.version = 2;
+      value.graphic_eq_db = (value.graphic_eq_db || []).slice(0, 12); while (value.graphic_eq_db.length < 12) value.graphic_eq_db.push(0);
+      value.graphic_eq_enabled = (value.graphic_eq_enabled || []).slice(0, 12); while (value.graphic_eq_enabled.length < 12) value.graphic_eq_enabled.push(true);
+      value.parametric_filters = this.parseNativeFilters(value.parametric || ''); return value;
+    },
+    validateNativeDsp: function (value) {
+      function number(name, input, min, max, nullable) {
+        if (nullable && input === null) return null;
+        var parsed = Number(input);
+        if (!isFinite(parsed) || parsed < min || parsed > max) throw new Error(name + ' must be between ' + min + ' and ' + max + '.');
+        return parsed;
+      }
+      if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('DSP configuration must be an object.');
+      if (!value.player_id) throw new Error('Select a player before applying DSP.');
+      ['bypass','eq_bypass','parametric_bypass','fir_bypass','spatial_bypass','fir_normalize','mono','true_peak','limiter','replaygain_managed','replaygain_headroom'].forEach(function (key) { value[key] = !!value[key]; });
+      value.preamp_db = number('Preamp', value.preamp_db, -30, 12);
+      value.headroom_db = number('Headroom', value.headroom_db, 0, 24, true);
+      value.fir_gain_db = number('FIR gain', value.fir_gain_db, -30, 12);
+      value.balance = number('Balance', value.balance, -1, 1);
+      value.stereo_width = number('Stereo width', value.stereo_width, 0, 2);
+      value.delay_left_ms = number('Left delay', value.delay_left_ms, 0, 100);
+      value.delay_right_ms = number('Right delay', value.delay_right_ms, 0, 100);
+      value.loudness_db = number('Loudness', value.loudness_db, 0, 12);
+      value.limiter_ceiling_db = number('Limiter ceiling', value.limiter_ceiling_db, -6, 0);
+      value.replaygain_db = number('ReplayGain trim', value.replaygain_db, -30, 12);
+      if (!Array.isArray(value.graphic_eq_db) || value.graphic_eq_db.length !== 12) throw new Error('Graphic EQ must contain exactly 12 bands.');
+      value.graphic_eq_db = value.graphic_eq_db.map(function (gain) { return number('Graphic EQ gain', gain, -24, 24); });
+      if (!Array.isArray(value.graphic_eq_enabled) || value.graphic_eq_enabled.length !== 12) throw new Error('Graphic EQ enable state must contain exactly 12 bands.');
+      value.graphic_eq_enabled = value.graphic_eq_enabled.map(Boolean);
+      if (String(value.fir_file || '').length > 2048) throw new Error('FIR path is too long.');
+      if (['none','left','right','both'].indexOf(value.polarity) < 0) throw new Error('Invalid polarity mode.');
+      if (['off','light','medium','strong'].indexOf(value.crossfeed) < 0) throw new Error('Invalid crossfeed mode.');
+      if (!Array.isArray(value.parametric_filters) || value.parametric_filters.length > 64) throw new Error('Parametric filters must be a list of at most 64 filters.');
+      value.parametric_filters.forEach(function (filter) {
+        if (!filter || ['peak','notch','lowshelf','highshelf','lowpass','highpass'].indexOf(filter.type) < 0) throw new Error('Invalid parametric filter type.');
+        filter.frequency = number('Filter frequency', filter.frequency, 10, 96000);
+        filter.q = number('Filter Q', filter.q, 0.1, 20);
+        filter.gain = number('Filter gain', filter.gain || 0, -24, 24);
+        filter.enabled = filter.enabled !== false;
+      });
+      return value;
+    },
+    serializeNativeDsp: function () {
+      var value = JSON.parse(JSON.stringify(this.nativeDspDraft));
+      value.player_id = value.player_id || this.store.playerId || '';
+      this.validateNativeDsp(value);
+      value.parametric = (value.parametric_filters || []).map(function (filter) {
+        var gain = /^(notch|lowpass|highpass)$/.test(filter.type) ? '' : ':' + Number(filter.gain || 0);
+        return filter.type + '=' + Number(filter.frequency || 1000) + ':' + Number(filter.q || 1) + gain + ':' + (filter.enabled === false ? 'off' : 'on');
+      }).join(';');
+      delete value.parametric_filters; return value;
+    },
+    selectDspOwner: async function (owner) {
+      if (owner === this.dspOwner) return;
+      try {
+        if (this.appleSqueezer.apiVersion >= 2 || this.appleCapability('dsp-owner')) {
+          var state = await LmsApi.setAppleSqueezerDspOwner(this.store.playerId, owner);
+          if (state.error) throw new Error(state.error);
+          if (state.owner && state.owner !== owner) throw new Error('The server did not confirm the DSP owner.');
+        }
+        this.dspOwner = owner;
+        LmsUi.notify((owner === 'apple-squeezer' ? 'Apple Squeezer' : 'SqueezeDSP') + ' now owns DSP.', 'success', 3000);
+      } catch (e) { LmsUi.notify(LmsStore.friendlyError(e, 'Could not change DSP owner.'), 'error', 6500); }
+    },
+    setNativeBand: function (index, value) { Vue.set(this.nativeDspDraft.graphic_eq_db, index, Number(value)); },
+    applyNativePreset: function (name) {
+      var presets = { flat:[0,0,0,0,0,0,0,0,0,0,0,0], warm:[1.5,1.2,0.8,0.4,0,0,-0.2,-0.3,-0.2,0,0,0], presence:[0,0,0,0,0,0.3,0.8,1.2,0.6,0.2,0,0], air:[0,0,0,0,0,0,0,0.2,0.8,1.2,1.5,1.5] };
+      this.nativeDspDraft.graphic_eq_db = (presets[name] || presets.flat).slice(); this.nativeDspDraft.graphic_eq_enabled = [true,true,true,true,true,true,true,true,true,true,true,true];
+    },
+    addNativeFilter: function () { this.nativeDspDraft.parametric_filters.push({ type: 'peak', frequency: 1000, q: 1, gain: 0, enabled: true }); },
+    nativeFilterTypeLabel: function (value) { var found = this.equalizerFilterTypes.filter(function (type) { return type.value === value; })[0]; return found ? found.label : value; },
+    cycleNativeFilterType: function (filter) { var values = this.equalizerFilterTypes.map(function (type) { return type.value; }); var index = values.indexOf(filter.type); filter.type = values[(index + 1) % values.length]; },
+    applyNativeFilterPreset: function (name) {
+      var presets = {
+        'subsonic': { type:'highpass', frequency:20, q:0.707, gain:0, enabled:true },
+        'bass shelf': { type:'lowshelf', frequency:90, q:0.707, gain:2, enabled:true },
+        'dialog clarity': { type:'peak', frequency:2800, q:1, gain:1.5, enabled:true },
+        'room notch': { type:'notch', frequency:60, q:8, gain:0, enabled:true }
+      };
+      if (presets[name]) this.nativeDspDraft.parametric_filters.push(Object.assign({}, presets[name]));
+    },
+    removeNativeFilter: function (index) { this.nativeDspDraft.parametric_filters.splice(index, 1); },
+    applyNativeDsp: async function () {
+      if (!this.nativeDspDraft || this.nativeDspSaving) return; this.nativeDspSaving = true;
+      try {
+        if (this.appleSqueezer.mode === 'dac-priority' || this.appleSqueezer.mode === 'audiophile') {
+          var switched = await this.changeAppleSqueezerMode('equalizer');
+          if (!switched) throw new Error('Could not leave DAC Priority mode.');
+        }
+        var previousRevision = this.appleSqueezer.revision;
+        var value = this.serializeNativeDsp();
+        var result = await LmsApi.applyAppleSqueezerDsp(this.store.playerId, value, previousRevision);
+        if (result.error) throw new Error(result.error);
+        var confirmed = await LmsApi.appleSqueezerStatus(this.store.playerId);
+        var confirmedRevision = confirmed.revision == null ? confirmed.dsp_revision : confirmed.revision;
+        if (this.appleSqueezer.apiVersion >= 2) {
+          if (confirmedRevision == null || String(confirmedRevision) === String(previousRevision)) {
+            await LmsApi.rollbackAppleSqueezerDsp(this.store.playerId, result.revision);
+            throw new Error('Apple Squeezer did not confirm a new DSP revision; the previous configuration was restored.');
+          }
+          this.appleSqueezer.revision = confirmedRevision;
+        } else if (!confirmed.dspConfig) {
+          throw new Error('Apple Squeezer did not return the saved DSP configuration.');
+        }
+        this.nativeDspDraft = this.prepareNativeDsp(value); this.nativeDspSaved = JSON.stringify(this.nativeDspDraft);
+        await this.loadNativeResponse(); LmsUi.notify('Apple Squeezer DSP applied.', 'success', 3000);
+      } catch (e) { LmsUi.notify(LmsStore.friendlyError(e, 'Could not apply native DSP.'), 'error', 6500); }
+      this.nativeDspSaving = false;
+    },
+    rollbackNativeDsp: async function () {
+      if (this.nativeDspSaving) return; this.nativeDspSaving = true;
+      try { var result = await LmsApi.rollbackAppleSqueezerDsp(this.store.playerId, this.appleSqueezer.revision); if (result.error) throw new Error(result.error); await this.loadAppleSqueezer(); LmsUi.notify('Previous DSP configuration restored.', 'success', 3000); }
+      catch (e) { LmsUi.notify(LmsStore.friendlyError(e, 'Could not restore native DSP.'), 'error', 6500); }
+      this.nativeDspSaving = false;
+    },
+    loadNativeResponse: async function () {
+      try { var result = await LmsApi.appleSqueezerDspResponse(this.store.playerId, this.appleSqueezer.diagnostics.rate || 48000, 128); this.nativeDspResponse = JSON.parse(result.response || '[]'); }
+      catch (e) { this.nativeDspResponse = []; }
+    },
+    saveNativeAB: function (slot) {
+      if (!this.nativeDspDraft) return; try { localStorage.setItem('echoclassic.native-dsp-' + slot + '.' + (this.store.playerId || 'default'), JSON.stringify(this.serializeNativeDsp())); this.nativeDspAB = slot; LmsUi.notify('Saved comparison ' + slot + '.', 'success', 2000); } catch (e) {}
+    },
+    loadNativeAB: function (slot) {
+      try { var value = localStorage.getItem('echoclassic.native-dsp-' + slot + '.' + (this.store.playerId || 'default')); if (value) { this.nativeDspDraft = this.prepareNativeDsp(JSON.parse(value)); this.nativeDspAB = slot; } } catch (e) {}
+    },
+    importSqueezeDspToNative: function () {
+      if (!this.equalizerDraft || !this.equalizerDraft.Client) return;
+      var client = this.equalizerDraft.Client, value = this.defaultNativeDsp(); value.preamp_db = Number(client.Preamp || 0);
+      var filters = client.Filters || [];
+      value.graphic_eq_db = APPLE_SQUEEZER_EQ_FREQUENCIES.map(function (frequency) { var found = filters.filter(function (f) { return String(f.FilterType).toLowerCase() === 'peak' && Math.abs(Number(f.Frequency)-frequency) < 1; })[0]; return Number(found && found.Gain || 0); });
+      var supported = { peak:'peak', peaking:'peak', notch:'notch', lowshelf:'lowshelf', low_shelf:'lowshelf', highshelf:'highshelf', high_shelf:'highshelf', lowpass:'lowpass', highpass:'highpass' }, skipped = 0;
+      value.parametric_filters = filters.filter(function (f) { return APPLE_SQUEEZER_EQ_FREQUENCIES.indexOf(Number(f.Frequency)) < 0; }).map(function (f) { var type = supported[String(f.FilterType || 'peak').toLowerCase().replace(/[ -]/g,'_')]; if (!type) { skipped++; return null; } return { type:type, frequency:Number(f.Frequency || 1000), q:Number(f.Slope || 1), gain:Number(f.Gain || 0), enabled:f.Bypass ? false : true }; }).filter(Boolean);
+      value.balance = Math.max(-1, Math.min(1, Number(client.Balance || 0) / 12)); value.stereo_width = Math.max(0, Math.min(2, 1 + Number(client.Width || 0) / 12)); value.crossfeed = client.Crossfeed === 'bonkers' ? 'strong' : (client.Crossfeed || 'off');
+      this.nativeDspDraft = value; this.selectDspOwner('apple-squeezer'); LmsUi.notify('Imported ' + value.parametric_filters.length + ' parametric filters' + (skipped ? '; skipped ' + skipped + ' unsupported filters' : '') + '. Review and apply.', skipped ? 'warning' : 'success', 5500);
+    },
+    loadAppleSqueezer: async function () {
+      try {
+        var state = await LmsApi.appleSqueezerStatus(this.store.playerId);
+        this.appleSqueezer.available = !!Number(state.available);
+        this.appleSqueezer.running = !!Number(state.running);
+        this.appleSqueezer.lifecycle = state.lifecycle || (this.appleSqueezer.running ? 'running' : (this.appleSqueezer.available ? 'stopped' : 'not-installed'));
+        this.appleSqueezer.apiVersion = Number(state.apiVersion || state.api_version || 0);
+        this.appleSqueezer.capabilities = this.parseAppleObject(state.capabilities);
+        this.appleSqueezer.revision = state.revision == null ? state.dsp_revision : state.revision;
+        this.appleSqueezer.mode = state.mode === 'audiophile' ? 'dac-priority' : state.mode === 'pcm-studio' ? 'osf' : (state.mode || 'native');
+        this.appleSqueezer.upsampleRate = state.upsampleRate || 'auto';
+        this.appleSqueezer.resampleFilter = state.resampleFilter || 'linear';
+        if (state.resampleExpert) { var expert = String(state.resampleExpert).split(':'); if (expert.length === 4) this.appleSqueezer.expert = { precision:Number(expert[0]), passband:Number(expert[1]), stopband:Number(expert[2]), phase:Number(expert[3]) }; }
+        this.appleSqueezer.diagnostics = this.parseAppleObject(state.diagnostics);
+        this.appleSqueezer.telemetry = this.parseAppleObject(state.dspTelemetry || state.dsp_telemetry);
+        var config = null; try { config = JSON.parse(state.dspConfig || state.dsp_config || 'null'); } catch (e) {}
+        this.nativeDspDraft = this.prepareNativeDsp(config); this.nativeDspSaved = JSON.stringify(this.nativeDspDraft);
+        this.dspOwner = state.dspOwner || state.dsp_owner || (config ? 'apple-squeezer' : 'squeezedsp');
+        if (config) this.loadNativeResponse();
+      } catch (e) {
+        this.appleSqueezer.available = false;
+        this.appleSqueezer.running = false;
+      }
+    },
+    refreshAppleSqueezerTelemetry: async function () {
+      if (!this.isSettingsScreen('equalizer') || !this.appleSqueezer.available || this.appleSqueezer.busy) return;
+      try {
+        if (this.appleCapability('telemetry')) {
+          var telemetry = await LmsApi.appleSqueezerTelemetry(this.store.playerId);
+          this.appleSqueezer.telemetry = this.parseAppleObject(telemetry.telemetry || telemetry.dspTelemetry || telemetry.dsp_telemetry || telemetry);
+          return;
+        }
+        var state = await LmsApi.appleSqueezerStatus(this.store.playerId);
+        this.appleSqueezer.running = !!Number(state.running);
+        this.appleSqueezer.diagnostics = this.parseAppleObject(state.diagnostics);
+        this.appleSqueezer.telemetry = this.parseAppleObject(state.dspTelemetry || state.dsp_telemetry);
+      } catch (e) {}
+    },
+    changeAppleSqueezerLifecycle: async function (action) {
+      if (this.appleSqueezer.busy || !this.appleSqueezerCanLifecycle) return;
+      this.appleSqueezer.busy = true;
+      try {
+        var state = await LmsApi.appleSqueezerLifecycle(action);
+        if (state.error) throw new Error(state.error);
+        await this.loadAppleSqueezer();
+        LmsUi.notify('Apple Squeezer ' + action + ' completed.', 'success', 3000);
+      } catch (e) { LmsUi.notify(LmsStore.friendlyError(e, 'Could not change Apple Squeezer lifecycle.'), 'error', 6500); }
+      this.appleSqueezer.busy = false;
+    },
+    changeAppleSqueezerMode: async function (mode) {
+      if (this.appleSqueezer.busy) return false;
+      if (mode === this.appleSqueezer.mode) return true;
+      this.appleSqueezer.busy = true;
+      try {
+        var state = await LmsApi.setAppleSqueezerMode(mode);
+		if (state.error) throw new Error(state.error);
+        this.appleSqueezer.mode = state.mode || mode;
+        this.appleSqueezer.running = !!Number(state.running);
+        LmsUi.notify('Apple Squeezer changed to ' + this.appleSqueezer.mode + '.', 'success', 3000);
+        this.appleSqueezer.busy = false;
+        return this.appleSqueezer.mode === mode;
+      } catch (e) {
+        LmsUi.notify(LmsStore.friendlyError(e, 'Could not change Apple Squeezer mode.'), 'error', 6500);
+        await this.loadAppleSqueezer();
+      }
+      this.appleSqueezer.busy = false;
+      return false;
+    },
+    changeAppleSqueezerUpsampleRate: async function (rate) {
+      if (this.appleSqueezer.busy || rate === this.appleSqueezer.upsampleRate) return;
+      this.appleSqueezer.busy = true;
+      try {
+        var state = await LmsApi.setAppleSqueezerUpsampleRate(rate);
+		if (state.error) throw new Error(state.error);
+        this.appleSqueezer.upsampleRate = state.upsampleRate || rate;
+        this.appleSqueezer.running = !!Number(state.running);
+        LmsUi.notify('PCM Studio rate changed to ' + this.appleSqueezerRateLabel + '.', 'success', 3000);
+      } catch (e) {
+        LmsUi.notify(LmsStore.friendlyError(e, 'Could not change the PCM Studio rate.'), 'error', 6500);
+        await this.loadAppleSqueezer();
+      }
+      this.appleSqueezer.busy = false;
+    },
+    changeAppleSqueezerResampleFilter: async function (filter) {
+      if (this.appleSqueezer.busy || filter === this.appleSqueezer.resampleFilter) return; this.appleSqueezer.busy = true;
+      try { var state = await LmsApi.setAppleSqueezerResampleFilter(filter); if (state.error) throw new Error(state.error); this.appleSqueezer.resampleFilter = state.resampleFilter || filter; LmsUi.notify('Resampling filter changed to ' + filter + '.', 'success', 3000); }
+      catch (e) { LmsUi.notify(LmsStore.friendlyError(e, 'Could not change the resampling filter.'), 'error', 6500); await this.loadAppleSqueezer(); }
+      this.appleSqueezer.busy = false;
+    },
+    applyAppleSqueezerExpert: async function () {
+      var value = this.appleSqueezer.expert; if (this.appleSqueezer.busy) return; this.appleSqueezer.busy = true;
+      try {
+        var precision = Number(value.precision), passband = Number(value.passband), stopband = Number(value.stopband), phase = Number(value.phase);
+        if (!isFinite(precision) || precision < 16 || precision > 32 || Math.round(precision) !== precision) throw new Error('Precision must be a whole number from 16 to 32 bits.');
+        if (!isFinite(passband) || passband < 80 || passband > 99) throw new Error('Passband must be between 80 and 99%.');
+        if (!isFinite(stopband) || stopband <= passband || stopband > 100) throw new Error('Stopband must be greater than passband and no more than 100%.');
+        if (!isFinite(phase) || phase < 0 || phase > 100) throw new Error('Phase must be between 0 and 100%.');
+        var state = await LmsApi.setAppleSqueezerResampleExpert(precision,passband,stopband,phase); if (state.error) throw new Error(state.error); LmsUi.notify('Custom sampling filter applied.', 'success', 3000);
+      }
+      catch (e) { LmsUi.notify(LmsStore.friendlyError(e, 'Could not apply the custom sampling filter.'), 'error', 6500); }
+      this.appleSqueezer.busy = false;
+    },
     sync: function (p) { LmsStore.syncWith(p.id); },
     unsync: function (playerId) { LmsStore.unsyncPlayer(playerId); },
     setGroupVolume: function (value) { LmsStore.setGroupVolume(value); },
@@ -3094,12 +3525,17 @@ Vue.component('lms-settings', {
     load: async function () {
       this.loading = true;
       try {
-        this.info = await LmsApi.serverInfo();
+        var loaded = await Promise.all([LmsApi.serverInfo(), this.loadAppleSqueezer()]);
+        this.info = loaded[0];
       } catch (e) {
         this.error = 'Could not read the server: ' + (e && e.message ? e.message : e);
       }
       this.loading = false;
     }
   },
-  created: function () { this.load(); }
+  created: function () {
+    this.load();
+    var self = this;
+    this.appleSqueezerTelemetryTimer = setInterval(function () { self.refreshAppleSqueezerTelemetry(); }, 2000);
+  }
 });

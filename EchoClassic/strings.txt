@@ -2212,6 +2212,10 @@ ECHOCLASSIC_UI_FIXED_VOLUME_ON_SERVER
 	EN	Fixed volume on server
 	PT	Volume fixo no servidor
 
+ECHOCLASSIC_UI_EXTERNAL_AMPLIFIER_VOLUME
+	EN	External amplifier volume
+	PT	Volume do amplificador externo
+
 ECHOCLASSIC_UI_CONFIRMING_SHORT
 	EN	Confirming…
 	PT	Confirmando…
@@ -2758,3 +2762,66 @@ ECHOCLASSIC_UI_SEARCH_ARTISTS_ALBUMS_CLASSICAL_WORKS_TRACKS_AND_PLAYLISTS_ACROSS
 ECHOCLASSIC_UI_THIS_LIBRARY_HAS_MORE_THAN_2_000_CONTRIBUTORS_IN_THIS_ROLE_USE_THE_FILTER_TO_NARROW_THE_LIST
 	EN	This library has more than 2,000 contributors in this role; use the filter to narrow the list.
 	PT	Esta biblioteca tem mais de 2.000 colaboradores nesta função; use o filtro para restringir a lista.
+ECHOCLASSIC_UI_APPLE_SQUEEZER_MODE
+	EN	Apple Squeezer mode
+	PT	Modo do Apple Squeezer
+
+ECHOCLASSIC_UI_PLAYBACK_MODE
+	EN	Playback mode
+	PT	Modo de reprodução
+
+ECHOCLASSIC_UI_UPSAMPLE_RATE
+	EN	Upsample rate
+	PT	Taxa de upsampling
+
+ECHOCLASSIC_UI_AUTOMATIC_PRESERVES_THE_SOURCE_CLOCK_FAMILY
+	EN	Automatic preserves the source clock family.
+	PT	Automático preserva a família de clock da fonte.
+
+ECHOCLASSIC_UI_AUTOMATIC_RATE
+	EN	Automatic rate
+	PT	Taxa automática
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_RESTARTS
+	EN	The player restarts when the mode changes.
+	PT	O player reinicia quando o modo muda.
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_EXCLUSIVE_HELP
+	EN	Exclusive access prevents standard Squeezelite from using the same audio device.
+	PT	O acesso exclusivo impede que o Squeezelite padrão use o mesmo dispositivo de áudio.
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_NATIVE
+	EN	Native
+	PT	Nativo
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_BITPERFECT
+	EN	Bit-perfect
+	PT	Bit-perfect
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_EXCLUSIVE
+	EN	Exclusive
+	PT	Exclusivo
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_AUDIOPHILE
+	EN	Audiophile
+	PT	Audiófilo
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_PCM_STUDIO
+	EN	PCM Studio
+	PT	PCM Studio
+
+ECHOCLASSIC_UI_SWITCHING
+	EN	Switching…
+	PT	Alternando…
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_NATIVE_PATH
+	EN	Native rate · LMS volume · shared CoreAudio
+	PT	Taxa nativa · volume do LMS · CoreAudio compartilhado
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_BITPERFECT_PATH
+	EN	Native rate · fixed volume · exclusive CoreAudio
+	PT	Taxa nativa · volume fixo · CoreAudio exclusivo
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_PCM_STUDIO_PATH
+	EN	VHQ upsampling · 1 dB headroom · TPDF dither · exclusive CoreAudio
+	PT	Upsampling VHQ · 1 dB de headroom · dither TPDF · CoreAudio exclusivo

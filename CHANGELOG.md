@@ -15,6 +15,42 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.0] — 2026-08-24
+
+### Added
+
+- Apple Squeezer Store integration negotiates its versioned API and capabilities,
+  reports installed/stopped/running/incompatible states, controls lifecycle and
+  four normalized playback modes, and offers player-scoped native DSP with
+  revision confirmation and rollback. [code/measured: contract tests and live
+  discovery against the published Apple Squeezer API]
+- The native DSP editor covers a 12-band graphic EQ, parametric filters,
+  preamp/headroom, ReplayGain trim, true-peak limiting, balance, stereo width,
+  delay, crossfeed, polarity, loudness and FIR convolution. [code/measured: Vue
+  template compilation, response and API regression tests]
+- Now Playing, the bottom bar and the Information sheet expose source versus
+  active stream data, transcoding and the Replay Gain value applied by LMS 9.2.
+  The Information sheet labels metadata, live LMS status and unavailable DAC
+  telemetry separately. [code/measured: direct, transcoded and lossy-stream tests]
+- Fixed-output players remain volume-controllable when LMS reports
+  `use_volume_control`, including AVR-control plugins. Mobile volume uses the
+  full available width, clickable speaker buttons and a configurable increment.
+  [code/measured: store and interaction tests]
+
+### Changed
+
+- Apple Squeezer diagnostics use bounded RPC timeouts and a short player-scoped
+  status cache. Native DSP and CSF payloads are validated for shape, size,
+  ranges and player identity before being sent. [code/measured: API and UI gates]
+
+### Fixed
+
+- Removed the development player/MAC fallback from Apple Squeezer DSP payloads;
+  applying DSP now requires the selected LMS player. [code/measured: source gate]
+- Lossy MP3/AAC output no longer inherits a bit depth from the source FLAC when
+  LMS deliberately returns an empty active-stream sample size. [code/measured:
+  LMS 9.2 status regression tests]
+
 ## [3.4.1] — 2026-08-23
 
 ### Added

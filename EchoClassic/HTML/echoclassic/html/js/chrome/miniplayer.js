@@ -47,6 +47,9 @@ Vue.component('lms-miniplayer', {
       <span class="badges mini-badges" v-if="hasTrack && ui.showBadges && badges.length">
         <span v-for="b in badges" :key="b.text" class="badge" :class="{hi: b.hi}">{{ b.text }}</span>
       </span>
+      <span v-if="hasTrack && (np.isTranscoded || replayGainText)" class="mini-signal ell" aria-live="polite">
+        <span v-if="np.isTranscoded">Transcoded</span><span v-if="np.isTranscoded && replayGainText"> · </span><span>{{ replayGainText }}</span>
+      </span>
     </span>
   </button>
   <div v-if="!ui.full" class="r">
@@ -114,6 +117,11 @@ Vue.component('lms-miniplayer', {
       if (this.np.bitrate) out.push({ text: Math.round(this.np.bitrate) + ' kbps', hi: false });
       if (this.np.format) out.push({ text: LmsFmt.format(this.np.format), hi: false });
       return out;
+    },
+    replayGainText: function () {
+      if (this.store.replayGainApplied == null || !isFinite(Number(this.store.replayGainApplied))) return '';
+      var gain = Number(this.store.replayGainApplied);
+      return 'Replay Gain ' + (gain > 0 ? '+' : '') + gain.toFixed(2).replace(/\.00$/, '') + ' dB';
     }
   },
   watch: {

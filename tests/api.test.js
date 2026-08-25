@@ -26,6 +26,49 @@ function apiContext(responder, extra) {
   return { api: ctx.LmsApi, calls: calls };
 }
 
+test('Apple Squeezer Intel 1.0.2 is negotiated and normalized from its published wire API', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'can') return { _can: cmd[1] === 'apple_squeezer' ? 1 : 0 };
+    if (cmd[0] === 'apple_squeezer' && cmd[1] === 'status') return {
+      available: 1, running: 1, mode: 'equalizer', upsample_rate: '192000',
+      resample_filter: 'minimum', coreaudio_telemetry: '{"rate":192000}'
+    };
+    if (cmd[0] === 'apple_squeezer' && cmd[1] === 'dsp_status') return {
+      configured: 1, configuration: '{"version":2,"graphic_eq_db":[]}',
+      telemetry: '{"active":true}'
+    };
+    return { success: 1 };
+  });
+
+  const state = await ctx.api.appleSqueezerStatus('player-1');
+  assert.equal(state.apiVersion, 1);
+  assert.equal(state.lifecycle, 'running');
+  assert.equal(state.upsampleRate, '192000');
+  assert.equal(state.resampleFilter, 'minimum');
+  assert.equal(state.dspConfig, '{"version":2,"graphic_eq_db":[]}');
+  assert.equal(state.capabilities.dsp, true);
+  assert.ok(ctx.calls.some(function (cmd) { return cmd[0] === 'apple_squeezer' && cmd[1] === 'dsp_status'; }));
+});
+
+test('Apple Squeezer Intel 1.0.2 mutations use the released underscore commands', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'can') return { _can: cmd[1] === 'apple_squeezer' ? 1 : 0 };
+    return { success: 1 };
+  });
+
+  await ctx.api.setAppleSqueezerUpsampleRate('192000');
+  await ctx.api.setAppleSqueezerResampleFilter('minimum');
+  await ctx.api.applyAppleSqueezerDsp('player-1', { version: 2 }, null);
+  await ctx.api.bypassAppleSqueezerDsp('player-1', true);
+  await ctx.api.rollbackAppleSqueezerDsp('player-1');
+
+  assert.ok(ctx.calls.some(function (cmd) { return cmd.join(' ') === 'apple_squeezer upsample_rate 192000'; }));
+  assert.ok(ctx.calls.some(function (cmd) { return cmd.join(' ') === 'apple_squeezer resample_filter minimum'; }));
+  assert.ok(ctx.calls.some(function (cmd) { return cmd[0] === 'apple_squeezer' && cmd[1] === 'dsp_apply' && cmd[2] === '{"version":2}'; }));
+  assert.ok(ctx.calls.some(function (cmd) { return cmd.join(' ') === 'apple_squeezer dsp_bypass true'; }));
+  assert.ok(ctx.calls.some(function (cmd) { return cmd.join(' ') === 'apple_squeezer dsp_rollback'; }));
+});
+
 /* 2a: sem a tag 'e' o LMS nao manda album_id, e a fila nao tem como agrupar
    por album sem recorrer ao nome (colide) ou ao coverid (e por faixa). */
 test('a fila pede a tag e, e o album_id volta como albumId sem quebrar faixas sem album', async function () {
@@ -102,6 +145,24 @@ test('status usa os atributos do stream ativo devolvidos pelo LMS 9.2', async fu
   assert.equal(st.sampleSize, 24);
   assert.equal(st.format, 'MP3');
   assert.equal(st.bitrate, 256);
+});
+
+test('status nao herda bit depth do FLAC quando o stream lossy declara samplesize vazio', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'status') return {
+      mode: 'play', samplerate: 48000, samplesize: '', type: 'mp3', bitrate: '256kbps',
+      replay_gain: '-5.25', use_volume_control: 1,
+      playlist_loop: [{ id: 42, duration: 123, samplerate: 192000, samplesize: 24, type: 'flc', bitrate: '5641kbps' }]
+    };
+    return {};
+  });
+  const st = await ctx.api.status('p1');
+  assert.equal(st.sampleSize, 0);
+  assert.equal(st.activeStream.sampleSize, 0);
+  assert.equal(st.sourceStream.sampleSize, 24);
+  assert.equal(st.replayGain, -5.25);
+  assert.equal(st.useVolumeControl, true);
+  assert.equal(st.isTranscoded, true);
 });
 
 test('status mantem os metadados como compatibilidade com LMS anterior ao 9.2', async function () {

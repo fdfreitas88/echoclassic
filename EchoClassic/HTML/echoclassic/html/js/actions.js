@@ -316,11 +316,20 @@
         <div class="srow">Resolution <span class="v">{{ resolution }}</span></div>
         <div v-if="info.bitrate" class="srow">Bitrate <span class="v">{{ Math.round(info.bitrate) }} kbps</span></div>
       </div>
+      <template v-if="isCurrentTrack">
+        <div class="sgh">Signal path</div>
+        <div class="sgroup signal-path-information">
+          <div class="srow"><span>Source track<small>Reported by track metadata</small></span><span class="v">{{ streamLabel(store.np.sourceStream) || 'Unavailable' }}</span></div>
+          <div class="srow"><span>LMS processing<small>Confirmed by the current status response</small></span><span class="v">{{ processingLabel }}</span></div>
+          <div class="srow"><span>Active stream<small>Sent by LMS to the selected player</small></span><span class="v">{{ streamLabel(store.np.activeStream) || 'Unavailable' }}</span></div>
+          <div class="srow"><span>CoreAudio / DAC<small>Requires Apple Squeezer hardware telemetry</small></span><span class="v">Unavailable</span></div>
+        </div>
+      </template>
     </div>
   </section>
 </div>`,
     data: function () {
-      return { ui: LmsUi.state, info: null, loading: false, error: '',
+      return { ui: LmsUi.state, store: LmsStore.state, info: null, loading: false, error: '',
                previousFocus: null, requestToken: 0, view: 'info' };
     },
     computed: {
@@ -344,6 +353,18 @@
       },
       formatLabel: function () {
         return this.info && this.info.format ? LmsFmt.format(this.info.format) : '—';
+      },
+      isCurrentTrack: function () {
+        return !!(this.item && this.store.np && String(this.item.id) === String(this.store.np.id));
+      },
+      processingLabel: function () {
+        var parts = [];
+        if (this.store.np.isTranscoded) parts.push('Transcoded');
+        if (this.store.replayGainApplied != null && isFinite(Number(this.store.replayGainApplied))) {
+          var gain = Number(this.store.replayGainApplied);
+          parts.push('Replay Gain ' + (gain > 0 ? '+' : '') + gain.toFixed(2).replace(/\.00$/, '') + ' dB');
+        }
+        return parts.length ? parts.join(' · ') : 'No processing reported';
       }
     },
     watch: {
@@ -382,6 +403,10 @@
          opmlview.js, filterpanel.js and browse.js. */
       tr: function (text) {
         return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
+      },
+      streamLabel: function (stream) {
+        if (!stream) return '';
+        return [LmsFmt.format(stream.format), LmsFmt.rate(stream.sampleRate), LmsFmt.depth(stream.sampleSize), stream.bitrate ? Math.round(stream.bitrate) + ' kbps' : ''].filter(Boolean).join(' · ');
       },
       headBack: function () {
         /* Never leaves the reading surface without an exit: from lyrics the

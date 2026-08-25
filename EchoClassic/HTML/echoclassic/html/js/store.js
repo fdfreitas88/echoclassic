@@ -17,6 +17,7 @@
 
   var state = Vue.observable({
     players: [], playerId: null, connected: false, fixedVolume: false,
+    useVolumeControl: null, volumeControllable: true,
     /* Ha destino para um comando de transporte. Nao e o mesmo que `connected`:
        o aviso de conexao pode estar na tela com a faixa anterior ainda em
        cache, e nesse estado tocar Play nao alcanca ninguem. Quem decide e o
@@ -34,7 +35,7 @@
     /* Ganho de reproducao do LMS, por player: 0 desligado, 1 faixa, 2 album,
        3 inteligente. Guardado como numero cru porque a interface oferece
        exatamente esses quatro valores fixos -- nao ha estado derivado aqui. */
-    replayGainMode: 0,
+    replayGainMode: 0, replayGainApplied: null,
     equalizer: {
       playerId: null, status: 'idle', clientName: '', revision: '',
       settings: null, presets: [], impulses: [], error: '', rules: [],
@@ -51,7 +52,8 @@
     npFavorite: false, npFavoriteIndex: null,
     np: {
       id: null, title: '', artist: '', album: '', coverId: null,
-      sampleRate: 0, sampleSize: 0, format: '', bitrate: 0, live: false
+      sampleRate: 0, sampleSize: 0, format: '', bitrate: 0, live: false,
+      sourceStream: null, activeStream: null, isTranscoded: false
     }
   });
 
@@ -417,6 +419,7 @@
     if (dvc == null) throw new Error('LMS did not confirm the volume mode.');
     if (state.playerId !== playerId) return false;
     state.fixedVolume = String(dvc) === '0';
+    state.volumeControllable = !state.fixedVolume || state.useVolumeControl === true;
     state.volumeModeSynced = true;
     return true;
   }
@@ -662,6 +665,9 @@
     state.mode = st.mode;
     state.time = st.time;
     state.duration = st.duration;
+    state.useVolumeControl = st.useVolumeControl;
+    state.volumeControllable = !state.fixedVolume || st.useVolumeControl === true;
+    state.replayGainApplied = st.replayGain;
     if (!state.volumeDragging) state.volume = st.volume;
     var oldTrackId = state.np.id;
     state.np = {
@@ -669,7 +675,9 @@
       album: st.track.album, albumId: st.track.albumId, trackNum: st.track.trackNum,
       coverId: st.track.coverId, url: st.track.url,
       sampleRate: st.sampleRate, sampleSize: st.sampleSize,
-      format: st.format, bitrate: st.bitrate, live: st.live
+      format: st.format, bitrate: st.bitrate, live: st.live,
+      sourceStream: st.sourceStream, activeStream: st.activeStream,
+      isTranscoded: st.isTranscoded
     };
     if (oldTrackId !== state.np.id) {
       state.trackInfo = null;
@@ -1274,7 +1282,7 @@
   }
 
   async function setVolume(volume) {
-    if (!state.playerId || state.fixedVolume) return;
+    if (!state.playerId || !state.volumeControllable) return;
     var value = Math.max(0, Math.min(100, Math.round(Number(volume) || 0)));
     await api.setVolume(state.playerId, value);
     await refresh();
@@ -1303,6 +1311,7 @@
       if (state.playerId !== playerId) return false;
 
       state.fixedVolume = String(confirmed) === '0';
+      state.volumeControllable = !state.fixedVolume || state.useVolumeControl === true;
       state.volumeModeSynced = true;
       if (!requestedFixed) {
         var status = await api.status(playerId);

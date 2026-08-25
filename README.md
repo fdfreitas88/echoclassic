@@ -19,10 +19,45 @@ depth **actually in use after transcoding**—the closest server-side view of wh
 reaches the player's decoder and DAC. Older LMS releases automatically fall back
 to the track metadata.
 
-Echo Classic 3.4.1 uses Vue 2 and has no compilation or bundling step: the files in
+Echo Classic 3.5.0 uses Vue 2 and has no compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
 ![Echo Classic library](docs/img/library.png)
+
+## Highlights in 3.5
+
+### Playback telemetry and Signal Path
+
+Echo Classic now treats playback information as a live signal chain rather than
+only as file metadata. On LMS 9.2 it keeps separate source and active-stream
+models, shows transcoding and applied Replay Gain, and deliberately omits bit
+depth when a lossless source becomes MP3 or AAC. Now Playing, the bottom bar and
+the Information sheet share the same live state and mark unavailable DAC facts
+instead of guessing them.
+
+### Apple Squeezer Store integration
+
+Apple Squeezer is discovered as an independent LMS Store plugin through a
+versioned, capability-driven API. When installed, Echo Classic can show its
+lifecycle, start or restart it, select DAC Priority, Equalizer, OSF or CSF mode,
+control upsampling and filter choices, and assign one confirmed DSP owner per
+player to guard against processing the signal twice.
+
+The native DSP surface includes graphic and parametric equalization, headroom,
+Replay Gain, true-peak protection, spatial controls and FIR convolution. Changes
+are validated before transmission, scoped to the selected player, confirmed by
+revision and rolled back if the server cannot confirm the new state. Older
+published Apple Squeezer releases remain supported through their released API,
+with advanced controls hidden when the capability is absent.
+
+### Mobile and externally controlled volume
+
+Echo Classic honors LMS `use_volume_control`, so a player fixed at 100% can still
+control an external Denon/Marantz-style amplifier when its plugin requests it.
+The phone layout gives the slider the available width; both speaker icons are
+volume buttons and the increment can be set to 1, 2, 5 or 10 percent.
+
+![Echo Classic advanced settings](docs/img/advancedlms.png)
 
 ## Highlights in 3.4
 
@@ -329,7 +364,7 @@ JavaScript file from running beside an older cached stylesheet.
 
 ## Project status
 
-Current release: **3.4.1**.
+Current release: **3.5.0**.
 
 - 421 automated tests passing.
 - Four validation stages passing.
