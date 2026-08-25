@@ -87,6 +87,28 @@ test('Apple Squeezer playback choices live inside Equalizer settings', function 
   assert.equal(settings.indexOf('class="apple-squeezer-panel"'), -1, 'old Players-panel placement is removed');
 });
 
+test('Apple Squeezer modes remain on one four-column row and setting help cannot run into labels', function () {
+  const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  assert.match(css, /\.apple-squeezer-modes\{[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(settings, /class="setting-copy">Apple Squeezer Store plugin<small>/);
+  assert.match(settings, /class="setting-copy">Processing engine<small>/);
+  assert.match(css, /\.setting-copy\{[^}]*flex-direction:column/);
+  assert.match(css, /\.setting-copy small\{[^}]*display:block/);
+});
+
+test('native DSP editor is only presented in Equalizer mode and missing telemetry is not fabricated', function () {
+  const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
+  assert.match(settings, /appleSqueezer\.mode === 'equalizer' && nativeDspDraft/);
+  assert.match(settings, /Select Equalizer playback mode to view and edit Apple Squeezer DSP/);
+  assert.match(settings, /Rate unavailable/);
+  assert.match(settings, /Latency unavailable/);
+  assert.match(settings, /Response unavailable/);
+  assert.match(settings, /clipped_samples == null \? '—'/);
+  assert.doesNotMatch(settings, /diagnostics\.rate \|\| 48000 \}\} Hz/);
+  assert.doesNotMatch(settings, /latency_frames \|\| 0 \}\} DSP frames/);
+});
+
 test('OSF and CSF expose a validated manual upsample-rate control', function () {
   const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
   const api = helpers.read('EchoClassic/HTML/echoclassic/html/js/api.js');

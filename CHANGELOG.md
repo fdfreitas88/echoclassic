@@ -15,6 +15,21 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.1] — 2026-08-24
+
+### Fixed
+
+- Apple Squeezer's four playback modes remain in one equal-width row on tablet
+  and desktop layouts; compact screens continue to stack them vertically.
+  Secondary API and DSP-owner descriptions now render on their own lines
+  instead of running into the primary labels. [code/measured: Vue compilation,
+  CSS and Apple Squeezer regression tests]
+- Native DSP controls are shown only while Equalizer playback mode is active,
+  eliminating the contradictory DAC Priority/DSP-enabled screen. Missing rate,
+  latency, response and clipping telemetry is explicitly reported as unavailable
+  instead of being displayed as invented 48 kHz or zero values. [code/measured:
+  capability/state regression tests]
+
 ## [3.5.0] — 2026-08-24
 
 ### Added

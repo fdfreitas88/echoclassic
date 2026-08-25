@@ -19,7 +19,7 @@ depth **actually in use after transcoding**—the closest server-side view of wh
 reaches the player's decoder and DAC. Older LMS releases automatically fall back
 to the track metadata.
 
-Echo Classic 3.5.0 uses Vue 2 and has no compilation or bundling step: the files in
+Echo Classic 3.5.1 uses Vue 2 and has no compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
 ![Echo Classic library](docs/img/library.png)
@@ -364,9 +364,9 @@ JavaScript file from running beside an older cached stylesheet.
 
 ## Project status
 
-Current release: **3.5.0**.
+Current release: **3.5.1**.
 
-- 421 automated tests passing.
+- 444 automated tests passing.
 - Four validation stages passing.
 - 20 Vue templates compiling.
 - 155/155 tested contrast pairs passing.
