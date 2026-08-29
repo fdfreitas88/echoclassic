@@ -29,3 +29,14 @@ test('playlist choice remembers recent destinations and Escape returns before cl
   assert.match(text, /if \(this\.view === 'playlists'\) this\.backToActions\(\)/);
   assert.match(text, /recentPlaylists/);
 });
+
+test('modal action sheets support swipe-down dismissal without changing anchored menus', function () {
+  const text = source();
+  assert.match(text, /v-if="!anchor" class="action-sheet-handle"/);
+  assert.match(text, /@pointerdown="startSwipe"/);
+  assert.match(text, /if \(this\.anchor \|\| event\.button > 0\) return/);
+  assert.match(text, /var dismiss = this\.swipeOffset >= 90/);
+  assert.match(text, /if \(dismiss\) this\.close\(\)/);
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  assert.match(css, /\.action-sheet:not\(\.anchored\)\.swiping\{transition:none;touch-action:none\}/);
+});

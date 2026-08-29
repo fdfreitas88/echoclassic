@@ -724,7 +724,7 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
   stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .library-tools.tight .split-options-command{margin-left:auto}
 .library-tools .filter-command,.library-tools .sort-command{width:auto;min-width:44px;padding:0 9px;gap:5px;
-  display:flex;align-items:center;justify-content:center;font-size:12px;white-space:nowrap}
+  flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;white-space:nowrap}
 .library-tools .command-label{display:inline;color:inherit;font-size:12px}
 .icon-command{width:44px;height:44px;color:var(--button-fg);font-size:20px;flex:0 0 44px;
   text-shadow:var(--button-tsh)}
@@ -760,11 +760,18 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
   .selection-wide-label{display:none}
   .library-tools .selection-tools{flex:1 1 100%}
 }
+/* Browser zoom reduces the CSS-pixel width of the pane even when the window
+   still looks desktop-sized. The labels used to keep painting after their
+   flex items had shrunk, producing one merged "Filter Sort Select" string.
+   Collapse the two descriptive labels before that can happen; accessible
+   names remain on the buttons and the search field keeps useful width. */
+@container (max-width:720px){
+  .library-tools .filter-command,.library-tools .sort-command{width:44px;flex-basis:44px;padding:0}
+  .library-tools .filter-command .command-label,
+  .library-tools .sort-command .command-label{display:none}
+}
 .library-tools.tight .filter-command,.library-tools.tight .sort-command{width:44px;flex:0 0 44px;padding:0}
 .library-tools.tight .command-label{display:none}
-.empty-shortcuts{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:14px;color:var(--text2);font-size:12px}
-.empty-shortcuts span{display:flex;align-items:center;gap:4px}
-.empty-shortcuts kbd{min-width:22px;padding:3px 5px;border:.5px solid var(--hair);border-radius:4px;background:var(--field);font:inherit;color:var(--text)}
 .history-strip{grid-column:1/-1;grid-row:4;border-bottom:.5px solid var(--hair);
   padding:10px 0 12px;background:var(--content)}
 .history-strip .sectitle{padding:0 10px 8px;font-size:13px;color:var(--text2)}
@@ -1759,6 +1766,8 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   display:flex;align-items:center;gap:10px;
   padding:0 14px;border-bottom:.5px solid var(--hair)}
 .queue .qhead .ttl{font-size:15px;font-weight:500}
+.queue-back{min-height:44px;color:var(--accent);font-size:14px}
+.queue-overflow{width:44px;height:44px;margin-left:auto;color:var(--text);font-size:19px}
 .queue .qhead .n{font-size:12px;color:var(--text2)}
 .queue .qhead .clear{margin-left:auto;color:var(--accent);font-size:14px}
 .queue .qhead button.clear{min-height:44px;padding:0 4px}
@@ -1777,6 +1786,14 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .queue-modes button{flex:1;padding:5px 8px;color:var(--text2);font-size:12px}
 .queue-modes button+button{border-left:.5px solid var(--hair)}
 .queue-modes button.on{color:var(--accent)}
+.queue-primary-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;background:var(--bg2)}
+.queue-primary-actions button{min-height:48px;padding:7px 11px;border-radius:9px;background:var(--picker-bg);color:var(--accent);text-align:left}
+.queue-primary-actions span,.queue-primary-actions small{display:block}.queue-primary-actions small{margin-top:3px;color:var(--text2)}
+.queue-settings{margin:0 12px 10px;border:.5px solid var(--hair);border-radius:10px;overflow:hidden;background:var(--picker-bg)}
+.queue-settings>button,.queue-setting-toggle{min-height:46px;width:100%;display:flex;align-items:center;justify-content:space-between;padding:0 13px;border-bottom:.5px solid var(--hair);font-size:13px;text-align:left}
+.queue-settings>:last-child{border-bottom:0}.queue-settings .destructive{justify-content:center;color:var(--destructive)}
+.queue-setting-toggle input{width:42px;height:24px}
+.queue-section-title{padding:7px 14px;color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.03em;background:var(--bg2)}
 .queue-intelligence{padding:12px 14px;border-bottom:.5px solid var(--hair);background:var(--bg2)}
 .queue-intelligence-head{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
 .queue-intelligence-head strong{font-size:13px;font-weight:600;white-space:nowrap}
@@ -1797,16 +1814,16 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .queue-intelligence button:disabled{opacity:.45}
 .queue-start{min-height:34px;display:flex;align-items:center;padding:0 14px;
   border-bottom:.5px solid var(--hair);color:var(--text2);font-size:12px}
-.queue .qbody{overflow-y:auto;flex:1}
+.queue .qbody{overflow-y:auto;flex:1;margin:0 10px 10px;border-radius:10px;background:var(--picker-bg)}
 /* AUDIT-09, modo 'headings': legenda propria de 22px, nunca uma .qrow mais
-   alta -- 52px continua sendo a altura da linha em qualquer modo de capa.
-   RESP-02: 22px e 52px sao piso (min-height), nao altura travada: com altura
+   alta. RESP-02: 22px e 60px sao piso (min-height), nao altura travada: com altura
    fixa e sem contencao, o conteudo transbordava e pintava por cima da linha
    de baixo em vez de ser cortado. */
 .qcaption{min-height:22px;display:flex;align-items:center;padding:0 14px;
   font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase}
 .qcaption .ell{flex:1}
-.qrow{--qhair-left:59px;min-height:52px;display:flex;align-items:center;gap:11px;padding:0 14px;position:relative}
+.qrow{--qhair-left:59px;min-height:60px;display:flex;align-items:center;gap:11px;padding:0 8px 0 12px;position:relative}
+.qrow:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:7px}
 /* Fila com o slot de capa colapsado (RESP-03): sem os 34px de arte, o gap
    ainda se aplica ao redor do item de largura zero, entao o conteudo comeca
    em 25px (14 de padding + 11 de gap), nao em 59px. O tracejado pertence a
@@ -1825,6 +1842,11 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .qrow .dur{font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;margin-left:auto}
 .queue-reorder{display:flex}
 .queue-reorder button{width:44px;height:44px;color:var(--accent);font-size:18px}
+.queue-reorder .queue-remove{color:var(--destructive)}
+.queue-more{width:44px;height:44px;flex:0 0 44px;color:var(--text2);font-size:18px}
+.queue-row-menu{position:absolute;z-index:2;right:8px;top:48px;width:180px;padding:5px;border:.5px solid var(--hair);border-radius:9px;background:var(--picker-bg);box-shadow:0 6px 22px var(--shadow)}
+.queue-row-menu button{display:block;width:100%;min-height:38px;padding:0 10px;text-align:left;border-radius:6px}.queue-row-menu button:hover{background:var(--bg2)}
+.queue-row-menu button.destructive{color:var(--destructive)}
 .qrow .drag{width:44px;height:44px;flex:0 0 44px;display:flex;align-items:center;
   justify-content:center}
 .qrow .drag svg{width:17px;height:17px;fill:none;stroke:var(--destructive);stroke-width:1.7;stroke-linecap:round}
@@ -1909,6 +1931,8 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .action-sheet{position:absolute;z-index:var(--z-sheet);left:50%;bottom:14px;
   transform:translateX(-50%);width:min(440px,calc(100vw - 20px));max-height:calc(100vh - 28px);
   overflow-y:auto;color:var(--text)}
+.action-sheet:not(.anchored){transition:transform .2s ease-out}.action-sheet:not(.anchored).swiping{transition:none;touch-action:none}
+.action-sheet-handle{display:block;width:36px;height:5px;margin:7px auto 1px;border-radius:3px;background:var(--hair)}
 .action-sheet>.sheet-title,.action-sheet>button,.sheet-choices{
   background:var(--picker-bg);border-bottom:.5px solid var(--hair)}
 .sheet-title{padding:12px 16px;text-align:center;border-radius:8px 8px 0 0}
@@ -2182,12 +2206,26 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   border-bottom:.5px solid var(--hair)}
 .np-tools button{flex:1;min-height:44px;padding:5px;color:var(--text2);font-size:11px}
 .np-tools button+button{border-left:.5px solid var(--hair)}
-.np-tools button.on{color:var(--accent)}
+.np-tools button.on{color:var(--accent);background:var(--field);font-weight:600;
+  box-shadow:inset 0 2px 0 var(--accent)}
 .rating-row{width:var(--player-column,min(calc(100% - 56px),400px));min-height:42px;display:flex;
   align-items:center;justify-content:center}
 .rating-row button{width:44px;height:44px;color:var(--chev);font-size:21px}
 .rating-row button.on{color:var(--accent)}
 .rating-row span{margin-left:8px;color:var(--text2);font-size:11px}
+@media (min-width:701px) and (max-height:700px){
+  /* The adaptive player normally lives inside .workspace, whose header and
+     footer leave only ~446px at 1024x650. In a short viewport it must own the
+     full screen, otherwise its lower tools are technically scrollable but
+     visibly cut off. */
+  .npstage.mode-adaptive{position:fixed;inset:0;padding:10px}
+  .npstage.mode-adaptive .npfull{max-height:calc(100vh - 20px)}
+  .npfull{--player-column:min(calc(100vw - 56px),32vh,260px);padding-top:14px}
+  .npfull .head{margin-top:7px}.npfull .head .np-player-row{min-height:38px}
+  .npfull .head .s{margin-top:1px}.npfull .scrub{margin-top:6px}
+  .npfull .transport{margin-top:5px}.npfull .bottom{margin-top:4px}
+  .npfull .np-secondary{margin-top:1px}
+}
 .edition-years{display:flex;flex-direction:column;gap:2px;margin-top:5px;
   color:var(--text2);font-size:11px}
 

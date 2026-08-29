@@ -19,10 +19,12 @@
     template: `
 <div v-if="item" class="sheet-stage" :class="{anchored: !!anchor}">
   <div class="sheet-back" @click="close"></div>
-  <div ref="sheet" class="action-sheet" :class="{anchored: !!anchor}" :style="sheetStyle"
+  <div ref="sheet" class="action-sheet" :class="{anchored: !!anchor, swiping: swipeStartY !== null}" :style="[sheetStyle, swipeStyle]"
        role="dialog" :aria-label="'Actions for ' + (item.title || item.label || item.name)"
        :aria-modal="String(!anchor)" tabindex="-1"
-       @keydown.esc.stop.prevent="escapeSheet" @keydown.tab="trapFocus">
+       @keydown.esc.stop.prevent="escapeSheet" @keydown.tab="trapFocus"
+       @pointerdown="startSwipe" @pointermove="moveSwipe" @pointerup="endSwipe" @pointercancel="cancelSwipe">
+    <span v-if="!anchor" class="action-sheet-handle" aria-hidden="true"></span>
     <header v-if="item.kind === 'player-picker'" class="player-picker-head">
       <button type="button" class="player-picker-done" @click="close">Done</button>
       <strong>Players</strong><span aria-hidden="true"></span>
@@ -113,7 +115,7 @@
     data: function () {
       return { ui: LmsUi.state, store: LmsStore.state, playlists: [], view: 'actions', playlistQuery: '',
                busy: false, favoriteExists: false, favoriteIndex: null, sheetStyle: {},
-               previousFocus: null };
+               previousFocus: null, swipeStartY: null, swipeOffset: 0 };
     },
     computed: {
       item: function () { return this.ui.actionItem; },
@@ -169,6 +171,10 @@
       otherPlaylists: function () {
         var recent = this.recentPlaylists.map(function (p) { return String(p.id); });
         return this.filteredPlaylists.filter(function (p) { return recent.indexOf(String(p.id)) === -1; });
+      },
+      swipeStyle: function () {
+        if (this.anchor || !this.swipeOffset) return {};
+        return { transform: 'translate(-50%, ' + this.swipeOffset + 'px)' };
       }
     },
     watch: {
@@ -222,6 +228,27 @@
           event.preventDefault(); nodes[0].focus();
         }
       },
+      startSwipe: function (event) {
+        if (this.anchor || event.button > 0) return;
+        var target = event.target;
+        if (!target || (!target.closest('.action-sheet-head') && !target.closest('.player-picker-head') && !target.closest('.action-sheet-handle'))) return;
+        this.swipeStartY = event.clientY;
+        this.swipeOffset = 0;
+        if (event.currentTarget.setPointerCapture) event.currentTarget.setPointerCapture(event.pointerId);
+      },
+      moveSwipe: function (event) {
+        if (this.swipeStartY === null) return;
+        this.swipeOffset = Math.max(0, event.clientY - this.swipeStartY);
+        if (this.swipeOffset) event.preventDefault();
+      },
+      endSwipe: function () {
+        if (this.swipeStartY === null) return;
+        var dismiss = this.swipeOffset >= 90;
+        this.swipeStartY = null;
+        this.swipeOffset = 0;
+        if (dismiss) this.close();
+      },
+      cancelSwipe: function () { this.swipeStartY = null; this.swipeOffset = 0; },
       positionSheet: function () {
         if (!this.anchor || !this.$refs.sheet) {
           this.sheetStyle = {};

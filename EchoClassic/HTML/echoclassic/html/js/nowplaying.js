@@ -14,7 +14,8 @@ Vue.component('lms-nowplaying', {
   <div class="npback" @click="close"></div>
   <section ref="dialog" class="npfull" :class="{'with-queue': ui.queueInline}"
            role="dialog" :aria-modal="String(isModal)" aria-label="Now playing"
-           tabindex="-1" @keydown.tab="trapFocus" @keydown.esc.stop.prevent="close">
+           tabindex="-1" @keydown.tab="trapFocus" @keydown.esc.stop.prevent="close"
+           @keydown="onPlayerKey">
     <button v-if="!ui.kioskMode" type="button" class="dismiss pointer" title="Close" aria-label="Close player" @click="close">
       <svg viewBox="0 0 24 12"><path d="M3 3l9 6 9-6"/></svg>
     </button>
@@ -51,14 +52,15 @@ Vue.component('lms-nowplaying', {
     </div>
 
     <div class="head">
-      <div class="t ell">{{ np.title || 'Nothing playing' }}</div>
+      <div class="t ell" :title="np.title || 'Nothing playing'"
+           :aria-label="np.title || 'Nothing playing'">{{ np.title || 'Nothing playing' }}</div>
       <button type="button" class="np-player-row pointer" :aria-label="playerPickerLabel"
               @click="openPlayerPicker">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h3l5 4V5L7 9z"/></svg>
         <span class="ell">{{ activePlayerName }}</span>
         <svg class="chevron" viewBox="0 0 12 20" aria-hidden="true"><path d="M2 2l8 8-8 8"/></svg>
       </button>
-      <div class="s ell">{{ subtitle }}</div>
+      <div class="s ell" :title="subtitle" :aria-label="subtitle">{{ subtitle }}</div>
     </div>
 
     <div v-if="hasTrack" class="scrub">
@@ -164,8 +166,8 @@ Vue.component('lms-nowplaying', {
     </div>
 
     <div class="np-tools">
-      <button type="button" :class="{on: store.shuffle}" @click="shuffle">{{ shuffleLabel }}</button>
-      <button type="button" :class="{on: store.repeat}" @click="repeat">{{ repeatLabel }}</button>
+      <button type="button" :class="{on: store.shuffle}" :aria-pressed="String(!!store.shuffle)" @click="shuffle">{{ shuffleLabel }}</button>
+      <button type="button" :class="{on: store.repeat}" :aria-pressed="String(!!store.repeat)" @click="repeat">{{ repeatLabel }}</button>
       <button type="button" v-if="np.id" @click="info">Information</button>
     </div>
     <div v-if="store.canRate && np.id" class="rating-row" aria-label="Rating">
@@ -370,6 +372,25 @@ Vue.component('lms-nowplaying', {
         event.preventDefault(); last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
         event.preventDefault(); first.focus();
+      }
+    },
+    onPlayerKey: function (event) {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      var target = event.target || {};
+      var tag = String(target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'select' || tag === 'textarea' || tag === 'button' || target.isContentEditable) return;
+      var key = event.key;
+      if ((key === ' ' || key === 'Spacebar') && this.store.commandable) {
+        event.preventDefault(); this.toggle(); return;
+      }
+      if ((key === 'ArrowLeft' || key === 'ArrowRight') && this.store.commandable && !this.np.live && this.store.duration) {
+        event.preventDefault();
+        var delta = key === 'ArrowLeft' ? -10 : 10;
+        LmsStore.seek(Math.max(0, Math.min(this.store.duration, Number(this.store.time || 0) + delta)));
+        return;
+      }
+      if ((key === 'ArrowUp' || key === 'ArrowDown') && this.store.volumeControllable) {
+        event.preventDefault(); this.stepVolume(key === 'ArrowUp' ? this.ui.volumeStep : -this.ui.volumeStep);
       }
     },
     toggle: function () { this.playing ? LmsStore.pause() : LmsStore.play(); },

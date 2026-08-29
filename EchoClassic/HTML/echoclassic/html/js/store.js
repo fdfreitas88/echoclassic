@@ -882,6 +882,19 @@
     timer = setTimeout(tick, pollDelay());
   }
 
+  /* A tab that comes back from the background must rejoin the server state
+     immediately. Waiting for the ordinary idle interval left a reopened phone
+     showing an old album and position for up to five seconds; pages restored
+     from the back-forward cache could remain stale even longer. */
+  function resumePolling() {
+    if (document.hidden) return;
+    polling = true;
+    if (ticking) return;                       // the in-flight refresh will reschedule
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    tick();
+  }
+
   function stopPolling() {
     polling = false;
     if (timer === null) return;
@@ -890,8 +903,9 @@
   }
 
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) stopPolling(); else startPolling();
+    if (document.hidden) stopPolling(); else resumePolling();
   });
+  if (window.addEventListener) window.addEventListener('pageshow', resumePolling);
 
   /* A fila e a playlist do servidor. Antes isto era uma copia no cliente, e
      playFrom mandava `playlistcontrol cmd:load track_id:` de uma faixa so — a

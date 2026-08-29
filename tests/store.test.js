@@ -53,6 +53,52 @@ function storeContext(apiExtra, uiExtra, sharedStore) {
   return { store: ctx.LmsStore, callCount: function () { return canCommandsCalls; }, backing: store };
 }
 
+test('a tab retomada sincroniza album e tempo imediatamente, inclusive via pageshow', async function () {
+  const listeners = {};
+  const document = {
+    hidden: true,
+    addEventListener: function (name, fn) { listeners[name] = fn; }
+  };
+  let statusCalls = 0;
+  const ctx = helpers.browserContext({
+    localStorage: { getItem: function () { return null; }, setItem: function () {} },
+    document: document,
+    navigator: {},
+    Vue: { observable: function (o) { return o; } },
+    LmsUi: { notify: function () {}, state: { defaultPlayer: 'last' } },
+    LmsApi: {
+      players: async function () { return [{ id: 'p1', name: 'Kitchen', connected: true, power: true }]; },
+      status: async function () {
+        statusCalls++;
+        return {
+          mode: 'play', time: 47, duration: 240, volume: 30,
+          track: { id: 22, title: 'Remote album track', artist: 'Artist', album: 'Remote album' }
+        };
+      },
+      playerPref: async function () { return null; }, sleepRemaining: async function () { return 0; },
+      canCommands: async function () { return {}; }, songInfo: async function () { return { id: 22 }; },
+      favoriteExists: async function () { return { exists: false, index: null }; }
+    }
+  });
+  ctx.window = ctx;
+  ctx.addEventListener = function (name, fn) { listeners[name] = fn; };
+  helpers.runInContext(ctx, 'EchoClassic/HTML/echoclassic/html/js/store.js');
+  await ctx.LmsStore.init();
+
+  document.hidden = false;
+  listeners.visibilitychange();
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(statusCalls, 1);
+  assert.equal(ctx.LmsStore.state.np.album, 'Remote album');
+  assert.equal(ctx.LmsStore.state.time, 47);
+
+  ctx.LmsStore.stopPolling();
+  listeners.pageshow();
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(statusCalls, 2, 'bfcache restore refreshes without waiting for the idle poll');
+  ctx.LmsStore.stopPolling();
+});
+
 test('player settings loaded for an old player cannot overwrite the newly selected player', async function () {
   let resolveFirstPref;
   const ctx = storeContext({

@@ -457,6 +457,7 @@
     /* Um valor gravado por uma versao futura (ou corrompido) nao pode zerar a
        capa da fila inteira -- cai no padrao em vez de travar num estado vazio. */
     queueArtMode: isQueueArtMode(saved.queueArtMode) ? saved.queueArtMode : 'album',
+    quickQueueControls: saved.quickQueueControls === true,
     /* Como queueArtMode acima: um valor gravado por versao futura, ou
        corrompido, cai no sentinela 'last' em vez de travar a escolha de
        player num id que nao existe mais. */
@@ -578,6 +579,7 @@
         theme: state.theme, dark: state.theme === 'dark',
         byView: byView, rootContexts: rootContexts,
         albumMode: state.albumMode, queueArtMode: state.queueArtMode,
+        quickQueueControls: state.quickQueueControls,
         defaultPlayer: state.defaultPlayer,
         showBadges: state.showBadges,
         markHires: state.markHires, colorScheme: state.colorScheme,
@@ -1361,6 +1363,11 @@
 
   function setBusy(message) { state.busyMessage = message || ''; }
 
+  function setQuickQueueControls(value) {
+    state.quickQueueControls = value === true;
+    persist();
+  }
+
   /* Traducao explicita, para o texto que nasce em JavaScript e nao passa pelo
      rewrite de template do i18n.js. */
   function tr(text) {
@@ -1512,7 +1519,8 @@
     toggleSelection: toggleSelection, clearSelection: clearSelection,
     queueSelection: queueSelection,
     selectionKey: selectionKey, isPinned: isPinned, togglePin: togglePin, movePin: movePin,
-    setBusy: setBusy, notify: notify, dismissNotice: dismissNotice,
+    setBusy: setBusy, setQuickQueueControls: setQuickQueueControls,
+    notify: notify, dismissNotice: dismissNotice,
     confirmAction: confirmAction, resolveConfirmation: resolveConfirmation
   };
 })(window);

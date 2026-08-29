@@ -2,6 +2,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const helpers = require('./helpers');
 
+test('superseded library detail placeholder is not implemented', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  assert.match(src, /Choose an item from the list on the left\./);
+  assert.doesNotMatch(src, /empty-shortcuts|Select an item to see artwork, tracks and playback actions/);
+  assert.doesNotMatch(css, /\.empty-shortcuts/);
+});
+
 test('allowsMediaFilter e a fonte unica da regra de filtro por view', function () {
   const ctx = helpers.uiContext();
   assert.equal(typeof ctx.LmsUi.allowsMediaFilter, 'function');
@@ -668,6 +676,81 @@ test('cache corrompido nao derruba a navegacao', function () {
   } finally { delete global.localStorage; }
 });
 
+test('F5 restores the complete album root before deciding whether LMS must page it again', function () {
+  const def = helpers.browseComponent().def;
+  const m = def.methods;
+  const loja = {};
+  global.localStorage = {
+    getItem: function (k) { return k in loja ? loja[k] : null; },
+    setItem: function (k, v) { loja[k] = String(v); }
+  };
+  const rows = [{ key: 'al7', kind: 'album', id: 7, label: 'Cached album', sub: 'Artist' }];
+  const self = { ui: { rootKey: 'all' }, rows: rows };
+  try {
+    m.writeAlbumRowsCache.call(self, 'scan-1');
+    const cached = m.readAlbumRowsCache.call(self);
+    assert.equal(cached.lastscan, 'scan-1');
+    assert.deepEqual(JSON.parse(JSON.stringify(cached.rows)), rows);
+    self.ui.rootKey = 'lossless';
+    assert.equal(m.readAlbumRowsCache.call(self), null,
+      'a virtual library must never inherit rows from another root');
+  } finally { delete global.localStorage; }
+
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const reload = src.split('reload: async function (preserveNavigation)')[1];
+  assert.match(reload, /this\.rows = albumRowsCache\.rows;\s*this\.loading = false;/,
+    'cached rows paint synchronously instead of leaving the blocking skeleton');
+  assert.match(reload, /albumRowsCache\.lastscan === rootLastscan/,
+    'an unchanged LMS scan skips album paging');
+});
+
+test('the first album page removes the blocking skeleton while later pages continue', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const paged = src.split('loadPagedRoot: async function (pid, token)')[1]
+    .split('reload: async function (preserveNavigation)')[0];
+  assert.match(paged, /this\.appendRows\(rows\);\s*\/\*[\s\S]*?if \(\(this\.refreshRows \|\| this\.rows\)\.length\) this\.loading = false;\s*start \+= sourceCount;/,
+    'the list must paint after page one, before requesting or processing the rest');
+});
+
+test('the complete album list is cached before optional duplicate enrichment', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const reload = src.split('reload: async function (preserveNavigation)')[1];
+  const writeAt = reload.indexOf('this.writeAlbumRowsCache(rootLastscan)');
+  const enrichAt = reload.indexOf('this.disambiguateDuplicateAlbums(pid, token)');
+  assert.ok(writeAt >= 0 && enrichAt > writeAt,
+    'slow duplicate lookups must not delay availability of the F5 cache');
+  const paged = src.split('loadPagedRoot: async function (pid, token)')[1]
+    .split('reload: async function (preserveNavigation)')[0];
+  assert.doesNotMatch(paged, /await this\.disambiguateDuplicateAlbums/,
+    'paging must return as soon as the complete basic list is ready');
+});
+
+test('a stale revision refresh never removes cached albums from the screen', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const reload = src.split('reload: async function (preserveNavigation)')[1];
+  assert.match(reload, /this\.refreshRows = \[\];\s*this\.loading = false;/,
+    'a background refresh must keep the cached list visible');
+  assert.match(reload, /this\.rows = this\.refreshRows;\s*this\.refreshRows = null;/,
+    'the new list replaces the cache atomically only when complete');
+  assert.doesNotMatch(reload, /if \(albumRowsCache\) \{\s*this\.rows = \[\]/,
+    'the destructive cached-row clear must not return');
+
+  const m = helpers.browseComponent().def.methods;
+  const self = { rows: [{ key: 'old' }], refreshRows: [], normalize: function (v) { return v; } };
+  m.appendRows.call(self, [{ key: 'new', kind: 'album', label: 'New' }]);
+  assert.deepEqual(self.rows, [{ key: 'old' }], 'visible rows stay untouched during refresh');
+  assert.equal(self.refreshRows[0].key, 'new', 'new rows accumulate off-screen');
+});
+
+test('only the unfiltered album root is eligible for the reload cache', function () {
+  const m = helpers.browseComponent().def.methods;
+  const base = { view: 'albums', hasMediaFilter: false,
+    groupsAlbumsByArtist: false, groupsAlbumsByRelatedArtist: false };
+  assert.equal(m.cacheableAlbumRoot.call(base), true);
+  assert.equal(m.cacheableAlbumRoot.call(Object.assign({}, base, { hasMediaFilter: true })), false);
+  assert.equal(m.cacheableAlbumRoot.call(Object.assign({}, base, { view: 'artists' })), false);
+});
+
 /* ---------- Fase 4: secoes reais e virtualizacao por soma de prefixos ------- */
 
 /* Array nascido dentro do vm tem outro Array.prototype, e o deepEqual estrito
@@ -1027,6 +1110,16 @@ test('the toolbar fits one row at the default split', function () {
   assert.doesNotMatch(css, /\.library-tools\.tight input\{[^}]*flex:1 1 100%/,
     'the forced row break must not come back');
   assert.match(src, /class="library-tools" :class="\{tight: toolbarTight\}"/);
+});
+
+test('library toolbar labels cannot merge when browser zoom narrows the CSS viewport', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const commands = css.match(/\.library-tools \.filter-command,\.library-tools \.sort-command\{([^}]*)\}/)[1];
+  assert.match(commands, /flex:0 0 auto/, 'text commands must never shrink through their labels');
+  const compact = css.match(/@container \(max-width:720px\)\{([\s\S]*?)\n\}/)[1];
+  assert.match(compact, /\.filter-command \.command-label/);
+  assert.match(compact, /\.sort-command \.command-label/);
+  assert.match(compact, /display:none/, 'descriptive labels collapse before they can overlap');
 });
 
 /* Visto na foto do README: "Local library" aparecia em portugues numa sessao

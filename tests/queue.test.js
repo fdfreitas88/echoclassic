@@ -89,6 +89,42 @@ test('legenda nunca aparece fora do modo headings', function () {
   assert.equal(self.showCaption(self.tracks[0], 0), false);
 });
 
+test('approved queue uses progressive row actions and optional quick controls', function () {
+  const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/queue.js');
+  assert.match(src, /Show quick queue controls/);
+  assert.match(src, /class="queue-more pointer"/);
+  assert.match(src, />Play next</);
+  assert.match(src, />Move to top</);
+  assert.match(src, />Move to bottom</);
+  assert.doesNotMatch(src, /@click\.stop="moveTo\(t\)">#<\/button>/);
+  assert.match(src, /v-if="ui\.quickQueueControls \|\| longPressIndex === t\.index"/);
+  const header = src.match(/<div class="qhead">([\s\S]*?)<\/div>/)[1];
+  const defaultHeader = header.match(/<template v-else>([\s\S]*?)<\/template>/)[1];
+  assert.doesNotMatch(defaultHeader, /Clear upcoming|Clear all/,
+    'destructive queue actions belong in settings, not the default header');
+});
+
+test('queue keyboard supports navigation, menu, reorder and confirmed removal', function () {
+  const calls = [];
+  const q = helpers.queueInstance({ LmsUi: undefined, LmsStore: {
+    state: { queue: [{ index: 0, title: 'A' }, { index: 1, title: 'B' }], queueIndex: 0,
+      queueTotal: 2, mode: 'play', shuffle: 0, repeat: 0, queueUndo: [], np: { id: 1 },
+      capabilities: {}, randomPlay: { active: '', busy: false }, dontStopMusic: { provider: '0', providers: [], busy: false } },
+    queueRemaining: function () { return 0; },
+    moveInQueue: function (from, to) { calls.push(['move', from, to]); },
+    removeFromQueue: function (index) { calls.push(['remove', index]); }
+  } });
+  q.ctx.LmsUi.confirmAction = async function () { return true; };
+  q.self.onRowKey(q.self.tracks[1], { key: 'ArrowUp', altKey: true, preventDefault: function () {} });
+  assert.deepEqual(calls[0], ['move', 1, 0]);
+  q.self.onRowKey(q.self.tracks[0], { key: 'Enter', altKey: false, preventDefault: function () {} });
+  assert.equal(q.self.menuIndex, 0);
+  return q.self.requestRemove(q.self.tracks[1]).then(function () {
+    assert.deepEqual(calls[calls.length - 1], ['remove', 1]);
+    assert.match(q.self.liveStatus, /removed from queue/);
+  });
+});
+
 /* RESP-01: .qcaption e flex, entao .ell no proprio container nunca alcanca o
    item flex anonimo que guarda o texto -- o titulo do album trunca sem
    reticencias. O padrao ja usado em queue.js:55 e nowplaying.js:54 poe o
@@ -125,8 +161,9 @@ test('RESP-02: .qcaption e .qrow tem altura MINIMA, nao travada, para nao pintar
   const qrow = css.match(/\.qrow\{([^}]*)\}/)[1];
   assert.match(qcaption, /min-height:22px/);
   assert.doesNotMatch(qcaption, /(?<!min-)height:22px/);
-  assert.match(qrow, /min-height:52px/);
-  assert.doesNotMatch(qrow, /(?<!min-)height:52px/);
+  const rowMinimum = Number(qrow.match(/min-height:(\d+)px/)[1]);
+  assert.ok(rowMinimum >= 52, 'the accessible row minimum must not regress below 52px');
+  assert.doesNotMatch(qrow, /(?<!min-)height:\d+px/);
 });
 
 test('RESP-04: a linha divisoria tambem aparece depois de uma legenda de grupo', function () {

@@ -28,6 +28,7 @@ var LmsSplitPane = {
    qualquer outro valor -- uma string ali vira uma funcao vazia, e a chave de
    storage vira o texto do corpo dessa funcao. */
 var LMS_MEDIA_CACHE_KEY = 'echoclassic.media.v1';
+var LMS_ALBUM_ROWS_CACHE_KEY = 'echoclassic.albumrows.v1';
 
 Vue.component('lms-browse', {
   template: `
@@ -231,10 +232,7 @@ Vue.component('lms-browse', {
     <lms-detail v-if="frame" :frame="frame"></lms-detail>
     <div v-else class="empty">
       <div class="h">{{ viewLabel }}</div>
-      <div class="p">Select an item to see artwork, tracks and playback actions.</div>
-      <div class="empty-shortcuts" aria-label="Keyboard shortcuts">
-        <span><kbd>↑</kbd><kbd>↓</kbd> Browse</span><span><kbd>Enter</kbd> Open</span>
-      </div>
+      <div class="p">Choose an item from the list on the left.</div>
     </div>
   </div>
 
@@ -245,7 +243,7 @@ Vue.component('lms-browse', {
     var split = LmsSplitPane.load();
     return {
       ui: LmsUi.state, store: LmsStore.state, LmsUi: LmsUi,
-      rows: [], libraries: [], loading: true, error: '', loadProgress: null, loadTotal: 0,
+      rows: [], refreshRows: null, libraries: [], loading: true, error: '', loadProgress: null, loadTotal: 0,
 	      loadingMore: false, limitWarning: '', requestToken: 0, unknownCount: 0,
 	      artistIndexTruncated: false,
       rootSelection: null,
@@ -987,9 +985,10 @@ Vue.component('lms-browse', {
       return url ? { backgroundImage: 'url(' + url + ')', backgroundSize: 'cover' } : {};
     },
     appendRows: function (items) {
+      var target = this.refreshRows || this.rows;
       var byKey = Object.create(null);
       var byArtist = Object.create(null);
-      this.rows.forEach(function (row) {
+      target.forEach(function (row) {
         byKey[row.key] = row;
         if (row.kind === 'artist') byArtist[this.normalize(row.label)] = row;
       }, this);
@@ -1002,7 +1001,7 @@ Vue.component('lms-browse', {
         } else if (!existing) {
           byKey[row.key] = row;
           if (row.kind === 'artist') byArtist[this.normalize(row.label)] = row;
-          this.rows.push(row);
+          target.push(row);
         }
       }, this);
     },
@@ -1124,6 +1123,27 @@ Vue.component('lms-browse', {
         /* Cota estourada nao pode derrubar a navegacao: sem cache a skin so
            volta a levar os dez segundos de sempre. */
       }
+    },
+    readAlbumRowsCache: function () {
+      try {
+        var saved = JSON.parse(localStorage.getItem(LMS_ALBUM_ROWS_CACHE_KEY) || '');
+        if (!saved || saved.rootKey !== this.ui.rootKey || !Array.isArray(saved.rows) || !saved.rows.length) return null;
+        return { lastscan: String(saved.lastscan || ''), rows: saved.rows };
+      } catch (e) { return null; }
+    },
+    writeAlbumRowsCache: function (lastscan) {
+      if (!lastscan || !this.rows.length) return;
+      try {
+        localStorage.setItem(LMS_ALBUM_ROWS_CACHE_KEY, JSON.stringify({
+          lastscan: String(lastscan), rootKey: this.ui.rootKey, rows: this.rows
+        }));
+      } catch (e) {
+        /* A lista continua funcional se a cota do navegador estiver cheia. */
+      }
+    },
+    cacheableAlbumRoot: function () {
+      return this.view === 'albums' && !this.hasMediaFilter &&
+        !this.groupsAlbumsByArtist && !this.groupsAlbumsByRelatedArtist;
     },
     loadMediaIndex: async function (pid, token) {
       if (this.mediaIndex) return this.mediaIndex;
@@ -1384,6 +1404,12 @@ Vue.component('lms-browse', {
           };
         }, this);
         this.appendRows(rows);
+        /* The first server page is already a complete, useful screen. 3.5.2
+           accidentally kept the blocking skeleton up until every page and
+           duplicate-edition lookup finished, turning a fast first paint into
+           a visible 0–99% wait. Reveal the first page immediately and let the
+           remaining pages append behind it, as the pre-3.5.2 browser did. */
+        if ((this.refreshRows || this.rows).length) this.loading = false;
         start += sourceCount;
         if (this.loadTotal > 0 && passes.length === 1) {
           this.loadProgress = Math.min(99, Math.round(start / this.loadTotal * 100));
@@ -1407,9 +1433,6 @@ Vue.component('lms-browse', {
 	          : '{n} albums could not be attributed to an artist in the index and appear as albums in this list.'
 	        ).replace('{n}', unattributed);
 	      }
-	      if (!this.groupsAlbumsByArtist && !this.groupsAlbumsByRelatedArtist && !this.hasMediaFilter) {
-	        await this.disambiguateDuplicateAlbums(pid, token);
-      }
     },
     reload: async function (preserveNavigation) {
       var token = ++this.requestToken;
@@ -1422,6 +1445,15 @@ Vue.component('lms-browse', {
 	      this.artistIndexTruncated = false;
       this.error = '';
       this.rows = [];
+      /* F5 must not turn a library the user just saw into a blocking skeleton.
+         Paint the last complete album root synchronously, then ask LMS whether
+         lastscan changed. An unchanged scan needs no album paging at all. */
+      var albumRowsCache = this.cacheableAlbumRoot() ? this.readAlbumRowsCache() : null;
+      if (albumRowsCache) {
+        this.rows = albumRowsCache.rows;
+        this.loading = false;
+        this.activeRail = this.railLetter(this.rows[0]);
+      }
       this.first = 0;
       this.activeRail = '';
       if (!preserveNavigation) {
@@ -1431,15 +1463,47 @@ Vue.component('lms-browse', {
       var pid = this.store.playerId || '';
       try {
         if (this.view === 'artists' || this.view === 'albums') {
+          var rootLastscan = '';
+          var albumCacheCurrent = false;
           if (!this.hasMediaFilter) {
             try {
               var totals = await LmsApi.serverInfo();
               if (token !== this.requestToken) return;
+              rootLastscan = String(totals.lastscan || '');
               this.loadTotal = this.groupsAlbumsByRelatedArtist ? totals.artists : totals.albums;
-              if (this.loadTotal > 0) this.loadProgress = 0;
-            } catch (ignored) { this.loadTotal = 0; }
+              albumCacheCurrent = !!(albumRowsCache && (!rootLastscan || albumRowsCache.lastscan === rootLastscan));
+              if (!albumCacheCurrent && this.loadTotal > 0) this.loadProgress = 0;
+            } catch (ignored) {
+              this.loadTotal = 0;
+              albumCacheCurrent = !!albumRowsCache;
+            }
           }
-          await this.loadPagedRoot(pid, token);
+          if (!albumCacheCurrent) {
+            if (albumRowsCache) {
+              /* Never blank a valid cached list merely because LMS reports a
+                 different revision. Build the replacement out of view, then
+                 swap it in one assignment when complete. */
+              this.refreshRows = [];
+              this.loading = false;
+            }
+            await this.loadPagedRoot(pid, token);
+            if (token !== this.requestToken) return;
+            if (this.refreshRows) {
+              this.rows = this.refreshRows;
+              this.refreshRows = null;
+            }
+            if (this.cacheableAlbumRoot()) {
+              /* Persist the complete basic list before optional duplicate-source
+                 enrichment. Those per-album lookups can be slow; making cache
+                 availability depend on them caused repeated F5 presses to miss
+                 the cache even though all 1,475 albums were already present. */
+              this.writeAlbumRowsCache(rootLastscan);
+              var self = this;
+              this.disambiguateDuplicateAlbums(pid, token).then(function () {
+                if (token === self.requestToken) self.writeAlbumRowsCache(rootLastscan);
+              }).catch(function () {});
+            }
+          }
         } else if (this.view === 'albumartists') {
           var albumArtists = await LmsApi.albumArtists(pid, 0, 5000);
           if (token !== this.requestToken) return;
@@ -1538,6 +1602,7 @@ Vue.component('lms-browse', {
         }
       } catch (e) {
         if (token !== this.requestToken) return;
+        this.refreshRows = null;
         this.error = e && e.message ? e.message : String(e);
       }
       if (token !== this.requestToken) return;

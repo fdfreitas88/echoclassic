@@ -111,7 +111,7 @@ sub initPlugin {
 
 sub getDisplayName { return 'ECHOCLASSIC_SKIN' }
 
-sub getSkinVersion { return '3.5.2' }
+sub getSkinVersion { return '3.5.3' }
 
 # Escapes a value for use inside a double-quoted JavaScript string literal.
 #

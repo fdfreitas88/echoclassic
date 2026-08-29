@@ -15,7 +15,8 @@ Vue.component('lms-queue', {
        role="dialog" :aria-modal="String(!inline)" aria-label="Playback queue"
        :tabindex="inline ? null : -1" @keydown.esc="onEsc" @keydown.tab="trapFocus">
     <div class="qhead">
-	      <span class="ttl">{{ queueTitle }}</span>
+      <button v-if="!inline" type="button" class="queue-back pointer" @click="close">‹ Player</button>
+	      <span class="ttl">Queue</span>
 	      <span class="n" v-if="confirmClear">Clear the whole queue?</span>
 	      <span class="n" v-else-if="tracks.length">{{ countLabel }} · {{ remaining }}</span>
       <template v-if="confirmClear">
@@ -25,23 +26,20 @@ Vue.component('lms-queue', {
       <template v-else>
         <button type="button" class="clear pointer" v-if="store.queueUndo.length"
                 @click="undo">Undo</button>
-        <button type="button" class="clear pointer" v-if="tracks.length > store.queueIndex + 1"
-                @click="clearUpcoming">Clear upcoming</button>
-        <button type="button" class="clear destructive pointer" v-if="tracks.length"
-                @click="confirmClear = true">Clear all</button>
       </template>
-      <button v-if="!inline" type="button" class="queue-dismiss pointer"
-              title="Close queue" aria-label="Close queue" @click="close">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
+      <button v-if="!confirmClear" type="button" class="queue-overflow pointer"
+              title="Queue settings" aria-label="Queue settings" @click="settingsOpen = !settingsOpen">•••</button>
     </div>
-	    <div class="queue-modes">
-	      <button type="button" :class="{on: store.shuffle}" @click="shuffle">{{ shuffleLabel }}</button>
-	      <button type="button" :class="{on: store.repeat}" @click="repeat">{{ repeatLabel }}</button>
-	      <button v-if="store.capabilities.randomplay" type="button"
-	              :class="{on: !!store.randomPlay.active}" @click="toggleRandom">Random mix</button>
-	      <button v-if="store.capabilities.dontstopthemusicsetting" type="button"
-	              :class="{on: store.dontStopMusic.provider !== '0'}" @click="toggleDontStop">Continue</button>
+	    <div class="queue-primary-actions">
+	      <button type="button" :class="{on: store.shuffle}" @click="shuffle"><span>Shuffle</span><small>{{ shuffleState }}</small></button>
+	      <button type="button" :class="{on: store.repeat}" @click="repeat"><span>Repeat</span><small>{{ repeatState }}</small></button>
+	    </div>
+	    <div v-if="settingsOpen" class="queue-settings">
+        <label class="queue-setting-toggle"><span>Show quick queue controls</span><input type="checkbox" :checked="ui.quickQueueControls" @change="setQuickControls($event.target.checked)"></label>
+	      <button v-if="store.capabilities.dontstopthemusicsetting" type="button" @click="toggleDontStop"><span>Continue playback</span><span>{{ store.dontStopMusic.provider !== '0' ? 'On' : 'Off' }} ›</span></button>
+	      <button v-if="store.capabilities.randomplay" type="button" @click="toggleRandom"><span>Start a random mix</span><span>›</span></button>
+        <button v-if="tracks.length > store.queueIndex + 1" type="button" class="destructive" @click="clearUpcoming">Clear upcoming tracks</button>
+        <button v-if="tracks.length" type="button" class="destructive" @click="confirmClear = true; settingsOpen = false">Clear whole queue</button>
 	    </div>
 	    <div v-if="randomOpen" class="queue-intelligence" aria-label="Random mix choices">
 	      <div class="queue-intelligence-head">
@@ -77,12 +75,15 @@ Vue.component('lms-queue', {
 	    <div v-if="playbackModeLabel" class="queue-start" role="status">{{ playbackModeLabel }}</div>
 	    <div v-if="playStartsLabel" class="queue-start" role="status">{{ playStartsLabel }}</div>
 
+	    <div class="queue-section-title" v-if="tracks.length">Up next · {{ countLabel }}, {{ remaining }}</div>
 	    <div class="qbody" v-if="tracks.length">
 	      <template v-for="(t, i) in tracks">
 	      <div v-if="showCaption(t, i)" :key="'cap-' + t.index" class="qcaption"><span class="ell">{{ t.album }}</span></div>
-	      <div :key="t.index + '-' + t.id" class="qrow"
+	      <div :key="t.index + '-' + t.id" class="qrow" :data-queue-index="t.index"
 	           draggable="true" @dragstart="dragStart(t, $event)" @dragover.prevent
 	           @drop.prevent="dropOn(t)" @dragend="dragIndex = null"
+	           tabindex="0" @keydown="onRowKey(t, $event)"
+	           @pointerdown="startLongPress(t)" @pointerup="cancelLongPress" @pointercancel="cancelLongPress" @pointerleave="cancelLongPress"
 	           :class="{now: isNow(t), nocover: !showCover(t, i)}" :aria-current="isNow(t) ? 'true' : null"
 	           role="group" :aria-label="trackLabel(t)">
 	        <button type="button" class="qrow-main pointer" :aria-label="trackLabel(t)"
@@ -96,20 +97,23 @@ Vue.component('lms-queue', {
 	          </span>
 	          <span class="dur">{{ dur(t.duration) }}</span>
 	        </button>
-        <span class="queue-reorder">
-          <button type="button" :title="'Move ' + t.title + ' to position'"
-                  :aria-label="'Move ' + t.title + ' to position'" @click.stop="moveTo(t)">#</button>
+        <span v-if="ui.quickQueueControls || longPressIndex === t.index" class="queue-reorder">
           <button type="button" :data-move="t.index + ':-1'" :disabled="t.index <= 0"
                   :title="'Move ' + t.title + ' up'" :aria-label="'Move ' + t.title + ' up'"
                   @click.stop="move(t, -1)">↑</button>
           <button type="button" :data-move="t.index + ':1'" :disabled="t.index >= tracks.length - 1"
                   :title="'Move ' + t.title + ' down'" :aria-label="'Move ' + t.title + ' down'"
                   @click.stop="move(t, 1)">↓</button>
+          <button type="button" class="queue-remove" :aria-label="'Remove ' + t.title + ' from the queue'" @click.stop="requestRemove(t)">×</button>
         </span>
-        <button type="button" class="drag pointer" title="Remove"
-                :aria-label="'Remove ' + t.title + ' from the queue'" @click.stop="remove(t)">
-          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-        </button>
+        <button type="button" class="queue-more pointer" :aria-expanded="String(menuIndex === t.index)"
+                :aria-label="'Actions for ' + t.title" @click.stop="toggleRowMenu(t)">•••</button>
+        <div v-if="menuIndex === t.index" class="queue-row-menu" role="menu">
+          <button type="button" role="menuitem" @click="playNext(t)">Play next</button>
+          <button type="button" role="menuitem" :disabled="t.index <= 0" @click="moveEdge(t, 0)">Move to top</button>
+          <button type="button" role="menuitem" :disabled="t.index >= tracks.length - 1" @click="moveEdge(t, tracks.length - 1)">Move to bottom</button>
+          <button type="button" role="menuitem" class="destructive" @click="requestRemove(t)">Remove</button>
+        </div>
       </div>
       </template>
     </div>
@@ -117,12 +121,14 @@ Vue.component('lms-queue', {
     <div class="qempty" v-else>
       The queue is empty. Play an album or a playlist and the tracks that follow appear here.
     </div>
+    <p class="visually-hidden" aria-live="polite" aria-atomic="true">{{ liveStatus }}</p>
   </div>
 </div>`,
   data: function () {
     return { ui: LmsUi.state, store: LmsStore.state, previousFocus: null,
              confirmClear: false, randomOpen: false, dontStopOpen: false,
-             pendingMix: '', dragIndex: null };
+             pendingMix: '', dragIndex: null, settingsOpen: false, menuIndex: null,
+             longPressIndex: null, longPressTimer: null, liveStatus: '' };
   },
   computed: {
 	    tracks: function () { return this.store.queue; },
@@ -163,6 +169,8 @@ Vue.component('lms-queue', {
       return ['Repeat off', 'Repeat one song', 'Repeat the whole queue'][this.store.repeat] ||
              'Repeat off';
     },
+    shuffleState: function () { return ['Off', 'Songs', 'Albums'][this.store.shuffle] || 'Off'; },
+    repeatState: function () { return ['Off', 'One song', 'Whole queue'][this.store.repeat] || 'Off'; },
     randomModes: function () {
       return [
         { id: 'track', name: 'Tracks' }, { id: 'contributor', name: 'Artists' },
@@ -235,6 +243,11 @@ Vue.component('lms-queue', {
     /* So engole o Esc quando ele fecha alguma coisa aqui; inline a folha nao
        fecha e o Esc precisa chegar ao player cheio. */
     onEsc: function (event) {
+      if (this.menuIndex !== null || this.settingsOpen || this.longPressIndex !== null) {
+        event.stopPropagation(); event.preventDefault();
+        this.menuIndex = null; this.settingsOpen = false; this.longPressIndex = null;
+        return;
+      }
       if (this.confirmClear) {
         event.stopPropagation();
         event.preventDefault();
@@ -258,7 +271,52 @@ Vue.component('lms-queue', {
       }
     },
     jump: function (t) { LmsStore.jumpTo(t.index); },
-    remove: function (t) { LmsStore.removeFromQueue(t.index); },
+    setQuickControls: function (value) { LmsUi.setQuickQueueControls(value); },
+    toggleRowMenu: function (t) { this.menuIndex = this.menuIndex === t.index ? null : t.index; },
+    announce: function (message) { this.liveStatus = ''; var self = this; this.$nextTick(function () { self.liveStatus = message; }); },
+    requestRemove: async function (t) {
+      this.menuIndex = null;
+      var accepted = await LmsUi.confirmAction({
+        title: 'Remove from queue?', message: t.title || 'This track', confirmLabel: 'Remove', destructive: true
+      });
+      if (!accepted) return;
+      await LmsStore.removeFromQueue(t.index);
+      this.announce((t.title || 'Track') + ' removed from queue');
+    },
+    playNext: function (t) {
+      this.menuIndex = null;
+      var to = Math.min(this.tracks.length - 1, (this.store.queueIndex || 0) + 1);
+      if (t.index === to) return;
+      LmsStore.moveInQueue(t.index, to);
+      this.announce((t.title || 'Track') + ' will play next');
+    },
+    moveEdge: function (t, to) {
+      this.menuIndex = null;
+      if (t.index === to) return;
+      LmsStore.moveInQueue(t.index, to);
+      this.announce((t.title || 'Track') + (to === 0 ? ' moved to top' : ' moved to bottom'));
+    },
+    onRowKey: function (t, event) {
+      var key = event.key;
+      if (event.altKey && (key === 'ArrowUp' || key === 'ArrowDown')) {
+        event.preventDefault(); this.move(t, key === 'ArrowUp' ? -1 : 1); return;
+      }
+      if (key === 'ArrowUp' || key === 'ArrowDown') {
+        event.preventDefault(); this.focusRow(t.index + (key === 'ArrowUp' ? -1 : 1)); return;
+      }
+      if (key === 'Enter') { event.preventDefault(); this.toggleRowMenu(t); return; }
+      if (key === 'Delete' || key === 'Backspace') { event.preventDefault(); this.requestRemove(t); }
+    },
+    focusRow: function (index) {
+      if (!this.$refs.queue) return;
+      var node = this.$refs.queue.querySelector('[data-queue-index="' + index + '"]');
+      if (node && node.focus) node.focus();
+    },
+    startLongPress: function (t) {
+      this.cancelLongPress(); var self = this;
+      this.longPressTimer = setTimeout(function () { self.longPressIndex = t.index; self.announce('Reorder controls shown for ' + t.title); }, 550);
+    },
+    cancelLongPress: function () { if (this.longPressTimer) clearTimeout(this.longPressTimer); this.longPressTimer = null; },
     move: function (t, delta) {
       var to = t.index + delta;
       if (to < 0 || to >= this.tracks.length) return;
@@ -266,6 +324,7 @@ Vue.component('lms-queue', {
       /* A linha e recriada a cada reordenacao; sem devolver o foco ao botao o
          teclado cai no body e o passo seguinte fica inalcancavel. */
       Promise.resolve(LmsStore.moveInQueue(t.index, to)).then(function () {
+        self.announce((t.title || 'Track') + ' moved to position ' + (to + 1));
         self.$nextTick(function () { self.focusMove(to, delta); });
       });
     },

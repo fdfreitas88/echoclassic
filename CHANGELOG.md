@@ -15,6 +15,34 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.3] — 2026-08-29
+
+### Changed
+
+- Queue controls now follow the approved hierarchy: Shuffle and Repeat remain
+  primary, destructive actions live under Settings, and each row has a focused
+  action menu. Optional quick controls persist across sessions. [code/measured:
+  queue and action-sheet regression tests]
+- Now Playing exposes complete metadata to assistive technology, semantic
+  Shuffle/Repeat state and keyboard playback, seek and volume controls while
+  preserving the approved Mini Player design. [code/measured: Now Playing and
+  responsive-layout regression tests]
+
+### Fixed
+
+- Albums render progressively again and reuse a revision-checked local index on
+  reload; a stale revision is rebuilt off-screen so the visible library never
+  falls back to a blocking skeleton. [live/measured: deployed Chrome reload and
+  browse cache regression tests]
+- Library toolbar commands no longer merge or truncate at narrow effective
+  widths, and the adaptive Now Playing panel fits short desktop viewports.
+  [live/measured: deployed Chrome checks and responsive regression tests]
+- Returning to an existing tab now refreshes player state immediately, including
+  pages restored from the back-forward cache. A second computer or phone using
+  the same LMS player therefore receives the current album, metadata, transport
+  state and playback position without waiting for the idle polling interval.
+  [code/measured: two-instance resume/state regression test]
+
 ## [3.5.2] — 2026-08-28
 
 ### Added
