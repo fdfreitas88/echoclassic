@@ -15,6 +15,46 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.2] — 2026-08-28
+
+### Added
+
+- Settings now provides user-curated Frequent Settings, with an “Add to
+  frequent settings” action on eligible pages, while Player settings keeps the
+  default-player and active-player choices in the expected hierarchy.
+  [live/measured: deployed interface; persistence and settings regression tests]
+- Library navigation adds a complete A–Z/# index that follows scrolling,
+  supports click, continuous touch scrubbing and keyboard stepping, and marks
+  only the active letter. Artist rows retain artwork, counts and per-row actions.
+  [live/measured: deployed interface; browse, responsive and index tests]
+- Loading and processing states expose determinate progress where the server
+  provides it; notifications occupy layout space above Recently Played instead
+  of covering content. [code/measured: system-state and feedback UI tests]
+
+### Changed
+
+- Album Detail presents Play and Shuffle as direct actions and keeps Equalizer
+  and Album information available as stable secondary tools. Music Folder adds
+  clearer location context, item counts, folder/track distinction, safe path
+  wrapping and an actionable empty state. [code/measured: focused album, folder,
+  navigation and localization tests]
+- Queue, playlists, favourites, radio, apps, action sheets, player selection,
+  search and responsive navigation use consistent touch sizing, safer action
+  hierarchy, keyboard paths and narrow-screen formatting while preserving the
+  intentional iPod Classic Now Playing and Mini Player designs. [code/measured:
+  focused interface tests and complete Vue/CSS validation]
+
+### Fixed
+
+- Fixed-output players honor LMS `use_volume_control`, and the Transcoded badge
+  is now determined only by the LMS `is_transcoded` status attribute instead of
+  being inferred from technical metadata. [code/measured: API and Now Playing
+  signal regression tests]
+- Long labels, feedback banners, selection controls, list separators and panel
+  layouts no longer overlap, clip or reserve incorrect fixed space across phone,
+  tablet and desktop widths. [code/measured: responsive regression tests and all
+  155 WCAG contrast pairs]
+
 ## [3.5.1] — 2026-08-24
 
 ### Fixed
