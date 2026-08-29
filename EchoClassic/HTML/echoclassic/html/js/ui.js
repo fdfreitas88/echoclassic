@@ -11,6 +11,7 @@
     Object.freeze({ key: 'apps', label: 'Apps' }),
     Object.freeze({ key: 'playlists', label: 'Playlists' }),
     Object.freeze({ key: 'music', label: 'My Music' }),
+    Object.freeze({ key: 'more', label: 'More' }),
     Object.freeze({ key: 'settings', label: 'Settings' })
   ]);
 
@@ -206,6 +207,18 @@
 
   var saved = readObject('echoclassic.ui.v2');
   var savedVolumeStep = Number(saved.volumeStep);
+  var FREQUENT_SETTING_KEYS = [
+    'equalizer', 'soundPreset', 'crossfade', 'replayGain', 'sleepTimer',
+    'volumeStep', 'stopAtEnd', 'theme', 'accentColor', 'queueArtwork',
+    'showBadges', 'markHires'
+  ];
+  var DEFAULT_FREQUENT_SETTINGS = ['equalizer', 'soundPreset', 'crossfade', 'replayGain', 'sleepTimer'];
+  function validFrequentSettings(value) {
+    if (!Array.isArray(value)) return DEFAULT_FREQUENT_SETTINGS.slice();
+    return value.filter(function (key, index) {
+      return FREQUENT_SETTING_KEYS.indexOf(key) >= 0 && value.indexOf(key) === index;
+    });
+  }
   var savedPins = readArray('echoclassic.pins.v1').filter(function (pin) {
     return !!plainObject(pin);
   });
@@ -457,7 +470,9 @@
     /* Ha uma busca suspensa a que o Back pode voltar. Fica no estado, e nao so
        na variavel de modulo abaixo, porque o rotulo do Back e computado. */
     searchReturn: false,
-    full: false,
+    /* A persisted kiosk preference must restore its only visible surface on
+       reload. Otherwise the kiosk CSS hides the app before a player exists. */
+    full: saved.kioskMode === true,
     playerPresentation: isPlayerPresentation(saved.playerPresentation) ? saved.playerPresentation : 'adaptive',
     playerPosition: isPlayerPosition(saved.playerPosition) ? saved.playerPosition : 'right',
     miniGaugeStyle: currentMiniGaugeStyle(initialTheme),
@@ -470,7 +485,7 @@
     legacyPlayerGaugeStyle: legacyPlayerGaugeStyle,
     miniGaugeColor: isGaugeColor(saved.miniGaugeColor) ? saved.miniGaugeColor : 'theme',
     playerGaugeColor: isGaugeColor(saved.playerGaugeColor) ? saved.playerGaugeColor : 'theme',
-    playerFullscreen: false,
+    playerFullscreen: saved.kioskMode === true,
     advancedSettings: false,
     advancedSettingsDirty: false,
     advancedSettingsPage: '',
@@ -505,6 +520,7 @@
     pins: savedPins,
     partyMode: saved.partyMode === true,
     volumeStep: [1, 2, 5, 10].indexOf(savedVolumeStep) >= 0 ? savedVolumeStep : 2,
+    frequentSettings: validFrequentSettings(saved.frequentSettings),
     kioskMode: saved.kioskMode === true,
     volumeExclusions: plainObject(saved.volumeExclusions) || {},
     colorScheme: isColorScheme(saved.colorScheme) ? saved.colorScheme : 'blue',
@@ -530,10 +546,13 @@
     markHires: saved.markHires !== false,
     busyMessage: '',
     notice: '',
-    noticeKind: 'info'
+    noticeKind: 'info',
+    confirmation: null
   });
 
   var noticeTimer = null;
+  var confirmationResolve = null;
+  var confirmationTrigger = null;
 
   function applyAppearance() {
     if (!document.body) return;
@@ -574,6 +593,7 @@
         miniGaugeColor: state.miniGaugeColor, playerGaugeColor: state.playerGaugeColor,
         prefer: state.prefer, partyMode: state.partyMode, kioskMode: state.kioskMode,
         volumeStep: state.volumeStep,
+        frequentSettings: state.frequentSettings,
         volumeExclusions: state.volumeExclusions,
         miniTheme: state.miniTheme, miniColorScheme: state.miniColorScheme, miniFont: state.miniFont,
         smallTheme: state.smallTheme, smallColorScheme: state.smallColorScheme, smallFont: state.smallFont,
@@ -772,13 +792,18 @@
   }
 
   function closePlayer() {
+    /* Kiosk owns the player surface. Closing it while the rest of the app is
+       hidden used to leave a completely blank screen. Every close gesture,
+       including Esc and the backdrop, now becomes the same explicit exit
+       request instead. */
+    if (state.kioskMode) { requestKioskExit(); return; }
     state.full = false;
     state.playerFullscreen = false;
     state.queueInline = false;
   }
 
   function togglePlayerFullscreen() {
-    if (!state.full) return;
+    if (!state.full || state.kioskMode) return;
     state.playerFullscreen = !state.playerFullscreen;
   }
 
@@ -1107,10 +1132,43 @@
     persist();
   }
 
+  async function requestKioskEntry() {
+    if (state.kioskMode) return true;
+    var accepted = await confirmAction({
+      title: tr('Enter kiosk mode?'),
+      message: tr('Navigation will be hidden. To leave, use the lock control in the player or press Esc, then confirm.'),
+      confirmLabel: tr('Enter kiosk mode'),
+      destructive: false
+    });
+    if (accepted) setPreference('kioskMode', true);
+    return accepted;
+  }
+
+  async function requestKioskExit() {
+    if (!state.kioskMode) return true;
+    var accepted = await confirmAction({
+      title: tr('Exit kiosk mode?'),
+      message: tr('Echo Classic navigation and the mini player will return.'),
+      confirmLabel: tr('Exit kiosk mode'),
+      destructive: false
+    });
+    if (accepted) setPreference('kioskMode', false);
+    return accepted;
+  }
+
+  function requestKioskMode(enabled) {
+    return enabled ? requestKioskEntry() : requestKioskExit();
+  }
+
   function setVolumeStep(value) {
     value = Number(value);
     if ([1, 2, 5, 10].indexOf(value) < 0) return;
     state.volumeStep = value;
+    persist();
+  }
+
+  function setFrequentSettings(keys) {
+    state.frequentSettings = validFrequentSettings(keys);
     persist();
   }
 
@@ -1312,15 +1370,42 @@
   function notify(message, kind, duration) {
     if (noticeTimer) clearTimeout(noticeTimer);
     state.notice = String(message || '');
-    state.noticeKind = kind === 'error' ? 'error' : 'info';
+    state.noticeKind = kind === 'error' ? 'error' : (kind === 'success' ? 'success' : 'info');
     if (!state.notice) return;
-    noticeTimer = setTimeout(function () { state.notice = ''; }, duration || 4200);
+    /* Errors remain until the user acknowledges them. A timed error could
+       disappear before a screen reader or a slow reader reaches it. */
+    if (state.noticeKind !== 'error') {
+      noticeTimer = setTimeout(function () { state.notice = ''; }, duration || 4200);
+    }
   }
 
   function dismissNotice() {
     if (noticeTimer) clearTimeout(noticeTimer);
     noticeTimer = null;
     state.notice = '';
+  }
+
+  function confirmAction(options) {
+    options = options || {};
+    if (confirmationResolve) confirmationResolve(false);
+    confirmationTrigger = document.activeElement;
+    state.confirmation = {
+      title: String(options.title || tr('Confirm action')),
+      message: String(options.message || ''),
+      confirmLabel: String(options.confirmLabel || tr('Continue')),
+      destructive: options.destructive !== false
+    };
+    return new Promise(function (resolve) { confirmationResolve = resolve; });
+  }
+
+  function resolveConfirmation(accepted) {
+    var resolve = confirmationResolve;
+    var trigger = confirmationTrigger;
+    confirmationResolve = null;
+    confirmationTrigger = null;
+    state.confirmation = null;
+    if (resolve) resolve(accepted === true);
+    setTimeout(function () { if (trigger && trigger.focus) trigger.focus(); }, 0);
   }
 
   /* Unico teclado global do skin. As camadas modais (folha de acoes, fila,
@@ -1331,7 +1416,7 @@
     if (event.key !== 'Escape' && event.key !== 'Esc') return;
     if (event.defaultPrevented) return;
     if (state.kioskMode) {
-      if (!global.confirm || global.confirm('Exit kiosk mode?')) setPreference('kioskMode', false);
+      requestKioskExit();
       event.preventDefault(); return;
     }
     if (state.picker) { state.picker = false; event.preventDefault(); return; }
@@ -1391,7 +1476,12 @@
     ALBUM_MODES: ALBUM_MODES, setAlbumMode: setAlbumMode,
     QUEUE_ART_MODES: QUEUE_ART_MODES, setQueueArtMode: setQueueArtMode,
     DEFAULT_PLAYER_LAST: DEFAULT_PLAYER_LAST, setDefaultPlayer: setDefaultPlayer,
-    setPreference: setPreference, setVolumeStep: setVolumeStep,
+    setPreference: setPreference, requestKioskMode: requestKioskMode,
+    requestKioskEntry: requestKioskEntry, requestKioskExit: requestKioskExit,
+    setVolumeStep: setVolumeStep,
+    FREQUENT_SETTING_KEYS: FREQUENT_SETTING_KEYS,
+    DEFAULT_FREQUENT_SETTINGS: DEFAULT_FREQUENT_SETTINGS,
+    setFrequentSettings: setFrequentSettings,
     setVolumeExcluded: setVolumeExcluded, volumeExcluded: volumeExcluded,
     viewLabel: viewLabel, setMusicView: setMusicView,
     setLibraryRoot: setLibraryRoot, setLibrary: setLibrary,
@@ -1422,6 +1512,7 @@
     toggleSelection: toggleSelection, clearSelection: clearSelection,
     queueSelection: queueSelection,
     selectionKey: selectionKey, isPinned: isPinned, togglePin: togglePin, movePin: movePin,
-    setBusy: setBusy, notify: notify, dismissNotice: dismissNotice
+    setBusy: setBusy, notify: notify, dismissNotice: dismissNotice,
+    confirmAction: confirmAction, resolveConfirmation: resolveConfirmation
   };
 })(window);

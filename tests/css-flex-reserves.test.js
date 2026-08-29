@@ -149,11 +149,12 @@ test('RESP-16: the now-unused .sp spacer is suppressed when it sits next to .sea
     '.sp only exists in the searching branch\'s markup as a leftover spacer; without suppressing it, both .searchwrap and .sp would carry flex:1 and share the row 50/50 instead of the field taking all of it');
 });
 
-test('RESP-16: .navbar .center is documented as reviewed-and-kept, not silently skipped', function () {
+test('RESP-16: .navbar .center now occupies a real grid column and cannot cover side controls', function () {
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
-  const centerBlock = css.match(/\/\* \.center cobre[\s\S]*?\n\.navbar \.center\{position:absolute;left:0;right:0/)[0];
-  assert.match(centerBlock, /REVISADO \(RESP-16\)/,
-    'the brief allows leaving this one with a comment if the safe fix is bigger than the commit warrants -- it must say so, not just go untouched with no trace of the decision');
+  assert.match(css, /\.navbar\{[^}]*display:grid;grid-template-columns:minmax\(44px,1fr\) minmax\(0,2fr\) minmax\(44px,1fr\)/,
+    'the title needs a bounded middle track between the true widths reserved for side controls');
+  assert.doesNotMatch(css, /\.navbar \.center\{position:absolute/,
+    'the old full-width overlay could collide with Back, Search, and translated labels');
 });
 
 /* ---------- EC-003: the selection bar reserves its own space instead of
@@ -216,13 +217,13 @@ test('UX-01: .connection-banner is a flow row of the app column, not a fixed ove
     'a centred, viewport-width-capped box only makes sense for an overlay; a column row spans the column');
 });
 
-test('UX-01: the banner no longer shares the fixed-overlay rule with .operation-banner/.notice', function () {
+test('UX-01: all feedback banners reserve space instead of covering controls', function () {
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
-  const shared = css.match(/^(.*)\{position:fixed;z-index:var\(--z-notice\);/m)[1];
-  assert.doesNotMatch(shared, /\.connection-banner/,
-    'inheriting position:fixed from the grouped rule would undo the fix even with the banner-specific rule corrected');
-  assert.match(shared, /\.operation-banner/, 'sanity: the transient banners stay overlays');
-  assert.match(shared, /\.notice/);
+  const feedback = css.match(/\.operation-banner,\.notice\{([^}]+)\}/)[1];
+  assert.match(feedback, /position:relative/);
+  assert.doesNotMatch(feedback, /position:fixed|top:|bottom:|translateX/,
+    'messages must remain in the reading order above the page content');
+  assert.match(css, /\.feedback-region\{[^}]*display:grid/);
 });
 
 test('UX-01: the banner markup sits between the header and the workspace', function () {

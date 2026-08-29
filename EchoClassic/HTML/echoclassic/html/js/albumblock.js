@@ -57,16 +57,29 @@ Vue.component('lms-album-block', {
     </div>
   </div>
 
-  <button v-if="store.equalizer.status === 'ready'" type="button" class="album-equalizer-disclosure"
-          @click="openAlbumEqualizer">
-    <svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M4 2.5v15M10 2.5v15M16 2.5v15"/><circle cx="4" cy="12" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="16" cy="10" r="2.2"/></g></svg>
-    <span>{{ tr('Equalizer') }}</span><span class="album-equalizer-value">{{ albumEqualizerRule ? tr('custom') : tr('Set for this album') }} ›</span>
-  </button>
-  <button v-if="albumInfoStatus" type="button" class="album-info-disclosure"
-          :aria-expanded="albumInfoVisible ? 'true' : 'false'"
-          @click="albumInfoVisible = !albumInfoVisible">
-    {{ tr(albumInfoVisible ? 'Hide album info' : 'Show album info') }}
-  </button>
+  <div class="album-primary-actions" aria-label="Album playback">
+    <button type="button" class="album-play-command" @click="playAlbum">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
+      <span>{{ tr('Play') }}</span>
+    </button>
+    <button type="button" class="album-shuffle-command" @click="shuffle">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3l4 4-4 4M4 7h16M8 21l-4-4 4-4M20 17H4"/></svg>
+      <span>{{ tr('Shuffle') }}</span>
+    </button>
+  </div>
+  <div v-if="store.equalizer.status === 'ready' || albumInfoStatus" class="album-secondary-tools">
+    <button v-if="store.equalizer.status === 'ready'" type="button" class="album-equalizer-disclosure"
+            @click="openAlbumEqualizer">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M4 2.5v15M10 2.5v15M16 2.5v15"/><circle cx="4" cy="12" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="16" cy="10" r="2.2"/></g></svg>
+      <span>{{ tr('Equalizer') }}</span><span class="album-equalizer-value">{{ albumEqualizerRule ? tr('custom') : tr('Default') }} ›</span>
+    </button>
+    <button v-if="albumInfoStatus" type="button" class="album-info-disclosure"
+            :aria-expanded="albumInfoVisible ? 'true' : 'false'"
+            @click="albumInfoVisible = !albumInfoVisible">
+      <span>{{ tr('Album information') }}</span>
+      <span class="album-info-value">{{ tr(albumInfoVisible ? 'Hide' : 'Show') }} ›</span>
+    </button>
+  </div>
   <section v-if="albumInfoStatus && albumInfoVisible" class="album-enrichment">
     <span class="opml-new-label">{{ tr('New') }}</span>
     <h3>{{ tr('Album information') }}</h3>
@@ -114,11 +127,6 @@ Vue.component('lms-album-block', {
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l5 5 5-5"/></svg>
     </button>
   </div>
-
-	  <button type="button" class="shufflerow pointer" @click="shuffle">
-	    <svg viewBox="0 0 24 24"><path d="M16 3l4 4-4 4M4 7h16M8 21l-4-4 4-4M20 17H4"/></svg>
-	    <span>Shuffle</span>
-	  </button>
 
   <div v-if="loading" class="empty"><div class="p">Loading tracks…</div></div>
   <div v-else-if="error" class="empty">
@@ -321,6 +329,9 @@ Vue.component('lms-album-block', {
     play: function (t) {
       var i = this.tracks.findIndex(function (x) { return x.id === t.id; });
       LmsStore.playContainer('album_id', this.album.id, i > 0 ? i : 0);
+    },
+    playAlbum: function () {
+      return LmsStore.playContainer('album_id', this.album.id, 0);
     },
     rowItem: function (t) {
       return {

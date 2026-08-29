@@ -13,7 +13,7 @@ Vue.component('lms-navbar', {
     segment: { type: String, default: '' }
   },
   template: `
-<div class="navbar">
+<div class="navbar" :class="{searching:ui.searching}">
   <template v-if="ui.searching">
     <div class="searchwrap">
       <svg class="ic sm-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="M16 16l5.5 5.5"/></svg>

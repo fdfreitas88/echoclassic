@@ -9,14 +9,18 @@ var opmlSnapshots = {};
 Vue.component('lms-opml', {
   props: {
     root: { type: String, required: true },   // 'radio' | 'favorites' | 'apps'
-    tab: { type: String, required: true }     // which nav stack to use
+    tab: { type: String, required: true },    // which nav stack to use
+    editing: { type: Boolean, default: false }
   },
   template: `
 <div ref="scroller" class="scroller">
-  <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
+  <div v-if="loading" class="system-state system-loading" role="status" aria-live="polite">
+    <div class="state-skeleton" aria-hidden="true"><span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span><span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span></div>
+    <div class="state-progress-copy"><span>Loading {{ rootLabel.toLowerCase() }}…</span></div><div class="state-progress indeterminate" role="progressbar" :aria-label="'Loading ' + rootLabel.toLowerCase()"><i></i></div>
+  </div>
   <div v-else-if="error" class="empty">
-    <div class="h">Could not open</div><div class="p">{{ error }}</div>
-    <button class="retry-command" @click="load">Try again</button>
+    <div class="state-error-mark" aria-hidden="true">!</div><div class="h">Could not open</div><div class="p">{{ error }} Your previous screen is still available.</div>
+    <div class="state-actions"><button class="retry-command primary" @click="load">Try again</button></div>
   </div>
   <div v-else-if="invalidContent" class="empty">
     <div class="h">Could not load favourites</div>
@@ -38,11 +42,17 @@ Vue.component('lms-opml', {
         </button>
       </div>
 
-      <div v-else :key="'i' + i" class="row"
-           :class="{pointer: actionable(it)}"
-           :role="actionable(it) ? 'button' : null" :tabindex="actionable(it) ? 0 : null"
-           @click="activate(it)" @keydown.enter.prevent="activate(it)"
-           @keydown.space.prevent="activate(it)">
+      <div v-else :key="'i' + i" class="row favourite-item-row"
+           :class="{pointer: !editing && actionable(it), 'is-editing': editing}"
+           :role="!editing && actionable(it) ? 'button' : null"
+           :tabindex="editing || actionable(it) ? 0 : null"
+           @click="editing ? renameFavourite(it) : activate(it)"
+           @keydown.enter.prevent="editing ? renameFavourite(it) : activate(it)"
+           @keydown.space.prevent="editing ? renameFavourite(it) : activate(it)"
+           @keydown.alt.up.prevent="editing && moveFavourite(it, i - 1)"
+           @keydown.alt.down.prevent="editing && moveFavourite(it, i + 1)"
+           @keydown.delete.prevent="editing && deleteFavourite(it)"
+           @keydown.esc.prevent="$emit('finish-edit')">
         <div class="favicon">
           <span v-if="it.image" class="opml-item-icon" :style="iconStyle(it)"></span>
           <svg v-else-if="it.kind === 'audio' || it.kind === 'action'" viewBox="0 0 24 24"><circle cx="12" cy="13" r="2.4"/><path d="M7.5 8.5a6 6 0 000 9M16.5 8.5a6 6 0 010 9"/></svg>
@@ -51,14 +61,17 @@ Vue.component('lms-opml', {
         <div class="ell">
           <div class="t ell">{{ it.title }}</div>
           <div v-if="it.subtitle" class="s ell">{{ it.subtitle }}</div>
+          <div v-if="editing" class="s ell">Select the name to rename</div>
         </div>
-        <svg v-if="it.kind === 'menu' && it.node" class="ic chev" style="width:9px;height:15px" viewBox="0 0 9 15"><path d="M1 1l6.5 6.5L1 14"/></svg>
-      </div>
-      <div v-if="root === 'favorites' && it.kind !== 'text' && it.kind !== 'search'" :key="'manage-' + i" class="favourite-row-tools">
-        <button type="button" @click="renameFavourite(it)">Rename</button>
-        <button type="button" :disabled="i === 0" @click="moveFavourite(it, i - 1)">Move up</button>
-        <button type="button" :disabled="i === items.length - 1" @click="moveFavourite(it, i + 1)">Move down</button>
-        <button type="button" class="destructive" @click="deleteFavourite(it)">Remove</button>
+        <div v-if="editing" class="favourite-edit-tools" @click.stop>
+          <button type="button" :disabled="i === 0" :aria-label="'Move ' + it.title + ' up'"
+                  @click="moveFavourite(it, i - 1)">↑</button>
+          <button type="button" :disabled="i === items.length - 1" :aria-label="'Move ' + it.title + ' down'"
+                  @click="moveFavourite(it, i + 1)">↓</button>
+          <button type="button" class="destructive" :aria-label="'Remove ' + it.title"
+                  @click="deleteFavourite(it)">×</button>
+        </div>
+        <svg v-else-if="it.kind === 'menu' && it.node" class="ic chev" style="width:9px;height:15px" viewBox="0 0 9 15"><path d="M1 1l6.5 6.5L1 14"/></svg>
       </div>
 
       <div v-if="it.kind === 'search' && fieldErrorIndex === i" :key="'e' + i"
@@ -172,7 +185,12 @@ Vue.component('lms-opml', {
       catch (e) { LmsUi.notify('Could not move the favourite. ' + e.message, 'error', 6500); }
     },
     deleteFavourite: async function (item) {
-      if (window.confirm && !window.confirm('Remove “' + item.title + '” from favourites?')) return;
+      var accepted = await LmsUi.confirmAction({
+        title: 'Remove “' + item.title + '”?',
+        message: 'This removes the item from your favourites. You can add it again later.',
+        confirmLabel: 'Remove favourite'
+      });
+      if (!accepted) return;
       try { await LmsApi.favoriteRemove(item.itemId); await this.refreshFavourites(); }
       catch (e) { LmsUi.notify('Could not remove the favourite. ' + e.message, 'error', 6500); }
     },

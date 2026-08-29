@@ -78,7 +78,8 @@ test('ARTMETA-01: progressive album information and refresh are explicit', funct
   assert.match(detail, /removeEnrichment/);
   assert.match(album, /musicAlbumInfo\(this\.store\.playerId \|\| '', this\.album\.id\)/);
   assert.match(album, /albumInfoStatus && albumInfoVisible/);
-  assert.match(album, /albumInfoVisible \? 'Hide album info' : 'Show album info'/);
+  assert.match(album, /tr\('Album information'\)/);
+  assert.match(album, /tr\(albumInfoVisible \? 'Hide' : 'Show'\)/);
   assert.match(album, /albumReviewExpanded \? 'Show less' : 'Show more'/);
   assert.match(album, /album-review" :class="\{expanded: albumReviewExpanded\}"/);
   assert.match(helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css'),

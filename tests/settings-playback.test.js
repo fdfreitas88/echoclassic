@@ -19,9 +19,10 @@ function settingsSrc() {
 
 function playerGroup() {
   const src = settingsSrc();
-  const m = src.match(/<div class="sgh">Player<\/div>[\s\S]*?<div class="sgh">Playback<\/div>/);
-  assert.ok(m, 'Player group not found');
-  return m[0];
+  const groups = Array.from(src.matchAll(/<div class="sgh">Player<\/div>[\s\S]*?<div class="sgh">Playback<\/div>/g));
+  const match = groups.find(function (item) { return item[0].includes('store.syncGroup'); });
+  assert.ok(match, 'Settings Player group not found');
+  return match[0];
 }
 
 function playbackGroup() {
@@ -295,4 +296,21 @@ test('R1: every replay gain phrase has a strings.txt key, so none is stranded in
   ].forEach(function (key) {
     assert.ok(strings.includes(key + '\n'), 'missing strings.txt key: ' + key);
   });
+});
+
+test('Default player is disclosed inside Active player instead of competing on the Settings root', function () {
+  const group = playerGroup();
+  const disclosure = group.indexOf('<template v-if="showPlayers">');
+  const defaultRow = group.indexOf('Default player');
+  const disclosureEnd = group.lastIndexOf('</template>');
+  assert.ok(disclosure >= 0 && defaultRow > disclosure && defaultRow < disclosureEnd);
+});
+
+test('segmented controls and colour swatches reflow without horizontal overflow on phones', function () {
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const start = css.indexOf('@media (max-width:480px)');
+  const mobile = css.slice(start, css.indexOf('/* ====== mini player', start));
+  assert.match(mobile, /\.segmented-row\{[^}]*flex-direction:column/);
+  assert.match(mobile, /\.segmented-row>\.segmented\{[^}]*width:100%/);
+  assert.match(mobile, /grid-template-columns:repeat\(4,44px\)/);
 });

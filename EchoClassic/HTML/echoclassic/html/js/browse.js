@@ -34,19 +34,24 @@ Vue.component('lms-browse', {
 <div ref="split" class="split-body" :class="{'split-locked': splitLocked}"
      :style="{'--pane-current': paneWidth + 'px'}">
   <div class="pane-left">
+    <div class="library-context">
+      <span class="library-context-title">{{ viewLabel }}</span>
+      <span v-if="!loading && !error" class="library-context-count">{{ resultCountLabel }}</span>
+    </div>
     <label v-if="libraries.length > 1" class="library-root-control">
-      <span>Library root</span>
+      <span>All music</span>
       <select :value="ui.rootKey" aria-label="Library root" @change="chooseLibrary($event.target.value)">
         <option v-for="library in libraries" :key="library.key" :value="library.key">{{ library.name }}</option>
       </select>
     </label>
     <div class="library-tools" :class="{tight: toolbarTight}">
-      <input v-model="ui.filter" type="search" placeholder="Filter"
+      <input ref="librarySearch" v-model="ui.filter" type="search" :placeholder="'Search ' + viewLabel.toLowerCase()"
              :aria-label="'Filter ' + viewLabel.toLowerCase()">
       <button ref="filterTrigger" class="icon-command filter-command" :class="{on: toolsActive}"
               :title="filterTitle" :aria-label="filterTriggerLabel" aria-haspopup="dialog"
               :aria-expanded="String(ui.filterPanel)" @click="openFilters">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h17l-6.5 7.6v5.6l-4 2.3v-7.9z"/></svg>
+        <span class="command-label">{{ filterCount ? 'Filter · ' + filterCount : 'Filter · All' }}</span>
         <span v-if="filterCount" class="filter-badge" aria-hidden="true">{{ filterCount }}</span>
       </button>
       <button ref="sortTrigger" class="icon-command sort-command" :class="{on: ui.sortMenu}"
@@ -56,6 +61,7 @@ Vue.component('lms-browse', {
           <path d="M4 6.5h11M4 12h7M4 17.5h4"/>
           <path d="M17.5 9.5v10M14.5 16.5l3 3 3-3"/>
         </svg>
+        <span class="command-label">{{ sortCompactLabel }}</span>
       </button>
       <button v-if="!ui.selectionMode" class="text-command select-command"
               :class="{tight: toolbarTight}" :title="toolbarTight ? 'Select' : null"
@@ -134,18 +140,31 @@ Vue.component('lms-browse', {
       <span class="ell">Related artist builds the list from the server's artists, so media filters do not apply here.</span>
     </div>
     <p aria-live="polite" class="visually-hidden">{{ liveSummary }}</p>
-    <div class="scroller" ref="scroller" @scroll="onScroll">
-      <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
+    <div class="scroller" ref="scroller" @scroll="onScroll" @keydown="navigateRows">
+      <div v-if="loading" class="system-state system-loading" role="status" aria-live="polite">
+        <div class="state-skeleton" aria-hidden="true">
+          <span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span>
+          <span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span>
+        </div>
+        <div class="state-progress-copy"><span>Loading {{ viewLabel.toLowerCase() }}…</span><strong v-if="loadProgress !== null">{{ loadProgress }}%</strong></div>
+        <div class="state-progress" :class="{indeterminate: loadProgress === null}" role="progressbar"
+             :aria-label="'Loading ' + viewLabel.toLowerCase()" aria-valuemin="0" aria-valuemax="100"
+             :aria-valuenow="loadProgress === null ? null : loadProgress">
+          <i :style="loadProgress === null ? null : {width: loadProgress + '%'}"></i>
+        </div>
+      </div>
       <div v-else-if="error" class="empty">
-        <div class="h">Could not read the library</div>
-        <div class="p">{{ error }}</div>
-        <button class="retry-command" @click="reload(true)">Try again</button>
+        <div class="state-error-mark" aria-hidden="true">!</div>
+        <div class="h">Library unavailable</div>
+        <div class="p">{{ error }} Your filters and position are still here.</div>
+        <div class="state-actions"><button class="retry-command primary" @click="reload(true)">Try again</button><button class="retry-command" @click="openServerSettings">Server settings</button></div>
       </div>
       <div v-else-if="!rows.length" class="empty">
-        <div class="h">{{ viewLabel }}</div>
+        <div class="state-empty-mark" aria-hidden="true">♫</div>
+        <div class="h">No {{ viewLabel.toLowerCase() }} here</div>
         <div v-if="hasMediaFilter" class="p">Nothing in this category matches the filter {{ mediaDescriptor() }}.</div>
         <div v-else class="p">No items found in this category.</div>
-        <button v-if="hasMediaFilter" class="retry-command" @click="clearMediaFilter">Clear filter</button>
+        <div class="state-actions" v-if="hasMediaFilter"><button class="retry-command primary" @click="clearMediaFilter">Clear filter</button><button class="retry-command" @click="goToMusic">Go to Music</button></div>
       </div>
       <template v-else>
         <div :style="{height: topPad + 'px'}"></div>
@@ -212,7 +231,10 @@ Vue.component('lms-browse', {
     <lms-detail v-if="frame" :frame="frame"></lms-detail>
     <div v-else class="empty">
       <div class="h">{{ viewLabel }}</div>
-      <div class="p">Choose an item from the list on the left.</div>
+      <div class="p">Select an item to see artwork, tracks and playback actions.</div>
+      <div class="empty-shortcuts" aria-label="Keyboard shortcuts">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Browse</span><span><kbd>Enter</kbd> Open</span>
+      </div>
     </div>
   </div>
 
@@ -223,7 +245,7 @@ Vue.component('lms-browse', {
     var split = LmsSplitPane.load();
     return {
       ui: LmsUi.state, store: LmsStore.state, LmsUi: LmsUi,
-      rows: [], libraries: [], loading: true, error: '',
+      rows: [], libraries: [], loading: true, error: '', loadProgress: null, loadTotal: 0,
 	      loadingMore: false, limitWarning: '', requestToken: 0, unknownCount: 0,
 	      artistIndexTruncated: false,
       rootSelection: null,
@@ -396,6 +418,14 @@ Vue.component('lms-browse', {
       return chips;
     },
     resultCount: function () { return this.displayRows.length; },
+    resultCountLabel: function () {
+      var count = this.resultCount;
+      return count + ' ' + (count === 1 ? 'item' : 'items');
+    },
+    sortCompactLabel: function () {
+      var current = this.sortOptions.filter(function (option) { return option.key === this.sortKey; }, this)[0];
+      return 'Sort · ' + (current ? current.label : this.primaryOptionLabel) + (this.sortDesc ? ' ↓' : ' ↑');
+    },
     /* A barra tem seis controles e o painel esquerdo comeca em 360px: sem
        encolher nada, ela quebrava em tres linhas e comia a lista logo na
        primeira abertura. O que encolhe e o rotulo do comando secundario -- a
@@ -564,6 +594,15 @@ Vue.component('lms-browse', {
     }
   },
   methods: {
+    openServerSettings: function () {
+      LmsUi.setTab('settings');
+      LmsNav.reset('settings');
+    },
+    goToMusic: function () {
+      this.clearAllTools();
+      LmsUi.setTab('music');
+      LmsNav.reset('music');
+    },
     chooseLibrary: function (key) {
       LmsNav.switchMusicRoot(key);
       this.rootSelection = LmsNav.top('music');
@@ -707,9 +746,13 @@ Vue.component('lms-browse', {
     scrubRail: function (e) {
       var touch = e.touches && e.touches[0];
       if (!touch) return;
-      var target = document.elementFromPoint(touch.clientX, touch.clientY);
-      var letter = target && target.getAttribute('data-letter');
-      if (letter) this.jump(letter);
+      /* O rail e um unico alvo continuo: mapear a coordenada evita exigir que
+         o dedo acerte uma letra visual de poucos pixels. */
+      var rail = e.currentTarget;
+      var rect = rail && rail.getBoundingClientRect ? rail.getBoundingClientRect() : null;
+      if (!rect || !rect.height) return;
+      var ratio = Math.max(0, Math.min(0.9999, (touch.clientY - rect.top) / rect.height));
+      this.jump(this.RAIL[Math.floor(ratio * this.RAIL.length)]);
     },
     open: function (r) {
       this.rootSelection = null;
@@ -857,6 +900,21 @@ Vue.component('lms-browse', {
     },
     rowClick: function (r) {
       if (this.ui.selectionMode) LmsUi.toggleSelection(r); else this.open(r);
+    },
+    navigateRows: function (event) {
+      if (!event || ['ArrowUp', 'ArrowDown', 'Escape'].indexOf(event.key) < 0) return;
+      if (event.key === 'Escape') {
+        if (this.$refs.librarySearch) this.$refs.librarySearch.focus();
+        event.preventDefault();
+        return;
+      }
+      var buttons = Array.prototype.slice.call(this.$refs.scroller.querySelectorAll('.row-main'));
+      if (!buttons.length) return;
+      var index = buttons.indexOf(document.activeElement);
+      var next = event.key === 'ArrowDown' ? Math.min(index + 1, buttons.length - 1) : Math.max(index - 1, 0);
+      if (index < 0) next = event.key === 'ArrowDown' ? 0 : buttons.length - 1;
+      buttons[next].focus();
+      event.preventDefault();
     },
     ensureMediaIndex: async function () {
       if (!this.needsMediaIndex || this.mediaIndex) return;
@@ -1326,8 +1384,10 @@ Vue.component('lms-browse', {
           };
         }, this);
         this.appendRows(rows);
-        this.loading = false;
         start += sourceCount;
+        if (this.loadTotal > 0 && passes.length === 1) {
+          this.loadProgress = Math.min(99, Math.round(start / this.loadTotal * 100));
+        }
         keepGoing = sourceCount === pageSize;
         this.loadingMore = keepGoing;
 	        if (keepGoing) await new Promise(function (resolve) { setTimeout(resolve, 0); });
@@ -1354,6 +1414,8 @@ Vue.component('lms-browse', {
     reload: async function (preserveNavigation) {
       var token = ++this.requestToken;
       this.loading = true;
+	      this.loadProgress = null;
+	      this.loadTotal = 0;
 	      this.loadingMore = false;
 	      this.limitWarning = '';
 	      this.unknownCount = 0;
@@ -1369,6 +1431,14 @@ Vue.component('lms-browse', {
       var pid = this.store.playerId || '';
       try {
         if (this.view === 'artists' || this.view === 'albums') {
+          if (!this.hasMediaFilter) {
+            try {
+              var totals = await LmsApi.serverInfo();
+              if (token !== this.requestToken) return;
+              this.loadTotal = this.groupsAlbumsByRelatedArtist ? totals.artists : totals.albums;
+              if (this.loadTotal > 0) this.loadProgress = 0;
+            } catch (ignored) { this.loadTotal = 0; }
+          }
           await this.loadPagedRoot(pid, token);
         } else if (this.view === 'albumartists') {
           var albumArtists = await LmsApi.albumArtists(pid, 0, 5000);
@@ -1471,6 +1541,7 @@ Vue.component('lms-browse', {
         this.error = e && e.message ? e.message : String(e);
       }
       if (token !== this.requestToken) return;
+      if (this.loadProgress !== null) this.loadProgress = 100;
       this.loading = false;
       this.loadingMore = false;
       if (this.rows.length) this.activeRail = this.railLetter(this.rows[0]);

@@ -38,6 +38,30 @@ PLUGIN_ECHOCLASSIC_SETTINGS_NOTE
 	EN	These are the defaults for a new browser. The skin's own Settings tab has the full set of options, including colour scheme, fonts and player layout.
 	PT	Estes são os padrões para um navegador novo. A aba Ajustes da própria skin tem o conjunto completo de opções, incluindo esquema de cores, fontes e layout do player.
 
+ECHOCLASSIC_UI_ENTER_KIOSK_MODE_QUESTION
+	EN	Enter kiosk mode?
+	PT	Entrar no modo quiosque?
+
+ECHOCLASSIC_UI_ENTER_KIOSK_MODE
+	EN	Enter kiosk mode
+	PT	Entrar no modo quiosque
+
+ECHOCLASSIC_UI_KIOSK_ENTRY_EXPLANATION
+	EN	Navigation will be hidden. To leave, use the lock control in the player or press Esc, then confirm.
+	PT	A navegação ficará oculta. Para sair, use o controle de bloqueio no player ou pressione Esc e confirme.
+
+ECHOCLASSIC_UI_EXIT_KIOSK_MODE_QUESTION
+	EN	Exit kiosk mode?
+	PT	Sair do modo quiosque?
+
+ECHOCLASSIC_UI_EXIT_KIOSK_MODE
+	EN	Exit kiosk mode
+	PT	Sair do modo quiosque
+
+ECHOCLASSIC_UI_KIOSK_EXIT_EXPLANATION
+	EN	Echo Classic navigation and the mini player will return.
+	PT	A navegação do Echo Classic e o mini player voltarão.
+
 # ====================================================================
 # Texto da interface. A linha PT e a chave que o JavaScript procura:
 # ela precisa bater exatamente com a frase escrita no template.
@@ -475,6 +499,10 @@ ECHOCLASSIC_UI_IMPORT_PREFERENCES_FROM_THIS_FILE
 ECHOCLASSIC_UI_INFORMATION
 	EN	Information
 	PT	Informações
+
+ECHOCLASSIC_UI_READ_LYRICS
+	EN	Read lyrics
+	PT	Ler letra
 
 ECHOCLASSIC_UI_INVALID_JSON
 	EN	invalid JSON
@@ -1115,6 +1143,10 @@ ECHOCLASSIC_UI_TRACKS_2
 ECHOCLASSIC_UI_TRACK_INFORMATION
 	EN	Track information
 	PT	Informações da faixa
+
+ECHOCLASSIC_UI_SIGNAL_PATH
+	EN	Signal path
+	PT	Caminho do sinal
 
 ECHOCLASSIC_UI_TRACK_POSITION
 	EN	Track position
@@ -2825,3 +2857,131 @@ ECHOCLASSIC_UI_APPLE_SQUEEZER_BITPERFECT_PATH
 ECHOCLASSIC_UI_APPLE_SQUEEZER_PCM_STUDIO_PATH
 	EN	VHQ upsampling · 1 dB headroom · TPDF dither · exclusive CoreAudio
 	PT	Upsampling VHQ · 1 dB de headroom · dither TPDF · CoreAudio exclusivo
+
+ECHOCLASSIC_UI_LIBRARY_UNAVAILABLE
+	EN	Library unavailable
+	PT	Biblioteca indisponível
+
+ECHOCLASSIC_UI_YOUR_FILTERS_AND_POSITION_ARE_STILL_HERE
+	EN	Your filters and position are still here.
+	PT	Seus filtros e sua posição foram preservados.
+
+ECHOCLASSIC_UI_SERVER_SETTINGS
+	EN	Server settings
+	PT	Ajustes do servidor
+
+ECHOCLASSIC_UI_GO_TO_MUSIC
+	EN	Go to Music
+	PT	Ir para Música
+
+ECHOCLASSIC_UI_SEARCHING_THE_LIBRARY
+	EN	Searching the library…
+	PT	Buscando na biblioteca…
+
+ECHOCLASSIC_UI_YOUR_SEARCH_AND_FILTERS_ARE_STILL_HERE
+	EN	Your search and filters are still here.
+	PT	Sua busca e seus filtros foram preservados.
+
+ECHOCLASSIC_UI_CLEAR_SEARCH
+	EN	Clear search
+	PT	Limpar busca
+
+ECHOCLASSIC_UI_CHANGE_SEARCH
+	EN	Change search
+	PT	Alterar busca
+
+ECHOCLASSIC_UI_LOADING_DETAILS
+	EN	Loading details…
+	PT	Carregando detalhes…
+
+ECHOCLASSIC_UI_LOADING_PLAYLISTS
+	EN	Loading playlists…
+	PT	Carregando playlists…
+
+ECHOCLASSIC_UI_PLAYLISTS_UNAVAILABLE
+	EN	Playlists unavailable
+	PT	Playlists indisponíveis
+
+ECHOCLASSIC_UI_MORE
+	EN	More
+	PT	Mais
+
+ECHOCLASSIC_UI_MUSIC_SERVICES_AND_PLUGINS
+	EN	Music services and plugins
+	PT	Serviços de música e plugins
+
+ECHOCLASSIC_UI_PLAYER_APPEARANCE_AND_SERVER
+	EN	Player, appearance and server
+	PT	Player, aparência e servidor
+
+ECHOCLASSIC_UI_SERVER_INFORMATION
+	EN	Server information
+	PT	Informações do servidor
+
+ECHOCLASSIC_UI_ORGANIZE
+	EN	Organize
+	PT	Organizar
+
+ECHOCLASSIC_UI_SAVED_VIEWS
+	EN	Saved views
+	PT	Visualizações salvas
+
+ECHOCLASSIC_UI_FIND_A_GENRE
+	EN	Find a genre
+	PT	Buscar um gênero
+
+ECHOCLASSIC_UI_REUSE_A_FILTER_AND_ORGANISATION_SETUP
+	EN	Reuse a filter and organisation setup
+	PT	Reutilize uma configuração de filtros e organização
+
+ECHOCLASSIC_UI_TAP_A_VIEW_TO_APPLY_IT_USE_EDIT_TO_MANAGE_SEVERAL_VIEWS_WITHOUT_OPENING_EACH_ONE
+	EN	Tap a view to apply it. Use Edit to manage several views without opening each one.
+	PT	Toque em uma visualização para aplicá-la. Use Editar para gerenciar várias sem abrir uma por uma.
+
+ECHOCLASSIC_UI_NO_SAVED_VIEWS_YET
+	EN	No saved views yet.
+	PT	Nenhuma visualização salva.
+
+ECHOCLASSIC_UI_NAME_THIS_VIEW
+	EN	Name this view
+	PT	Nomeie esta visualização
+
+ECHOCLASSIC_UI_SAVE_CURRENT_VIEW
+	EN	Save current view
+	PT	Salvar visualização atual
+
+ECHOCLASSIC_UI_DELETE_SAVED_VIEW
+	EN	Delete saved view?
+	PT	Excluir visualização salva?
+
+ECHOCLASSIC_UI_SELECTED
+	EN	selected
+	PT	selecionados
+
+ECHOCLASSIC_UI_MUSIC
+	EN	Music
+	PT	Música
+
+ECHOCLASSIC_UI_CONTENTS
+	EN	Contents
+	PT	Conteúdo
+
+ECHOCLASSIC_UI_ITEM
+	EN	item
+	PT	item
+
+ECHOCLASSIC_UI_ITEMS
+	EN	items
+	PT	itens
+
+ECHOCLASSIC_UI_THIS_FOLDER_IS_EMPTY
+	EN	This folder is empty
+	PT	Esta pasta está vazia
+
+ECHOCLASSIC_UI_RETURN_TO_MUSIC_TO_CHOOSE_ANOTHER_FOLDER
+	EN	Return to Music to choose another folder.
+	PT	Volte para Música para escolher outra pasta.
+
+ECHOCLASSIC_UI_BACK_TO_MUSIC
+	EN	Back to Music
+	PT	Voltar para Música

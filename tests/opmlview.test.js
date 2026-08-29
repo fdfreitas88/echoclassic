@@ -33,6 +33,21 @@ test('OPML content only includes controls that can perform their action', functi
   assert.equal(def.computed.hasContent.call({ items: [{ kind: 'search' }] }), true);
 });
 
+test('favourites use one explicit edit mode with batch-friendly controls', function () {
+  const def = component();
+  assert.equal(def.props.editing.default, false);
+  assert.match(def.template, /favourite-edit-tools/);
+  assert.match(def.template, />↑<\/button>/);
+  assert.match(def.template, />↓<\/button>/);
+  assert.match(def.template, />×<\/button>/);
+  assert.match(def.template, /@keydown\.alt\.up\.prevent/);
+  assert.match(def.template, /@keydown\.alt\.down\.prevent/);
+  assert.match(def.template, /@keydown\.delete\.prevent/);
+  assert.match(def.template, /@keydown\.esc\.prevent/);
+  assert.doesNotMatch(def.template, /favourite-row-tools/,
+    'administrative controls must not remain permanently expanded below every row');
+});
+
 /* ERR-01: the Apps screen printed the wire straight to the user --
    `[network] qobuz items 0 200 menu:qobuz: Failed to fetch`. The RPC verb, the
    pagination window and the fetch's own words, none of which tell anyone what

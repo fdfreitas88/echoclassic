@@ -87,10 +87,13 @@ test('Apple Squeezer playback choices live inside Equalizer settings', function 
   assert.equal(settings.indexOf('class="apple-squeezer-panel"'), -1, 'old Players-panel placement is removed');
 });
 
-test('Apple Squeezer modes remain on one four-column row and setting help cannot run into labels', function () {
+test('Apple Squeezer modes use a readable checkmarked settings list', function () {
   const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
-  assert.match(css, /\.apple-squeezer-modes\{[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(settings, /class="apple-squeezer-mode-list" role="radiogroup"/);
+  assert.match(settings, /appleSqueezer\.mode === mode\.key \? '✓' : ''/);
+  assert.match(settings, /appleSqueezerModeHelp\(mode\.key\)/);
+  assert.doesNotMatch(css, /\.apple-squeezer-modes/);
   assert.match(settings, /class="setting-copy">Apple Squeezer Store plugin<small>/);
   assert.match(settings, /class="setting-copy">Processing engine<small>/);
   assert.match(css, /\.setting-copy\{[^}]*flex-direction:column/);
@@ -99,14 +102,39 @@ test('Apple Squeezer modes remain on one four-column row and setting help cannot
 
 test('native DSP editor is only presented in Equalizer mode and missing telemetry is not fabricated', function () {
   const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
-  assert.match(settings, /appleSqueezer\.mode === 'equalizer' && nativeDspDraft/);
-  assert.match(settings, /Select Equalizer playback mode to view and edit Apple Squeezer DSP/);
+  assert.match(settings, /isSettingsScreen\('equalizer-graphic'\)[^>]*appleSqueezer\.mode === 'equalizer' && nativeDspDraft/);
+  assert.match(settings, /Equalizer is unavailable in \{\{ appleSqueezerModeLabel \}\}/);
   assert.match(settings, /Rate unavailable/);
   assert.match(settings, /Latency unavailable/);
   assert.match(settings, /Response unavailable/);
   assert.match(settings, /clipped_samples == null \? '—'/);
   assert.doesNotMatch(settings, /diagnostics\.rate \|\| 48000 \}\} Hz/);
   assert.doesNotMatch(settings, /latency_frames \|\| 0 \}\} DSP frames/);
+});
+
+test('inactive Apple Squeezer modes do not fall through to the SqueezeDSP editor', function () {
+  const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
+  assert.match(settings, /<template v-else-if="isSettingsScreen\('equalizer-graphic'\) && dspOwner === 'squeezedsp'">/);
+  assert.match(settings, /Equalizer is unavailable in \{\{ appleSqueezerModeLabel \}\}/);
+  assert.match(settings, /openAppearanceScreen\('equalizer-mode'\)/);
+  assert.match(settings, /Switch playback mode to Equalizer to edit or apply your saved settings/);
+});
+
+test('Equalizer hub follows the approved hierarchy and keeps sound controls together', function () {
+  const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const player = settings.indexOf("openAppearanceScreen('equalizer-player')");
+  const mode = settings.indexOf("openAppearanceScreen('equalizer-mode')");
+  const graphic = settings.indexOf("openAppearanceScreen('equalizer-graphic')");
+  assert.ok(player >= 0 && player < mode && mode < graphic, 'player, playback and graphic settings keep the approved order');
+  assert.match(settings, /Player DSP settings<small>\{\{ dspOwner/);
+  assert.match(settings, /Graphic Equalizer<small>Bands, filters, tone and processing<\/small>/);
+  assert.match(settings, /Automatic EQ rules<small>Apply settings by song, album, artist, genre or folder<\/small>/);
+  assert.doesNotMatch(settings, /Advanced processing<small>/);
+  assert.match(settings, /class="setting-copy">\{\{ equalizerContextName \}\}<small>\{\{ equalizerContextMeta \}\}<\/small>/);
+  assert.match(css, /\.equalizer-screen\{[^}]*width:min\(100%,960px\)/);
+  assert.match(css, /\.eq-apply-group\{[^}]*position:sticky/);
+  assert.match(css, /Swipe for higher frequencies/);
 });
 
 test('OSF and CSF expose a validated manual upsample-rate control', function () {

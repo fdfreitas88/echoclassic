@@ -3,19 +3,25 @@
    api.js e leva cada resultado para a mesma pilha usada por Minha Musica. */
 Vue.component('lms-search', {
   template: `
-<div class="search-body scroller">
-  <div class="advanced-search-bar">
-    <button type="button" class="text-command" :class="{on: advancedOpen}"
-            :aria-expanded="String(advancedOpen)" @click="advancedOpen = !advancedOpen">Filters</button>
-    <span v-if="activeFilterCount" class="advanced-search-summary">{{ activeFilterCount }} active</span>
-    <button v-if="activeFilterCount" type="button" class="text-command" @click="clearAdvanced">Clear</button>
-  </div>
-  <div v-if="advancedOpen" class="advanced-search-panel" aria-label="Advanced search filters">
-    <div class="advanced-search-types" role="group" aria-label="Result types">
+<div class="search-body scroller" @keydown="onKeydown">
+  <header v-if="effectiveQuery" class="search-context">
+    <h1>Results for “{{ effectiveQuery }}”</h1>
+    <div class="search-scopes" role="group" aria-label="Result type">
+      <button type="button" :class="{on: !searchTypes.length}" :aria-pressed="String(!searchTypes.length)"
+              @click="selectSearchType('')">All</button>
       <button v-for="type in searchTypeOptions" :key="type.key" type="button"
-              :class="{on: searchTypes.indexOf(type.key) >= 0}" :aria-pressed="String(searchTypes.indexOf(type.key) >= 0)"
-              @click="toggleSearchType(type.key)">{{ type.label }}</button>
+              :class="{on: searchTypes[0] === type.key}" :aria-pressed="String(searchTypes[0] === type.key)"
+              @click="selectSearchType(type.key)">{{ type.label }}</button>
     </div>
+    <div class="advanced-search-bar">
+      <button type="button" class="text-command" :class="{on: advancedOpen || advancedFilterCount}"
+              :aria-expanded="String(advancedOpen)" @click="advancedOpen = !advancedOpen">Filter · {{ filterSummary }} ›</button>
+      <span class="advanced-search-summary">{{ total }} {{ total === 1 ? 'result' : 'results' }} in {{ rootSummary }}</span>
+      <button v-if="advancedFilterCount" type="button" class="text-command" @click="clearAdvancedFilters">Clear</button>
+    </div>
+  </header>
+  <div v-if="advancedOpen && effectiveQuery" class="advanced-search-panel" aria-label="Advanced search filters">
+    <div class="advanced-search-panel-title"><strong>Refine results</strong><button type="button" class="text-command" @click="advancedOpen = false">Done</button></div>
     <label>Year <input v-model.trim="yearFilter" inputmode="numeric" placeholder="e.g. 1965 or 1960–1969" aria-label="Filter by year"></label>
     <label>Source <select v-model="sourceFilter" aria-label="Filter by source"><option value="">Any source</option><option value="local">Local library</option><option value="stream">Streaming</option></select></label>
     <label>Format <input v-model.trim="formatFilter" placeholder="e.g. FLAC, MP3" aria-label="Filter by format"></label>
@@ -30,22 +36,40 @@ Vue.component('lms-search', {
   <div v-if="!effectiveQuery" class="empty">
     <div class="h">Search the library</div>
     <div class="p">Type an artist, album or track.</div>
+    <div v-if="recentSearches.length" class="recent-searches" aria-label="Recent searches">
+      <span>Recent searches</span>
+      <button v-for="term in recentSearches" :key="term" type="button" @click="useRecentSearch(term)">{{ term }}</button>
+    </div>
   </div>
-  <div v-else-if="loading && !total" class="empty"><div class="p">Searching…</div></div>
+  <div v-else-if="loading && !total" class="system-state system-loading" role="status" aria-live="polite">
+    <div class="state-skeleton" aria-hidden="true"><span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span><span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span></div>
+    <div class="state-progress-copy"><span>Searching the library…</span></div>
+    <div class="state-progress indeterminate" role="progressbar" aria-label="Searching the library"><i></i></div>
+  </div>
   <div v-else-if="error" class="empty">
+    <div class="state-error-mark" aria-hidden="true">!</div>
     <div class="h">Search failed</div>
-    <div class="p">{{ error }}</div>
-    <button class="retry-command" @click="run">Try again</button>
+    <div class="p">{{ error }} Your search and filters are still here.</div>
+    <div class="state-actions"><button class="retry-command primary" @click="run">Try again</button><button class="retry-command" @click="clearSearch">Clear search</button></div>
   </div>
   <div v-else-if="!total" class="empty">
+    <div class="state-empty-mark" aria-hidden="true">⌕</div>
     <div class="h">No results</div>
-    <div class="p">We did not find “{{ effectiveQuery }}” in your library.</div>
+    <div class="p">We did not find “{{ effectiveQuery }}” with the current filters.</div>
+    <div class="state-actions"><button v-if="advancedFilterCount" class="retry-command primary" @click="clearAdvancedFilters">Clear filters</button><button class="retry-command" @click="clearSearch">Change search</button></div>
   </div>
   <template v-else>
     <div v-if="loading" class="search-refreshing" role="status" aria-live="polite">Searching…</div>
+	    <section v-if="bestMatch && !searchTypes.length" class="search-best" aria-label="Best match">
+	      <span v-if="bestMatch.kind === 'album' || bestMatch.kind === 'track'" class="art" :style="art(bestMatch.artId)"></span>
+	      <span v-else class="search-kind">{{ bestMatch.initial }}</span>
+	      <div class="search-best-copy"><span>Best match · {{ bestMatch.label }}</span><strong>{{ bestMatch.title }}</strong><small>{{ bestMatch.subtitle }}</small>
+	        <div class="search-best-actions"><button type="button" class="primary" @click="playBest">Play</button><button type="button" @click="openBest">Open</button><button type="button" aria-label="More actions for best match" @click="bestActions($event)">•••</button></div>
+	      </div>
+	    </section>
 	    <section v-if="results.artists.length && typeVisible('artists')" class="search-group">
-	      <h2 class="search-heading">Artists <span>{{ results.artists.length }}</span></h2>
-	      <button v-for="a in results.artists" :key="'ar' + a.id"
+	      <h2 class="search-heading">Artists <button v-if="canSeeAll('artists')" @click="selectSearchType('artists')">See all {{ results.artists.length }}</button><span v-else>{{ results.artists.length }}</span></h2>
+	      <button v-for="a in visibleResults('artists')" :key="'ar' + a.id"
 	              type="button" class="row noart pointer search-result"
 	              @click="openArtist(a)">
 	        <span class="search-kind">A</span>
@@ -55,8 +79,8 @@ Vue.component('lms-search', {
 	    </section>
 
 	    <section v-if="results.albums.length && typeVisible('albums')" class="search-group">
-	      <h2 class="search-heading">Albums <span>{{ results.albums.length }}</span></h2>
-	      <button v-for="a in results.albums" :key="'al' + a.id"
+	      <h2 class="search-heading">Albums <button v-if="canSeeAll('albums')" @click="selectSearchType('albums')">See all {{ results.albums.length }}</button><span v-else>{{ results.albums.length }}</span></h2>
+	      <button v-for="a in visibleResults('albums')" :key="'al' + a.id"
 	              type="button" class="row pointer search-result"
 	              @click="openAlbum(a)">
 	        <span class="art" :style="art(a.artworkTrackId)"></span>
@@ -70,8 +94,8 @@ Vue.component('lms-search', {
 	    </section>
 
 	    <section v-if="(results.works || []).length && typeVisible('works')" class="search-group">
-	      <h2 class="search-heading">Works <span>{{ results.works.length }}</span></h2>
-	      <button v-for="w in results.works" :key="'wo' + w.id" type="button"
+	      <h2 class="search-heading">Works <button v-if="canSeeAll('works')" @click="selectSearchType('works')">See all {{ results.works.length }}</button><span v-else>{{ results.works.length }}</span></h2>
+	      <button v-for="w in visibleResults('works')" :key="'wo' + w.id" type="button"
 	              class="row noart pointer search-result" @click="openWork(w)">
 	        <span class="search-kind">W</span>
 	        <span class="ell"><span class="t ell">{{ w.title }}</span><span v-if="w.composer" class="s ell">{{ w.composer }}</span><span v-if="w.rootName" class="s ell">{{ w.rootName }}</span></span>
@@ -80,8 +104,8 @@ Vue.component('lms-search', {
 	    </section>
 
 	    <section v-if="results.tracks.length && typeVisible('tracks')" class="search-group">
-	      <h2 class="search-heading">Tracks <span>{{ results.tracks.length }}</span></h2>
-	      <div v-for="t in results.tracks" :key="'tr' + t.id"
+	      <h2 class="search-heading">Tracks <button v-if="canSeeAll('tracks')" @click="selectSearchType('tracks')">See all {{ results.tracks.length }}</button><span v-else>{{ results.tracks.length }}</span></h2>
+	      <div v-for="t in visibleResults('tracks')" :key="'tr' + t.id"
 	           class="row search-result" role="group" :aria-label="trackLabel(t)">
 	        <button type="button" class="row-main pointer" :aria-label="trackLabel(t)"
 	                @click="openTrack(t, $event)">
@@ -105,8 +129,8 @@ Vue.component('lms-search', {
 	    </section>
 
 	    <section v-if="results.playlists.length && typeVisible('playlists')" class="search-group">
-	      <h2 class="search-heading">Playlists <span>{{ results.playlists.length }}</span></h2>
-	      <button v-for="p in results.playlists" :key="'pl' + p.id"
+	      <h2 class="search-heading">Playlists <button v-if="canSeeAll('playlists')" @click="selectSearchType('playlists')">See all {{ results.playlists.length }}</button><span v-else>{{ results.playlists.length }}</span></h2>
+	      <button v-for="p in visibleResults('playlists')" :key="'pl' + p.id"
 	              type="button" class="row noart pointer search-result"
 	              @click="openPlaylist(p)">
 	        <span class="search-kind">P</span>
@@ -126,6 +150,7 @@ Vue.component('lms-search', {
       loading: false, error: '', timer: null, request: 0, limit: 50,
       restoreScroll: 0, advancedOpen: false, searchTypes: [], yearFilter: '', sourceFilter: '',
       composerFilter: '', workFilter: '', formatFilter: '', releaseTypeFilter: '', roots: [], selectedRoots: [],
+      recentSearches: [],
       searchTypeOptions: [
         { key: 'artists', label: 'Artists' }, { key: 'albums', label: 'Albums' },
         { key: 'works', label: 'Works' }, { key: 'tracks', label: 'Tracks' },
@@ -144,6 +169,25 @@ Vue.component('lms-search', {
       (this.sourceFilter ? 1 : 0) + (this.formatFilter ? 1 : 0) + (this.releaseTypeFilter ? 1 : 0) +
       (this.composerFilter ? 1 : 0) + (this.workFilter ? 1 : 0) +
       (this.selectedRoots.length > 1 ? 1 : 0); },
+    advancedFilterCount: function () { return this.activeFilterCount - this.searchTypes.length; },
+    filterSummary: function () { return this.advancedFilterCount ? this.advancedFilterCount + ' active' : 'All'; },
+    rootSummary: function () {
+      var selected = this.roots.filter(function (root) { return this.selectedRoots.indexOf(root.key) >= 0; }, this);
+      return selected.length === 1 ? selected[0].name : selected.length + ' libraries';
+    },
+    bestMatch: function () {
+      var candidates = [];
+      (this.results.artists || []).forEach(function (item) { candidates.push({ kind: 'artist', label: 'Artist', title: item.name, subtitle: '', initial: 'A', item: item }); });
+      (this.results.albums || []).forEach(function (item) { candidates.push({ kind: 'album', label: 'Album', title: item.title, subtitle: this.albumSubtitle(item), initial: 'A', artId: item.artworkTrackId, item: item }); }, this);
+      (this.results.tracks || []).forEach(function (item) { candidates.push({ kind: 'track', label: 'Track', title: item.title, subtitle: this.trackSubtitle(item), initial: 'T', artId: item.coverId, item: item }); }, this);
+      (this.results.playlists || []).forEach(function (item) { candidates.push({ kind: 'playlist', label: 'Playlist', title: item.name, subtitle: '', initial: 'P', item: item }); });
+      var query = String(this.query || '').trim().toLocaleLowerCase();
+      return candidates.sort(function (a, b) {
+        var ae = a.title.toLocaleLowerCase() === query ? 0 : 1;
+        var be = b.title.toLocaleLowerCase() === query ? 0 : 1;
+        return ae - be;
+      })[0] || null;
+    },
     effectiveQuery: function () { return [this.query.trim(), this.composerFilter, this.workFilter].filter(Boolean).join(' '); },
     hasMore: function () {
       var limit = this.limit;
@@ -163,6 +207,11 @@ Vue.component('lms-search', {
     selectedRoots: { deep: true, handler: function () { this.schedule(); } }
   },
   methods: {
+    clearSearch: function () {
+      this.ui.query = '';
+      this.error = '';
+      this.results = { artists: [], albums: [], tracks: [], playlists: [], works: [] };
+    },
     loadRoots: async function () {
       this.roots = LmsApi.libraryRoots
         ? await LmsApi.libraryRoots(this.store.playerId || '')
@@ -174,10 +223,9 @@ Vue.component('lms-search', {
       if (!this.selectedRoots.length) this.selectedRoots = ['all'];
     },
     typeVisible: function (key) { return !this.searchTypes.length || this.searchTypes.indexOf(key) >= 0; },
-    toggleSearchType: function (key) {
-      var at = this.searchTypes.indexOf(key);
-      if (at < 0) this.searchTypes.push(key); else this.searchTypes.splice(at, 1);
-    },
+    selectSearchType: function (key) { this.searchTypes = key ? [key] : []; },
+    visibleResults: function (key) { var rows = this.results[key] || []; return this.searchTypes.length ? rows : rows.slice(0, 3); },
+    canSeeAll: function (key) { return !this.searchTypes.length && (this.results[key] || []).length > 3; },
     toggleRoot: function (key) {
       var at = this.selectedRoots.indexOf(key);
       if (at < 0) {
@@ -193,6 +241,54 @@ Vue.component('lms-search', {
       this.searchTypes = []; this.yearFilter = ''; this.sourceFilter = '';
       this.formatFilter = ''; this.releaseTypeFilter = ''; this.composerFilter = ''; this.workFilter = '';
       this.selectedRoots = [this.ui.rootKey || 'all'];
+    },
+    clearAdvancedFilters: function () {
+      this.yearFilter = ''; this.sourceFilter = ''; this.formatFilter = ''; this.releaseTypeFilter = '';
+      this.composerFilter = ''; this.workFilter = ''; this.selectedRoots = [this.ui.rootKey || 'all'];
+    },
+    useRecentSearch: function (term) { this.ui.query = term; },
+    onKeydown: function (event) {
+      if (event.key === 'Escape') {
+        var input = document.querySelector('.searchwrap input[type="search"], .searchwrap input');
+        if (input) { event.preventDefault(); input.focus(); }
+        return;
+      }
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      var rows = Array.prototype.slice.call(this.$el.querySelectorAll('.search-result.row, button.search-result'));
+      if (!rows.length) return;
+      var active = document.activeElement;
+      var current = rows.findIndex(function (row) { return row === active || row.contains(active); });
+      var next = event.key === 'ArrowDown' ? Math.min(rows.length - 1, current + 1) : Math.max(0, current < 0 ? 0 : current - 1);
+      var target = rows[next].matches('button') ? rows[next] : rows[next].querySelector('button');
+      if (target) { event.preventDefault(); target.focus(); target.scrollIntoView({ block: 'nearest' }); }
+    },
+    rememberSearch: function () {
+      var term = String(this.query || '').trim();
+      if (!term || !this.total) return;
+      this.recentSearches = [term].concat(this.recentSearches.filter(function (item) { return item !== term; })).slice(0, 5);
+      try { localStorage.setItem('echoclassic.recent-searches.v1', JSON.stringify(this.recentSearches)); } catch (e) {}
+    },
+    openBest: function () {
+      if (!this.bestMatch) return;
+      var item = this.bestMatch.item;
+      if (this.bestMatch.kind === 'artist') this.openArtist(item);
+      else if (this.bestMatch.kind === 'album') this.openAlbum(item);
+      else if (this.bestMatch.kind === 'track') this.openTrack(item);
+      else this.openPlaylist(item);
+    },
+    playBest: function () {
+      if (!this.bestMatch) return;
+      var kind = this.bestMatch.kind, item = this.bestMatch.item;
+      if (kind === 'artist') LmsStore.playContainer('artist_id', item.id, 0);
+      else if (kind === 'album') LmsStore.playContainer('album_id', item.id, 0);
+      else if (kind === 'track' && LmsApi.loadTrack) LmsApi.loadTrack(this.store.playerId || '', item.id);
+      else this.openBest();
+    },
+    bestActions: function (event) {
+      if (!this.bestMatch) return;
+      var item = this.bestMatch.item;
+      LmsUi.openActions({ kind: this.bestMatch.kind, id: item.id, title: this.bestMatch.title,
+        artist: item.artist, album: item.album, url: item.url, coverId: item.coverId || item.artworkTrackId }, event && event.currentTarget);
     },
     applyAdvanced: function (found) {
       var year = String(this.yearFilter || '').match(/^(\d{4})(?:\s*[-–]\s*(\d{4}))?$/);
@@ -269,7 +365,7 @@ Vue.component('lms-search', {
         var chosenRoots = this.roots.filter(function (root) { return this.selectedRoots.indexOf(root.key) >= 0; }, this);
         var found = await LmsApi.searchRoots(this.store.playerId || '', this.effectiveQuery, this.limit, chosenRoots);
         found = this.applyAdvanced(found);
-        if (token === this.request) this.results = found;
+        if (token === this.request) { this.results = found; this.$nextTick(this.rememberSearch); }
       } catch (e) {
         // texto em portugues; a string do protocolo fica no console (friendlyError)
         if (token === this.request) {
@@ -297,7 +393,8 @@ Vue.component('lms-search', {
         limit: this.limit, advancedOpen: this.advancedOpen,
         searchTypes: this.searchTypes.slice(), yearFilter: this.yearFilter,
         sourceFilter: this.sourceFilter, composerFilter: this.composerFilter,
-        workFilter: this.workFilter, selectedRoots: this.selectedRoots.slice()
+        workFilter: this.workFilter, formatFilter: this.formatFilter,
+        releaseTypeFilter: this.releaseTypeFilter, selectedRoots: this.selectedRoots.slice()
       });
       return frame;
     },
@@ -362,6 +459,7 @@ Vue.component('lms-search', {
      instantaneo devolve a lista e a rolagem, e a consulta nao e refeita: a
      rede so entra de novo quando o termo muda. */
   created: function () {
+    try { this.recentSearches = JSON.parse(localStorage.getItem('echoclassic.recent-searches.v1') || '[]').slice(0, 5); } catch (e) { this.recentSearches = []; }
     var snapshot = LmsUi.takeSearchSnapshot ? LmsUi.takeSearchSnapshot() : null;
     if (snapshot && snapshot.query === this.ui.query) {
       if (snapshot.results) this.results = snapshot.results;
@@ -373,6 +471,8 @@ Vue.component('lms-search', {
       this.sourceFilter = snapshot.sourceFilter || '';
       this.composerFilter = snapshot.composerFilter || '';
       this.workFilter = snapshot.workFilter || '';
+      this.formatFilter = snapshot.formatFilter || '';
+      this.releaseTypeFilter = snapshot.releaseTypeFilter || '';
       this.selectedRoots = snapshot.selectedRoots || [];
     }
     this.loadRoots();

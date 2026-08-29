@@ -12,10 +12,13 @@ Vue.component('lms-detail', {
   props: { frame: { type: Object, required: true } },
   template: `
 <div class="detail">
-  <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
+  <div v-if="loading" class="system-state system-loading" role="status" aria-live="polite">
+    <div class="state-skeleton" aria-hidden="true"><span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span><span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span></div>
+    <div class="state-progress-copy"><span>Loading details…</span></div><div class="state-progress indeterminate" role="progressbar" aria-label="Loading details"><i></i></div>
+  </div>
   <div v-else-if="error" class="empty">
-    <div class="h">Could not open</div><div class="p">{{ error }}</div>
-    <button class="retry-command" @click="load">Try again</button>
+    <div class="state-error-mark" aria-hidden="true">!</div><div class="h">Could not open</div><div class="p">{{ error }} Your place in the library is unchanged.</div>
+    <div class="state-actions"><button class="retry-command primary" @click="load">Try again</button></div>
   </div>
 
   <template v-else-if="frame.kind === 'album'">
@@ -26,13 +29,22 @@ Vue.component('lms-detail', {
   </template>
 
   <template v-else-if="frame.kind === 'musicfolder'">
-    <div class="hero"><div class="photo placeholder"><span aria-hidden="true">⌂</span></div><div class="name ell">{{ frame.label }}</div></div>
-    <button v-for="item in folderItems" :key="item.key" type="button" class="row noart pointer" @click="openFolderItem(item)">
+    <div class="music-folder-context" aria-label="Current location">
+      <span>{{ tr('Music') }}</span><span aria-hidden="true">›</span><strong>{{ frame.label }}</strong>
+    </div>
+    <div class="hero music-folder-hero"><div class="photo placeholder"><span aria-hidden="true">⌂</span></div><div class="name ell">{{ frame.label }}</div></div>
+    <div class="music-folder-heading"><span>{{ tr('Contents') }}</span><span>{{ folderCountLabel }}</span></div>
+    <button v-for="item in folderItems" :key="item.key" type="button"
+            class="row noart pointer music-folder-row" :class="item.type" @click="openFolderItem(item)">
       <span class="search-kind">{{ item.type === 'folder' ? '⌂' : '♪' }}</span>
-      <span class="ell"><span class="t ell">{{ item.name }}</span><span v-if="item.path" class="s ell">{{ item.path }}</span></span>
+      <span class="music-folder-copy"><span class="t">{{ item.name }}</span><span class="s">{{ folderItemContext(item) }}</span></span>
       <svg v-if="item.type === 'folder'" class="ic chev" viewBox="0 0 9 15"><path d="M1 1l6.5 6.5L1 14"/></svg>
     </button>
-    <div v-if="!folderItems.length" class="empty"><div class="p">This folder is empty.</div></div>
+    <div v-if="!folderItems.length" class="empty music-folder-empty">
+      <div class="h">{{ tr('This folder is empty') }}</div>
+      <div class="p">{{ tr('Return to Music to choose another folder.') }}</div>
+      <button type="button" class="retry-command" @click="backToMusic">‹ {{ tr('Back to Music') }}</button>
+    </div>
   </template>
 
   <template v-else>
@@ -161,6 +173,10 @@ Vue.component('lms-detail', {
     },
     localAlbums: function () { return this.albums.filter(function (a) { return !a.source || a.source === 'Local library'; }); },
     connectedAlbums: function () { return this.albums.filter(function (a) { return a.source && a.source !== 'Local library'; }); },
+    folderCountLabel: function () {
+      var count = this.folderItems.length;
+      return count + ' ' + this.tr(count === 1 ? 'item' : 'items');
+    },
     /* No modo Albuns a pagina mostra so o album escolhido; no modo Faixas ela
        empilha a discografia inteira. */
     visibleBlocks: function () {
@@ -178,6 +194,11 @@ Vue.component('lms-detail', {
         LmsUi.openActions({ kind: 'track', id: item.id, title: item.title || item.name, url: item.url });
       }
     },
+    folderItemContext: function (item) {
+      var type = this.tr(item.type === 'folder' ? 'Folder' : 'Track');
+      return item.path ? type + ' · ' + item.path : type;
+    },
+    backToMusic: function () { LmsNav.reset('music'); },
     tr: function (text) {
       return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
     },

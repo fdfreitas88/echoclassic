@@ -201,21 +201,18 @@ test('genero vira filtro com id do servidor e rotulo legivel', async function ()
   assert.equal(self.filterLabel('year:1975-1975'), '1975', 'intervalo de um ano le-se como o ano');
 });
 
-test('a busca dentro dos filtros reduz as opcoes e esconde secao vazia', async function () {
+test('a busca contextual reduz apenas os generos', async function () {
   const captured = helpers.panelInstance();
   const panel = captured.self;
   await panel.loadGenres();
 
   panel.needle = 'fla';
-  assert.deepEqual(plain(panel.visibleFormats.map(function (f) { return f.key; })), ['flac']);
-  assert.equal(panel.show('Format'), true);
-  assert.equal(panel.show('Genre'), false, 'nenhum genero casa "fla"');
+  assert.equal(panel.visibleFormats.length, 11, 'formatos nao somem por uma busca de genero');
+  assert.deepEqual(plain(panel.visibleGenres), [], 'nenhum genero casa "fla"');
 
   panel.needle = 'rock';
   assert.deepEqual(plain(panel.visibleGenres.map(function (g) { return g.name; })), ['Rock']);
 
-  panel.needle = '';
-  assert.equal(panel.show('Year'), true, 'sem busca, tudo aparece');
 });
 
 test('o ano aceita intervalo, ano exato e limite aberto', function () {
@@ -492,9 +489,52 @@ test('a secao de generos mostra uma amostra ate haver busca', async function () 
   assert.equal(panel.genreOverflow, false, 'com busca, nada fica escondido sem aviso');
 });
 
-test('a busca tambem esconde as vistas salvas', function () {
+test('filtros, organizacao e vistas salvas sao telas separadas', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/filterpanel.js');
-  assert.match(src, /v-if="show\('Saved views'\)" class="filter-group filter-views"/);
+  assert.match(src, /screen === 'filters'/);
+  assert.match(src, /screen === 'organize'/);
+  assert.match(src, /class="filter-body scroller filter-views"/);
+  assert.doesNotMatch(src, /<legend>Sort by<\/legend>/, 'Sort fica no menu direto da toolbar');
+  assert.equal((src.match(/@click="apply"/g) || []).length, 1, 'ha um unico Apply');
+  assert.match(src, /placeholder="Find a genre"/, 'a busca diz o que pesquisa');
+  assert.doesNotMatch(src, /Search within filters/);
+});
+
+test('renomear e inline e apagar pede confirmacao interna', async function () {
+  const captured = helpers.panelInstance();
+  const panel = captured.self;
+  const LmsUi = captured.ctx.LmsUi;
+  LmsUi.setMusicView('albums');
+  const view = LmsUi.saveCurrentView('Original');
+
+  panel.startRename(view);
+  panel.editingName = 'Renomeada';
+  panel.finishRename(view);
+  assert.equal(LmsUi.state.views[0].name, 'Renomeada');
+
+  let options = null;
+  LmsUi.confirmAction = async function (value) { options = value; return false; };
+  await panel.deleteView(view);
+  assert.equal(LmsUi.state.views.length, 1, 'cancelar preserva a vista');
+  assert.equal(options.destructive, true);
+
+  LmsUi.confirmAction = async function () { return true; };
+  await panel.deleteView(view);
+  assert.equal(LmsUi.state.views.length, 0);
+});
+
+test('voltar navega nas subtelas antes de cancelar o painel', function () {
+  const captured = helpers.panelInstance();
+  const panel = captured.self;
+  const LmsUi = captured.ctx.LmsUi;
+  LmsUi.openFilterPanel();
+  panel.screen = 'views';
+  panel.backOrCancel();
+  assert.equal(panel.screen, 'organize');
+  assert.equal(LmsUi.state.filterPanel, true);
+  panel.backOrCancel();
+  assert.equal(panel.screen, 'filters');
+  assert.equal(LmsUi.state.filterPanel, true);
 });
 
 /* Dois avisos na mesma linha se truncavam nos dois -- visto na tela. */

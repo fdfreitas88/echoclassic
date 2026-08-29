@@ -46,9 +46,97 @@ Vue.component('lms-settings', {
           :src="advancedFrameSrc"></iframe>
 </div>
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
-  <template v-if="isSettingsScreen('equalizer')">
-    <div class="sgh">{{ equalizerContextHeading }}</div>
-    <div v-if="appleSqueezer.available" class="sgroup apple-squeezer-contract">
+  <template v-if="isSettingsScreen('frequent-settings')">
+    <div class="settings-intro">Choose the settings you use most. Reorder selected items with the arrow buttons.</div>
+    <div class="sgh">Shown in Settings <span class="settings-count">{{ ui.frequentSettings.length }} selected</span></div>
+    <div class="sgroup frequent-editor-group">
+      <div v-for="(key,index) in ui.frequentSettings" :key="'selected-'+key" class="srow frequent-editor-row">
+        <button type="button" class="frequent-check on" :aria-label="'Remove '+frequentLabel(key)+' from frequent settings'" @click="removeFrequent(key)">✓</button>
+        <span class="setting-copy">{{ frequentLabel(key) }}<small>{{ frequentHint(key) }}</small></span>
+        <span class="frequent-order-buttons">
+          <button type="button" :disabled="index===0" :aria-label="'Move '+frequentLabel(key)+' up'" @click="moveFrequent(index,-1)">↑</button>
+          <button type="button" :disabled="index===ui.frequentSettings.length-1" :aria-label="'Move '+frequentLabel(key)+' down'" @click="moveFrequent(index,1)">↓</button>
+        </span>
+      </div>
+      <div v-if="!ui.frequentSettings.length" class="player-help">No shortcuts selected. Add any setting below or from its own menu.</div>
+    </div>
+    <div class="sgh">More settings</div>
+    <div class="sgroup frequent-editor-group">
+      <button v-for="key in availableFrequentSettings" :key="'available-'+key" type="button" class="srow settings-command-row frequent-editor-row" @click="addFrequent(key)">
+        <span class="frequent-check" aria-hidden="true">＋</span><span class="setting-copy">{{ frequentLabel(key) }}<small>{{ frequentHint(key) }}</small></span>
+      </button>
+    </div>
+    <button type="button" class="settings-reset-button" @click="resetFrequent">Reset recommended settings</button>
+  </template>
+  <template v-else-if="isSettingsScreen('player-settings')">
+    <div class="sgh">Player selection</div>
+    <div class="sgroup">
+      <button type="button" class="srow settings-command-row pointer player-default-row" :aria-expanded="String(showDefaultPlayer)" @click="showDefaultPlayer=!showDefaultPlayer">Default player <span class="v">{{ defaultPlayerName }}<template v-if="defaultPlayerNote"> · {{ defaultPlayerNote }}</template> ›</span></button>
+      <template v-if="showDefaultPlayer">
+        <div class="player-help">Choose which player Echo Classic connects to when it starts.</div>
+        <button type="button" class="srow player-presentation-row" role="radio" :aria-checked="ui.defaultPlayer==='last'?'true':'false'" @click="defaultPlayer('last')"><span>Last used</span><span class="font-option-check" aria-hidden="true"></span></button>
+        <button v-for="p in store.players" :key="'default-'+p.id" type="button" class="srow player-presentation-row" role="radio" :aria-checked="ui.defaultPlayer===p.id?'true':'false'" @click="defaultPlayer(p.id)"><span class="player-presentation-copy"><span>{{ p.name }}</span><small v-if="!p.connected">{{ playerStatusLabel(p) }}</small></span><span class="font-option-check" aria-hidden="true"></span></button>
+      </template>
+    </div>
+    <div class="sgh">Controls</div>
+    <div class="sgroup"><div class="srow segmented-row"><span>Volume button step<small>Amount changed by each speaker-button press.</small></span><div class="segmented" role="radiogroup" aria-label="Volume button step"><button v-for="step in [1,2,5,10]" :key="'detail-volume-'+step" type="button" role="radio" :class="{on:ui.volumeStep===step}" :aria-checked="String(ui.volumeStep===step)" @click="setVolumeStep(step)">{{ step }}%</button></div></div><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('volumeStep')">{{ frequentActionLabel('volumeStep') }}</button></div>
+    <div class="sgh">Playback ending</div>
+    <div class="sgroup"><div class="srow sleep-row"><span>Stop at end<small>{{ sleepAtEndHint }}</small></span><div class="inline-commands"><button :disabled="!canSleepAtEnd" @click="sleepTrack">This song</button><button :disabled="!canSleepAtEnd" @click="sleepQueue">The queue</button><button v-if="store.sleepRemaining" @click="cancelSleep">Cancel</button></div></div><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('stopAtEnd')">{{ frequentActionLabel('stopAtEnd') }}</button></div>
+  </template>
+  <template v-else-if="isSettingsScreen('playback-settings')">
+    <div class="sgh">Playback</div>
+    <div class="sgroup"><div class="srow">Crossfade<button type="button" class="sw" :class="{on:!!store.transitionType}" role="switch" :aria-checked="String(!!store.transitionType)" @click="toggleCrossfade"></button></div><div class="player-help">{{ crossfadeHint }}</div><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('crossfade')">{{ frequentActionLabel('crossfade') }}</button></div>
+    <div class="sgroup"><div class="srow segmented-row"><span>Replay gain</span><div class="segmented" role="radiogroup" aria-label="Replay gain"><button v-for="option in replayGainModes" :key="'detail-rg-'+option.key" type="button" role="radio" :class="{on: store.replayGainMode === option.key}" :aria-checked="store.replayGainMode === option.key ? 'true' : 'false'" :tabindex="store.replayGainMode === option.key ? 0 : -1" :disabled="!store.playerId" @keydown="radioKey($event, replayGainModes, store.replayGainMode, selectReplayGain)" @click="selectReplayGain(option.key)">{{ tr(option.label) }}</button></div></div><div class="player-help">{{ replayGainHint }}</div><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('replayGain')">{{ frequentActionLabel('replayGain') }}</button></div>
+    <div class="sgroup"><div class="srow sleep-row">Sleep timer<div class="inline-commands"><button @click="sleepMinutes(15)">15 minutes</button><button @click="sleepMinutes(30)">30 minutes</button><button @click="sleepMinutes(60)">1 hour</button><button v-if="store.sleepRemaining" @click="cancelSleep">Cancel</button></div></div><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('sleepTimer')">{{ frequentActionLabel('sleepTimer') }}</button></div>
+  </template>
+  <template v-else-if="isSettingsScreen('appearance-settings')">
+    <div class="sgh">Appearance</div>
+    <div class="sgroup"><div class="srow segmented-row"><span>Theme</span><div class="segmented" role="radiogroup" aria-label="Theme"><button v-for="option in themeOptions" :key="'detail-theme-'+option.key" type="button" role="radio" :class="{on:ui.theme===option.key}" :aria-checked="String(ui.theme===option.key)" @click="selectTheme(option.key)">{{ option.label }}</button></div></div><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('theme')">{{ frequentActionLabel('theme') }}</button></div>
+    <div class="sgroup"><div class="srow">Accent colour<div class="swatch-row" role="radiogroup" aria-label="Accent colour"><button v-for="scheme in colorSchemes" :key="'detail-scheme-'+scheme.key" type="button" class="swatch-dot" :class="'scheme-'+scheme.key" role="radio" :aria-checked="String(ui.colorScheme===scheme.key)" :aria-label="tr(scheme.label)" @click="colorScheme(scheme.key)"></button></div></div><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('accentColor')">{{ frequentActionLabel('accentColor') }}</button></div>
+    <div class="sgh">Font</div><div class="sgroup font-option-group" role="radiogroup" aria-label="Font"><button v-for="font in fontOptions" :key="'detail-font-'+font.key" type="button" class="srow font-option-row" :class="'font-'+font.key" role="radio" :aria-checked="String(ui.fontFamily===font.key)" @click="fontFamily(font.key)"><span class="font-option-label">{{ font.label }}</span><span class="font-option-check" aria-hidden="true"></span></button></div>
+    <div class="sgroup"><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('players')">Player layout <span class="v">›</span></button></div>
+  </template>
+  <template v-else-if="isSettingsScreen('queue-settings')">
+    <div class="sgh">Queue artwork</div><div class="sgroup player-presentation-group" role="radiogroup" aria-label="Queue artwork"><button v-for="mode in queueArtModes" :key="'detail-queue-'+mode.key" type="button" class="srow player-presentation-row" role="radio" :aria-checked="String(ui.queueArtMode===mode.key)" @click="queueArtMode(mode.key)"><span class="player-presentation-copy"><span>{{ mode.label }}</span><small>{{ queueArtModeHint(mode.key) }}</small></span><span class="font-option-check" aria-hidden="true"></span></button><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('queueArtwork')">{{ frequentActionLabel('queueArtwork') }}</button></div>
+  </template>
+  <template v-else-if="isSettingsScreen('interface-settings')">
+    <div class="sgh">Shared use</div><div class="sgroup interface-mode-group"><button type="button" class="srow settings-command-row pointer interface-mode-row" role="switch" :aria-checked="String(ui.partyMode)" @click="preference('partyMode')"><span class="setting-copy">Party mode<small>Keep playback available while hiding delete and reorder actions.</small></span><span class="switch" :class="{on:ui.partyMode}"></span></button><button type="button" class="srow settings-command-row pointer interface-mode-row" role="switch" :aria-checked="String(ui.kioskMode)" @click="preference('kioskMode')"><span class="setting-copy">Kiosk mode<small>Show only the full player. Exit remains available from the lock control or Esc.</small></span><span class="switch" :class="{on:ui.kioskMode}"></span></button></div>
+    <div class="interface-mode-note">These modes affect this browser only. Kiosk mode never removes playback controls and cannot hide its own exit path.</div>
+    <div class="sgh">Technical display</div>
+    <div class="sgroup"><div class="srow">Rate and bits in the bottom bar<button type="button" class="sw" :class="{on:ui.showBadges}" role="switch" :aria-checked="String(ui.showBadges)" @click="preference('showBadges')"></button></div><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('showBadges')">{{ frequentActionLabel('showBadges') }}</button><div class="srow">Highlight hi-res<button type="button" class="sw" :class="{on:ui.markHires}" role="switch" :aria-checked="String(ui.markHires)" @click="preference('markHires')"></button></div><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('markHires')">{{ frequentActionLabel('markHires') }}</button></div>
+    <div class="sgh">Language</div><div class="sgroup language-group" role="radiogroup" aria-label="Language"><button v-for="lang in languages" :key="'detail-language-'+lang.key" type="button" class="srow language-row" role="radio" :aria-checked="String(currentLanguage===lang.key)" @click="language(lang.key)"><span>{{ lang.label }}</span><span class="language-check" aria-hidden="true"></span></button></div>
+  </template>
+  <template v-else-if="isSettingsScreen('backup-settings')">
+    <div class="sgh">Backup</div><div class="sgroup"><div class="srow settings-actions">Skin preferences<span class="inline-commands"><button @click="exportSettings">Export</button><button @click="$refs.importFile.click()">Import</button></span><input ref="importFile" class="visually-hidden" type="file" accept="application/json" tabindex="-1" aria-hidden="true" @change="importSettings"></div><div v-if="pendingImport" class="import-confirm" role="alert"><strong>Import preferences from this file?</strong><span>Only these groups will be replaced: {{ pendingImportGroups.join(', ') }}.</span><div class="inline-commands"><button @click="confirmImport">Import and reload</button><button @click="cancelImport">Cancel</button></div></div></div>
+  </template>
+  <template v-else-if="isSettingsScreen('about-settings')">
+    <div class="sgh">About</div><div class="sgroup"><div class="srow">Connection <span class="v">{{ store.connected?'connected':'no player' }}</span></div><div v-if="loading" class="srow">Querying the server…</div><template v-else-if="info"><div class="srow">Artists <span class="v">{{ n(info.artists) }}</span></div><div class="srow">Albums <span class="v">{{ n(info.albums) }}</span></div><div class="srow">Songs <span class="v">{{ n(info.songs) }}</span></div><div class="srow">Genres <span class="v">{{ n(info.genres) }}</span></div></template><div class="srow">Server version <span class="v">LMS {{ info?info.version:'—' }}</span></div><div class="srow">Skin version <span class="v">{{ skinVersion }}</span></div><div class="srow">Lock screen controls <span class="v">{{ mediaSessionSupported?'available':'not supported' }}</span></div><button type="button" class="srow settings-command-row pointer" :aria-expanded="String(ui.advancedSettings)" @click="openAdvanced">Advanced LMS settings <span class="v">›</span></button></div>
+  </template>
+  <template v-else-if="isEqualizerScreen">
+    <div class="equalizer-screen">
+    <template v-if="isSettingsScreen('equalizer')">
+      <div class="equalizer-now-playing"><span>{{ equalizerContextName }}</span><small>{{ equalizerContextMeta }}</small></div>
+      <div class="sgh">Player</div>
+      <div class="sgroup equalizer-ios-group"><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-player')"><span class="setting-copy">Player DSP settings<small>{{ dspOwner === 'apple-squeezer' ? 'Apple Squeezer' : 'SqueezeDSP' }} · {{ appleSqueezerCompatible ? 'Connected' : 'Available' }}</small></span><span class="v">›</span></button></div>
+      <div class="sgh">Playback</div>
+      <div class="sgroup equalizer-ios-group"><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-mode')"><span class="setting-copy">Playback mode<small>How this player processes audio</small></span><span class="v">{{ appleSqueezerModeLabel }} ›</span></button></div>
+      <template v-if="equalizerAvailableNow">
+        <div class="sgh">Equalizer</div>
+        <div class="sgroup equalizer-ios-group">
+          <div class="srow"><span class="setting-copy">Equalizer<small>Keep your saved curve applied to this player</small></span><button type="button" class="sw" :class="{on:activeEqualizerEnabled}" role="switch" :aria-checked="String(activeEqualizerEnabled)" @click="toggleActiveEqualizer"><span class="visually-hidden">Equalizer</span></button></div>
+          <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-graphic')"><span class="setting-copy">Graphic Equalizer<small>Bands, filters, tone and processing</small></span><span class="v">{{ equalizerPresetLabel || 'Custom' }} ›</span></button>
+          <div v-if="dspOwner === 'squeezedsp'" class="srow eq-hold-row"><span class="setting-copy">Compare<small>Press and hold to hear the original, unprocessed signal</small></span><button type="button" class="eq-hold-button" aria-label="Compare with original; press and hold" @pointerdown.prevent="holdEqualizerBypass(true)" @pointerup.prevent="holdEqualizerBypass(false)" @pointercancel="holdEqualizerBypass(false)" @pointerleave="holdEqualizerBypass(false)" @keydown.space.prevent="holdEqualizerBypass(true)" @keyup.space.prevent="holdEqualizerBypass(false)" @keydown.enter.prevent="holdEqualizerBypass(true)" @keyup.enter.prevent="holdEqualizerBypass(false)" @blur="holdEqualizerBypass(false)">Hold</button></div>
+          <button v-else type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-graphic')"><span class="setting-copy">Compare<small>A/B comparison is available with the sound controls</small></span><span class="v">{{ nativeDspAB }} ›</span></button>
+        </div>
+      </template>
+      <template v-else>
+        <div class="sgh">Equalizer</div>
+        <div class="sgroup equalizer-ios-group"><div class="equalizer-unavailable-copy"><strong>Equalizer is unavailable in {{ appleSqueezerModeLabel }}</strong><small>Switch playback mode to Equalizer to edit or apply your saved settings.</small></div><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-mode')">Choose playback mode <span class="v">›</span></button></div>
+      </template>
+      <div class="sgh">More</div>
+      <div class="sgroup equalizer-ios-group"><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-presets')"><span class="setting-copy">Equalizer presets<small>Choose, save or remove sound profiles</small></span><span class="v">›</span></button><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-rules')"><span class="setting-copy">Automatic EQ rules<small>Apply settings by song, album, artist, genre or folder</small></span><span class="v">›</span></button></div>
+    </template>
+    <div v-if="isSettingsScreen('equalizer-player') && appleSqueezer.available" class="sgroup apple-squeezer-contract">
       <div class="srow"><span class="setting-copy">Apple Squeezer Store plugin<small>API {{ appleSqueezer.apiVersion || 'legacy' }} · {{ appleSqueezer.lifecycle }}</small></span><span class="v">{{ appleSqueezerCompatible ? 'Connected' : 'Update required' }}</span></div>
       <div v-if="appleSqueezerCanLifecycle" class="srow eq-inline-actions">
         <button v-if="!appleSqueezer.running" type="button" class="eq-action-button" :disabled="appleSqueezer.busy" @click="changeAppleSqueezerLifecycle('start')">Start</button>
@@ -57,19 +145,16 @@ Vue.component('lms-settings', {
       </div>
       <div v-if="!appleSqueezerCompatible" class="player-help">Native DSP requires Apple Squeezer Store API v2 or later. Playback remains available.</div>
     </div>
-    <template v-if="appleSqueezer.running">
+    <template v-if="isSettingsScreen('equalizer-mode') && appleSqueezer.running">
       <div class="sgh apple-squeezer-section-heading">{{ tr('Playback mode') }}</div>
       <div class="sgroup apple-squeezer-panel">
-        <div class="srow apple-squeezer-heading">
-          <span>{{ tr('Apple Squeezer mode') }}<small>{{ tr('The player restarts when the mode changes.') }}</small></span>
-          <span class="v">{{ appleSqueezer.busy ? tr('Switching…') : appleSqueezerModeLabel }}</span>
-        </div>
-        <div class="apple-squeezer-modes" role="radiogroup" aria-label="Apple Squeezer mode">
+        <div class="player-help equalizer-mode-warning"><strong>Changing mode briefly restarts this player.</strong><br>Your Equalizer settings remain saved.</div>
+        <div class="apple-squeezer-mode-list" role="radiogroup" aria-label="Apple Squeezer mode">
           <button v-for="mode in appleSqueezerModes" :key="mode.key" type="button"
-                  :class="{ on: appleSqueezer.mode === mode.key }"
+                  class="srow settings-command-row pointer" :class="{ on: appleSqueezer.mode === mode.key }"
                   :aria-checked="appleSqueezer.mode === mode.key ? 'true' : 'false'"
                   :disabled="appleSqueezer.busy" role="radio" @click="changeAppleSqueezerMode(mode.key)">
-            {{ tr(mode.label) }}
+            <span class="setting-copy">{{ tr(mode.label) }}<small>{{ appleSqueezerModeHelp(mode.key) }}</small></span><span class="v">{{ appleSqueezer.mode === mode.key ? '✓' : '' }}</span>
           </button>
         </div>
         <div v-if="['osf','csf','pcm-studio'].indexOf(appleSqueezer.mode) >= 0" class="apple-squeezer-rate">
@@ -102,10 +187,9 @@ Vue.component('lms-settings', {
         </div>
       </div>
     </template>
-    <div class="sgh">DSP owner</div>
-    <div class="sgroup"><div class="srow segmented-row"><span class="setting-copy">Processing engine<small>Stored by the server for this player.</small></span><div class="segmented" role="radiogroup" aria-label="DSP owner"><button type="button" :class="{on:dspOwner==='apple-squeezer'}" :disabled="!appleSqueezerCompatible" @click="selectDspOwner('apple-squeezer')">Apple Squeezer</button><button type="button" :class="{on:dspOwner==='squeezedsp'}" @click="selectDspOwner('squeezedsp')">SqueezeDSP</button></div></div></div>
-    <div v-if="dspOwner === 'apple-squeezer' && appleSqueezerCompatible && appleSqueezer.mode !== 'equalizer'" class="player-help native-dsp-mode-notice">Select Equalizer playback mode to view and edit Apple Squeezer DSP. DAC Priority, OSF and CSF do not apply the native EQ.</div>
-    <template v-if="dspOwner === 'apple-squeezer' && appleSqueezerCompatible && appleSqueezer.mode === 'equalizer' && nativeDspDraft">
+    <div v-if="isSettingsScreen('equalizer-player')" class="sgroup equalizer-secondary-settings"><div class="srow segmented-row"><span class="setting-copy">Processing engine<small>Stored by the server for this player.</small></span><div class="segmented" role="radiogroup" aria-label="DSP owner"><button type="button" role="radio" :aria-checked="String(dspOwner==='apple-squeezer')" :tabindex="dspOwner==='apple-squeezer'?0:-1" :class="{on:dspOwner==='apple-squeezer'}" :disabled="!appleSqueezerCompatible" @keydown="radioKey($event, dspOwnerOptions, dspOwner, selectDspOwner)" @click="selectDspOwner('apple-squeezer')">Apple Squeezer</button><button type="button" role="radio" :aria-checked="String(dspOwner==='squeezedsp')" :tabindex="dspOwner==='squeezedsp'?0:-1" :class="{on:dspOwner==='squeezedsp'}" @keydown="radioKey($event, dspOwnerOptions, dspOwner, selectDspOwner)" @click="selectDspOwner('squeezedsp')">SqueezeDSP</button></div></div>
+    </div>
+    <template v-if="isSettingsScreen('equalizer-graphic') && dspOwner === 'apple-squeezer' && appleSqueezerCompatible && appleSqueezer.mode === 'equalizer' && nativeDspDraft">
       <div class="native-signal-console">
         <div class="native-signal-head"><span>Native signal response<small>{{ appleSqueezer.diagnostics.rate ? appleSqueezer.diagnostics.rate + ' Hz' : 'Rate unavailable' }} · {{ appleSqueezer.telemetry.latency_frames == null ? 'Latency unavailable' : appleSqueezer.telemetry.latency_frames + ' DSP frames' }}</small></span><span class="eq-status-badge" :class="{on:!nativeDspDraft.bypass}">{{ nativeDspDraft.bypass ? 'Bypass' : 'Native' }}</span></div>
         <svg v-if="nativeDspResponsePath" class="native-response" viewBox="0 0 320 76" role="img" aria-label="Native DSP frequency response"><path class="native-response-zero" d="M0 64 L320 64"></path><path class="native-response-line" :d="nativeDspResponsePath"></path></svg>
@@ -118,30 +202,30 @@ Vue.component('lms-settings', {
       </div>
       <div class="sgh">Headroom and protection</div><div class="sgroup">
         <label class="srow">Preamp <input v-model.number="nativeDspDraft.preamp_db" class="setting-range" type="range" min="-30" max="12" step="0.1"><span class="v">{{ formatSigned(nativeDspDraft.preamp_db,' dB') }}</span></label>
-        <div class="srow"><span>Automatic response headroom</span><button type="button" class="sw" :class="{on:nativeDspDraft.headroom_db===null}" @click="nativeDspDraft.headroom_db=nativeDspDraft.headroom_db===null?3:null"></button></div>
+        <div class="srow"><span>Automatic response headroom</span><button type="button" class="sw" role="switch" aria-label="Automatic response headroom" :aria-checked="String(nativeDspDraft.headroom_db===null)" :class="{on:nativeDspDraft.headroom_db===null}" @click="nativeDspDraft.headroom_db=nativeDspDraft.headroom_db===null?3:null"></button></div>
         <label v-if="nativeDspDraft.headroom_db!==null" class="srow">Manual headroom <input v-model.number="nativeDspDraft.headroom_db" class="setting-range" type="range" min="0" max="24" step="0.1"><span class="v">{{ Number(nativeDspDraft.headroom_db).toFixed(1) }} dB</span></label>
-        <div class="srow"><span>Apply LMS ReplayGain inside DSP</span><button type="button" class="sw" :class="{on:nativeDspDraft.replaygain_managed}" @click="nativeDspDraft.replaygain_managed=!nativeDspDraft.replaygain_managed"></button></div><label class="srow">ReplayGain trim <input v-model.number="nativeDspDraft.replaygain_db" class="setting-range" type="range" min="-30" max="12" step="0.1"><span class="v">{{ Number(nativeDspDraft.replaygain_db).toFixed(1) }} dB</span></label><div class="srow"><span>Reserve positive ReplayGain headroom</span><button type="button" class="sw" :class="{on:nativeDspDraft.replaygain_headroom}" @click="nativeDspDraft.replaygain_headroom=!nativeDspDraft.replaygain_headroom"></button></div>
-        <div class="srow"><span>4× true-peak protection</span><button type="button" class="sw" :class="{on:nativeDspDraft.true_peak}" @click="nativeDspDraft.true_peak=!nativeDspDraft.true_peak"></button></div>
-        <div class="srow"><span>True-peak limiter</span><button type="button" class="sw" :class="{on:nativeDspDraft.limiter}" @click="nativeDspDraft.limiter=!nativeDspDraft.limiter"></button></div>
+        <div class="srow"><span>Apply LMS ReplayGain inside DSP</span><button type="button" class="sw" role="switch" aria-label="Apply LMS ReplayGain inside DSP" :aria-checked="String(nativeDspDraft.replaygain_managed)" :class="{on:nativeDspDraft.replaygain_managed}" @click="nativeDspDraft.replaygain_managed=!nativeDspDraft.replaygain_managed"></button></div><label class="srow">ReplayGain trim <input v-model.number="nativeDspDraft.replaygain_db" class="setting-range" type="range" min="-30" max="12" step="0.1"><span class="v">{{ Number(nativeDspDraft.replaygain_db).toFixed(1) }} dB</span></label><div class="srow"><span>Reserve positive ReplayGain headroom</span><button type="button" class="sw" role="switch" aria-label="Reserve positive ReplayGain headroom" :aria-checked="String(nativeDspDraft.replaygain_headroom)" :class="{on:nativeDspDraft.replaygain_headroom}" @click="nativeDspDraft.replaygain_headroom=!nativeDspDraft.replaygain_headroom"></button></div>
+        <div class="srow"><span>4× true-peak protection</span><button type="button" class="sw" role="switch" aria-label="4× true-peak protection" :aria-checked="String(nativeDspDraft.true_peak)" :class="{on:nativeDspDraft.true_peak}" @click="nativeDspDraft.true_peak=!nativeDspDraft.true_peak"></button></div>
+        <div class="srow"><span>True-peak limiter</span><button type="button" class="sw" role="switch" aria-label="True-peak limiter" :aria-checked="String(nativeDspDraft.limiter)" :class="{on:nativeDspDraft.limiter}" @click="nativeDspDraft.limiter=!nativeDspDraft.limiter"></button></div>
         <label v-if="nativeDspDraft.limiter" class="srow">Limiter ceiling <input v-model.number="nativeDspDraft.limiter_ceiling_db" class="setting-range" type="range" min="-6" max="0" step="0.1"><span class="v">{{ Number(nativeDspDraft.limiter_ceiling_db).toFixed(1) }} dBTP</span></label>
       </div>
-      <div class="sgh">12-band equalizer</div><div class="sgroup"><div class="srow"><span>Graphic stage</span><button type="button" class="sw" :class="{on:!nativeDspDraft.eq_bypass}" @click="nativeDspDraft.eq_bypass=!nativeDspDraft.eq_bypass"></button></div></div>
+      <div class="sgh">12-band equalizer</div><div class="sgroup"><div class="srow"><span>Graphic stage</span><button type="button" class="sw" role="switch" aria-label="Graphic stage" :aria-checked="String(!nativeDspDraft.eq_bypass)" :class="{on:!nativeDspDraft.eq_bypass}" @click="nativeDspDraft.eq_bypass=!nativeDspDraft.eq_bypass"></button></div></div>
       <div class="sgroup"><div class="srow eq-inline-actions"><button v-for="preset in ['flat','warm','presence','air']" type="button" class="eq-action-button" @click="applyNativePreset(preset)">{{ preset }}</button></div></div>
       <div class="sgroup eq-band-panel"><div class="eq-band-bank" aria-label="Native 12-band equalizer"><label v-for="band in nativeDspBands" :key="band.frequency" class="eq-band" :class="{disabled:!band.enabled}"><span class="eq-band-value">{{ formatEqGain(band.gain) }}</span><span class="eq-slider"><input :value="band.gain" type="range" min="-24" max="24" step="0.5" :disabled="!band.enabled" :aria-label="band.label+' hertz'" @input="setNativeBand(band.index,$event.target.value)"></span><button type="button" class="native-band-toggle" :aria-pressed="String(band.enabled)" @click.prevent="nativeDspDraft.graphic_eq_enabled.splice(band.index,1,!band.enabled)">{{ band.label }}</button></label></div></div>
-      <div class="sgh">Parametric filters</div><div class="sgroup"><div class="srow"><span>Parametric stage</span><button type="button" class="sw" :class="{on:!nativeDspDraft.parametric_bypass}" @click="nativeDspDraft.parametric_bypass=!nativeDspDraft.parametric_bypass"></button></div>
+      <div class="sgh">Parametric filters</div><div class="sgroup"><div class="srow"><span>Parametric stage</span><button type="button" class="sw" role="switch" aria-label="Parametric stage" :aria-checked="String(!nativeDspDraft.parametric_bypass)" :class="{on:!nativeDspDraft.parametric_bypass}" @click="nativeDspDraft.parametric_bypass=!nativeDspDraft.parametric_bypass"></button></div>
         <div class="srow eq-inline-actions"><button v-for="preset in ['subsonic','bass shelf','dialog clarity','room notch']" type="button" class="eq-action-button" @click="applyNativeFilterPreset(preset)">{{ preset }}</button></div>
-        <div v-for="(filter,index) in nativeDspDraft.parametric_filters" :key="'native-filter-'+index" class="eq-filter-editor"><div class="srow"><button type="button" class="eq-action-button" :aria-label="'Filter type: '+nativeFilterTypeLabel(filter.type)" @click="cycleNativeFilterType(filter)">{{ nativeFilterTypeLabel(filter.type) }} ›</button><button type="button" class="eq-remove-button" @click="removeNativeFilter(index)">Remove</button><button type="button" class="sw" :class="{on:filter.enabled}" @click="filter.enabled=!filter.enabled"></button></div><label class="srow">Frequency <input v-model.number="filter.frequency" class="setting-range" type="range" min="20" max="20000" step="1"><span class="v">{{ filter.frequency }} Hz</span></label><label class="srow">Q <input v-model.number="filter.q" class="setting-range" type="range" min="0.1" max="20" step="0.1"><span class="v">{{ Number(filter.q).toFixed(1) }}</span></label><label v-if="['notch','lowpass','highpass'].indexOf(filter.type)<0" class="srow">Gain <input v-model.number="filter.gain" class="setting-range" type="range" min="-24" max="24" step="0.1"><span class="v">{{ formatSigned(filter.gain,' dB') }}</span></label></div>
+        <div v-for="(filter,index) in nativeDspDraft.parametric_filters" :key="'native-filter-'+index" class="eq-filter-editor"><div class="srow"><button type="button" class="eq-action-button" :aria-label="'Filter type: '+nativeFilterTypeLabel(filter.type)" @click="cycleNativeFilterType(filter)">{{ nativeFilterTypeLabel(filter.type) }} ›</button><button type="button" class="eq-remove-button" @click="removeNativeFilter(index)">Remove</button><button type="button" class="sw" role="switch" :aria-label="'Enable parametric filter '+(index+1)" :aria-checked="String(filter.enabled)" :class="{on:filter.enabled}" @click="filter.enabled=!filter.enabled"></button></div><label class="srow">Frequency <input v-model.number="filter.frequency" class="setting-range" type="range" min="20" max="20000" step="1"><span class="v">{{ filter.frequency }} Hz</span></label><label class="srow">Q <input v-model.number="filter.q" class="setting-range" type="range" min="0.1" max="20" step="0.1"><span class="v">{{ Number(filter.q).toFixed(1) }}</span></label><label v-if="['notch','lowpass','highpass'].indexOf(filter.type)<0" class="srow">Gain <input v-model.number="filter.gain" class="setting-range" type="range" min="-24" max="24" step="0.1"><span class="v">{{ formatSigned(filter.gain,' dB') }}</span></label></div>
         <button type="button" class="srow settings-command-row pointer" @click="addNativeFilter">Add parametric filter <span class="v">＋</span></button></div>
-      <div class="sgh">Room and spatial processing</div><div class="sgroup"><div class="srow"><span>Spatial stage</span><button type="button" class="sw" :class="{on:!nativeDspDraft.spatial_bypass}" @click="nativeDspDraft.spatial_bypass=!nativeDspDraft.spatial_bypass"></button></div>
+      <div class="sgh">Room and spatial processing</div><div class="sgroup"><div class="srow"><span>Spatial stage</span><button type="button" class="sw" role="switch" aria-label="Spatial stage" :aria-checked="String(!nativeDspDraft.spatial_bypass)" :class="{on:!nativeDspDraft.spatial_bypass}" @click="nativeDspDraft.spatial_bypass=!nativeDspDraft.spatial_bypass"></button></div>
         <label class="srow">Stereo width <input v-model.number="nativeDspDraft.stereo_width" class="setting-range" type="range" min="0" max="2" step="0.01"><span class="v">{{ Number(nativeDspDraft.stereo_width).toFixed(2) }}×</span></label><label class="srow">Balance <input v-model.number="nativeDspDraft.balance" class="setting-range" type="range" min="-1" max="1" step="0.01"><span class="v">{{ Number(nativeDspDraft.balance).toFixed(2) }}</span></label>
         <label class="srow">Left delay <input v-model.number="nativeDspDraft.delay_left_ms" class="setting-range" type="range" min="0" max="100" step="0.01"><span class="v">{{ Number(nativeDspDraft.delay_left_ms).toFixed(2) }} ms</span></label><label class="srow">Right delay <input v-model.number="nativeDspDraft.delay_right_ms" class="setting-range" type="range" min="0" max="100" step="0.01"><span class="v">{{ Number(nativeDspDraft.delay_right_ms).toFixed(2) }} ms</span></label>
-        <div class="srow segmented-row"><span>Crossfeed</span><div class="segmented" role="radiogroup" aria-label="Crossfeed"><button v-for="mode in ['off','light','medium','strong']" type="button" :class="{on:nativeDspDraft.crossfeed===mode}" @click="nativeDspDraft.crossfeed=mode">{{ mode }}</button></div></div><div class="srow segmented-row"><span>Polarity</span><div class="segmented" role="radiogroup" aria-label="Polarity"><button v-for="mode in ['none','left','right','both']" type="button" :class="{on:nativeDspDraft.polarity===mode}" @click="nativeDspDraft.polarity=mode">{{ mode }}</button></div></div>
-        <div class="srow"><span>Mono</span><button type="button" class="sw" :class="{on:nativeDspDraft.mono}" @click="nativeDspDraft.mono=!nativeDspDraft.mono"></button></div><label class="srow">Loudness <input v-model.number="nativeDspDraft.loudness_db" class="setting-range" type="range" min="0" max="12" step="0.1"><span class="v">{{ Number(nativeDspDraft.loudness_db).toFixed(1) }} dB</span></label>
+        <div class="srow segmented-row"><span>Crossfeed</span><div class="segmented" role="radiogroup" aria-label="Crossfeed"><button v-for="option in crossfeedOptions" :key="option.key" type="button" role="radio" :aria-checked="String(nativeDspDraft.crossfeed===option.key)" :tabindex="nativeDspDraft.crossfeed===option.key?0:-1" :class="{on:nativeDspDraft.crossfeed===option.key}" @keydown="radioKey($event, crossfeedOptions, nativeDspDraft.crossfeed, setNativeCrossfeed)" @click="setNativeCrossfeed(option.key)">{{ option.label }}</button></div></div><div class="srow segmented-row"><span>Polarity</span><div class="segmented" role="radiogroup" aria-label="Polarity"><button v-for="option in polarityOptions" :key="option.key" type="button" role="radio" :aria-checked="String(nativeDspDraft.polarity===option.key)" :tabindex="nativeDspDraft.polarity===option.key?0:-1" :class="{on:nativeDspDraft.polarity===option.key}" @keydown="radioKey($event, polarityOptions, nativeDspDraft.polarity, setNativePolarity)" @click="setNativePolarity(option.key)">{{ option.label }}</button></div></div>
+        <div class="srow"><span>Mono</span><button type="button" class="sw" role="switch" aria-label="Mono" :aria-checked="String(nativeDspDraft.mono)" :class="{on:nativeDspDraft.mono}" @click="nativeDspDraft.mono=!nativeDspDraft.mono"></button></div><label class="srow">Loudness <input v-model.number="nativeDspDraft.loudness_db" class="setting-range" type="range" min="0" max="12" step="0.1"><span class="v">{{ Number(nativeDspDraft.loudness_db).toFixed(1) }} dB</span></label>
       </div>
-      <div class="sgh">FIR room correction</div><div class="sgroup"><div class="srow"><span>Convolution stage</span><button type="button" class="sw" :class="{on:!nativeDspDraft.fir_bypass}" @click="nativeDspDraft.fir_bypass=!nativeDspDraft.fir_bypass"></button></div><label class="srow eq-preset-editor">WAV or AIFF path<input v-model.trim="nativeDspDraft.fir_file" type="text" placeholder="/path/to/room.wav"></label><label class="srow">FIR gain <input v-model.number="nativeDspDraft.fir_gain_db" class="setting-range" type="range" min="-30" max="12" step="0.1"><span class="v">{{ Number(nativeDspDraft.fir_gain_db).toFixed(1) }} dB</span></label><div class="srow"><span>Normalize impulse<small>Scales the imported impulse to unity peak before FIR gain.</small></span><button type="button" class="sw" :class="{on:nativeDspDraft.fir_normalize}" role="switch" :aria-checked="String(nativeDspDraft.fir_normalize)" @click="nativeDspDraft.fir_normalize=!nativeDspDraft.fir_normalize"></button></div></div>
+      <div class="sgh">FIR room correction</div><div class="sgroup"><div class="srow"><span>Convolution stage</span><button type="button" class="sw" role="switch" aria-label="Convolution stage" :aria-checked="String(!nativeDspDraft.fir_bypass)" :class="{on:!nativeDspDraft.fir_bypass}" @click="nativeDspDraft.fir_bypass=!nativeDspDraft.fir_bypass"></button></div><label class="srow eq-preset-editor">WAV or AIFF path<input v-model.trim="nativeDspDraft.fir_file" type="text" placeholder="/path/to/room.wav"></label><label class="srow">FIR gain <input v-model.number="nativeDspDraft.fir_gain_db" class="setting-range" type="range" min="-30" max="12" step="0.1"><span class="v">{{ Number(nativeDspDraft.fir_gain_db).toFixed(1) }} dB</span></label><div class="srow"><span>Normalize impulse<small>Scales the imported impulse to unity peak before FIR gain.</small></span><button type="button" class="sw" aria-label="Normalize impulse" :class="{on:nativeDspDraft.fir_normalize}" role="switch" :aria-checked="String(nativeDspDraft.fir_normalize)" @click="nativeDspDraft.fir_normalize=!nativeDspDraft.fir_normalize"></button></div></div>
       <div class="sgroup eq-apply-group"><div class="player-help">A/B slots use automatic response-peak headroom for gain-matched comparison. Changes are validated, backed up, and applied per player. DSD/DoP bypasses PCM DSP.</div><button type="button" class="srow settings-command-row pointer" :disabled="!nativeDspDirty||nativeDspSaving" @click="applyNativeDsp">{{ nativeDspSaving?'Applying…':'Apply native DSP' }} <span class="v">{{ nativeDspDirty?'›':'✓' }}</span></button><button type="button" class="srow settings-command-row destructive pointer" :disabled="nativeDspSaving" @click="rollbackNativeDsp">Restore previous native DSP <span class="v">↺</span></button></div>
     </template>
-    <template v-else>
+    <template v-else-if="isSettingsScreen('equalizer-graphic') && dspOwner === 'squeezedsp'">
     <div v-if="!equalizerDraft" class="sgroup">
       <div class="player-help">Equalizer settings are not available for this player.</div>
       <button type="button" class="srow settings-command-row pointer" @click="refreshEqualizer">Try again <span class="v">↻</span></button>
@@ -172,14 +256,9 @@ Vue.component('lms-settings', {
       </div><div class="player-help eq-band-help">−30 dB … +30 dB · Pre = preamp headroom</div>
         <button type="button" class="eq-reset-button" @click="resetEqualizerBands">Reset bands to default</button></div>
       <div class="sgh">{{ equalizerContextTitle }}</div>
-      <div class="sgroup"><div class="srow"><span>{{ equalizerContextName }}<small>{{ equalizerContextMeta }}</small></span><span class="eq-status-badge" :class="{on: !equalizerDraft.Client.Bypass}">EQ</span></div>
+      <div class="sgroup"><div class="srow"><span class="setting-copy">{{ equalizerContextName }}<small>{{ equalizerContextMeta }}</small></span><span class="eq-status-badge" :class="{on: !equalizerDraft.Client.Bypass}">EQ</span></div>
         <div class="srow"><span>{{ equalizerRememberLabel }}</span><button type="button" class="sw" :class="{on: equalizerContextScope.active}" role="switch" :aria-checked="String(equalizerContextScope.active)" :disabled="equalizerDirty || !equalizerContextScope.key" @click="toggleEqualizerRule(equalizerContextScope.type)"><span class="visually-hidden">{{ equalizerRememberLabel }}</span></button></div>
       </div><div class="player-help">Priority: song › album › folder › artist › genre › year › manual EQ.</div>
-      <div class="sgroup eq-actions-group"><button type="button" class="srow settings-command-row pointer" @click="equalizerRulesOpen = !equalizerRulesOpen">Set EQ from any album, artist, genre… <span class="v">{{ equalizerRulesOpen ? '⌄' : '›' }}</span></button>
-        <template v-if="equalizerRulesOpen"><div v-if="!equalizerPlayerRules.length" class="player-help">No automatic EQ rules yet.</div><div v-for="rule in equalizerPlayerRules" :key="rule.id" class="srow eq-rule-row"><span>{{ rule.label }}<small>{{ equalizerRuleTypeLabel(rule.type) }}<template v-if="store.equalizer.activeRule && store.equalizer.activeRule.id === rule.id"> · Active</template></small></span><button type="button" class="eq-remove-button" :aria-label="'Remove EQ rule for ' + rule.label" @click="removeEqualizerRule(rule.id)">Remove</button></div><div class="player-help">Rules are saved in this browser for this player.</div></template>
-        <button type="button" class="srow settings-command-row pointer" @click="equalizerAdvancedOpen = !equalizerAdvancedOpen">Advanced <span class="v">Filters {{ equalizerAdvancedOpen ? '⌄' : '›' }}</span></button>
-      </div>
-      <template v-if="equalizerAdvancedOpen">
       <div class="sgh">Signal processing</div><div class="sgroup">
         <label class="srow">Balance <input v-model.number="equalizerDraft.Client.Balance" class="setting-range" type="range" min="-12" max="12" step="0.1"><span class="v">{{ formatSigned(equalizerDraft.Client.Balance, ' dB') }}</span></label>
         <label class="srow">Stereo width <input v-model.number="equalizerDraft.Client.Width" class="setting-range" type="range" min="-12" max="12" step="0.1"><span class="v">{{ formatSigned(equalizerDraft.Client.Width, ' dB') }}</span></label>
@@ -201,10 +280,24 @@ Vue.component('lms-settings', {
         <div v-if="!equalizerDraft.Client.Filters.length" class="player-help">No filters configured.</div>
         <div v-for="(filter, index) in equalizerDraft.Client.Filters" :key="'eq-' + index" class="eq-filter-editor"><div class="srow"><span>{{ index + 1 }}. {{ equalizerFilterLabel(filter.FilterType) }}</span><button type="button" class="eq-remove-button" @click="removeEqualizerFilter(index)">Remove</button></div><div class="srow"><div class="segmented eq-filter-types" role="radiogroup" :aria-label="'Filter type ' + (index + 1)"><button v-for="type in equalizerFilterTypes" :key="type.value" type="button" role="radio" :aria-checked="filter.FilterType === type.value ? 'true' : 'false'" :class="{on: filter.FilterType === type.value}" @click="setEqualizerFilterType(filter, type.value)">{{ type.short }}</button></div></div><label class="srow">Frequency <input v-model.number="filter.Frequency" class="setting-range" type="range" min="20" max="20000" step="1"><span class="v">{{ filter.Frequency }} Hz</span></label><label v-if="filter.FilterType !== 'lowpass' && filter.FilterType !== 'highpass'" class="srow">Gain <input v-model.number="filter.Gain" class="setting-range" type="range" min="-30" max="30" step="0.1"><span class="v">{{ formatEqGain(filter.Gain) }} dB</span></label><label class="srow">{{ filter.SlopeType === 'slope' ? 'Slope' : 'Q' }} <input v-model.number="filter.Slope" class="setting-range" type="range" min="0.1" max="20" step="0.1"><span class="v">{{ Number(filter.Slope || 1.41).toFixed(1) }}</span></label></div>
         <div class="srow eq-inline-actions"><button v-for="type in equalizerQuickFilters" :key="type.value" type="button" class="eq-action-button" @click="addEqualizerFilter(type.value)">+ {{ type.label }}</button></div>
-      </div></template>
+      </div>
       <div class="sgroup eq-apply-group"><div class="player-help">Changes are staged. Apply may briefly restart the current track.</div><button type="button" class="srow settings-command-row pointer" :disabled="!equalizerDirty || equalizerSaving" @click="applyEqualizer">{{ equalizerSaving ? 'Applying…' : 'Apply changes' }} <span class="v">{{ equalizerDirty ? '›' : '✓' }}</span></button><button type="button" class="srow settings-command-row destructive pointer" :disabled="equalizerSaving" @click="resetEqualizerAll">Reset all DSP settings <span class="v">↺</span></button></div>
     </template>
     </template>
+    <template v-if="isSettingsScreen('equalizer-presets')">
+      <div class="sgh">Presets</div>
+      <div v-if="dspOwner === 'apple-squeezer'" class="sgroup equalizer-ios-group"><button v-for="preset in ['flat','warm','presence','air']" :key="preset" type="button" class="srow settings-command-row pointer" @click="applyNativePreset(preset); openAppearanceScreen('equalizer-graphic')"><span>{{ preset.charAt(0).toUpperCase() + preset.slice(1) }}</span><span class="v">›</span></button></div>
+      <div v-else class="sgroup equalizer-ios-group"><button v-for="preset in equalizerPresetOptions" :key="preset.key" type="button" class="srow settings-command-row pointer" @click="chooseEqualizerPreset(preset)"><span>{{ preset.name }}</span><span class="v">{{ equalizerPresetLabel === preset.name ? '✓' : '' }}</span></button><div class="srow eq-preset-editor"><label for="eq-preset-screen-name">Preset name</label><input id="eq-preset-screen-name" v-model.trim="equalizerPresetName" type="text" maxlength="80" placeholder="My preset"></div><div class="srow eq-inline-actions"><button type="button" class="eq-action-button" :disabled="!equalizerPresetName || equalizerSaving" @click="saveEqualizerPreset">Save as new</button><button type="button" class="eq-action-button destructive" :disabled="!equalizerServerPresetSelected || equalizerSaving" @click="deleteEqualizerPreset">Delete selected</button></div></div>
+    </template>
+    <template v-if="isSettingsScreen('equalizer-rules')">
+      <div class="equalizer-now-playing"><span>{{ equalizerContextName }}</span><small>{{ equalizerContextMeta }}</small></div>
+      <div class="sgh">Priority</div>
+      <div class="player-help equalizer-rules-help">Checked from top to bottom. The first matching rule applies.</div>
+      <div class="sgroup equalizer-ios-group"><div v-for="scope in equalizerRuleScopes" :key="scope.type" class="srow"><span class="setting-copy">{{ equalizerRuleTypeLabel(scope.type) }}<small>{{ scope.value || 'Not set' }}</small></span><button type="button" class="sw" :class="{on:scope.active}" role="switch" :aria-checked="String(scope.active)" :disabled="equalizerDirty || !scope.key" @click="toggleEqualizerRule(scope.type)"><span class="visually-hidden">{{ scope.label }}</span></button></div><div class="srow"><span class="setting-copy">Preset (default)<small>{{ equalizerPresetLabel || 'Custom' }}</small></span><span class="v">✓</span></div></div>
+      <div class="sgh">Saved rules</div>
+      <div class="sgroup equalizer-ios-group"><div v-if="!equalizerPlayerRules.length" class="equalizer-unavailable-copy"><strong>No automatic EQ rules yet</strong><small>Turn on a song, album, artist, genre, folder or year above to add one.</small></div><div v-for="rule in equalizerPlayerRules" :key="rule.id" class="srow eq-rule-row"><span class="setting-copy">{{ rule.label }}<small>{{ equalizerRuleTypeLabel(rule.type) }}<template v-if="store.equalizer.activeRule && store.equalizer.activeRule.id === rule.id"> · Active</template></small></span><button type="button" class="eq-remove-button" :aria-label="'Remove EQ rule for ' + rule.label" @click="removeEqualizerRule(rule.id)">Remove</button></div></div>
+    </template>
+    </div>
   </template>
   <template v-else-if="ui.appearanceScreen === 'players'">
     <!-- SPL-3: uma tela, tres perguntas em ordem de tarefa.
@@ -384,6 +477,43 @@ Vue.component('lms-settings', {
   </template>
 </div>
 <div v-else class="settings">
+  <div class="settings-player-card">
+    <span class="settings-player-art" aria-hidden="true"></span>
+    <span class="setting-copy"><strong>{{ playerName }}</strong><small>Active player</small></span>
+    <button type="button" :aria-expanded="String(showPlayers)" @click="showPlayers=!showPlayers">Change</button>
+  </div>
+  <div v-if="showPlayers" class="sgroup settings-player-chooser">
+    <div v-for="p in store.players" :key="'home-player-'+p.id" class="player-choice"><div class="player-name"><strong>{{ p.name }}</strong><span>{{ p.connected?'connected':'unavailable' }}</span></div><span v-if="p.id===store.playerId" class="player-current">In use</span><button v-else-if="p.connected" type="button" @click="control(p)">Control</button></div>
+  </div>
+
+  <div class="sgh frequent-heading"><span>Frequent settings</span><span>{{ ui.frequentSettings.length }} shown</span></div>
+  <div class="sgroup frequent-home-group">
+    <template v-for="key in ui.frequentSettings">
+      <button v-if="key==='equalizer' || key==='soundPreset'" :key="key" type="button" class="srow settings-command-row pointer" @click="openFrequentSetting(key)"><span class="setting-copy">{{ frequentLabel(key) }}<small v-if="key==='soundPreset'">{{ dspOwner==='apple-squeezer'?'Apple Squeezer':'SqueezeDSP' }}</small></span><span class="v">{{ frequentValue(key) }} ›</span></button>
+      <div v-else-if="key==='crossfade'" :key="key" class="srow">Crossfade<button type="button" class="sw" :class="{on:!!store.transitionType}" role="switch" :aria-checked="String(!!store.transitionType)" @click="toggleCrossfade"></button></div>
+      <button v-else-if="key==='showBadges' || key==='markHires'" :key="key" type="button" class="srow settings-command-row" role="switch" :aria-checked="String(key==='showBadges'?ui.showBadges:ui.markHires)" @click="preference(key)"><span>{{ frequentLabel(key) }}</span><span class="switch" :class="{on:key==='showBadges'?ui.showBadges:ui.markHires}"></span></button>
+      <button v-else :key="key" type="button" class="srow settings-command-row pointer" @click="openFrequentSetting(key)"><span>{{ frequentLabel(key) }}</span><span class="v">{{ frequentValue(key) }} ›</span></button>
+    </template>
+    <button type="button" class="srow settings-command-row frequent-menu-action" @click="openAppearanceScreen('frequent-settings')">Edit frequent settings</button>
+  </div>
+
+  <div class="sgh">Player &amp; app</div>
+  <div class="sgroup settings-destination-group">
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('player-settings')"><span class="setting-copy">Player settings<small>Default player, volume step and stop at end</small></span><span class="v">›</span></button>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('playback-settings')"><span class="setting-copy">Playback settings<small>Crossfade, Replay Gain and sleep timer</small></span><span class="v">›</span></button>
+    <button type="button" class="srow settings-command-row pointer" @click="openEqualizer"><span class="setting-copy">Equalizer settings<small>Engine, presets, bands, rules and headroom</small></span><span class="v">›</span></button>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('appearance-settings')"><span class="setting-copy">Appearance<small>Theme, colour, font and player layout</small></span><span class="v">›</span></button>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('queue-settings')"><span class="setting-copy">Queue<small>Artwork and album grouping</small></span><span class="v">›</span></button>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('interface-settings')"><span class="setting-copy">Interface &amp; access<small>Party mode, kiosk mode, technical badges and language</small></span><span class="v">›</span></button>
+  </div>
+  <div class="sgh">System</div>
+  <div class="sgroup settings-destination-group">
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('backup-settings')">Backup <span class="v">›</span></button>
+    <button type="button" class="srow settings-command-row pointer" :aria-expanded="String(ui.advancedSettings)" @click="openAdvanced">Advanced LMS settings <span class="v">›</span></button>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('about-settings')">About <span class="v">›</span></button>
+  </div>
+
+  <template v-if="false">
   <div class="sgh">Player</div>
   <div class="sgroup">
     <button type="button" class="srow settings-command-row pointer"
@@ -414,8 +544,7 @@ Vue.component('lms-settings', {
           <span v-else class="player-current">Synced</span>
         </template>
       </div>
-    </template>
-    <button type="button" class="srow settings-command-row pointer"
+    <button type="button" class="srow settings-command-row pointer player-default-row"
             :aria-expanded="String(showDefaultPlayer)" @click="showDefaultPlayer = !showDefaultPlayer">
       Default player
       <span class="v">{{ defaultPlayerName }}<template v-if="defaultPlayerNote"> · {{ defaultPlayerNote }}</template> ›</span>
@@ -443,6 +572,7 @@ Vue.component('lms-settings', {
         </span>
         <span class="font-option-check" aria-hidden="true"></span>
       </button>
+    </template>
     </template>
   </div>
 
@@ -583,8 +713,8 @@ Vue.component('lms-settings', {
 
   <div class="sgh">General</div>
   <div class="sgroup">
-    <button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.partyMode)" @click="preference('partyMode')"><span>Party mode<small>Hide destructive library and playlist commands.</small></span><span class="switch" :class="{on:ui.partyMode}"></span></button>
-    <button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.kioskMode)" @click="preference('kioskMode')"><span>Kiosk mode<small>Lock Echo Classic to the player presentation.</small></span><span class="switch" :class="{on:ui.kioskMode}"></span></button>
+    <button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.partyMode)" @click="preference('partyMode')"><span>Party mode<small>Keep playback available while hiding delete and reorder actions.</small></span><span class="switch" :class="{on:ui.partyMode}"></span></button>
+    <button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.kioskMode)" @click="preference('kioskMode')"><span>Kiosk mode<small>Show only the full player. Exit remains available from the lock control or Esc.</small></span><span class="switch" :class="{on:ui.kioskMode}"></span></button>
     <div class="srow">Rate and bits in the bottom bar
       <button type="button" class="sw" :class="{on: ui.showBadges}" role="switch"
               :aria-checked="String(ui.showBadges)" aria-label="Rate and bits in the bottom bar"
@@ -661,6 +791,7 @@ Vue.component('lms-settings', {
   <div class="sgh" style="text-transform:none">
     Native LMS pages open inside Settings, keeping Echo Classic navigation.
   </div>
+  </template>
 </div>
 </div>`,
   data: function () {
@@ -678,6 +809,12 @@ Vue.component('lms-settings', {
       fontOptions: LmsUi.FONT_OPTIONS,
       themeOptions: LmsUi.THEME_OPTIONS,
       replayGainModes: LmsUi.REPLAY_GAIN_MODES,
+      dspOwnerOptions: [
+        { key: 'apple-squeezer', label: 'Apple Squeezer' },
+        { key: 'squeezedsp', label: 'SqueezeDSP' }
+      ],
+      crossfeedOptions: ['off', 'light', 'medium', 'strong'].map(function (key) { return { key: key, label: key }; }),
+      polarityOptions: ['none', 'left', 'right', 'both'].map(function (key) { return { key: key, label: key }; }),
       playerPositions: LmsUi.PLAYER_POSITIONS,
       playerPresentations: LmsUi.PLAYER_PRESENTATIONS,
       gaugeStyles: LmsUi.GAUGE_STYLES,
@@ -724,13 +861,22 @@ Vue.component('lms-settings', {
          arrasto, nao esperar o round-trip com o servidor. */
       durationDraft: null,
       equalizerDraft: null, equalizerSaving: false, equalizerPreset: '', equalizerPresetName: '',
-      equalizerPresetsOpen: false, equalizerRulesOpen: false,
-      equalizerAdvancedOpen: false, equalizerSignalOpen: false, equalizerConvolutionOpen: false, equalizerImpulsesOpen: false,
+      equalizerPresetsOpen: false, equalizerImpulsesOpen: false,
       equalizerHoldRestore: null
       ,dspOwner: 'apple-squeezer', nativeDspDraft: null, nativeDspSaved: '', nativeDspResponse: [], nativeDspSaving: false, nativeDspAB: 'A'
     };
   },
   computed: {
+	isEqualizerScreen: function () { return /^equalizer(?:-|$)/.test(String(this.ui.appearanceScreen || '')); },
+	availableFrequentSettings: function () {
+		var selected = this.ui.frequentSettings || [];
+		return (LmsUi.FREQUENT_SETTING_KEYS || []).filter(function (key) { return selected.indexOf(key) < 0; });
+	},
+	equalizerAvailableNow: function () { return this.dspOwner !== 'apple-squeezer' || (this.appleSqueezerCompatible && this.appleSqueezer.mode === 'equalizer'); },
+	activeEqualizerEnabled: function () {
+		if (this.dspOwner === 'apple-squeezer') return !!(this.nativeDspDraft && !this.nativeDspDraft.bypass);
+		return !!(this.equalizerDraft && this.equalizerDraft.Client && !this.equalizerDraft.Client.Bypass);
+	},
 	appleSqueezerCompatible: function () { return this.appleSqueezer.available && (this.appleSqueezer.apiVersion >= 2 || this.appleCapability('dsp')); },
 	appleSqueezerCanLifecycle: function () { return this.appleCapability('lifecycle'); },
 	appleSqueezerPath: function () {
@@ -1087,7 +1233,28 @@ Vue.component('lms-settings', {
     if (LmsUi.applyAdvancedSettings === this.applyAdvancedFrame) LmsUi.applyAdvancedSettings = null;
   },
   methods: {
+    setNativeCrossfeed: function (key) {
+      if (this.nativeDspDraft) this.nativeDspDraft.crossfeed = key;
+    },
+    setNativePolarity: function (key) {
+      if (this.nativeDspDraft) this.nativeDspDraft.polarity = key;
+    },
     isSettingsScreen: function (screen) { return this.ui['appearanceScreen'] === screen; },
+    appleSqueezerModeHelp: function (mode) {
+      return {
+        'dac-priority': 'Use the DAC preferred signal path with DSP bypassed',
+        'equalizer': 'Apply equalizer and DSP processing',
+        'osf': 'Oversampling filter with automatic source-family handling',
+        'csf': 'Custom sample-rate filter with expert controls'
+      }[mode] || 'Alternate playback mode for this player';
+    },
+    toggleActiveEqualizer: function () {
+      if (this.dspOwner === 'apple-squeezer' && this.nativeDspDraft) {
+        this.nativeDspDraft.bypass = !this.nativeDspDraft.bypass;
+      } else if (this.equalizerDraft && this.equalizerDraft.Client) {
+        this.equalizerDraft.Client.Bypass = this.equalizerDraft.Client.Bypass ? 0 : 1;
+      }
+    },
     stopAdvancedThemeObserver: function () {
       if (this.advancedThemeObserver && this.advancedThemeObserver.disconnect) {
         this.advancedThemeObserver.disconnect();
@@ -1649,15 +1816,9 @@ Vue.component('lms-settings', {
     },
     advancedDispatchChange: function (doc, node) {
       if (!node || !node.dispatchEvent) return;
-      var event;
-      try {
-        var EventCtor = (doc.defaultView && doc.defaultView.Event) || Event;
-        event = new EventCtor('change', { bubbles: true });
-      } catch (e) {
-        if (!doc.createEvent) return;
-        event = doc.createEvent('HTMLEvents');
-        event.initEvent('change', true, false);
-      }
+      var EventCtor = doc.defaultView && doc.defaultView.Event;
+      if (!EventCtor) return;
+      var event = new EventCtor('change', { bubbles: true });
       node.dispatchEvent(event);
     },
     advancedCreateEl: function (doc, tag, className, text) {
@@ -2259,8 +2420,13 @@ Vue.component('lms-settings', {
         var clear = this.advancedCreateEl(doc, 'button', 'ec-scan-journal-clear',
           this.tr('Clear ignored') + ' (' + ignored.length + ')');
         clear.type = 'button';
-        clear.addEventListener('click', function () {
-          if (window.confirm && !window.confirm(self.tr('Clear ignored scan errors?'))) return;
+        clear.addEventListener('click', async function () {
+          var accepted = await LmsUi.confirmAction({
+            title: self.tr('Clear ignored scan errors?'),
+            message: self.tr('The ignored entries will be removed from this history.'),
+            confirmLabel: self.tr('Clear ignored')
+          });
+          if (!accepted) return;
           self.scanJournalWrite(entries.filter(function (item) { return !item.ignored; }));
           self.renderScanJournal(doc, parent, gauges);
         });
@@ -2711,9 +2877,92 @@ Vue.component('lms-settings', {
        needs nothing extra to make Back work, hardware or on-screen. */
     appearanceScreenLabel: function (screen) {
       var labels = {
-        players: 'Player layout', equalizer: 'Equalizer'
+        players: 'Player layout', equalizer: 'Equalizer',
+        'frequent-settings': 'Frequent settings',
+        'player-settings': 'Player settings',
+        'playback-settings': 'Playback settings',
+        'appearance-settings': 'Appearance',
+        'queue-settings': 'Queue',
+        'interface-settings': 'Interface & access',
+        'backup-settings': 'Backup',
+        'about-settings': 'About',
+        'equalizer-player': 'Player DSP settings',
+        'equalizer-mode': 'Playback mode',
+        'equalizer-graphic': 'Graphic Equalizer',
+        'equalizer-presets': 'Equalizer presets',
+        'equalizer-rules': 'Automatic EQ rules'
       };
       return labels[screen] || '';
+    },
+    frequentLabel: function (key) {
+      return {
+        equalizer: 'Equalizer', soundPreset: 'Sound preset', crossfade: 'Crossfade',
+        replayGain: 'Replay gain', sleepTimer: 'Sleep timer', volumeStep: 'Volume button step',
+        stopAtEnd: 'Stop at end', theme: 'Theme', accentColor: 'Accent colour',
+        queueArtwork: 'Queue artwork', showBadges: 'Rate and bits in the bottom bar',
+        markHires: 'Highlight hi-res'
+      }[key] || key;
+    },
+    frequentHint: function (key) {
+      return {
+        equalizer: 'Open or bypass the active equalizer', soundPreset: 'Current equalizer preset',
+        crossfade: 'Blend the end and start of songs', replayGain: 'Manage playback loudness',
+        sleepTimer: 'Stop playback after a chosen time', volumeStep: 'Speaker-button adjustment amount',
+        stopAtEnd: 'Stop after this song or the queue', theme: 'Light, dark or legacy appearance',
+        accentColor: 'Interface accent colour', queueArtwork: 'Album art grouping in the queue',
+        showBadges: 'Technical badges in the bottom bar', markHires: 'Highlight high-resolution audio'
+      }[key] || '';
+    },
+    frequentValue: function (key) {
+      if (key === 'equalizer') return this.dspOwner === 'apple-squeezer' ? 'Apple Squeezer' : 'SqueezeDSP';
+      if (key === 'soundPreset') return this.equalizerPreset || 'Flat';
+      if (key === 'replayGain') {
+        var mode = this.replayGainModes.filter(function (item) { return item.key === this.store.replayGainMode; }, this)[0];
+        return mode ? this.tr(mode.label) : 'Off';
+      }
+      if (key === 'sleepTimer') return this.store.sleepRemaining ? this.sleepLabel : 'Off';
+      if (key === 'volumeStep') return this.ui.volumeStep + '%';
+      if (key === 'stopAtEnd') return this.store.sleepRemaining ? this.sleepLabel : 'Off';
+      if (key === 'theme') return this.themeOptions.filter(function (item) { return item.key === this.ui.theme; }, this)[0].label;
+      if (key === 'accentColor') {
+        var scheme = this.colorSchemes.filter(function (item) { return item.key === this.ui.colorScheme; }, this)[0];
+        return scheme ? this.tr(scheme.label) : '';
+      }
+      if (key === 'queueArtwork') {
+        var queueMode = this.queueArtModes.filter(function (item) { return item.key === this.ui.queueArtMode; }, this)[0];
+        return queueMode ? queueMode.label : '';
+      }
+      return '';
+    },
+    isFrequent: function (key) { return (this.ui.frequentSettings || []).indexOf(key) >= 0; },
+    frequentActionLabel: function (key) {
+      return this.isFrequent(key) ? 'Remove from frequent settings' : 'Add to frequent settings';
+    },
+    addFrequent: function (key) {
+      if (this.isFrequent(key) || (LmsUi.FREQUENT_SETTING_KEYS || []).indexOf(key) < 0) return;
+      LmsUi.setFrequentSettings((this.ui.frequentSettings || []).concat(key));
+      LmsUi.notify(this.frequentLabel(key) + ' added to Frequent settings.', 'info', 2400);
+    },
+    removeFrequent: function (key) {
+      LmsUi.setFrequentSettings((this.ui.frequentSettings || []).filter(function (item) { return item !== key; }));
+      LmsUi.notify(this.frequentLabel(key) + ' removed from Frequent settings.', 'info', 2400);
+    },
+    toggleFrequent: function (key) { if (this.isFrequent(key)) this.removeFrequent(key); else this.addFrequent(key); },
+    moveFrequent: function (index, direction) {
+      var next = (this.ui.frequentSettings || []).slice();
+      var target = index + direction;
+      if (index < 0 || target < 0 || target >= next.length) return;
+      var moved = next.splice(index, 1)[0]; next.splice(target, 0, moved); LmsUi.setFrequentSettings(next);
+    },
+    resetFrequent: function () {
+      LmsUi.setFrequentSettings((LmsUi.DEFAULT_FREQUENT_SETTINGS || []).slice());
+      LmsUi.notify('Frequent settings restored.', 'info', 2400);
+    },
+    openFrequentSetting: function (key) {
+      if (key === 'equalizer') { this.openEqualizer(); return; }
+      if (key === 'soundPreset') { this.openEqualizer(); this.openAppearanceScreen('equalizer-presets'); return; }
+      var screens = { crossfade:'playback-settings', replayGain:'playback-settings', sleepTimer:'playback-settings', volumeStep:'player-settings', stopAtEnd:'player-settings', theme:'appearance-settings', accentColor:'appearance-settings', queueArtwork:'queue-settings', showBadges:'interface-settings', markHires:'interface-settings' };
+      if (screens[key]) this.openAppearanceScreen(screens[key]);
     },
     openAppearanceScreen: function (screen) {
       var self = this;
@@ -2910,7 +3159,13 @@ Vue.component('lms-settings', {
     deleteEqualizerPreset: async function () {
       if (!this.equalizerServerPresetSelected || !this.store.playerId || this.equalizerSaving) return;
       var preset = this.equalizerSelectedServerPreset;
-      if (!window.confirm('Delete equalizer preset "' + this.equalizerPresetDisplayName(preset) + '"?')) return;
+      var presetName = this.equalizerPresetDisplayName(preset);
+      var accepted = await LmsUi.confirmAction({
+        title: 'Delete equalizer preset “' + presetName + '”?',
+        message: 'This equalizer preset will be permanently removed. Your current equalizer settings stay active.',
+        confirmLabel: 'Delete preset'
+      });
+      if (!accepted) return;
       this.equalizerSaving = true;
       try {
         await LmsApi.squeezeDspDeletePreset(this.store.playerId, preset);
@@ -2983,7 +3238,7 @@ Vue.component('lms-settings', {
       var wasAppearance = !!this.ui.appearanceScreen;
       this.ui.advancedSettings = advanced;
       this.ui.appearanceScreen = advanced ? null : ((top && top.screen) || null);
-      if (!advanced && this.ui['appearanceScreen'] === 'equalizer' && !this.equalizerDraft && this.store.equalizer.settings) {
+      if (!advanced && /^equalizer(?:-|$)/.test(String(this.ui['appearanceScreen'] || '')) && !this.equalizerDraft && this.store.equalizer.settings) {
         this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
       }
       if (advanced) LmsUi.applyAdvancedSettings = this.applyAdvancedFrame;
@@ -3020,7 +3275,10 @@ Vue.component('lms-settings', {
         LmsUi.setSurfaceFollowsApp(surface.key, on);
       });
     },
-    preference: function (key) { LmsUi.setPreference(key, !this.ui[key]); },
+    preference: function (key) {
+      if (key === 'kioskMode') { LmsUi.requestKioskMode(!this.ui.kioskMode); return; }
+      LmsUi.setPreference(key, !this.ui[key]);
+    },
     setVolumeStep: function (value) { LmsUi.setVolumeStep(value); },
     control: function (p) { LmsStore.selectPlayer(p.id); },
     handoff: function (p) { LmsStore.handoffTo(p.id); },
@@ -3210,7 +3468,7 @@ Vue.component('lms-settings', {
       }
     },
     refreshAppleSqueezerTelemetry: async function () {
-      if (!this.isSettingsScreen('equalizer') || !this.appleSqueezer.available || this.appleSqueezer.busy) return;
+      if (!this.isEqualizerScreen || !this.appleSqueezer.available || this.appleSqueezer.busy) return;
       try {
         if (this.appleCapability('telemetry')) {
           var telemetry = await LmsApi.appleSqueezerTelemetry(this.store.playerId);
@@ -3422,6 +3680,10 @@ Vue.component('lms-settings', {
 	        var colorSchemes = keysOf(LmsUi.COLOR_SCHEMES);
 	        var themes = keysOf(LmsUi.THEME_OPTIONS);
 	        var fontFamilies = keysOf(LmsUi.FONT_OPTIONS);
+	        if (parsed.frequentSettings !== undefined && (!Array.isArray(parsed.frequentSettings) ||
+	            parsed.frequentSettings.some(function (key, index) {
+	              return LmsUi.FREQUENT_SETTING_KEYS.indexOf(key) < 0 || parsed.frequentSettings.indexOf(key) !== index;
+	            }))) return 'frequentSettings has an incompatible value';
 	        var enums = [
 	          ['tab', tabs], ['musicView', views], ['albumMode', albumModes],
 	          ['queueArtMode', queueArtModes],

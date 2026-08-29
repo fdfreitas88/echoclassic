@@ -29,3 +29,29 @@ test('fresh and legacy SqueezeDSP documents receive UI-safe nested defaults with
     assert.match(src, new RegExp('client\\.' + field));
   });
 });
+
+test('native DSP controls expose switch and radio state to assistive technology', function () {
+  [
+    'Automatic response headroom', 'Apply LMS ReplayGain inside DSP',
+    'Reserve positive ReplayGain headroom', '4× true-peak protection',
+    'True-peak limiter', 'Graphic stage', 'Parametric stage', 'Spatial stage',
+    'Mono', 'Convolution stage'
+  ].forEach(function (label) {
+    assert.match(src, new RegExp('role="switch"[^>]*aria-label="' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"|aria-label="' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"[^>]*role="switch"'));
+  });
+  ['DSP owner', 'Crossfeed', 'Polarity'].forEach(function (label) {
+    const group = src.slice(src.indexOf('aria-label="' + label + '"'), src.indexOf('aria-label="' + label + '"') + 1800);
+    assert.match(group, /role="radio"/);
+    assert.match(group, /:aria-checked=/);
+    assert.match(group, /radioKey\(/);
+  });
+});
+
+test('Compare hold is a real keyboard-operable button and always releases bypass', function () {
+  const row = src.slice(src.indexOf('class="srow eq-hold-row"'), src.indexOf('class="srow eq-hold-row"') + 1400);
+  assert.match(row, /<button type="button" class="eq-hold-button"/);
+  assert.match(row, /@keydown\.space\.prevent="holdEqualizerBypass\(true\)"/);
+  assert.match(row, /@keyup\.space\.prevent="holdEqualizerBypass\(false\)"/);
+  assert.match(row, /@blur="holdEqualizerBypass\(false\)"/);
+  assert.doesNotMatch(row, /<button[^>]*>[^<]*<button/);
+});

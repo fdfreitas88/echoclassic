@@ -10,6 +10,17 @@ test('Now Playing distinguishes source audio from the stream sent to the player'
   assert.match(src, /Output to player:/);
 });
 
+test('phone volume controls preserve a full-width slider and separate the mode switch', function () {
+  const np = helpers.read('EchoClassic/HTML/echoclassic/html/js/nowplaying.js');
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  assert.match(np, /class="volume-step quiet pointer"/);
+  assert.match(np, /class="volume-step loud pointer"/);
+  assert.match(np, /@click="stepVolume\(-ui\.volumeStep\)"/);
+  assert.match(np, /@click="stepVolume\(ui\.volumeStep\)"/);
+  assert.match(css, /@media \(max-width:560px\)\{[\s\S]*?\.npfull \.bottom\{grid-template-columns:minmax\(0,1fr\);gap:4px\}/);
+  assert.match(css, /\.npfull \.volume-mode\{border-left:0;padding-left:0;padding-top:7px\}/);
+});
+
 test('Now Playing displays the Replay Gain value actually applied by LMS', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/nowplaying.js');
   assert.match(src, /store\.replayGainApplied/);

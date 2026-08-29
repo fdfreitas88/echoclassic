@@ -1101,8 +1101,11 @@ body.dark .swatch-dot::before{background:var(--scheme-dark)}
 .swatch-dot.gauge-color-theme::before{background:linear-gradient(135deg,var(--content) 50%,var(--chrome) 50%)}
 body.dark .swatch-dot.gauge-color-theme::before{background:linear-gradient(135deg,var(--content) 50%,var(--chrome) 50%)}
 @media (max-width:480px){
+  .segmented-row{align-items:stretch;flex-direction:column;gap:8px;padding-top:8px;padding-bottom:8px}
+  .segmented-row>.segmented{width:100%;margin-left:0}
+  .segmented-row>.segmented button{min-width:0;flex:1;padding-left:6px;padding-right:6px;overflow:hidden;text-overflow:ellipsis}
   .srow:has(>.swatch-row){flex-wrap:wrap;padding-top:5px;padding-bottom:5px}
-  .srow>.swatch-row{width:100%;margin-left:0;justify-content:space-between;gap:0}
+  .srow>.swatch-row{width:100%;display:grid;grid-template-columns:repeat(4,44px);margin-left:0;justify-content:space-between;gap:6px 0}
 }
 /* ====== mini player ==================================================== */
 .mini{height:var(--mini);flex:0 0 auto;background:var(--mini-bg);border-top:.5px solid var(--mini-edge);
@@ -2042,7 +2045,7 @@ body.notes .mocknote{display:block}
 </head>
 <body class="marks notes">
 <div class="mockpage">
-  
+
 <div class="mockbar">
   <span class="g">Screen</span>
   <button data-screen="settings" class="on">Settings</button>
@@ -2070,7 +2073,7 @@ body.notes .mocknote{display:block}
             <span class="mid">4:55 PM</span>
             <span class="srv">LMS Server 9.1.1</span>
           </div>
-          
+
 <div class="navbar">
   <button class="back pointer" id="navback" style="display:none" aria-label="Back">
     <svg class="ic chevleft" viewBox="0 0 13 20"><path d="M10 1L2.5 10 10 19"/></svg><span id="navbacklbl">Settings</span>
@@ -2087,7 +2090,7 @@ body.notes .mocknote{display:block}
         <main class="workspace">
           <div class="body">
             <div class="settings-scroll" id="scroll">
-              
+
 <div class="screen on" id="s-settings" data-title="Settings">
   <div class="settings">
 
@@ -2170,13 +2173,13 @@ body.notes .mocknote{display:block}
       </div>
       <div class="srow">Accent colour
         <div class="swatch-row" role="radiogroup" aria-label="Accent colour">
-          <button class="swatch-dot scheme-blue pointer" aria-checked="true" role="radio"></button>
-          <button class="swatch-dot scheme-teal pointer" aria-checked="false" role="radio"></button>
-          <button class="swatch-dot scheme-crimson pointer" aria-checked="false" role="radio"></button>
-          <button class="swatch-dot scheme-indigo pointer" aria-checked="false" role="radio"></button>
-          <button class="swatch-dot scheme-amber pointer" aria-checked="false" role="radio"></button>
-          <button class="swatch-dot scheme-silver pointer" aria-checked="false" role="radio"></button>
-          <button class="swatch-dot scheme-black pointer" aria-checked="false" role="radio"></button>
+          <button class="swatch-dot scheme-blue pointer" aria-label="Blue" aria-checked="true" role="radio"></button>
+          <button class="swatch-dot scheme-teal pointer" aria-label="Teal" aria-checked="false" role="radio"></button>
+          <button class="swatch-dot scheme-crimson pointer" aria-label="Crimson" aria-checked="false" role="radio"></button>
+          <button class="swatch-dot scheme-indigo pointer" aria-label="Indigo" aria-checked="false" role="radio"></button>
+          <button class="swatch-dot scheme-amber pointer" aria-label="Amber" aria-checked="false" role="radio"></button>
+          <button class="swatch-dot scheme-silver pointer" aria-label="Silver" aria-checked="false" role="radio"></button>
+          <button class="swatch-dot scheme-black pointer" aria-label="Black" aria-checked="false" role="radio"></button>
         </div>
       </div>
     </div>
@@ -2307,7 +2310,7 @@ Deadly nicotine kills what's left of it&hellip;</div>
           </div>
         </main>
         <footer class="app-footer">
-          
+
 <div class="mini">
   <div class="transport">
     <button type="button" class="mini-action pointer" aria-label="Previous track">

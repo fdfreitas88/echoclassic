@@ -5,36 +5,50 @@
 Vue.component('lms-playlists', {
   template: `
 <div class="scroller">
-  <div v-if="loading" class="empty"><div class="p">Loading…</div></div>
+  <div v-if="loading" class="system-state system-loading" role="status" aria-live="polite">
+    <div class="state-skeleton" aria-hidden="true"><span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span><span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span></div>
+    <div class="state-progress-copy"><span>Loading playlists…</span></div><div class="state-progress indeterminate" role="progressbar" aria-label="Loading playlists"><i></i></div>
+  </div>
   <div v-else-if="error" class="empty">
-    <div class="h">Could not read the playlists</div><div class="p">{{ error }}</div>
-    <button class="retry-command" @click="retry">Try again</button>
+    <div class="state-error-mark" aria-hidden="true">!</div><div class="h">Playlists unavailable</div><div class="p">{{ error }} Your current page is unchanged.</div>
+    <div class="state-actions"><button class="retry-command primary" @click="retry">Try again</button></div>
   </div>
 
   <template v-else-if="frame">
     <div style="display:flex">
       <div style="flex:1;min-width:0">
-        <div class="albhead">
+        <div class="albhead playlist-head">
           <input v-if="editing" v-model="editName" class="playlist-name-input"
                  aria-label="Playlist name" @keyup.enter="rename">
           <div v-else class="big ell">{{ frame.label }}</div>
+          <div class="playlist-primary-actions">
+            <button class="playlist-primary pointer" @click="playAll">Play</button>
+            <button class="playlist-primary secondary pointer" @click="shuffle">Shuffle</button>
+          </div>
         </div>
         <div class="albsub">{{ tracks.length }} {{ tracks.length === 1 ? 'song' : 'songs' }}<span v-if="total"> • {{ total }}</span></div>
-        <div class="acts-row">
-          <button class="playlist-command pointer" @click="playAll">Play</button>
-          <button class="playlist-command pointer" @click="shuffle">Shuffle</button>
-          <button class="playlist-command pointer"
-                  @click="toggleEdit">{{ editing ? 'Done' : 'Edit' }}</button>
-          <button v-if="editing && selectedCount" class="playlist-command pointer"
-                  @click="removeSelected">Remove {{ selectedCount }}</button>
-	      <button v-if="editing && duplicateCount" class="playlist-command pointer"
+        <div v-if="!editing" class="acts-row playlist-browse-actions">
+          <button class="playlist-command pointer" @click="toggleEdit">Edit</button>
+        </div>
+        <div v-else class="playlist-edit-bar" role="toolbar" aria-label="Playlist editing">
+          <strong>{{ selectedCount }} selected</strong>
+          <span>Tap songs to select</span>
+          <button v-if="selectedCount" class="playlist-command pointer"
+                  @click="removeSelected">Remove selected</button>
+	      <button v-if="duplicateCount" class="playlist-command pointer"
 	              @click="removeDuplicates">Remove {{ duplicateCount }} duplicates</button>
-	          <button v-if="editing" class="playlist-command destructive pointer"
-	                  @click="confirmDelete = true">Delete playlist</button>
+          <button class="playlist-command pointer" @click="toggleEdit">Done</button>
         </div>
 	        <div v-for="t in tracks" :key="t.index + '-' + t.id" class="trow"
+	             ref="trackRows" tabindex="0"
 	             :draggable="editing" @dragstart="dragStart(t, $event)" @dragover.prevent
 	             @drop.prevent="dropOn(t)" @dragend="dragIndex = null"
+	             @keydown.up.prevent="focusTrack(t, -1)" @keydown.down.prevent="focusTrack(t, 1)"
+	             @keydown.space.prevent="editing ? trackClick(t) : playTrack(t)"
+	             @keydown.alt.up.prevent="editing && move(t, -1)"
+	             @keydown.alt.down.prevent="editing && move(t, 1)"
+	             @keydown.delete.prevent="editing && removeOne(t)"
+	             @keydown.esc.prevent="editing && toggleEdit()"
 	             :class="{playing: store.np.id === t.id, chosen: isSelected(t)}"
 	             role="group" :aria-label="trackLabel(t)">
 	          <button type="button" class="trow-main pointer" :aria-label="trackLabel(t)"
@@ -49,12 +63,14 @@ Vue.component('lms-playlists', {
 	            <span class="dur">{{ dur(t.duration) }}</span>
 	          </button>
 	          <template v-if="editing">
-	            <button class="reorder-command" title="Move to position"
-	                    :aria-label="'Move ' + t.title + ' to position'" @click.stop="moveTo(t)">#</button>
 	            <button class="reorder-command" title="Move up"
+	                    :disabled="t.index === 0"
 	                    :aria-label="'Move ' + t.title + ' up'" @click.stop="move(t, -1)">↑</button>
 	            <button class="reorder-command" title="Move down"
+	                    :disabled="t.index === tracks.length - 1"
 	                    :aria-label="'Move ' + t.title + ' down'" @click.stop="move(t, 1)">↓</button>
+	            <button class="reorder-command destructive playlist-row-remove" title="Remove"
+	                    :aria-label="'Remove ' + t.title" @click.stop="removeOne(t)">×</button>
 	          </template>
 	          <button v-else class="more-command" title="More actions"
 	                  :aria-label="'More actions for ' + t.title"
@@ -72,6 +88,10 @@ Vue.component('lms-playlists', {
           {{ tracksLoadingMore ? 'Loading…' : 'Load more songs' }}
         </button>
         <div v-if="!tracks.length" class="empty"><div class="p">This playlist has no songs yet.</div></div>
+        <div v-if="editing" class="playlist-danger-zone">
+          <span>Playlist settings and permanent actions</span>
+          <button class="playlist-command destructive pointer" @click="confirmDelete = true">Delete playlist…</button>
+        </div>
       </div>
     </div>
   </template>
@@ -247,14 +267,24 @@ Vue.component('lms-playlists', {
         await self.loadTracks(self.frame);
       });
     },
-    moveTo: async function (t) {
-      var answer = window.prompt('Move to position (1–' + this.tracks.length + ')', String(t.index + 1));
-      if (answer === null) return;
-      var to = Math.max(0, Math.min(this.tracks.length - 1, Number(answer) - 1));
-      if (!Number.isFinite(to) || to === t.index) return;
+    focusTrack: function (t, delta) {
+      var rows = this.$refs.trackRows || [];
+      if (!Array.isArray(rows)) rows = [rows];
+      var current = this.tracks.indexOf(t);
+      var next = rows[current + delta];
+      if (next && next.focus) next.focus();
+    },
+    removeOne: async function (t) {
+      var accepted = await LmsUi.confirmAction({
+        title: 'Remove “' + t.title + '”?',
+        message: 'The song leaves this playlist but remains in your library.',
+        confirmLabel: 'Remove song'
+      });
+      if (!accepted) return;
       var self = this;
-      await this.runOperation('Reordering playlist…', async function () {
-        await LmsApi.editPlaylist(self.frame.id, 'move', { index: t.index, toIndex: to });
+      await this.runOperation('Removing song…', async function () {
+        await LmsApi.editPlaylist(self.frame.id, 'delete', { index: t.index });
+        self.selected = {};
         await self.loadTracks(self.frame);
       });
     },

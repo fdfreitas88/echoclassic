@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Echo Classic — Settings before / after</title>
+  <style>
+    :root{--bg:#ececf1;--paper:#fff;--ink:#17171a;--muted:#6b6b73;--line:#c8c8ce;--blue:#087db5;--green:#31a451;--danger:#d13a31;--r:12px;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#d8d8dd}
+    *{box-sizing:border-box}body{margin:0}.page{max-width:1220px;margin:auto;padding:28px 20px 48px}.intro{display:flex;justify-content:space-between;gap:30px;align-items:end;margin-bottom:20px}.intro h1{margin:0;font-size:30px;letter-spacing:-.04em}.intro p{max-width:620px;margin:0;color:#505058;line-height:1.45}.compare{display:grid;grid-template-columns:1fr 1fr;gap:22px}.panel-title{display:flex;align-items:center;gap:9px;margin:0 0 9px;font-size:13px;color:#4e4e56;text-transform:uppercase;letter-spacing:.07em}.tag{padding:4px 7px;border-radius:5px;background:#fff;border:1px solid #bbb}.phone{height:760px;overflow:hidden;background:var(--bg);border:1px solid #aaa;border-radius:28px;box-shadow:0 18px 45px rgba(30,30,40,.14)}.status{height:24px;background:#f8f8f9;padding:5px 13px;font-size:11px;font-weight:600;display:flex;justify-content:space-between}.nav{height:45px;background:#f8f8f9;border-bottom:1px solid var(--line);display:grid;grid-template-columns:60px 1fr 60px;align-items:center;text-align:center;color:var(--blue)}.nav b{color:var(--ink);font-weight:500}.scroll{height:691px;overflow:auto;padding-bottom:30px}.section-title{padding:24px 16px 7px;color:#6d6d75;font-size:12px;text-transform:uppercase}.group{background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.row{min-height:48px;margin-left:16px;padding:9px 15px 9px 0;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:16px}.row:last-child{border-bottom:0}.value{color:var(--muted);white-space:nowrap}.chev{color:#97979e;font-size:22px;line-height:1}.copy{min-width:0}.copy small{display:block;color:var(--muted);font-size:12px;line-height:1.25;margin-top:2px}.switch{width:44px;height:26px;border-radius:15px;background:#999;flex:none;padding:2px}.switch.on{background:var(--green)}.switch:after{content:"";display:block;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #666}.switch.on:after{margin-left:18px}.seg{display:flex;border:1px solid var(--blue);border-radius:7px;overflow:hidden;color:var(--blue);flex:none}.seg span{padding:7px 11px;border-right:1px solid var(--blue);font-size:12px}.seg span:last-child{border:0}.seg .on{color:#fff;background:var(--blue)}.help{padding:6px 16px 0;color:var(--muted);font-size:12px;line-height:1.3}.issue{margin:10px 12px;padding:10px 12px;border-radius:9px;background:#fff4d6;color:#654d11;font-size:12px;line-height:1.35}.after .phone{background:#f1f1f5}.after .nav b{font-weight:600}.after .group{margin:0 10px;border:0;border-radius:var(--r);overflow:hidden}.after .row{min-height:52px}.after .section-title{padding-left:22px}.player-card{margin:14px 10px 0;background:#fff;border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:42px 1fr auto;gap:11px;align-items:center}.art{width:42px;height:42px;border-radius:7px;background:linear-gradient(145deg,#b78950,#543f2c);box-shadow:inset 0 0 0 1px #0002}.player-card b{font-size:15px}.player-card small{display:block;color:var(--muted);margin-top:2px}.select{border:1px solid #b8b8bf;border-radius:8px;padding:7px 9px;color:var(--blue);font-size:13px}.eq-status{color:var(--green);font-size:13px;font-weight:600}.footer-note{margin:18px 15px;color:#696971;font-size:12px;line-height:1.4}.map{margin-top:20px;background:#f5f5f7;border-radius:14px;padding:16px 18px}.map h2{font-size:16px;margin:0 0 10px}.map-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:13px}.map-grid div{background:#fff;border:1px solid #d1d1d6;border-radius:8px;padding:9px}.map b{display:block;margin-bottom:3px}.map span{color:#666}.dead{color:var(--danger);font-weight:600}
+    .edit-link,.frequent-action{color:var(--blue);justify-content:center;font-size:15px}.customize,.menu-example{margin-top:22px;display:grid;grid-template-columns:minmax(280px,390px) 1fr;gap:24px;align-items:start}.customize .phone{height:710px}.customize .scroll{height:641px}.customize-copy{background:#f5f5f7;border-radius:14px;padding:18px}.customize-copy h2{margin:0 0 9px;font-size:20px}.customize-copy p{color:#606068;line-height:1.45}.customize-copy li{margin:9px 0;line-height:1.35}.check{width:23px;height:23px;border:1.5px solid #aaa;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}.check.on{border-color:var(--blue);background:var(--blue)}.handle{color:#aaa;font-size:20px;letter-spacing:-3px}.disabled-copy{color:#999}.count{color:var(--muted);font-size:12px;margin-left:auto}.reset{color:var(--blue);font-size:15px}.after .frequent-title{display:flex;justify-content:space-between;align-items:end}.after .frequent-title span:last-child{font-size:11px;text-transform:none;letter-spacing:0;color:#888}.menu-example .phone{height:515px}.menu-example .scroll{height:446px}.choice-mark{color:var(--blue);font-size:19px}.menu-example .customize-copy{margin-top:34px}.confirmation{margin:12px 10px;padding:10px 12px;border-radius:9px;background:#e7f6ec;color:#246a39;font-size:13px}.context-icon{color:var(--blue);font-size:19px;margin-right:8px}
+    @media(max-width:800px){.page{padding:16px 10px 30px}.intro{display:block}.intro p{margin-top:8px}.compare,.customize,.menu-example{grid-template-columns:1fr}.phone{height:730px}.map-grid{grid-template-columns:1fr}.intro h1{font-size:25px}.customize .phone,.menu-example .phone{max-width:390px;margin:auto}.customize-copy{order:-1}.menu-example .customize-copy{margin-top:0}}
+  </style>
+</head>
+<body>
+<main class="page">
+  <header class="intro">
+    <div><h1>Settings · arquitetura aprovada + atalhos pessoais</h1><p>Reorganização iOS-like baseada na frequência e no alcance de cada ajuste. Agora cada usuário escolhe quais controles aparecem na área frequente.</p></div>
+    <p><b>Refinamento para aprovação.</b> Nenhuma mudança aplicada ao Echo Classic.</p>
+  </header>
+  <section class="compare" aria-label="Comparação antes e depois">
+    <article>
+      <h2 class="panel-title"><span class="tag">Antes</span> lista única e extensa</h2>
+      <div class="phone">
+        <div class="status"><span>Echo Classic</span><span>LMS Server 9.1.1</span></div>
+        <div class="nav"><span>☾</span><b>Settings</b><span>⌕</span></div>
+        <div class="scroll">
+          <div class="section-title">Player</div><div class="group"><div class="row"><span>Active player</span><span class="value">Squeezelite ›</span></div><div class="row"><span>Default player</span><span class="value">Last used ›</span></div></div>
+          <div class="section-title">Playback</div><div class="group">
+            <div class="row"><span>Equalizer</span><span class="value">Apple Squeezer ›</span></div><div class="row"><span>Crossfade</span><i class="switch"></i></div><div class="help">Off: gapless playback — songs join with no gap and no blend</div>
+            <div class="row"><span>Replay gain</span><span class="seg"><span>Off</span><span>Track</span><span class="on">Album</span><span>Smart</span></span></div>
+            <div class="row"><span class="copy">Volume button step<small>Amount changed by each speaker-button press.</small></span><span class="seg"><span>1%</span><span class="on">2%</span><span>5%</span><span>10%</span></span></div>
+            <div class="row"><span>Sleep timer</span><span class="value">15m · 30m · 1h</span></div><div class="row"><span>Stop at end</span><span class="value">Unavailable</span></div>
+          </div>
+          <div class="issue"><b>Problema observado em 390 px:</b> rótulos e controles segmentados disputam a mesma linha; opções frequentes, administrativas e técnicas formam uma rolagem longa sem visão geral.</div>
+          <div class="section-title">Appearance</div><div class="group"><div class="row"><span>Theme</span><span class="value">Light</span></div><div class="row"><span>Accent colour</span><span class="value">System Blue</span></div><div class="row"><span>Font</span><span class="value">Helvetica</span></div><div class="row"><span>Player layout</span><span class="chev">›</span></div></div>
+        </div>
+      </div>
+    </article>
+    <article class="after">
+      <h2 class="panel-title"><span class="tag">Depois</span> frequente primeiro, detalhes por destino</h2>
+      <div class="phone">
+        <div class="status"><span>Echo Classic</span><span>LMS Server 9.1.1</span></div>
+        <div class="nav"><span>☾</span><b>Settings</b><span>⌕</span></div>
+        <div class="scroll">
+          <div class="player-card"><span class="art"></span><span><b>Squeezelite</b><small>Active player</small></span><button class="select">Change</button></div>
+          <div class="section-title frequent-title"><span>Frequent settings</span><span>5 shown</span></div><div class="group">
+            <div class="row"><span>Equalizer</span><span class="eq-status">On&nbsp;&nbsp;</span><i class="switch on"></i></div>
+            <div class="row"><span class="copy">Sound preset<small>Apple Squeezer · Native</small></span><span class="value">Flat <span class="chev">›</span></span></div>
+            <div class="row"><span>Equalizer settings</span><span class="chev">›</span></div>
+            <div class="row"><span>Crossfade</span><i class="switch"></i></div>
+            <div class="row"><span>Replay gain</span><span class="value">Album <span class="chev">›</span></span></div>
+            <div class="row"><span>Sleep timer</span><span class="value">Off <span class="chev">›</span></span></div>
+            <div class="row edit-link"><span>Edit frequent settings</span></div>
+          </div>
+          <div class="section-title">Player & app</div><div class="group">
+            <div class="row"><span class="copy">Player settings<small>Default player, volume step, stop at end</small></span><span class="chev">›</span></div>
+            <div class="row"><span class="copy">Appearance<small>Theme, colour, font and player layout</small></span><span class="chev">›</span></div>
+            <div class="row"><span class="copy">Queue<small>Artwork and album grouping</small></span><span class="chev">›</span></div>
+            <div class="row"><span class="copy">Interface &amp; access<small>Party mode, kiosk mode, rate and hi-res</small></span><span class="chev">›</span></div>
+          </div>
+          <div class="section-title">System</div><div class="group"><div class="row"><span>Backup</span><span class="chev">›</span></div><div class="row"><span>Advanced LMS settings</span><span class="chev">›</span></div><div class="row"><span>About</span><span class="chev">›</span></div></div>
+          <p class="footer-note">Idioma pode permanecer em Interface &amp; access. Informações de conexão, biblioteca e versões ficam em About.</p>
+        </div>
+      </div>
+    </article>
+  </section>
+  <section class="customize" aria-label="Personalização das configurações frequentes">
+    <div class="phone after">
+      <div class="status"><span>Echo Classic</span><span>LMS Server 9.1.1</span></div>
+      <div class="nav"><span>‹ Settings</span><b>Frequent settings</b><span class="reset">Reset</span></div>
+      <div class="scroll">
+        <p class="footer-note">Choose the settings you use most. Drag selected items to change their order.</p>
+        <div class="section-title">Shown in Settings <span class="count">5 selected</span></div>
+        <div class="group">
+          <div class="row"><i class="check on">✓</i><span class="copy">Equalizer<small>On or off</small></span><span class="handle">≡</span></div>
+          <div class="row"><i class="check on">✓</i><span class="copy">Sound preset<small>Current equalizer preset</small></span><span class="handle">≡</span></div>
+          <div class="row"><i class="check on">✓</i><span>Crossfade</span><span class="handle">≡</span></div>
+          <div class="row"><i class="check on">✓</i><span>Replay gain</span><span class="handle">≡</span></div>
+          <div class="row"><i class="check on">✓</i><span>Sleep timer</span><span class="handle">≡</span></div>
+        </div>
+        <div class="section-title">More settings</div>
+        <div class="group">
+          <div class="row"><i class="check"></i><span>Volume button step</span></div>
+          <div class="row"><i class="check"></i><span>Stop at end</span></div>
+          <div class="row"><i class="check"></i><span>Theme</span></div>
+          <div class="row"><i class="check"></i><span>Accent colour</span></div>
+          <div class="row"><i class="check"></i><span>Queue artwork</span></div>
+          <div class="row"><i class="check"></i><span>Rate and bits</span></div>
+          <div class="row"><i class="check"></i><span>Highlight hi-res</span></div>
+        </div>
+        <p class="footer-note">These controls remain available in their original menus even when they are not shown here.</p>
+      </div>
+    </div>
+    <div class="customize-copy">
+      <h2>Personalização sem duplicar configurações</h2>
+      <p>A área frequente funciona como uma coleção de atalhos vivos. Ela mostra e altera o mesmo valor da configuração original — não cria uma segunda preferência.</p>
+      <ul>
+        <li>O usuário pode selecionar, remover e reordenar itens.</li>
+        <li>A configuração inicial mantém os cinco controles aprovados.</li>
+        <li><b>Reset</b> restaura a seleção e a ordem recomendadas.</li>
+        <li>Os destinos estruturais, como Player settings e About, permanecem fixos para a navegação continuar previsível.</li>
+        <li>Um item temporariamente indisponível continua visível, desativado e com uma explicação — nunca desaparece silenciosamente.</li>
+      </ul>
+    </div>
+  </section>
+  <section class="menu-example" aria-label="Ação dentro dos menus">
+    <div class="phone after">
+      <div class="status"><span>Echo Classic</span><span>LMS Server 9.1.1</span></div>
+      <div class="nav"><span>‹ Settings</span><b>Player settings</b><span></span></div>
+      <div class="scroll">
+        <div class="section-title">Player selection</div>
+        <div class="group"><div class="row"><span>Default player</span><span class="value">Last used <span class="chev">›</span></span></div></div>
+        <div class="section-title">Controls</div>
+        <div class="group">
+          <div class="row"><span>Volume button step</span><span class="value">2% <span class="chev">›</span></span></div>
+          <div class="row frequent-action"><span><b class="context-icon">＋</b>Add to frequent settings</span></div>
+        </div>
+        <div class="section-title">Playback ending</div>
+        <div class="group">
+          <div class="row"><span>Stop at end</span><span class="value">Off <span class="chev">›</span></span></div>
+          <div class="row frequent-action"><span><b class="context-icon">✓</b>Remove from frequent settings</span></div>
+        </div>
+        <div class="confirmation">Added to Frequent settings. The control remains here too.</div>
+      </div>
+    </div>
+    <div class="customize-copy">
+      <h2>Ação contextual em cada menu</h2>
+      <p>Cada configuração elegível oferece uma linha secundária explícita. O texto sempre descreve o estado atual:</p>
+      <ul>
+        <li><b>Add to frequent settings</b> quando o item ainda não está na área frequente.</li>
+        <li><b>Remove from frequent settings</b> quando já está selecionado.</li>
+        <li>A confirmação é discreta e informa que a configuração continua no menu original.</li>
+        <li>A ação não aparece em páginas de navegação, Backup, About ou comandos administrativos.</li>
+      </ul>
+    </div>
+  </section>
+  <section class="map"><h2>Mapa dos destinos — sem perda de recursos</h2><div class="map-grid">
+    <div><b>Player settings</b><span>Default player · volume button step · stop at end</span></div>
+    <div><b>Equalizer settings</b><span>Engine · bands · presets · rules · headroom · import</span></div>
+    <div><b>Appearance</b><span>Theme · accent colour · font · player layout</span></div>
+    <div><b>Interface &amp; access</b><span>Party mode · kiosk mode · technical badges · language</span></div>
+    <div><b>Backup / About</b><span>Import/export separados de conexão, contagens e versões</span></div>
+    <div><b>Frequent settings</b><span>Atalhos escolhidos e ordenados pelo usuário; valores continuam únicos.</span></div>
+  </div></section>
+</main>
+</body>
+</html>

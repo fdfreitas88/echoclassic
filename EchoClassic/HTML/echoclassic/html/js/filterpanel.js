@@ -1,5 +1,5 @@
 
-/* Painel de filtros, ordenacao, agrupamento e preferencia de reproducao.
+/* Painel de filtros, organizacao e vistas salvas.
 
    Um controle so para quatro conceitos foi o defeito que a 3.2.0 comecou a
    desfazer: o <select> da barra decidia filtro, agrupamento e ordem ao mesmo
@@ -38,49 +38,50 @@
            role="dialog" aria-modal="true" aria-labelledby="filter-panel-title" tabindex="-1"
            @keydown.esc.stop.prevent="cancel" @keydown.tab="trapFocus">
     <header class="filter-head">
-      <button ref="first" class="back-command" @click="cancel">
-        <span v-if="mode === 'small'" aria-hidden="true">‹ </span>Cancel
+      <button ref="first" class="back-command" @click="backOrCancel">
+        <span v-if="screen !== 'filters' || mode === 'small'" aria-hidden="true">‹ </span>{{ screen === 'filters' ? 'Cancel' : 'Filters' }}
       </button>
-      <h2 id="filter-panel-title" class="ttl">Filters</h2>
-      <button class="back-command filter-apply" @click="apply">Apply</button>
+      <h2 id="filter-panel-title" class="ttl">{{ screenTitle }}</h2>
+      <button v-if="screen !== 'views'" class="back-command filter-apply" @click="apply">Apply</button>
+      <button v-else class="back-command filter-apply" @click="viewsEditing = !viewsEditing">{{ viewsEditing ? 'Done' : 'Edit' }}</button>
     </header>
 
-    <div class="filter-body scroller">
-      <label class="filter-search">
-        <span class="visually-hidden">Search within filters</span>
-        <input v-model="needle" type="search" placeholder="Search within filters">
-      </label>
+    <div v-if="screen === 'filters'" class="filter-body scroller">
 
       <p v-if="!allowsFilters" class="filter-note">
         This root cannot filter by media. Source, format, resolution, genre and year filters apply in Albums and in Recently added.
       </p>
 
-      <fieldset v-if="allowsFilters && show('Source')" class="filter-group">
+      <fieldset v-if="allowsFilters" class="filter-group">
         <legend>Source</legend>
         <button v-for="o in sourceOptions" :key="o.key" type="button" class="filter-option"
                 :class="{on: has(o.key)}" :aria-pressed="String(has(o.key))"
                 @click="toggle(o.key)">{{ o.label }}</button>
       </fieldset>
 
-      <fieldset v-if="allowsFilters && show('Genre')" class="filter-group">
+      <fieldset v-if="allowsFilters" class="filter-group filter-genres">
         <legend>Genre</legend>
+        <label class="filter-search filter-genre-search">
+          <span class="visually-hidden">Find a genre</span>
+          <input v-model="needle" type="search" placeholder="Find a genre">
+        </label>
         <div v-if="genresLoading" class="filter-note">Loading genres…</div>
         <button v-for="g in visibleGenres" :key="g.id" type="button" class="filter-option"
                 :class="{on: has('genre:' + g.id)}" :aria-pressed="String(has('genre:' + g.id))"
                 @click="toggle('genre:' + g.id)">{{ g.name }}</button>
         <div v-if="genreOverflow" class="filter-note">
-          The genre list is long. Use the search above to find the rest.
+          The genre list is long. Search to find the rest.
         </div>
       </fieldset>
 
-      <fieldset v-if="allowsFilters && show('Format')" class="filter-group">
+      <fieldset v-if="allowsFilters" class="filter-group">
         <legend>Format</legend>
         <button v-for="f in visibleFormats" :key="f.key" type="button" class="filter-option"
                 :class="{on: has('format:' + f.key)}" :aria-pressed="String(has('format:' + f.key))"
                 @click="toggle('format:' + f.key)">{{ f.label }}</button>
       </fieldset>
 
-      <fieldset v-if="allowsFilters && show('Year')" class="filter-group filter-years">
+      <fieldset v-if="allowsFilters" class="filter-group filter-years">
         <legend>Year</legend>
         <label class="filter-year">
           <span>From</span>
@@ -97,7 +98,7 @@
         <p v-if="yearError" class="filter-note">{{ yearError }}</p>
       </fieldset>
 
-      <details v-if="allowsFilters && show('Qualidade')" class="filter-advanced">
+      <details v-if="allowsFilters" class="filter-advanced">
         <summary>Audio quality</summary>
         <fieldset class="filter-group">
           <legend class="visually-hidden">Audio quality</legend>
@@ -110,19 +111,10 @@
         </p>
       </details>
 
-      <fieldset v-if="show('Sort')" class="filter-group">
-        <legend>Sort by</legend>
-        <button v-for="s in sortOptions" :key="s.key" type="button" class="filter-option"
-                :class="{on: draft.sort[0] && draft.sort[0].key === s.key}"
-                :aria-pressed="String(!!draft.sort[0] && draft.sort[0].key === s.key)"
-                @click="chooseSort(s.key)">{{ s.label }}</button>
-        <button type="button" class="filter-option" :aria-pressed="String(sortDesc)"
-                :class="{on: sortDesc}" @click="toggleDir">
-          {{ sortDesc ? 'Descending order (Z–A)' : 'Ascending order (A–Z)' }}
-        </button>
-      </fieldset>
+    </div>
 
-      <fieldset v-if="show('Agrupar')" class="filter-group">
+    <div v-else-if="screen === 'organize'" class="filter-body scroller">
+      <fieldset class="filter-group">
         <legend>Group by</legend>
         <button v-for="g in groupOptions" :key="g.value" type="button" class="filter-option"
                 :class="{on: groupChoice === g.value}" :aria-pressed="String(groupChoice === g.value)"
@@ -132,7 +124,7 @@
         </p>
       </fieldset>
 
-      <fieldset v-if="show('Preference')" class="filter-group">
+      <fieldset class="filter-group">
         <legend>Playback preference</legend>
         <button v-for="p in preferOptions" :key="p.key" type="button" class="filter-option"
                 :class="{on: draft.prefer === p.key}" :aria-pressed="String(draft.prefer === p.key)"
@@ -142,46 +134,54 @@
         </p>
       </fieldset>
 
-      <fieldset v-if="show('Saved views')" class="filter-group filter-views">
-        <legend>Saved views</legend>
-        <div v-for="v in ui.views" :key="v.id" class="filter-view-row">
-          <button type="button" class="filter-option filter-view-name"
-                  :class="{on: ui.defaultView === v.id}" @click="loadView(v)">
-            {{ v.name }}<span v-if="ui.defaultView === v.id" class="filter-view-tag"> · default</span>
-          </button>
-          <button type="button" class="filter-chip-clear"
-                  :aria-label="'Set ' + v.name + ' as default'"
-                  @click="LmsUi.setDefaultView(v.id)">Default</button>
-          <button type="button" class="filter-chip-clear" :aria-label="'Rename' + v.name"
-                  @click="rename(v)">Rename</button>
-          <button type="button" class="filter-chip-clear" :aria-label="'Duplicate' + v.name"
-                  @click="LmsUi.duplicateView(v.id)">Duplicate</button>
-          <button type="button" class="filter-chip-clear destructive"
-                  :aria-label="'Delete' + v.name" @click="LmsUi.deleteView(v.id)">Delete</button>
-        </div>
-        <div v-if="!ui.views.length" class="filter-note">No saved views yet.</div>
-        <label class="filter-search">
-          <span class="visually-hidden">View name</span>
-          <input v-model="viewName" type="text" placeholder="View name" @keydown.enter="saveView">
-        </label>
-        <button type="button" class="filter-option" :disabled="!viewName.trim()"
-                @click="saveView">Save view</button>
-      </fieldset>
+      <button type="button" class="filter-destination" @click="screen = 'views'">
+        <span><strong>Saved views</strong><small>Reuse a filter and organisation setup</small></span>
+        <span aria-hidden="true">›</span>
+      </button>
     </div>
 
-    <footer class="filter-actions">
+    <div v-else class="filter-body scroller filter-views">
+      <p class="filter-note filter-views-note">Tap a view to apply it. Use Edit to manage several views without opening each one.</p>
+      <div v-for="v in ui.views" :key="v.id" class="filter-view-row">
+        <label v-if="editingId === v.id" class="filter-inline-name">
+          <span class="visually-hidden">New name</span>
+          <input v-model.trim="editingName" type="text" @keydown.enter="finishRename(v)" @keydown.esc="cancelRename">
+        </label>
+        <button v-else type="button" class="filter-option filter-view-name" @click="applyView(v)">
+          {{ v.name }}<span v-if="ui.defaultView === v.id" class="filter-view-tag"> · default</span>
+        </button>
+        <div v-if="viewsEditing" class="filter-view-actions">
+          <button type="button" class="filter-chip-clear" :aria-label="'Set ' + v.name + ' as default'" @click="LmsUi.setDefaultView(v.id)">★</button>
+          <button v-if="editingId !== v.id" type="button" class="filter-chip-clear" :aria-label="'Rename ' + v.name" @click="startRename(v)">Rename</button>
+          <button v-else type="button" class="filter-chip-clear" @click="finishRename(v)">Save</button>
+          <button type="button" class="filter-chip-clear" :aria-label="'Duplicate ' + v.name" @click="LmsUi.duplicateView(v.id)">Duplicate</button>
+          <button type="button" class="filter-chip-clear destructive" :aria-label="'Delete ' + v.name" @click="deleteView(v)">Delete</button>
+        </div>
+      </div>
+      <div v-if="!ui.views.length" class="filter-empty">No saved views yet.</div>
+      <div class="filter-new-view">
+        <label class="filter-search">
+          <span class="visually-hidden">View name</span>
+          <input v-model="viewName" type="text" placeholder="Name this view" @keydown.enter="saveView">
+        </label>
+        <button type="button" class="filter-option" :disabled="!viewName.trim()" @click="saveView">Save current view</button>
+      </div>
+    </div>
+
+    <footer v-if="screen === 'filters'" class="filter-actions">
       <button type="button" class="filter-chip-clear" @click="clearAll">Clear all</button>
       <span class="filter-actions-spacer"></span>
-      <button ref="last" type="button" class="filter-option filter-apply-main"
-              @click="apply">Apply</button>
+      <span class="filter-selection-count">{{ selectedFilterCount }} selected</span>
+      <button ref="last" type="button" class="filter-destination compact" @click="screen = 'organize'">Organize <span aria-hidden="true">›</span></button>
     </footer>
   </section>
 </div>`,
     data: function () {
       return {
         ui: LmsUi.state, LmsUi: LmsUi,
-        draft: LmsUi.currentDraft(),
-        needle: '', viewName: '',
+        draft: LmsUi.currentDraft(), screen: 'filters',
+        needle: '', viewName: '', viewsEditing: false,
+        editingId: '', editingName: '',
         yearFrom: '', yearTo: '', yearError: '',
         genres: [], genresLoading: false,
         width: typeof window !== 'undefined' ? window.innerWidth : 1024,
@@ -205,6 +205,11 @@
         return { width: width + 'px', maxHeight: Math.round(this.height * 0.8) + 'px' };
       },
       allowsFilters: function () { return LmsUi.allowsMediaFilter(this.ui.musicView); },
+      screenTitle: function () {
+        return this.screen === 'organize' ? this.tr('Organize') :
+          (this.screen === 'views' ? this.tr('Saved views') : this.tr('Filters'));
+      },
+      selectedFilterCount: function () { return this.draft.filters.length; },
       sourceOptions: function () {
         return [
           { key: 'origin:local', label: this.tr('Local library') },
@@ -265,8 +270,7 @@
       },
       sortDesc: function () { return !!(this.draft.sort[0] || {}).desc; },
       visibleFormats: function () {
-        var self = this;
-        return MEDIA_FORMATS.filter(function (f) { return self.matches(f.label); });
+        return MEDIA_FORMATS;
       },
       /* Vistos na tela: 60 generos empurravam Formato, Ano, Ordenar e Agrupar
          para fora do alcance -- em tela estreita, cada um ocupa uma linha
@@ -309,20 +313,14 @@
         if (!needle) return true;
         return String(label || '').toLowerCase().indexOf(needle) >= 0;
       },
-      /* A busca dentro dos filtros tambem esconde secao inteira quando o nome da
-         secao nao casa e nonea opcao dela sobrou. Sem isso, procurar "rock"
-         deixaria na tela cinco cabecalhos vazios. */
-      show: function (title) {
-        if (!this.needle) return true;
-        if (this.matches(title)) return true;
-        if (title === 'Format') return this.visibleFormats.length > 0;
-        if (title === 'Genre') return this.visibleGenres.length > 0;
-        return false;
-      },
       reset: function () {
         this.draft = LmsUi.currentDraft();
+        this.screen = 'filters';
         this.needle = '';
         this.viewName = '';
+        this.viewsEditing = false;
+        this.editingId = '';
+        this.editingName = '';
         this.yearError = '';
         this.syncYearInputs();
       },
@@ -393,8 +391,7 @@
         this.draft.group = [value];
       },
       clearAll: function () {
-        this.draft = { view: this.ui.musicView, filters: [], group: [], sections: [],
-                       sort: [], prefer: 'none' };
+        this.draft.filters = [];
         this.yearFrom = '';
         this.yearTo = '';
         this.yearError = '';
@@ -402,6 +399,11 @@
       apply: function () {
         LmsUi.applyDraft(this.draft);
         this.close();
+      },
+      backOrCancel: function () {
+        if (this.screen === 'views') { this.screen = 'organize'; this.cancelRename(); return; }
+        if (this.screen === 'organize') { this.screen = 'filters'; return; }
+        this.cancel();
       },
       cancel: function () { this.close(); },
       close: function () {
@@ -417,8 +419,13 @@
       saveView: function () {
         var name = String(this.viewName || '').trim();
         if (!name) return;
+        /* Save exactly what is visible in the panel without making it active or
+           closing the sheet. A saved view must not have the side effect of
+           changing the library before the user taps it. */
+        var active = LmsUi.currentDraft();
         LmsUi.applyDraft(this.draft);
         var saved = LmsUi.saveCurrentView(name);
+        LmsUi.applyDraft(active);
         if (saved) {
           this.viewName = '';
           LmsUi.notify(this.tr('View saved.'), 'success', 2500);
@@ -432,9 +439,36 @@
         };
         this.syncYearInputs();
       },
-      rename: function (view) {
-        var name = typeof prompt === 'function' ? prompt(this.tr('New name'), view.name) : null;
-        if (name) LmsUi.renameView(view.id, name);
+      applyView: function (view) {
+        this.loadView(view);
+        this.apply();
+      },
+      startRename: function (view) {
+        this.editingId = view.id;
+        this.editingName = view.name;
+        this.$nextTick(function () {
+          var input = this.$refs.panel && this.$refs.panel.querySelector('.filter-inline-name input');
+          if (input && input.focus) { input.focus(); if (input.select) input.select(); }
+        }.bind(this));
+      },
+      finishRename: function (view) {
+        var name = String(this.editingName || '').trim();
+        if (!name) return;
+        LmsUi.renameView(view.id, name);
+        this.cancelRename();
+      },
+      cancelRename: function () {
+        this.editingId = '';
+        this.editingName = '';
+      },
+      deleteView: async function (view) {
+        var accepted = await LmsUi.confirmAction({
+          title: this.tr('Delete saved view?'),
+          message: view.name,
+          confirmLabel: this.tr('Delete'),
+          destructive: true
+        });
+        if (accepted) LmsUi.deleteView(view.id);
       },
       loadGenres: async function () {
         if (this.genres.length || this.genresLoading) return;

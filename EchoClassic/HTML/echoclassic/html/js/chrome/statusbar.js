@@ -1,21 +1,15 @@
 
-/* The iOS 9 status bar, repurposed: the device name slot carries the skin's
-   brand and the battery slot carries the server version, because neither a
-   device name nor a battery means anything here. */
+/* The iOS 9 status bar. Server details live in More/About where they remain
+   readable; the compact bar keeps the brand and the user's local clock. */
 Vue.component('lms-statusbar', {
   template: `
 <div class="statusbar" aria-hidden="true">
   <b class="brand">Echo Classic</b>
   <span class="mid">{{ clock }}</span>
-  <span class="srv">LMS Server {{ version }}</span>
+  <span class="status-reserve" aria-hidden="true">Echo Classic</span>
 </div>`,
   data: function () {
     return { clock: '', timer: null };
-  },
-  computed: {
-    version: function () {
-      return typeof LMS_VERSION === 'string' && LMS_VERSION ? LMS_VERSION : '—';
-    }
   },
   methods: {
     /* toLocaleTimeString respeita a preferencia de 12h/24h do sistema; a

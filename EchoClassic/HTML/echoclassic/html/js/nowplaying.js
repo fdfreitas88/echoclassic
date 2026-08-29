@@ -15,10 +15,10 @@ Vue.component('lms-nowplaying', {
   <section ref="dialog" class="npfull" :class="{'with-queue': ui.queueInline}"
            role="dialog" :aria-modal="String(isModal)" aria-label="Now playing"
            tabindex="-1" @keydown.tab="trapFocus" @keydown.esc.stop.prevent="close">
-	    <button type="button" class="dismiss pointer" title="Close" aria-label="Close player" @click="close">
+    <button v-if="!ui.kioskMode" type="button" class="dismiss pointer" title="Close" aria-label="Close player" @click="close">
       <svg viewBox="0 0 24 12"><path d="M3 3l9 6 9-6"/></svg>
     </button>
-    <button v-if="!fullscreen" type="button" class="player-position pointer"
+    <button v-if="!fullscreen && !ui.kioskMode" type="button" class="player-position pointer"
 	            :title="positionTitle" :aria-label="positionTitle" @click="cyclePosition">
       <svg viewBox="0 0 30 20" aria-hidden="true">
         <rect x="1" y="2" width="8" height="16" rx="1"
@@ -29,7 +29,7 @@ Vue.component('lms-nowplaying', {
               :class="{active: ui.playerPosition === 'right'}"/>
       </svg>
     </button>
-    <button type="button" class="player-size pointer"
+    <button v-if="!ui.kioskMode" type="button" class="player-size pointer"
 	            :title="fullscreen ? 'Back to adaptive mode' : 'Show full screen'"
 	            :aria-label="fullscreen ? 'Back to adaptive mode' : 'Show full screen'"
 	            @click="toggleFullscreen">
@@ -39,6 +39,10 @@ Vue.component('lms-nowplaying', {
       <svg v-else viewBox="0 0 24 24" aria-hidden="true">
         <path d="M9 3H3v6M15 3h6v6M9 21H3v-6M15 21h6v-6"/>
       </svg>
+    </button>
+    <button v-if="ui.kioskMode" type="button" class="kiosk-exit pointer"
+            title="Exit kiosk mode" aria-label="Exit kiosk mode" @click="close">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
     </button>
 
     <div class="cover" :class="{placeholder: !coverUrl || coverFailed}">

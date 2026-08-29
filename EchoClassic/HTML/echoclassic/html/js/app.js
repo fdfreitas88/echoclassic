@@ -28,24 +28,47 @@
     </button>
   </div>
 
+  <aside v-if="ui.partyMode && !ui.kioskMode" class="party-status" aria-label="Party mode status">
+    <span class="party-status-icon" aria-hidden="true">♬</span>
+    <strong>Party mode</strong>
+    <span>Delete and reorder are hidden.</span>
+    <button type="button" @click="managePartyMode">Manage</button>
+  </aside>
+
 	  <main class="workspace" :class="workspaceClasses">
 	    <h1 class="visually-hidden">{{ pageHeading }}</h1>
 	    <lms-nowplaying v-if="ui.full" :fullscreen="ui.playerFullscreen"></lms-nowplaying>
+
+    <!-- Feedback belongs to the reading order. On the default Music screen this
+         is immediately before "Recently played", so a result cannot hide behind
+         the mini player or cover a list control. -->
+    <section v-if="ui.busyMessage || ui.notice" class="feedback-region"
+             aria-label="Status messages">
+      <div v-if="ui.busyMessage" class="operation-banner" role="status" aria-live="polite">
+        <span class="feedback-spinner" aria-hidden="true"></span>
+        <span class="feedback-copy">{{ ui.busyMessage }}</span>
+      </div>
+      <div v-if="ui.notice" class="notice" :class="ui.noticeKind"
+           :role="ui.noticeKind === 'error' ? 'alert' : 'status'"
+           :aria-live="ui.noticeKind === 'error' ? 'assertive' : 'polite'">
+        <span class="feedback-mark" aria-hidden="true">{{ ui.noticeKind === 'error' ? '!' : '✓' }}</span>
+        <span class="feedback-copy">{{ ui.notice }}</span>
+        <button type="button" class="feedback-dismiss" aria-label="Dismiss message"
+                @click="LmsUi.dismissNotice">×</button>
+      </div>
+    </section>
 
     <div class="body" :class="{split: isSplit, drilled: drilled}">
       <lms-search    v-if="ui.searching"></lms-search>
       <lms-browse    v-else-if="ui.tab === 'music'"></lms-browse>
       <lms-playlists v-else-if="ui.tab === 'playlists'" :key="plKey"></lms-playlists>
       <lms-settings  v-else-if="ui.tab === 'settings'"></lms-settings>
+      <lms-more      v-else-if="ui.tab === 'more'"></lms-more>
       <lms-opml      v-else-if="ui.tab === 'radio'"     root="radio"     tab="radio"     :key="radioKey"></lms-opml>
       <lms-opml      v-else-if="ui.tab === 'apps'"      root="apps"      tab="apps"      :key="appsKey"></lms-opml>
       <lms-favorites v-else-if="ui.tab === 'favourites'" :key="favKey"></lms-favorites>
     </div>
   </main>
-
-  <div v-if="ui.busyMessage" class="operation-banner" role="status">{{ ui.busyMessage }}</div>
-  <button v-if="ui.notice" class="notice" :class="ui.noticeKind"
-          @click="LmsUi.dismissNotice">{{ ui.notice }}</button>
 
   <!-- Fica aqui, e nao junto das folhas la embaixo: a barra de selecao e uma
        linha da coluna .app (flex:0 0 44px), nao uma sobreposicao. A ordem de
@@ -62,6 +85,20 @@
   <lms-action-sheet></lms-action-sheet>
   <lms-info-sheet></lms-info-sheet>
   <lms-filter-panel></lms-filter-panel>
+
+  <div v-if="ui.confirmation" class="confirm-stage global-confirm" role="dialog"
+       aria-modal="true" aria-labelledby="global-confirm-title"
+       @keydown.esc.stop.prevent="cancelConfirmation">
+    <div class="confirm-back" @click="cancelConfirmation"></div>
+    <div ref="confirmation" class="confirm-panel" tabindex="-1">
+      <span class="confirm-handle" aria-hidden="true"></span>
+      <strong id="global-confirm-title">{{ ui.confirmation.title }}</strong>
+      <span>{{ ui.confirmation.message }}</span>
+      <button type="button" :class="{destructive:ui.confirmation.destructive}"
+              @click="acceptConfirmation">{{ ui.confirmation.confirmLabel }}</button>
+      <button ref="confirmationCancel" type="button" @click="cancelConfirmation">Cancel</button>
+    </div>
+  </div>
 
   <!-- Seletor de raiz de Minha Musica, como listbox do ARIA APG (A11Y-01). Era
        uma pilha de botoes sem papel nenhum, com o foco parado no gatilho: o
@@ -104,6 +141,14 @@
           }
           if (nodes[at]) nodes[at].focus();
           else if (self.$refs.picker && self.$refs.picker.focus) self.$refs.picker.focus();
+        });
+      },
+      'ui.confirmation': function (value) {
+        if (!value) return;
+        var self = this;
+        this.$nextTick(function () {
+          if (self.$refs.confirmationCancel) self.$refs.confirmationCancel.focus();
+          else if (self.$refs.confirmation) self.$refs.confirmation.focus();
         });
       }
     },
@@ -193,6 +238,14 @@
         }
       },
       reconnect: function () { LmsStore.reconnect(); },
+      managePartyMode: function () {
+        LmsUi.setTab('settings');
+        if (LmsNav.reset) LmsNav.reset('settings');
+        LmsNav.push('settings', { label: 'Interface & access', screen: 'interface-settings' });
+        this.ui.appearanceScreen = 'interface-settings';
+      },
+      acceptConfirmation: function () { LmsUi.resolveConfirmation(true); },
+      cancelConfirmation: function () { LmsUi.resolveConfirmation(false); },
       /* O gatilho chega junto do evento porque e para ele que o foco volta.
          Mesmo acordo que o menu de ordenacao faz por LmsUi.sortTrigger(); aqui
          o dono e o proprio componente, que ja renderiza o popup. */

@@ -140,7 +140,7 @@ test('AC-R2-02: the Lyrics row is gated on the truthiness of info.lyrics, not ke
      exactly the empty-screen defect this row must never open onto. See the
      hasLyrics computed itself, and the whitespace-gate tests below, for that
      part of the contract. */
-  assert.match(src, /<button v-if="hasLyrics" type="button" class="srow settings-command-row pointer"\s*\n\s*@click="view = 'lyrics'">\{\{ tr\('Lyrics'\) \}\} <span class="v">›<\/span><\/button>/,
+  assert.match(src, /<button v-if="hasLyrics" type="button" class="srow settings-command-row pointer"\s*\n\s*@click="view = 'lyrics'">\{\{ tr\('Lyrics'\) \}\} <span class="v">\{\{ tr\('Read lyrics'\) \}\} ›<\/span><\/button>/,
     'a row with no v-if, or gated on "lyrics" in info instead of the string being truthy, would open a reading surface with nothing in it for tracks whose songinfo omits the tag but not for ones where the mapper simply produced an empty string -- api.js always yields a string, so truthiness is the only correct gate');
   assert.doesNotMatch(src, /v-if="'lyrics' in info"/, 'gating on key presence would fire even when info.lyrics is the empty string the mapper guarantees for tracks with no lyrics');
 });
@@ -156,7 +156,7 @@ test('the reading surface offers a way back to the information list, not only a 
   const src = actionsSource();
   const headBack = src.match(/headBack: function \(\) \{[\s\S]*?\n      \},/);
   assert.ok(headBack, 'headBack method not found');
-  assert.match(headBack[0], /if \(this\.view === 'lyrics'\) this\.view = 'info';/,
+  assert.match(headBack[0], /if \(this\.view === 'lyrics' \|\| this\.view === 'signal'\) this\.view = 'info';/,
     'from the lyrics view, the head control must return to the info list -- a reading surface with no way back except closing the whole sheet violates the explicit product rule');
   assert.match(headBack[0], /else this\.close\(\);/, 'only once the list itself is showing does the same control close the sheet');
 });
@@ -201,15 +201,15 @@ test('both new strings.txt keys exist with EN and PT entries', function () {
 
 test('dynamic lyrics controls and source text use explicit translation', function () {
   const src = actionsSource();
-  assert.match(src, /tr\(view === 'lyrics' \? 'Back' : 'Done'\)/);
-  assert.match(src, /tr\(view === 'lyrics' \? 'Lyrics' : 'Information'\)/);
+  assert.match(src, /tr\(view === 'info' \? 'Done' : 'Back'\)/);
+  assert.match(src, /tr\(view === 'lyrics' \? 'Lyrics' : \(view === 'signal' \? 'Signal path' : 'Information'\)\)/);
   assert.match(src, /tr\("From the file's own tags"\)/);
   assert.match(src, /tr\('Lyrics'\)/);
 });
 
 test('track information normalizes LMS format aliases for display', function () {
   const src = actionsSource();
-  assert.match(src, /Format <span class="v">\{\{ formatLabel \}\}<\/span>/);
+  assert.match(src, /<div class="info-facts"><span>\{\{ formatLabel \}\}<\/span>/);
   assert.match(src, /return this\.info && this\.info\.format \? LmsFmt\.format\(this\.info\.format\) : '—';/);
 });
 
@@ -292,7 +292,7 @@ test('switching between the info and lyrics views re-focuses a control inside th
 
 test('the dialog aria-label follows the view instead of staying pinned to "Track information" while lyrics are showing', function () {
   const src = actionsSource();
-  assert.match(src, /:aria-label="view === 'lyrics' \? tr\('Lyrics'\) : tr\('Track information'\)"/,
+  assert.match(src, /:aria-label="view === 'lyrics' \? tr\('Lyrics'\) : \(view === 'signal' \? tr\('Signal path'\) : tr\('Track information'\)\)"/,
     'the label must track view via the same ternary idiom as the .ttl text node two lines below, resolved through tr() by hand because :aria-label is a dynamic binding');
   assert.doesNotMatch(src, /\saria-label="Track information"/, 'the old static attribute must be gone, not left duplicated alongside the dynamic one');
   assert.match(src, /tr: function \(text\) \{\s*\n\s*return window\.LmsStr && LmsStr\.t \? LmsStr\.t\(text\) : text;\s*\n\s*\},/,

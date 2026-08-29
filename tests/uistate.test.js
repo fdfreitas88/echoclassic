@@ -523,6 +523,18 @@ test('PLAYER_POSITIONS lista na ordem left, center, right', function () {
     ['left', 'center', 'right']);
 });
 
+test('frequent settings start recommended, persist order, and reject unknown or duplicate keys', function () {
+  const fresh = ui();
+  assert.deepEqual(plain(fresh.state.frequentSettings),
+    ['equalizer', 'soundPreset', 'crossfade', 'replayGain', 'sleepTimer']);
+
+  fresh.setFrequentSettings(['theme', 'volumeStep', 'theme', 'unknown']);
+  assert.deepEqual(plain(fresh.state.frequentSettings), ['theme', 'volumeStep']);
+
+  const reloaded = ui({ frequentSettings: ['queueArtwork', 'markHires'] });
+  assert.deepEqual(plain(reloaded.state.frequentSettings), ['queueArtwork', 'markHires']);
+});
+
 /* WP5 (3.2.6b): appearanceScreen e o campo que lms-settings usa para escolher
    qual subtela de Aparencia mostrar. E navegacao, nao preferencia -- igual a
    advancedSettings/picker/queueOpen, que tambem nascem falsos/null e nunca

@@ -770,6 +770,10 @@
       useVolumeControl: owns(r, 'use_volume_control')
         ? String(r.use_volume_control) === '1'
         : null,
+      // LMS is the authority on whether it actually transcoded this stream.
+      // Technical output fields can differ from playlist metadata even for a
+      // direct stream, so they must never be used to infer this state.
+      isTranscoded: owns(r, 'is_transcoded') && String(r.is_transcoded) === '1',
       live: duration === 0
     };
     // Older servers do not reliably carry these fields; fill only the gaps so
@@ -781,11 +785,6 @@
       if (!activeHasSize && !st.sampleSize) st.sampleSize = st.activeStream.sampleSize = info.sampleSize;
       if (!activeHasType && !st.format) st.format = st.activeStream.format = info.format;
     }
-    st.isTranscoded = !!(activeHasRate || activeHasSize || activeHasType || activeHasBitrate) &&
-      (st.activeStream.sampleRate !== st.sourceStream.sampleRate ||
-       st.activeStream.sampleSize !== st.sourceStream.sampleSize ||
-       st.activeStream.format !== st.sourceStream.format ||
-       st.activeStream.bitrate !== st.sourceStream.bitrate);
     return st;
   }
 

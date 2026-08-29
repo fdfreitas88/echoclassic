@@ -151,7 +151,7 @@ test('status nao herda bit depth do FLAC quando o stream lossy declara samplesiz
   const ctx = apiContext(function (cmd) {
     if (cmd[0] === 'status') return {
       mode: 'play', samplerate: 48000, samplesize: '', type: 'mp3', bitrate: '256kbps',
-      replay_gain: '-5.25', use_volume_control: 1,
+      replay_gain: '-5.25', use_volume_control: 1, is_transcoded: 1,
       playlist_loop: [{ id: 42, duration: 123, samplerate: 192000, samplesize: 24, type: 'flc', bitrate: '5641kbps' }]
     };
     return {};
@@ -163,6 +163,32 @@ test('status nao herda bit depth do FLAC quando o stream lossy declara samplesiz
   assert.equal(st.replayGain, -5.25);
   assert.equal(st.useVolumeControl, true);
   assert.equal(st.isTranscoded, true);
+});
+
+test('status only marks a stream transcoded when LMS explicitly says so', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'status') return {
+      mode: 'play', is_transcoded: 0,
+      samplerate: 48000, samplesize: '', type: 'mp3', bitrate: '256kbps',
+      playlist_loop: [{ id: 42, duration: 123, samplerate: 192000, samplesize: 24, type: 'flc', bitrate: '5641kbps' }]
+    };
+    return {};
+  });
+  const st = await ctx.api.status('p1');
+  assert.equal(st.isTranscoded, false,
+    'technical stream differences are not proof of LMS transcoding');
+});
+
+test('status without the LMS transcode attribute does not guess', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'status') return {
+      mode: 'play', samplerate: 48000, type: 'mp3',
+      playlist_loop: [{ id: 42, duration: 123, samplerate: 44100, type: 'flc' }]
+    };
+    return {};
+  });
+  const st = await ctx.api.status('p1');
+  assert.equal(st.isTranscoded, false);
 });
 
 test('status mantem os metadados como compatibilidade com LMS anterior ao 9.2', async function () {
