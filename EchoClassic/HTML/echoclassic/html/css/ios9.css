@@ -548,19 +548,26 @@ button:disabled{opacity:.35}
 .statusbar .brand{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .statusbar .status-reserve{visibility:hidden;text-align:right}
 .status-branding{min-width:0;display:flex;align-items:baseline;gap:7px;position:relative}
-.support-trigger{min-height:18px;padding:0 3px;border:0;border-radius:3px;color:inherit;
-  font:600 10px var(--app-font);letter-spacing:.01em;text-decoration:underline;text-underline-offset:2px;
-  background:transparent;text-shadow:inherit;opacity:.88}
-.support-trigger:hover,.support-trigger[aria-expanded=true]{opacity:1}
+/* Capsula tingida (aprovada): distingue o gatilho tocavel da marca estatica. */
+.support-trigger{min-height:16px;padding:1px 8px 2px;border:0;border-radius:999px;
+  color:var(--accent);font:600 9.5px var(--app-font);letter-spacing:.01em;
+  background:rgba(0,119,176,.14);
+  background:color-mix(in srgb,var(--accent) 14%,transparent);
+  text-shadow:none;opacity:.92}
+.support-trigger:hover,.support-trigger[aria-expanded=true]{opacity:1;
+  background:rgba(0,119,176,.2);
+  background:color-mix(in srgb,var(--accent) 20%,transparent)}
 .support-trigger:focus-visible{outline:2px solid currentColor;outline-offset:1px}
 .support-menu{position:absolute;z-index:calc(var(--z-chrome) + 10);top:calc(100% + 5px);left:0;
   width:220px;padding:5px;overflow:hidden;border:.5px solid var(--hair);border-radius:9px;
   color:var(--text);text-shadow:none;background:var(--group-bg);box-shadow:0 8px 24px var(--shadow)}
-.support-menu a{display:flex;min-height:44px;padding:7px 10px;box-sizing:border-box;flex-direction:column;
-  justify-content:center;border-radius:6px;color:var(--text);text-decoration:none}
+.support-menu a{display:flex;min-height:44px;padding:7px 10px;box-sizing:border-box;align-items:center;
+  gap:9px;border-radius:6px;color:var(--text);text-decoration:none}
 .support-menu a+a{border-top:.5px solid var(--hair);border-radius:0 0 6px 6px}
 .support-menu a:hover,.support-menu a:focus-visible{outline:0;background:var(--field)}
-.support-menu strong{font-size:13px}.support-menu span{margin-top:2px;color:var(--text2);font-size:10px;font-weight:400}
+.support-menu-copy{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.support-menu-copy strong{font-size:13px}
+.support-menu-copy span{margin-top:2px;color:var(--text2);font-size:10px;font-weight:400}
 
 /* ====== nav bar ======================================================== */
 .navbar{height:var(--navbar);flex:0 0 auto;background:var(--nav-bg);

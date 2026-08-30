@@ -12,9 +12,9 @@ Vue.component('lms-statusbar', {
     <div v-if="open" id="support-menu" ref="menu" class="support-menu" role="menu"
          aria-label="Support Echo Classic" @keydown.esc.stop.prevent="close(true)">
       <a ref="firstLink" role="menuitem" :href="patreonUrl" target="_blank"
-         rel="noopener noreferrer" @click="close()"><strong>Patreon</strong><span>Become a monthly supporter</span></a>
+         rel="noopener noreferrer" @click="close()"><span class="support-service-mark patreon-mark" aria-hidden="true">P</span><span class="support-menu-copy"><strong>Patreon</strong><span>Become a monthly supporter</span></span></a>
       <a role="menuitem" :href="coffeeUrl" target="_blank"
-         rel="noopener noreferrer" @click="close()"><strong>Buy Me a Coffee</strong><span>Make a one-time contribution</span></a>
+         rel="noopener noreferrer" @click="close()"><span class="support-service-mark coffee-mark" aria-hidden="true">☕</span><span class="support-menu-copy"><strong>Buy Me a Coffee</strong><span>Make a one-time contribution</span></span></a>
     </div>
   </div>
   <span class="mid" aria-hidden="true">{{ clock }}</span>
