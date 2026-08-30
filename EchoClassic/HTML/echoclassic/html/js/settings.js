@@ -116,6 +116,7 @@ Vue.component('lms-settings', {
   </template>
   <template v-else-if="isSettingsScreen('about-settings')">
     <div class="sgh">About</div><div class="sgroup"><div class="srow">Connection <span class="v">{{ store.connected?'connected':'no player' }}</span></div><div v-if="loading" class="srow">Querying the server…</div><template v-else-if="info"><div class="srow">Artists <span class="v">{{ n(info.artists) }}</span></div><div class="srow">Albums <span class="v">{{ n(info.albums) }}</span></div><div class="srow">Songs <span class="v">{{ n(info.songs) }}</span></div><div class="srow">Genres <span class="v">{{ n(info.genres) }}</span></div></template><div class="srow">Server version <span class="v">LMS {{ info?info.version:'—' }}</span></div><div class="srow">Skin version <span class="v">{{ skinVersion }}</span></div><div class="srow">Lock screen controls <span class="v">{{ mediaSessionSupported?'available':'not supported' }}</span></div><button type="button" class="srow settings-command-row pointer" :aria-expanded="String(ui.advancedSettings)" @click="openAdvanced">Advanced LMS settings <span class="v">›</span></button></div>
+    <div class="sgh support-about-heading">Support Echo Classic</div><div class="sgroup support-about-group"><a class="srow settings-command-row support-about-link" :href="patreonSupportUrl" target="_blank" rel="noopener noreferrer"><span class="support-service-mark patreon-mark" aria-hidden="true">P</span><span class="setting-copy">Patreon<small>Become a monthly supporter</small></span><span class="v" aria-hidden="true">↗</span></a><a class="srow settings-command-row support-about-link" :href="coffeeSupportUrl" target="_blank" rel="noopener noreferrer"><span class="support-service-mark coffee-mark" aria-hidden="true">☕</span><span class="setting-copy">Buy Me a Coffee<small>Make a one-time contribution</small></span><span class="v" aria-hidden="true">↗</span></a></div>
   </template>
   <template v-else-if="isEqualizerScreen">
     <div class="equalizer-screen">
@@ -925,6 +926,8 @@ Vue.component('lms-settings', {
     };
   },
   computed: {
+	patreonSupportUrl: function () { return ECHOCLASSIC_PATREON_URL; },
+	coffeeSupportUrl: function () { return ECHOCLASSIC_COFFEE_URL; },
 	isEqualizerScreen: function () { return /^equalizer(?:-|$)/.test(String(this.ui.appearanceScreen || '')); },
 	availableFrequentSettings: function () {
 		var selected = this.ui.frequentSettings || [];

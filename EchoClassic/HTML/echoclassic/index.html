@@ -28,6 +28,8 @@ print('const LMS_SKIN_VERSION="'   . Plugins::EchoClassic::Plugin::jsLiteral($sk
 print('const LMS_PLAYER_HINT="'    . Plugins::EchoClassic::Plugin::jsLiteral($hint) . "\";\n");
 print('const LMS_ASSET_REVISION="' . Plugins::EchoClassic::Plugin::jsLiteral($rev)  . "\";\n");
 print('const LMS_LANG="' . Plugins::EchoClassic::Plugin->getLang() . "\";\n");
+print('const ECHOCLASSIC_PATREON_URL="https://patreon.com/fdfreitas88?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink";' . "\n");
+print('const ECHOCLASSIC_COFFEE_URL="https://buymeacoffee.com/fdfreitas";' . "\n");
 # Todos os dicionarios, e nao so o da sessao do LMS: e o que permite trocar de
 # idioma dentro dos Ajustes da skin sem uma volta ao servidor.
 print('const LMS_STRINGS_BY_LANG=' . Plugins::EchoClassic::Plugin->getStringMapsJson() . ";\n");
