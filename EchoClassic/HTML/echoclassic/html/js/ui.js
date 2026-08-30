@@ -17,18 +17,18 @@
 
   /* The four roots of Minha Musica, picked from the nav bar title like iOS 9. */
   var MUSIC_VIEWS = Object.freeze([
-    Object.freeze({ key: 'recent', label: 'Recent' }),
-    Object.freeze({ key: 'artists', label: 'Artists' }),
-    Object.freeze({ key: 'albumartists', label: 'Album Artists' }),
-    Object.freeze({ key: 'composers', label: 'Composers' }),
-    Object.freeze({ key: 'conductors', label: 'Conductors' }),
-    Object.freeze({ key: 'ensembles', label: 'Ensembles' }),
-    Object.freeze({ key: 'works', label: 'Works' }),
-    Object.freeze({ key: 'albums', label: 'Albums' }),
-    Object.freeze({ key: 'genres', label: 'Genres' }),
+    Object.freeze({ key: 'recent', label: 'Recent', alphabeticIndex: true }),
+    Object.freeze({ key: 'artists', label: 'Artists', alphabeticIndex: true }),
+    Object.freeze({ key: 'albumartists', label: 'Album Artists', alphabeticIndex: true }),
+    Object.freeze({ key: 'composers', label: 'Composers', alphabeticIndex: true }),
+    Object.freeze({ key: 'conductors', label: 'Conductors', alphabeticIndex: true }),
+    Object.freeze({ key: 'ensembles', label: 'Ensembles', alphabeticIndex: true }),
+    Object.freeze({ key: 'works', label: 'Works', alphabeticIndex: true }),
+    Object.freeze({ key: 'albums', label: 'Albums', alphabeticIndex: true }),
+    Object.freeze({ key: 'genres', label: 'Genres', alphabeticIndex: true }),
     Object.freeze({ key: 'years', label: 'Years' })
-    ,Object.freeze({ key: 'musicfolders', label: 'Music Folder' })
-    ,Object.freeze({ key: 'releasetypes', label: 'Release Types' })
+    ,Object.freeze({ key: 'musicfolders', label: 'Music Folder', alphabeticIndex: true })
+    ,Object.freeze({ key: 'releasetypes', label: 'Release Types', alphabeticIndex: true })
   ]);
 
   var COLOR_SCHEMES = Object.freeze([
@@ -545,6 +545,8 @@
     appearanceScreen: null,
     showBadges: saved.showBadges !== false,
     markHires: saved.markHires !== false,
+    artistDetailLayout: saved.artistDetailLayout === 'under' ? 'under' : 'sidecar',
+    artistDetailControls: saved.artistDetailControls === 'icons' ? 'icons' : 'buttons',
     busyMessage: '',
     notice: '',
     noticeKind: 'info',
@@ -583,6 +585,8 @@
         defaultPlayer: state.defaultPlayer,
         showBadges: state.showBadges,
         markHires: state.markHires, colorScheme: state.colorScheme,
+        artistDetailLayout: state.artistDetailLayout,
+        artistDetailControls: state.artistDetailControls,
         fontFamily: state.fontFamily, playerPresentation: state.playerPresentation,
         playerPosition: state.playerPosition,
         miniGaugeStyle: state.miniGaugeStyle, playerGaugeStyle: state.playerGaugeStyle,
@@ -1134,6 +1138,13 @@
     persist();
   }
 
+  function setArtistDetailPreference(key, value) {
+    if (key === 'layout' && ['sidecar', 'under'].indexOf(value) >= 0) state.artistDetailLayout = value;
+    else if (key === 'controls' && ['buttons', 'icons'].indexOf(value) >= 0) state.artistDetailControls = value;
+    else return;
+    persist();
+  }
+
   async function requestKioskEntry() {
     if (state.kioskMode) return true;
     var accepted = await confirmAction({
@@ -1484,6 +1495,7 @@
     QUEUE_ART_MODES: QUEUE_ART_MODES, setQueueArtMode: setQueueArtMode,
     DEFAULT_PLAYER_LAST: DEFAULT_PLAYER_LAST, setDefaultPlayer: setDefaultPlayer,
     setPreference: setPreference, requestKioskMode: requestKioskMode,
+    setArtistDetailPreference: setArtistDetailPreference,
     requestKioskEntry: requestKioskEntry, requestKioskExit: requestKioskExit,
     setVolumeStep: setVolumeStep,
     FREQUENT_SETTING_KEYS: FREQUENT_SETTING_KEYS,

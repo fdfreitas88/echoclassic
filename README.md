@@ -1,6 +1,6 @@
 # Echo Classic
 
-**A modern, responsive Lyrion Music Server interface inspired by the clarity and
+**A responsive Lyrion Music Server interface inspired by the clarity and
 directness of the classic iPad Music app.**
 
 [![Release](https://img.shields.io/github/v/release/fdfreitas88/echoclassic?label=release)](https://github.com/fdfreitas88/echoclassic/releases/latest)
@@ -8,290 +8,241 @@ directness of the classic iPad Music app.**
 [![License](https://img.shields.io/badge/license-GPL--3.0--or--later-555)](LICENSE)
 
 Echo Classic turns Lyrion Music Server (formerly Logitech Media Server) into a
-touch-friendly music system for tablets, phones and desktop browsers. It combines
-fast library browsing, serious queue and playlist editing, classical-music
-navigation, multi-library search, synchronized-player controls and an optional
-server-side equalizer in one interface.
+touch-friendly music system for tablets, phones and desktop browsers. It brings
+library discovery, queue and playlist editing, synchronized-player control,
+live signal-path information and optional server-side DSP into one interface.
 
-It also distinguishes the source track from the stream currently sent to the
-player. With LMS 9.2, Now Playing can show the codec, bitrate, sample rate and bit
-depth **actually in use after transcoding**—the closest server-side view of what
-reaches the player's decoder and DAC. Older LMS releases automatically fall back
-to the track metadata.
-
-Echo Classic 3.5.3 uses Vue 2 and has no compilation or bundling step: the files in
+Version **3.5.4** uses Vue 2 without a compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
-![Echo Classic library](docs/img/library.png)
+![Echo Classic 3.5.4 library](docs/img/release-3.5.4-library.png)
 
-## Highlights in 3.5
+## What is new in 3.5.4
 
-### Playback telemetry and Signal Path
+### One full-width Equalizer workspace
 
-Echo Classic now treats playback information as a live signal chain rather than
-only as file metadata. On LMS 9.2 it keeps separate source and active-stream
-models, shows transcoding and applied Replay Gain, and deliberately omits bit
-depth when a lossless source becomes MP3 or AAC. Now Playing, the bottom bar and
-the Information sheet share the same live state and mark unavailable DAC facts
-instead of guessing them.
+Equalizer no longer moves between a narrow settings list and disconnected detail
+pages. Engine selection, playback mode, quick presets, automatic rules, the
+saved response curve and advanced processing now share one responsive workspace.
+Every Equalizer entry point opens this same view and preserves its navigation
+context.
 
-### Apple Squeezer Store integration
+Apple Squeezer and SqueezeDSP are presented as processing engines rather than
+competing settings screens. DAC Priority, Equalizer, OSF and CSF are explicit
+playback modes. If the current mode cannot process the saved curve, Echo Classic
+keeps the curve visible and offers a direct way back to Equalizer mode.
 
-Apple Squeezer is discovered as an independent LMS Store plugin through a
-versioned, capability-driven API. When installed, Echo Classic can show its
-lifecycle, start or restart it, select DAC Priority, Equalizer, OSF or CSF mode,
-control upsampling and filter choices, and assign one confirmed DSP owner per
-player to guard against processing the signal twice.
+![Echo Classic 3.5.4 Equalizer](docs/img/release-3.5.4-equalizer.png)
 
-The native DSP surface includes graphic and parametric equalization, headroom,
-Replay Gain, true-peak protection, spatial controls and FIR convolution. Changes
-are validated before transmission, scoped to the selected player, confirmed by
-revision and rolled back if the server cannot confirm the new state. Older
-published Apple Squeezer releases remain supported through their released API,
-with advanced controls hidden when the capability is absent.
+The workspace includes:
 
-### Mobile and externally controlled volume
+- quick and saved sound profiles;
+- a saved frequency-response preview;
+- graphic and parametric equalization;
+- preamp, headroom, Replay Gain and true-peak protection;
+- balance, stereo width, delay, crossfeed and FIR convolution;
+- contextual rules for a song, album, folder, artist, genre, year or epoch;
+- momentary comparison with recoverable restore state;
+- staged changes with validation, confirmation and rollback.
 
-Echo Classic honors LMS `use_volume_control`, so a player fixed at 100% can still
-control an external Denon/Marantz-style amplifier when its plugin requests it.
-The phone layout gives the slider the available width; both speaker icons are
-volume buttons and the increment can be set to 1, 2, 5 or 10 percent.
+### Safer Apple Squeezer control
 
-![Echo Classic advanced settings](docs/img/advancedlms.png)
+Echo Classic discovers Apple Squeezer through its versioned, capability-driven
+LMS Store API. Mode changes show a blocking wait state while the audio path
+restarts. OSF/CSF rate and filter choices update immediately, return to their
+previous values if the server rejects the change, and invalidate cached status
+after every mutation.
 
-## Highlights in 3.4
+Native DSP state is scoped to the selected player and confirmed by revision.
+Unsupported controls stay hidden, and missing telemetry is reported as
+unavailable instead of being invented.
 
-### New in 3.4.1
+### Complete four-language runtime
 
-Version 3.4.1 expands the SqueezeDSP integration from a graphic equalizer into a
-complete responsive DSP control surface. It adds graphic-band Q, signal controls,
-DSP ReplayGain, crossfeed, FIR room correction, editable shelf/pass/notch filters,
-server preset creation and deletion, and separate graphic/full reset actions.
-Legacy Echo EQ documents are migrated to SqueezeDSP's native `Slope` contract,
-and unknown plugin fields are retained so newer SqueezeDSP versions remain safe
-to edit. The release was verified against a running LMS/SqueezeDSP installation,
-including staged changes, reset behaviour and the server-preset lifecycle.
+All 801 runtime strings are complete in English, German, French and Portuguese.
+The validation suite rejects missing translations, malformed blocks and duplicate
+keys before a release can be packaged.
 
-### Server-side equalizer
+### Explicit failure and recovery states
 
-![SqueezeDSP equalizer](docs/img/release-3.4.0-equalizer.png)
+Server and network failures no longer masquerade as empty lists or successful
+actions. Queue, favourites, playlists, related artists, player settings,
+playback intelligence, track information and Apple Squeezer diagnostics expose
+their failure state or an actionable retry.
 
-When [SqueezeDSP](https://github.com/Foxenfurter/SqueezeDSP) is installed, every
-player gets a full graphic equalizer with preamp control, presets and momentary
-bypass for comparing the processed and original signal. The EQ is available from
-Settings, the player bar, album pages and individual track rows.
+Settings import now requires a successful backup and rolls back every affected
+key if a write fails. Malformed JSON-RPC envelopes, invalid paging values,
+missing album identities and out-of-range queue positions fail safely. Responses
+that arrive after the active player changes are discarded.
 
-The advanced DSP panel also covers graphic-band Q, balance, stereo width, delay,
-loudness, DSP-side ReplayGain, headphone crossfeed and FIR room correction.
-Parametric filters include peak, low/high shelf, low/high pass and notch modes;
-low shelf supplies dynamic-bass shaping and high shelf supplies treble
-enhancement. Presets can be loaded, created and deleted directly from the skin,
-and separate reset actions restore either the graphic bands or the complete DSP
-document.
-
-EQ settings can be remembered contextually for:
-
-- an individual song or album;
-- a music folder;
-- an artist or genre;
-- a release year or epoch;
-- the active player as its manual fallback.
-
-More-specific rules win: song → album → folder → artist → genre → year → manual
-EQ. Settings are maintained separately for each player and complete SqueezeDSP
-documents are written atomically.
-
-### Library roots, folders and classical music
-
-![Expanded My Music navigation](docs/img/release-3.4.0-library-roots.png)
-
-My Music now covers the full range of useful LMS entry points:
-
-- Recent, Artists and the separate Album Artists view;
-- Composers, Conductors, Ensembles and Works;
-- Albums, Genres and Years;
-- recursive Music Folder navigation;
-- Release Types;
-- All Music, LMS virtual libraries and top-level music folders as switchable
-  library roots.
-
-Each root keeps its own drill-down and scroll state. Albums retain server ordering
-and multi-disc releases are separated into explicit Disc 1, Disc 2… sections.
-
-![Recursive Music Folder navigation](docs/img/release-3.4.0-music-folder.png)
-
-### Advanced, multi-root search
-
-![Advanced search](docs/img/release-3.4.0-advanced-search.png)
-
-Global search covers artists, albums, classical works, tracks and playlists. Its
-advanced panel adds year, source, format, release type, composer and work fields,
-and a query can run across one or several library roots at once. Results retain
-their root provenance, exact matches rank first, and opening a result no longer
-throws away the query, result list or scroll position.
-
-## Complete feature overview
+## Core features
 
 ### Library and discovery
 
-- Adaptive split view on wide screens and a focused single-column layout on phones.
-- Album lists, cover grids, track lists, Recent, Artists, Album Artists, Albums,
-  Genres, Years and release-type navigation.
-- Recursive Music Folder browser and switchable LMS virtual-library roots.
-- Classical navigation through composers, works, conductors and ensembles when the
-  library's tags and LMS metadata expose them.
-- Explicit multi-disc album sections.
-- Combined filtering by media type, source, year range and genre.
+- Adaptive split view on wide screens and a focused single column on phones.
+- Recent, Artists, Album Artists, Albums, Tracks, Genres, Years and Release Types.
+- Classical navigation through Composers, Conductors, Ensembles and Works.
+- Recursive Music Folder browsing and switchable LMS virtual-library roots.
+- Separate multi-disc sections and complete album track metadata.
+- Combined filters for media type, source, year range and genre.
 - Independent sorting, grouping and playback-edition preference.
-- Section headers with counts, A–Z navigation where appropriate and virtualized
-  long lists.
+- A–Z navigation for name-sorted roots, including Music Folder, without a false
+  alphabet rail on chronological or numeric lists.
+- Progressive album loading with a revision-checked local index; a stale index is
+  rebuilt without replacing the visible library with a blocking skeleton.
 - Local and streaming editions can be preferred by source or resolution without
-  hiding alternative editions.
-- Optional MusicArtistInfo biographies, artist photographs, album reviews and
-  refreshable bounded metadata caches.
+  hiding the alternatives.
+- Optional MusicArtistInfo biographies, photographs and album reviews with
+  explicit loading, unavailable, refresh and retry states.
 
-| | |
-|---|---|
-| ![Filters](docs/img/filters.png) | ![Sections](docs/img/sections.png) |
-| Filters are staged until Apply and appear as individually removable pills. | Grouping creates real sections without dropping albums from the list. |
+### Search
 
-### Playback and audio information
+Global search covers artists, albums, classical works, tracks and playlists.
+Advanced search adds year, source, format, release type, composer and work fields
+and can run across one or several library roots. Results retain their provenance,
+rank exact matches first and preserve the query and scroll position when a result
+is opened.
+
+![Advanced search](docs/img/release-3.4.0-advanced-search.png)
+
+### Playback and signal path
 
 - Full player, wide-screen side player and persistent bottom player bar.
-- Play, pause, stop, previous/next, seeking, volume, sleep timer and stop-at-end.
-- Crossfade/gapless controls and Off, Track, Album and Smart replay-gain modes.
-- Ratings and favourite actions where supported by LMS.
-- Lock-screen and hardware-media controls through the Media Session API.
-- Codec, bitrate, sample rate, bit depth and hi-res highlighting.
-- LMS 9.2 active-stream attributes after transcoding, with metadata fallback for
-  LMS 8.x/9.1.
-- SqueezeDSP equalizer with contextual per-song, album, folder, artist, genre and
-  year/epoch rules.
-- Complete SqueezeDSP signal controls, FIR impulse selection and strength,
-  save/delete preset lifecycle, graphic-band Q and peak/shelf/pass/notch filter
-  editing.
+- Play, pause, stop, previous/next, seek, volume, sleep timer and stop at end.
+- Crossfade and Off, Track, Album or Smart Replay Gain controls.
+- Ratings and favourite actions where LMS supports them.
+- Lock-screen and hardware controls through the Media Session API.
+- Source codec, bitrate, sample rate, bit depth and hi-res indication.
+- LMS 9.2 active-stream attributes after transcoding, kept separate from source
+  metadata and shared by Now Playing, the bottom bar and Information sheet.
+- Applied Replay Gain and explicit transcoding status without guessing missing
+  DAC facts.
 - RandomPlay and Don't Stop The Music provider selection with live active state.
 
-![Player layout controls](docs/img/playerlayout.png)
+On LMS 8.x and 9.1, Echo Classic falls back to track metadata. On LMS 9.2 it can
+show the stream actually sent to the player's decoder, including deliberate
+omission of bit depth when a lossless source is transcoded to MP3 or AAC.
 
-### Multiple players and synchronization
+### Players and synchronization
 
 - Fast active-player switching and an optional default player.
-- Synchronized-group status, master/member topology and individual Unsync.
-- Group volume control.
-- “Do Not Set Volume” policy for members that must keep their own level.
-- Fixed-output players are excluded from inappropriate volume writes.
-- Per-player playback, equalizer and preference state is protected from stale
-  responses when the selected player changes.
+- Synchronized group topology with master/member status and individual Unsync.
+- Group volume with a per-member “Do Not Set Volume” policy.
+- Correct handling of fixed-output players and external volume-control plugins.
+- Configurable phone volume steps of 1, 2, 5 or 10 percent.
+- Player-scoped playback, Equalizer and preference state protected from stale
+  asynchronous responses.
 
 ### Queue and playlists
 
 - Add, play next, insert, remove, clear upcoming and clear queue actions.
+- Shuffle and Repeat remain primary; destructive actions live under Settings.
+- Focused per-row action menus and optional persistent quick controls.
 - Player-scoped undo after destructive queue edits.
-- Queue artwork on every track, once per album, or once with album headings.
-- Queue drag-and-drop and direct move-to-position.
-- Saved-playlist rename, removal, arrow movement, move-to-position and drag-and-drop.
+- Artwork on every track, once per album or once with album headings.
+- Drag-and-drop, edge movement and direct move-to-position.
+- Playlist creation, rename, removal, filtering and reordering.
 - One-step duplicate removal for saved playlists.
-- Large queues are read safely before clearing, with an explicit warning if LMS
-  cannot return the complete list.
+- Safe large-queue reads with an explicit warning if LMS cannot return the
+  complete list.
 
 ![Playlist editing](docs/img/playlists.png)
 
 ### Favourites, Radio, Apps and pinned destinations
 
-- Native LMS menus and service actions are preserved instead of being flattened
-  into a library-only model.
-- In-service search and paged loading for large providers such as Qobuz or TuneIn.
-- Favourite creation/removal plus favourite-folder creation, rename and movement
-  when the server advertises the corresponding commands.
-- Pin and unpin destinations, with manual pinned-item ordering.
-- Capability-gated commands: unsupported server/plugin actions are hidden or
-  explained instead of pretending to succeed.
-
-### Shared-screen modes
-
-- **Party mode** hides destructive library and playlist commands from casual users.
-- **Kiosk mode** locks Echo Classic to its player presentation and provides an
-  administrator recovery path.
+- Native LMS menus and service actions remain available instead of being reduced
+  to a library-only model.
+- In-service search and paged loading for providers such as Qobuz or TuneIn.
+- Favourite creation/removal and favourite-folder management when advertised by
+  the server.
+- Pin, unpin and manually reorder destinations.
+- Capability-gated commands: unsupported actions are hidden or explained.
 
 ### Appearance and responsive design
 
-Echo Classic includes three complete visual treatments:
+Echo Classic includes Light, Dark and Legacy visual treatments plus seven accent
+schemes: System Blue, Atlantic Teal, Editorial Crimson, Studio Indigo, Hi-Fi
+Amber, Silver and Black. The app, full player, side player and bottom bar can
+follow one appearance or use independent theme, accent and font settings.
 
-- **Light** — the clean iOS 9-inspired default;
-- **Dark** — a full dark interface, not an inverted afterthought;
-- **Legacy** — an iOS 6-style treatment with bevelled chrome and grouped tables.
-
-Seven accent schemes are included: System Blue, Atlantic Teal, Editorial Crimson,
-Studio Indigo, Hi-Fi Amber, Silver and Black. The app, full player, side player and
-bottom bar can share one appearance or use independent theme, accent and font
-settings.
+Below 700 px the interface becomes a single column, sheets use the full screen
+and primary actions remain reachable. Touch targets are at least 44×44 px, long
+translated labels wrap safely and the 390 px layout is checked for horizontal
+overflow.
 
 | | |
 |---|---|
 | ![Legacy theme](docs/img/legacy.png) | ![Dark theme](docs/img/dark.png) |
-| Legacy | Dark with hi-res track badges |
-
-![Appearance settings](docs/img/themes.png)
-
-Below 700 px the interface becomes a single column, sheets use the full screen and
-primary actions stay reachable. Touch targets are at least 44×44 px and the 390 px
-layout is checked for horizontal overflow.
+| Legacy | Dark |
 
 <img src="docs/img/mobile.png" alt="Echo Classic on a phone" width="320">
 
 ### Settings and server administration
 
-- Player, playback, equalizer, queue, appearance, language and shared-screen
-  preferences in one responsive settings surface.
-- Export and import of skin preferences.
+Settings starts with user-curated Frequent Settings and groups the complete
+surface into Player, Playback, Equalizer, Appearance, Queue, Interface & Access,
+Backup and System destinations.
+
+![Echo Classic 3.5.4 settings](docs/img/release-3.5.4-settings.png)
+
+- Export and transactional import of skin preferences.
+- Party mode hides destructive commands from casual users.
+- Kiosk mode locks the player presentation and provides an administrator
+  recovery path.
 - Live connection, library-count, LMS-version and skin-version information.
-- Native LMS settings embedded inside Echo Classic with its navigation preserved.
-- Responsive File Types table, media-scan progress gauges and a bounded scan-error
+- Native LMS settings embedded with Echo Classic navigation and Save controls.
+- Responsive File Types table, scan progress and a bounded, redacted scan-error
   journal.
-- Plugin manager with Active/Inactive status views, search, counts and the original
-  LMS enable/disable controls.
+- Plugin manager with Active/Inactive views, search, counts and native LMS
+  enable/disable controls.
 
-| | |
-|---|---|
-| ![Echo Classic settings](docs/img/settings.png) | ![Advanced LMS settings](docs/img/advancedlms.png) |
-| Skin and playback settings | Native LMS administration inside Echo Classic |
+### Accessibility
 
-### Language and accessibility
-
-- English source interface and a complete Portuguese translation in `strings.txt`.
-- Per-skin language selection can differ from the LMS session language.
-- WCAG 2.1 AA contrast checks across 155 Light, Dark and Legacy token pairs.
+- Complete English, German, French and Portuguese runtime dictionaries.
+- WCAG 2.1 AA validation across 155 Light, Dark and Legacy token pairs.
 - Visible keyboard focus, dialog focus containment and focus restoration.
-- Radiogroups with arrow-key navigation and correctly exposed listboxes, switches
-  and dialogs.
-- Reduced-motion support and 44×44 px touch targets.
+- Keyboard playback, seeking and volume controls in Now Playing.
+- Semantic Shuffle/Repeat state and complete Now Playing metadata for assistive
+  technology.
+- Arrow-key radiogroups, labeled switches and dialogs, reduced-motion support and
+  44×44 px touch targets.
+
+## Optional integrations
+
+- **Apple Squeezer** — lifecycle, playback modes, telemetry and player-scoped
+  native DSP through its published Store API.
+- **SqueezeDSP** — server-side graphic/parametric Equalizer, presets, contextual
+  rules, signal controls and FIR processing.
+- **MusicArtistInfo** — enriched artist biographies, photographs and album
+  information.
+- **RandomPlay / Don't Stop The Music** — capability-gated continuous-playback
+  controls.
+
+Echo Classic remains useful without any optional plugin; unsupported integration
+surfaces are omitted or explain how to enable them.
 
 ## Requirements
 
 - Lyrion Music Server 8.0 or later.
 - A modern browser with JavaScript enabled.
-- LMS 9.2 or later for post-transcoding active-stream attributes. The rest of Echo
-  Classic remains compatible with LMS 8.x and 9.1.
-- SqueezeDSP is optional and required only for the equalizer.
-- MusicArtistInfo is optional and used only for enriched artist/album information.
+- LMS 9.2 or later only for post-transcoding active-stream attributes.
+- Optional plugins only for the integration features listed above.
 
-Echo Classic is developed and tested primarily with LMS 9.x on macOS, but the
-plugin uses the normal LMS skin and JSON-RPC interfaces and is not macOS-only.
+Echo Classic is developed and tested primarily with LMS 9.x on macOS. It uses
+normal LMS skin and JSON-RPC interfaces and is not macOS-only.
 
 ## Installation
 
 ### Plugin repository — recommended
 
-In LMS, open **Settings → Plugins → Additional repositories**, add:
+In LMS, open **Settings → Plugins → Additional repositories** and add:
 
 ```text
 https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/repo.xml
 ```
 
-Apply the LMS settings, find **Echo Classic** in the plugin list, install it and
-restart LMS when requested. Future published versions then appear through the LMS
-plugin updater.
+Apply the LMS settings, find **Echo Classic**, install it and restart LMS when
+requested. Future versions then appear through the LMS plugin updater.
 
 Open:
 
@@ -299,7 +250,7 @@ Open:
 http://<your-lms-server>:9000/echoclassic/
 ```
 
-You can also choose Echo Classic under **Server Settings → Interface** to make it
+You can also select Echo Classic under **Server Settings → Interface** to make it
 the default web interface.
 
 ### Manual installation
@@ -336,7 +287,7 @@ EchoClassic/
   Plugin.pm                skin registration and asset revision
   Settings.pm              server-side preferences
   install.xml              LMS extension manifest
-  strings.txt              translatable interface strings
+  strings.txt              runtime translations
 docs/                      screenshots, specifications and release evidence
 tests/                     Node test suite
 tools/                     validation, deployment, screenshot and release tools
@@ -349,35 +300,37 @@ npm ci
 npm test
 npm run validate
 npm run check-version
-node tools/check-source-language.js
 ```
 
 `npm run validate` checks every JavaScript file, compiles every Vue 2 template,
-detects orphaned cross-module references and recomputes all theme contrast pairs.
-Release packaging goes through `tools/release.sh X.Y.Z`, which synchronizes the
-three version manifests, builds the ZIP, compares the archive to the tested tree
-and writes the exact SHA-1 into `repo.xml`.
+detects orphaned cross-module references, recomputes all theme contrast pairs and
+verifies that every runtime string is complete and unique in all four languages.
 
-`Plugin.pm` adds a revision to asset URLs based on the newest plugin file. This is
-intentional: LMS caches skin assets aggressively, and a revision prevents a new
-JavaScript file from running beside an older cached stylesheet.
+Release packaging goes through `tools/release.sh X.Y.Z`. It synchronizes the
+version manifests, runs the gates, builds the ZIP, compares the archive with the
+tested tree and writes its exact SHA-1 into `repo.xml`.
+
+`Plugin.pm` adds an asset revision based on the newest plugin file because LMS
+caches skin assets aggressively. This prevents new JavaScript from running beside
+an older cached stylesheet.
 
 ## Project status
 
-Current release: **3.5.3**.
+Current release candidate: **3.5.4**.
 
-- 497 automated tests passing.
-- Four validation stages passing.
-- 20 Vue templates compiling.
+- 542 automated tests passing.
+- Five validation stages passing.
+- 21 Vue templates compiling.
+- 801 runtime strings complete in four languages with no duplicate keys.
 - 155/155 tested contrast pairs passing.
 
-The [changelog](CHANGELOG.md) distinguishes features verified in a running
+The [changelog](CHANGELOG.md) distinguishes behavior verified in a running
 interface (`live`), paths established in source (`code`) and values produced by a
 named validation step (`measured`).
 
-Podium Sans and Espy Sans currently fall back to Geneva/Verdana because their font
-files are not distributed pending a licensing decision. Chicago renders only on
-systems that provide it.
+Podium Sans and Espy Sans currently fall back to Geneva/Verdana because their
+font files are not distributed pending a licensing decision. Chicago renders
+only on systems that provide it.
 
 ## Author and license
 

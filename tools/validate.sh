@@ -7,7 +7,7 @@ SKIN="EchoClassic/HTML/echoclassic/html"
 fail=0
 step() { printf "\n\033[1m== %s\033[0m\n" "$1"; }
 
-step "1/4  sintaxe JavaScript"
+step "1/5  sintaxe JavaScript"
 while IFS= read -r f; do
   case "$f" in */lib/*) continue;; esac
   if node --check "$f" >/dev/null 2>&1; then
@@ -17,7 +17,7 @@ while IFS= read -r f; do
   fi
 done < <(find "$SKIN/js" -name '*.js' | sort)
 
-step "2/4  templates Vue"
+step "2/5  templates Vue"
 if [ ! -d node_modules/vue-template-compiler ]; then
   echo "  instalando vue-template-compiler (so na primeira vez)..."
   npm ci --silent --no-fund --no-audit || {
@@ -32,11 +32,14 @@ else
   fail=1
 fi
 
-step "3/4  referencias entre modulos"
+step "3/5  referencias entre modulos"
 node tools/check-modules.js || fail=1
 
-step "4/4  contraste WCAG"
+step "4/5  contraste WCAG"
 python3 tools/check-contrast.py || fail=1
+
+step "5/5  strings.txt"
+node tools/check-strings.js || fail=1
 
 printf "\n"
 if [ "$fail" -eq 0 ]; then printf "\033[32mTUDO PASSA\033[0m\n"; else printf "\033[31mHA FALHAS\033[0m\n"; fi

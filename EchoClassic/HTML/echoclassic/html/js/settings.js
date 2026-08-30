@@ -95,6 +95,11 @@ Vue.component('lms-settings', {
     <div class="sgroup"><div class="srow">Accent colour<div class="swatch-row" role="radiogroup" aria-label="Accent colour"><button v-for="scheme in colorSchemes" :key="'detail-scheme-'+scheme.key" type="button" class="swatch-dot" :class="'scheme-'+scheme.key" role="radio" :aria-checked="String(ui.colorScheme===scheme.key)" :aria-label="tr(scheme.label)" @click="colorScheme(scheme.key)"></button></div></div><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('accentColor')">{{ frequentActionLabel('accentColor') }}</button></div>
     <div class="sgh">Font</div><div class="sgroup font-option-group" role="radiogroup" aria-label="Font"><button v-for="font in fontOptions" :key="'detail-font-'+font.key" type="button" class="srow font-option-row" :class="'font-'+font.key" role="radio" :aria-checked="String(ui.fontFamily===font.key)" @click="fontFamily(font.key)"><span class="font-option-label">{{ font.label }}</span><span class="font-option-check" aria-hidden="true"></span></button></div>
     <div class="sgroup"><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('players')">Player layout <span class="v">›</span></button></div>
+    <div class="sgh">Artist detail <span class="opml-new-label settings-new-label">NEW</span></div>
+    <div class="sgroup">
+      <div class="srow segmented-row"><span>Artist information layout<small>Choose where the concise biography appears.</small></span><div class="segmented" role="radiogroup" aria-label="Artist information layout"><button v-for="option in [{key:'sidecar',label:'Sidecar'},{key:'under',label:'Under album'}]" :key="'artist-layout-'+option.key" type="button" role="radio" :class="{on:ui.artistDetailLayout===option.key}" :aria-checked="String(ui.artistDetailLayout===option.key)" @click="artistDetailPreference('layout',option.key)">{{ option.label }}</button></div></div>
+      <div class="srow segmented-row"><span>Album controls<small>Small buttons are the default; icons use less space.</small></span><div class="segmented" role="radiogroup" aria-label="Artist album controls"><button v-for="option in [{key:'buttons',label:'Small buttons'},{key:'icons',label:'Icons'}]" :key="'artist-controls-'+option.key" type="button" role="radio" :class="{on:ui.artistDetailControls===option.key}" :aria-checked="String(ui.artistDetailControls===option.key)" @click="artistDetailPreference('controls',option.key)">{{ option.label }}</button></div></div>
+    </div>
   </template>
   <template v-else-if="isSettingsScreen('queue-settings')">
     <div class="sgh">Queue artwork</div><div class="sgroup player-presentation-group" role="radiogroup" aria-label="Queue artwork"><button v-for="mode in queueArtModes" :key="'detail-queue-'+mode.key" type="button" class="srow player-presentation-row" role="radio" :aria-checked="String(ui.queueArtMode===mode.key)" @click="queueArtMode(mode.key)"><span class="player-presentation-copy"><span>{{ mode.label }}</span><small>{{ queueArtModeHint(mode.key) }}</small></span><span class="font-option-check" aria-hidden="true"></span></button><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('queueArtwork')">{{ frequentActionLabel('queueArtwork') }}</button></div>
@@ -115,27 +120,64 @@ Vue.component('lms-settings', {
   <template v-else-if="isEqualizerScreen">
     <div class="equalizer-screen">
     <template v-if="isSettingsScreen('equalizer')">
-      <div class="equalizer-now-playing"><span>{{ equalizerContextName }}</span><small>{{ equalizerContextMeta }}</small></div>
-      <div class="sgh">Player</div>
-      <div class="sgroup equalizer-ios-group"><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-player')"><span class="setting-copy">Player DSP settings<small>{{ dspOwner === 'apple-squeezer' ? 'Apple Squeezer' : 'SqueezeDSP' }} · {{ appleSqueezerCompatible ? 'Connected' : 'Available' }}</small></span><span class="v">›</span></button></div>
-      <div class="sgh">Playback</div>
-      <div class="sgroup equalizer-ios-group"><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-mode')"><span class="setting-copy">Playback mode<small>How this player processes audio</small></span><span class="v">{{ appleSqueezerModeLabel }} ›</span></button></div>
-      <template v-if="equalizerAvailableNow">
-        <div class="sgh">Equalizer</div>
-        <div class="sgroup equalizer-ios-group">
-          <div class="srow"><span class="setting-copy">Equalizer<small>Keep your saved curve applied to this player</small></span><button type="button" class="sw" :class="{on:activeEqualizerEnabled}" role="switch" :aria-checked="String(activeEqualizerEnabled)" @click="toggleActiveEqualizer"><span class="visually-hidden">Equalizer</span></button></div>
-          <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-graphic')"><span class="setting-copy">Graphic Equalizer<small>Bands, filters, tone and processing</small></span><span class="v">{{ equalizerPresetLabel || 'Custom' }} ›</span></button>
-          <div v-if="dspOwner === 'squeezedsp'" class="srow eq-hold-row"><span class="setting-copy">Compare<small>Press and hold to hear the original, unprocessed signal</small></span><button type="button" class="eq-hold-button" aria-label="Compare with original; press and hold" @pointerdown.prevent="holdEqualizerBypass(true)" @pointerup.prevent="holdEqualizerBypass(false)" @pointercancel="holdEqualizerBypass(false)" @pointerleave="holdEqualizerBypass(false)" @keydown.space.prevent="holdEqualizerBypass(true)" @keyup.space.prevent="holdEqualizerBypass(false)" @keydown.enter.prevent="holdEqualizerBypass(true)" @keyup.enter.prevent="holdEqualizerBypass(false)" @blur="holdEqualizerBypass(false)">Hold</button></div>
-          <button v-else type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-graphic')"><span class="setting-copy">Compare<small>A/B comparison is available with the sound controls</small></span><span class="v">{{ nativeDspAB }} ›</span></button>
-        </div>
-      </template>
-      <template v-else>
-        <div class="sgh">Equalizer</div>
-        <div class="sgroup equalizer-ios-group"><div class="equalizer-unavailable-copy"><strong>Equalizer is unavailable in {{ appleSqueezerModeLabel }}</strong><small>Switch playback mode to Equalizer to edit or apply your saved settings.</small></div><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-mode')">Choose playback mode <span class="v">›</span></button></div>
-      </template>
-      <div class="sgh">More</div>
-      <div class="sgroup equalizer-ios-group"><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-presets')"><span class="setting-copy">Equalizer presets<small>Choose, save or remove sound profiles</small></span><span class="v">›</span></button><button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('equalizer-rules')"><span class="setting-copy">Automatic EQ rules<small>Apply settings by song, album, artist, genre or folder</small></span><span class="v">›</span></button></div>
+      <div class="equalizer-dashboard">
+        <section class="equalizer-dashboard-path" aria-label="Equalizer engine and playback mode">
+          <div class="equalizer-dashboard-control"><span>Engine</span><div class="equalizer-dashboard-segment" role="radiogroup" aria-label="Processing engine"><button v-for="owner in dspOwnerOptions" :key="owner.key" type="button" role="radio" :aria-checked="String(dspOwner===owner.key)" :class="{on:dspOwner===owner.key}" :disabled="owner.key==='apple-squeezer'&&!appleSqueezerCompatible" @click="selectDspOwner(owner.key)">{{ owner.label }}</button><button type="button" class="more" :aria-expanded="String(equalizerMoreEnginesOpen)" @click="toggleEqualizerDashboard('engines')">{{ equalizerMoreEnginesOpen ? '−' : '+' }}</button></div></div>
+          <div class="equalizer-dashboard-control"><span>Mode</span><div class="equalizer-dashboard-segment" role="radiogroup" aria-label="Playback mode"><button v-for="mode in appleSqueezerModes.slice(0,2)" :key="mode.key" type="button" role="radio" :aria-checked="String(appleSqueezer.mode===mode.key)" :class="{on:appleSqueezer.mode===mode.key}" :disabled="appleSqueezer.busy||dspOwner!=='apple-squeezer'" @click="changeAppleSqueezerMode(mode.key)">{{ mode.label }}</button><button type="button" class="more" :aria-expanded="String(equalizerMoreModesOpen)" :disabled="dspOwner!=='apple-squeezer'" @click="toggleEqualizerDashboard('modes')">{{ equalizerMoreModesOpen ? '−' : '+' }}</button></div></div>
+        </section>
+        <div v-if="equalizerMoreEnginesOpen" class="equalizer-dashboard-extra equalizer-engine-extra"><span><strong>Processing ownership</strong><small>Choose Apple Squeezer or SqueezeDSP above. Compatible engines appear here automatically.</small></span></div>
+        <div v-if="equalizerMoreModesOpen" class="equalizer-dashboard-extra"><button v-for="mode in appleSqueezerModes.slice(2)" :key="mode.key" type="button" class="equalizer-dashboard-choice" :class="{on:appleSqueezer.mode===mode.key}" :disabled="appleSqueezer.busy" @click="changeAppleSqueezerMode(mode.key)"><span><strong>{{ mode.label }}</strong><small>{{ appleSqueezerModeHelp(mode.key) }}</small></span><span>{{ appleSqueezer.mode===mode.key ? '✓' : '' }}</span></button></div>
+
+        <section class="equalizer-dashboard-row equalizer-dashboard-presets" aria-label="Quick presets"><header><strong>Quick presets</strong><small>Choose a curve or manage saved profiles</small></header><button v-for="preset in equalizerDashboardPresets" :key="preset.key" type="button" class="equalizer-dashboard-preset" :class="{on:equalizerPresetLabel===preset.label}" @click="applyEqualizerDashboardPreset(preset)"><svg viewBox="0 0 34 18" aria-hidden="true"><path :d="preset.path"></path></svg><span>{{ preset.short }}</span></button><button type="button" class="equalizer-dashboard-more" :aria-expanded="String(equalizerMorePresetsOpen)" @click="toggleEqualizerDashboard('presets')">{{ equalizerMorePresetsOpen ? '−' : '+' }}</button></section>
+        <div v-if="equalizerMorePresetsOpen" class="equalizer-dashboard-extra equalizer-preset-extra"><button v-for="preset in equalizerPresetOptions" :key="preset.key" type="button" class="equalizer-dashboard-choice" @click="chooseEqualizerPreset(preset)"><span><strong>{{ preset.name }}</strong><small>{{ preset.server ? 'Saved profile' : 'Built-in profile' }}</small></span><span>{{ equalizerPresetLabel===preset.name ? '✓' : '' }}</span></button><div v-if="dspOwner==='squeezedsp'" class="equalizer-dashboard-manager"><label for="eq-dashboard-preset-name">Preset name</label><input id="eq-dashboard-preset-name" v-model.trim="equalizerPresetName" type="text" maxlength="80" placeholder="My preset"><div><button type="button" class="eq-action-button" :disabled="!equalizerPresetName||equalizerSaving" @click="saveEqualizerPreset">Save as new</button><button type="button" class="eq-action-button destructive" :disabled="!equalizerServerPresetSelected||equalizerSaving" @click="deleteEqualizerPreset">Delete selected</button></div></div></div>
+
+        <section class="equalizer-dashboard-row equalizer-dashboard-rules" aria-label="Apply automatically"><header><strong>Apply automatically</strong><small>Use this curve for</small><span class="equalizer-dashboard-now"><i aria-hidden="true"></i><span><b>{{ equalizerContextName }}</b><small>{{ equalizerContextMeta }}</small></span></span></header><div class="equalizer-dashboard-rule" v-for="scope in equalizerRuleScopes.slice(0,3)" :key="scope.type"><span><strong>{{ equalizerRuleTypeLabel(scope.type) }}</strong><small>{{ scope.value || 'Not set' }}</small></span><button type="button" class="sw" :class="{on:scope.active}" role="switch" :aria-checked="String(scope.active)" :disabled="equalizerDirty||!scope.key" @click="toggleEqualizerRule(scope.type)"></button></div><button type="button" class="equalizer-dashboard-more" :aria-expanded="String(equalizerMoreRulesOpen)" @click="toggleEqualizerDashboard('rules')">{{ equalizerMoreRulesOpen ? '−' : '+' }}</button></section>
+        <div v-if="equalizerMoreRulesOpen" class="equalizer-dashboard-extra equalizer-rule-extra"><div class="equalizer-dashboard-rule" v-for="scope in equalizerRuleScopes.slice(3)" :key="scope.type"><span><strong>{{ equalizerRuleTypeLabel(scope.type) }}</strong><small>{{ scope.value || 'Not set' }}</small></span><button type="button" class="sw" :class="{on:scope.active}" role="switch" :aria-checked="String(scope.active)" :disabled="equalizerDirty||!scope.key" @click="toggleEqualizerRule(scope.type)"></button></div><div class="equalizer-dashboard-manager"><strong>Saved rules · {{ equalizerPlayerRules.length }}</strong><small v-if="!equalizerPlayerRules.length">No automatic EQ rules yet.</small><div v-for="rule in equalizerPlayerRules" :key="rule.id" class="equalizer-dashboard-saved-rule"><span>{{ rule.label }}<small>{{ equalizerRuleTypeLabel(rule.type) }}</small></span><button type="button" class="eq-remove-button" :aria-label="'Remove EQ rule for '+rule.label" @click="removeEqualizerRule(rule.id)">Remove</button></div></div></div>
+
+        <section class="equalizer-dashboard-curve"><header class="equalizer-workspace-title"><h2>Curve</h2><span>{{ equalizerPresetLabel || 'Custom' }} · {{ dspOwner === 'apple-squeezer' ? nativeDspBands.length : equalizerBands.length }} bands</span><span class="eq-status-badge" :class="{on:equalizerAvailableNow&&activeEqualizerEnabled}">{{ !equalizerAvailableNow ? 'Paused' : (activeEqualizerEnabled ? 'Active' : 'Bypass') }}</span></header>
+          <div v-if="!equalizerAvailableNow" class="equalizer-workspace-mode" role="status"><span><strong>{{ appleSqueezerModeLabel }} is active.</strong><small>The saved curve is shown below but is not processing audio. Nothing will be lost.</small></span><button type="button" class="eq-action-button primary" :disabled="appleSqueezer.busy" @click="activateEqualizerWorkspace">Use Equalizer mode</button></div>
+          <div class="equalizer-workspace-surface" :class="{paused:!equalizerAvailableNow}">
+            <div v-if="dspOwner === 'apple-squeezer' && nativeDspDraft" class="equalizer-workspace-response">
+              <div class="native-signal-head"><span>Saved response<small>{{ appleSqueezer.diagnostics.rate ? appleSqueezer.diagnostics.rate + ' Hz' : 'Rate unavailable' }} · {{ equalizerPresetLabel || 'Custom' }}</small></span></div>
+              <svg v-if="nativeDspResponsePath" class="native-response" viewBox="0 0 320 76" role="img" aria-label="Saved equalizer frequency response"><path class="native-response-zero" d="M0 64 L320 64"></path><path class="native-response-line" :d="nativeDspResponsePath"></path></svg><div v-else class="native-response-empty">Saved response preview unavailable</div>
+            </div>
+            <div v-if="dspOwner === 'apple-squeezer' && nativeDspDraft" class="eq-band-panel equalizer-workspace-bands"><div class="eq-band-bank" aria-label="Native equalizer bands"><label v-for="band in nativeDspBands" :key="'workspace-'+band.frequency" class="eq-band" :class="{disabled:!band.enabled}"><span class="eq-band-value">{{ formatEqGain(band.gain) }}</span><span class="eq-slider"><input :value="band.gain" type="range" min="-24" max="24" step="0.5" :disabled="!equalizerAvailableNow||nativeDspSaving||!band.enabled" :aria-label="band.label+' hertz'" @input="setNativeBand(band.index,$event.target.value)"></span><span>{{ band.label }}</span></label></div></div>
+            <div v-else-if="equalizerDraft" class="eq-band-panel equalizer-workspace-bands"><div class="eq-band-bank" aria-label="Graphic equalizer bands"><label class="eq-band eq-preamp-band"><span class="eq-band-value">{{ formatEqGain(equalizerDraft.Client.Preamp) }}</span><span class="eq-slider"><input v-model.number="equalizerDraft.Client.Preamp" type="range" min="-30" max="0" step="0.1" aria-label="Preamp"></span><span>Pre</span></label><label v-for="band in equalizerBands" :key="'workspace-'+band.frequency" class="eq-band"><span class="eq-band-value">{{ formatEqGain(band.gain) }}</span><span class="eq-slider"><input :value="band.gain" type="range" min="-30" max="30" step="0.5" :aria-label="band.label+' hertz'" @input="setEqualizerBand(band.frequency,$event.target.value)"></span><span>{{ band.label }}</span></label></div></div>
+            <div v-else class="equalizer-unavailable-copy"><strong>Equalizer settings are not available for this player.</strong><small>Refresh the player connection or choose another processing engine.</small></div>
+            <div class="equalizer-workspace-actions">
+              <button v-if="dspOwner === 'squeezedsp'" type="button" class="eq-hold-button" :disabled="!equalizerAvailableNow" @pointerdown.prevent="holdEqualizerBypass(true)" @pointerup.prevent="holdEqualizerBypass(false)" @pointercancel="holdEqualizerBypass(false)" @pointerleave="holdEqualizerBypass(false)" @keydown.space.prevent="holdEqualizerBypass(true)" @keyup.space.prevent="holdEqualizerBypass(false)" @keydown.enter.prevent="holdEqualizerBypass(true)" @keyup.enter.prevent="holdEqualizerBypass(false)" @blur="holdEqualizerBypass(false)">Compare</button>
+              <button v-else type="button" class="eq-action-button" @click="loadNativeAB(nativeDspAB==='A'?'B':'A')">Compare {{ nativeDspAB }}</button>
+              <button v-if="dspOwner==='apple-squeezer' && nativeDspDraft" type="button" class="eq-action-button" @click="saveNativeAB(nativeDspAB)">Save {{ nativeDspAB }}</button>
+              <button type="button" class="eq-action-button" :disabled="!equalizerAvailableNow" @click="dspOwner==='apple-squeezer'?applyNativePreset('flat'):resetEqualizerBands()">Reset</button>
+              <button type="button" class="eq-action-button primary equalizer-workspace-apply" :disabled="!equalizerAvailableNow||(dspOwner==='apple-squeezer'?(!nativeDspDirty||nativeDspSaving):(!equalizerDirty||equalizerSaving))" @click="dspOwner==='apple-squeezer'?applyNativeDsp():applyEqualizer()">{{ (nativeDspSaving||equalizerSaving)?'Applying…':'Apply changes' }}</button>
+            </div>
+            <div v-if="!equalizerAvailableNow" class="equalizer-workspace-paused-label">Saved curve preview · processing paused</div>
+          </div></section>
+
+        <section class="equalizer-dashboard-advanced"><header><strong>Advanced processing</strong><small>Open only the controls you need</small></header><div class="equalizer-dashboard-advanced-tabs"><button v-for="module in equalizerAdvancedModules" :key="module.key" type="button" :aria-expanded="String(equalizerAdvancedOpen[module.key])" @click="toggleEqualizerAdvanced(module.key)"><span><strong>{{ module.label }}</strong><small>{{ module.help }}</small></span><i>{{ equalizerAdvancedOpen[module.key] ? '−' : '+' }}</i></button></div>
+          <div v-if="equalizerAdvancedOpen.headroom" class="equalizer-dashboard-advanced-detail"><template v-if="dspOwner==='apple-squeezer'&&nativeDspDraft"><label>Preamp<input v-model.number="nativeDspDraft.preamp_db" class="setting-range" type="range" min="-30" max="12" step="0.1"><span>{{ formatSigned(nativeDspDraft.preamp_db,' dB') }}</span></label><div><span>Automatic headroom</span><button type="button" class="sw" :class="{on:nativeDspDraft.headroom_db===null}" @click="nativeDspDraft.headroom_db=nativeDspDraft.headroom_db===null?3:null"></button></div><div><span>True-peak limiter</span><button type="button" class="sw" :class="{on:nativeDspDraft.limiter}" @click="nativeDspDraft.limiter=!nativeDspDraft.limiter"></button></div></template><template v-else-if="equalizerDraft"><label>Preamp<input v-model.number="equalizerDraft.Client.Preamp" class="setting-range" type="range" min="-30" max="0" step="0.1"><span>{{ formatSigned(equalizerDraft.Client.Preamp,' dB') }}</span></label><div><span>Loudness</span><button type="button" class="sw" :class="{on:!!equalizerDraft.Client.Loudness.enabled}" @click="equalizerDraft.Client.Loudness.enabled=equalizerDraft.Client.Loudness.enabled?0:1"></button></div><div><span>ReplayGain in DSP</span><button type="button" class="sw" :class="{on:!!equalizerDraft.Client.ReplayGain.enabled}" @click="equalizerDraft.Client.ReplayGain.enabled=equalizerDraft.Client.ReplayGain.enabled?0:1"></button></div></template></div>
+          <div v-if="equalizerAdvancedOpen.filters" class="equalizer-dashboard-advanced-detail"><template v-if="dspOwner==='apple-squeezer'&&nativeDspDraft"><div><span>Parametric stage</span><button type="button" class="sw" :class="{on:!nativeDspDraft.parametric_bypass}" @click="nativeDspDraft.parametric_bypass=!nativeDspDraft.parametric_bypass"></button></div><div><span>{{ nativeDspDraft.parametric_filters.length }} configured filters</span><button type="button" class="eq-action-button" @click="addNativeFilter">Add filter</button></div><div v-for="(filter,index) in nativeDspDraft.parametric_filters" :key="'dashboard-native-filter-'+index" class="equalizer-dashboard-filter"><button type="button" @click="cycleNativeFilterType(filter)">{{ nativeFilterTypeLabel(filter.type) }}</button><label>Hz<input v-model.number="filter.frequency" type="number" min="20" max="20000"></label><label>Q<input v-model.number="filter.q" type="number" min="0.1" max="20" step="0.1"></label><label v-if="['notch','lowpass','highpass'].indexOf(filter.type)<0">dB<input v-model.number="filter.gain" type="number" min="-24" max="24" step="0.1"></label><button type="button" class="eq-remove-button" @click="removeNativeFilter(index)">Remove</button></div></template><template v-else-if="equalizerDraft"><div><span>{{ equalizerDraft.Client.Filters.length }} configured filters</span><button type="button" class="eq-action-button" @click="addEqualizerFilter('peak')">Add filter</button></div><div v-for="(filter,index) in equalizerDraft.Client.Filters" :key="'dashboard-filter-'+index" class="equalizer-dashboard-filter"><span>{{ equalizerFilterLabel(filter.FilterType) }}</span><label>Hz<input v-model.number="filter.Frequency" type="number" min="20" max="20000"></label><label>Q<input v-model.number="filter.Slope" type="number" min="0.1" max="20" step="0.1"></label><label v-if="filter.FilterType!=='lowpass'&&filter.FilterType!=='highpass'">dB<input v-model.number="filter.Gain" type="number" min="-30" max="30" step="0.1"></label><button type="button" class="eq-remove-button" @click="removeEqualizerFilter(index)">Remove</button></div></template></div>
+          <div v-if="equalizerAdvancedOpen.spatial" class="equalizer-dashboard-advanced-detail"><template v-if="dspOwner==='apple-squeezer'&&nativeDspDraft"><label>Stereo width<input v-model.number="nativeDspDraft.stereo_width" class="setting-range" type="range" min="0" max="2" step="0.01"><span>{{ Number(nativeDspDraft.stereo_width).toFixed(2) }}×</span></label><label>Balance<input v-model.number="nativeDspDraft.balance" class="setting-range" type="range" min="-1" max="1" step="0.01"><span>{{ Number(nativeDspDraft.balance).toFixed(2) }}</span></label><label>Left delay<input v-model.number="nativeDspDraft.delay_left_ms" class="setting-range" type="range" min="0" max="100" step="0.01"><span>{{ Number(nativeDspDraft.delay_left_ms).toFixed(2) }} ms</span></label><label>Right delay<input v-model.number="nativeDspDraft.delay_right_ms" class="setting-range" type="range" min="0" max="100" step="0.01"><span>{{ Number(nativeDspDraft.delay_right_ms).toFixed(2) }} ms</span></label><div><span>Crossfeed</span><button v-for="option in crossfeedOptions" :key="option.key" type="button" :class="{on:nativeDspDraft.crossfeed===option.key}" @click="setNativeCrossfeed(option.key)">{{ option.label }}</button></div><label>Room correction file<input v-model.trim="nativeDspDraft.fir_file" type="text" placeholder="/path/to/room.wav"></label></template><template v-else-if="equalizerDraft"><label>Stereo width<input v-model.number="equalizerDraft.Client.Width" class="setting-range" type="range" min="-12" max="12" step="0.1"><span>{{ formatSigned(equalizerDraft.Client.Width,' dB') }}</span></label><label>Balance<input v-model.number="equalizerDraft.Client.Balance" class="setting-range" type="range" min="-12" max="12" step="0.1"><span>{{ formatSigned(equalizerDraft.Client.Balance,' dB') }}</span></label><label>Delay<input v-model.number="equalizerDraft.Client.Delay.delay" class="setting-range" type="range" min="0" max="1000" step="0.01"><span>{{ Number(equalizerDraft.Client.Delay.delay).toFixed(2) }} ms</span></label><div><span>Crossfeed</span><button v-for="mode in equalizerCrossfeedModes" :key="mode" type="button" :class="{on:equalizerDraft.Client.Crossfeed===mode}" @click="equalizerDraft.Client.Crossfeed=mode">{{ mode }}</button></div><label>Room correction<input v-model.trim="equalizerDraft.Client.FIRWavFile" type="text" placeholder="/path/to/room.wav"></label></template></div>
+        </section>
+      </div>
     </template>
+    <div v-else class="equalizer-subworkspace">
+      <aside class="equalizer-workspace-rail equalizer-subworkspace-rail" aria-label="Equalizer sections">
+        <div class="equalizer-workspace-track"><span><strong>{{ equalizerContextName }}</strong><small>{{ equalizerContextMeta }}</small></span></div>
+        <div class="equalizer-workspace-heading">Equalizer</div>
+        <div class="equalizer-workspace-nav">
+          <button type="button" class="equalizer-workspace-link" @click="openAppearanceScreen('equalizer')"><span class="setting-copy">Curve<small>Graphic equalizer and response</small></span><span class="v">›</span></button>
+          <button type="button" class="equalizer-workspace-link" :class="{on:isSettingsScreen('equalizer-presets')}" :aria-current="isSettingsScreen('equalizer-presets')?'page':null" @click="openAppearanceScreen('equalizer-presets')"><span class="setting-copy">Presets<small>Saved sound profiles</small></span><span class="v">›</span></button>
+          <button type="button" class="equalizer-workspace-link" :class="{on:isSettingsScreen('equalizer-rules')}" :aria-current="isSettingsScreen('equalizer-rules')?'page':null" @click="openAppearanceScreen('equalizer-rules')"><span class="setting-copy">Rules<small>Automatic matching</small></span><span class="v">›</span></button>
+          <button type="button" class="equalizer-workspace-link" :class="{on:isSettingsScreen('equalizer-graphic')}" :aria-current="isSettingsScreen('equalizer-graphic')?'page':null" @click="openAppearanceScreen('equalizer-graphic')"><span class="setting-copy">Advanced<small>Filters and protection</small></span><span class="v">›</span></button>
+        </div>
+        <div class="equalizer-workspace-heading">Signal path</div>
+        <div class="equalizer-workspace-nav">
+          <button type="button" class="equalizer-workspace-link" :class="{on:isSettingsScreen('equalizer-player')}" :aria-current="isSettingsScreen('equalizer-player')?'page':null" @click="openAppearanceScreen('equalizer-player')"><span class="setting-copy">{{ dspOwner === 'apple-squeezer' ? 'Apple Squeezer' : 'SqueezeDSP' }}<small>Processing engine</small></span><span class="v">›</span></button>
+          <button type="button" class="equalizer-workspace-link" :class="{on:isSettingsScreen('equalizer-mode')}" :aria-current="isSettingsScreen('equalizer-mode')?'page':null" @click="openAppearanceScreen('equalizer-mode')"><span class="setting-copy">Playback mode<small>How audio is processed</small></span><span class="v">{{ appleSqueezerModeLabel }} ›</span></button>
+        </div>
+      </aside>
+      <section class="equalizer-subworkspace-main">
     <div v-if="isSettingsScreen('equalizer-player') && appleSqueezer.available" class="sgroup apple-squeezer-contract">
       <div class="srow"><span class="setting-copy">Apple Squeezer Store plugin<small>API {{ appleSqueezer.apiVersion || 'legacy' }} · {{ appleSqueezer.lifecycle }}</small></span><span class="v">{{ appleSqueezerCompatible ? 'Connected' : 'Update required' }}</span></div>
       <div v-if="appleSqueezerCanLifecycle" class="srow eq-inline-actions">
@@ -187,8 +229,18 @@ Vue.component('lms-settings', {
         </div>
       </div>
     </template>
+    <div v-if="appleSqueezer.modeTransition" class="apple-squeezer-transition" role="alertdialog" aria-modal="true" aria-live="assertive" aria-labelledby="apple-squeezer-transition-title">
+      <div class="apple-squeezer-transition-card">
+        <span class="apple-squeezer-transition-spinner" aria-hidden="true"></span>
+        <strong id="apple-squeezer-transition-title">{{ tr('Changing playback mode…') }}</strong>
+        <span>{{ tr('Please wait while Apple Squeezer restarts the audio path.') }}</span>
+        <small>{{ appleSqueezerModeName(appleSqueezer.modeTransition.from) }} → {{ appleSqueezerModeName(appleSqueezer.modeTransition.to) }}</small>
+      </div>
+    </div>
     <div v-if="isSettingsScreen('equalizer-player')" class="sgroup equalizer-secondary-settings"><div class="srow segmented-row"><span class="setting-copy">Processing engine<small>Stored by the server for this player.</small></span><div class="segmented" role="radiogroup" aria-label="DSP owner"><button type="button" role="radio" :aria-checked="String(dspOwner==='apple-squeezer')" :tabindex="dspOwner==='apple-squeezer'?0:-1" :class="{on:dspOwner==='apple-squeezer'}" :disabled="!appleSqueezerCompatible" @keydown="radioKey($event, dspOwnerOptions, dspOwner, selectDspOwner)" @click="selectDspOwner('apple-squeezer')">Apple Squeezer</button><button type="button" role="radio" :aria-checked="String(dspOwner==='squeezedsp')" :tabindex="dspOwner==='squeezedsp'?0:-1" :class="{on:dspOwner==='squeezedsp'}" @keydown="radioKey($event, dspOwnerOptions, dspOwner, selectDspOwner)" @click="selectDspOwner('squeezedsp')">SqueezeDSP</button></div></div>
     </div>
+    <div v-if="isSettingsScreen('equalizer-graphic') && dspOwner === 'apple-squeezer' && appleSqueezerCompatible && appleSqueezer.mode !== 'equalizer'" class="native-dsp-mode-notice" role="status"><span><strong>{{ appleSqueezerModeLabel }} is active.</strong><small>Your advanced DSP settings remain saved. Switch modes to edit or apply them.</small></span><button type="button" class="eq-action-button primary" :disabled="appleSqueezer.busy" @click="activateEqualizerWorkspace">Use Equalizer mode</button></div>
+    <div v-if="isSettingsScreen('equalizer-graphic') && dspOwner === 'apple-squeezer' && !appleSqueezerCompatible" class="sgroup"><div class="equalizer-unavailable-copy"><strong>Advanced DSP is unavailable</strong><small>Update or reconnect Apple Squeezer, or choose SqueezeDSP as the processing engine.</small></div></div>
     <template v-if="isSettingsScreen('equalizer-graphic') && dspOwner === 'apple-squeezer' && appleSqueezerCompatible && appleSqueezer.mode === 'equalizer' && nativeDspDraft">
       <div class="native-signal-console">
         <div class="native-signal-head"><span>Native signal response<small>{{ appleSqueezer.diagnostics.rate ? appleSqueezer.diagnostics.rate + ' Hz' : 'Rate unavailable' }} · {{ appleSqueezer.telemetry.latency_frames == null ? 'Latency unavailable' : appleSqueezer.telemetry.latency_frames + ' DSP frames' }}</small></span><span class="eq-status-badge" :class="{on:!nativeDspDraft.bypass}">{{ nativeDspDraft.bypass ? 'Bypass' : 'Native' }}</span></div>
@@ -297,6 +349,8 @@ Vue.component('lms-settings', {
       <div class="sgh">Saved rules</div>
       <div class="sgroup equalizer-ios-group"><div v-if="!equalizerPlayerRules.length" class="equalizer-unavailable-copy"><strong>No automatic EQ rules yet</strong><small>Turn on a song, album, artist, genre, folder or year above to add one.</small></div><div v-for="rule in equalizerPlayerRules" :key="rule.id" class="srow eq-rule-row"><span class="setting-copy">{{ rule.label }}<small>{{ equalizerRuleTypeLabel(rule.type) }}<template v-if="store.equalizer.activeRule && store.equalizer.activeRule.id === rule.id"> · Active</template></small></span><button type="button" class="eq-remove-button" :aria-label="'Remove EQ rule for ' + rule.label" @click="removeEqualizerRule(rule.id)">Remove</button></div></div>
     </template>
+      </section>
+    </div>
     </div>
   </template>
   <template v-else-if="ui.appearanceScreen === 'players'">
@@ -821,8 +875,9 @@ Vue.component('lms-settings', {
       gaugeColors: LmsUi.GAUGE_COLORS,
       queueArtModes: LmsUi.QUEUE_ART_MODES,
       info: null, loading: true, error: '', showPlayers: false,
-      appleSqueezer: { available: false, running: false, lifecycle: 'not-installed', apiVersion: 0, capabilities: {}, revision: null, mode: 'native', upsampleRate: 'auto', resampleFilter: 'linear', expert: {precision:28,passband:95,stopband:100,phase:50}, busy: false, diagnostics: {}, telemetry: {} },
+      appleSqueezer: { available: false, running: false, lifecycle: 'not-installed', apiVersion: 0, capabilities: {}, revision: null, mode: 'native', upsampleRate: 'auto', resampleFilter: 'linear', expert: {precision:28,passband:95,stopband:100,phase:50}, busy: false, modeTransition: null, diagnostics: {}, telemetry: {}, error:'', telemetryError:'', telemetryUpdatedAt:0 },
       appleSqueezerTelemetryTimer: null,
+      appleSqueezerLoadToken: 0, appleSqueezerTelemetryToken: 0,
       appleSqueezerModes: [
         { key: 'dac-priority', label: 'DAC Priority' },
         { key: 'equalizer', label: 'Equalizer' },
@@ -862,7 +917,10 @@ Vue.component('lms-settings', {
       durationDraft: null,
       equalizerDraft: null, equalizerSaving: false, equalizerPreset: '', equalizerPresetName: '',
       equalizerPresetsOpen: false, equalizerImpulsesOpen: false,
-      equalizerHoldRestore: null
+      equalizerHoldRestore: null,
+      equalizerMoreEnginesOpen: false, equalizerMoreModesOpen: false,
+      equalizerMorePresetsOpen: false, equalizerMoreRulesOpen: false,
+      equalizerAdvancedOpen: { headroom:false, filters:false, spatial:false }
       ,dspOwner: 'apple-squeezer', nativeDspDraft: null, nativeDspSaved: '', nativeDspResponse: [], nativeDspSaving: false, nativeDspAB: 'A'
     };
   },
@@ -1113,6 +1171,24 @@ Vue.component('lms-settings', {
         return names.indexOf(self.equalizerPresetDisplayName(name).toLowerCase()) < 0;
       }).map(function (name) { return { key: 'server:' + name, name: self.equalizerPresetDisplayName(name), server: name }; }));
     },
+    equalizerDashboardPresets: function () {
+      return [
+        { key:'flat', label:'Flat', short:'Flat', path:'M2 9H32' },
+        { key:'warm', label:'Warm', short:'Warm', path:'M2 6C8 3 12 3 17 7S27 11 32 9' },
+        { key:'presence', label:'Presence', short:'Voice', path:'M2 11C9 11 11 10 15 5S23 4 26 8 30 10 32 10' },
+        { key:'air', label:'Air', short:'Air', path:'M2 11C15 11 20 11 24 8S29 4 32 3' },
+        { key:'bass', label:'Bass', short:'Bass', path:'M2 3C7 3 10 5 14 9S24 11 32 11' },
+        { key:'detail', label:'Detail', short:'Detail', path:'M2 10C11 10 16 9 20 7S27 5 32 6' },
+        { key:'night', label:'Night', short:'Night', path:'M2 8C8 6 12 6 17 8S27 10 32 8' }
+      ];
+    },
+    equalizerAdvancedModules: function () {
+      return [
+        { key:'headroom', label:'Headroom & protection', help:'Preamp, ReplayGain and limiter' },
+        { key:'filters', label:'Parametric filters', help:'Notches, shelves and pass filters' },
+        { key:'spatial', label:'Room & spatial', help:'Crossfeed, balance, delays and FIR' }
+      ];
+    },
     equalizerBands: function () {
       var filters = (this.equalizerDraft && this.equalizerDraft.Client.Filters) || [];
       return ECHOCLASSIC_EQUALIZER_FREQUENCIES.map(function (frequency) {
@@ -1247,6 +1323,10 @@ Vue.component('lms-settings', {
         'osf': 'Oversampling filter with automatic source-family handling',
         'csf': 'Custom sample-rate filter with expert controls'
       }[mode] || 'Alternate playback mode for this player';
+    },
+    appleSqueezerModeName: function (mode) {
+      var selected = this.appleSqueezerModes.filter(function (item) { return item.key === mode; })[0];
+      return selected ? this.tr(selected.label) : String(mode || '');
     },
     toggleActiveEqualizer: function () {
       if (this.dspOwner === 'apple-squeezer' && this.nativeDspDraft) {
@@ -2960,7 +3040,7 @@ Vue.component('lms-settings', {
     },
     openFrequentSetting: function (key) {
       if (key === 'equalizer') { this.openEqualizer(); return; }
-      if (key === 'soundPreset') { this.openEqualizer(); this.openAppearanceScreen('equalizer-presets'); return; }
+      if (key === 'soundPreset') { this.openEqualizer(); this.equalizerMorePresetsOpen = true; return; }
       var screens = { crossfade:'playback-settings', replayGain:'playback-settings', sleepTimer:'playback-settings', volumeStep:'player-settings', stopAtEnd:'player-settings', theme:'appearance-settings', accentColor:'appearance-settings', queueArtwork:'queue-settings', showBadges:'interface-settings', markHires:'interface-settings' };
       if (screens[key]) this.openAppearanceScreen(screens[key]);
     },
@@ -2977,6 +3057,31 @@ Vue.component('lms-settings', {
       LmsStore.setEqualizerContext(null);
       this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
       this.openAppearanceScreen('equalizer');
+    },
+    toggleEqualizerDashboard: function (section) {
+      var fields = { engines:'equalizerMoreEnginesOpen', modes:'equalizerMoreModesOpen', presets:'equalizerMorePresetsOpen', rules:'equalizerMoreRulesOpen' };
+      var field = fields[section]; if (!field) return;
+      this[field] = !this[field];
+    },
+    toggleEqualizerAdvanced: function (section) {
+      if (!Object.prototype.hasOwnProperty.call(this.equalizerAdvancedOpen, section)) return;
+      Vue.set(this.equalizerAdvancedOpen, section, !this.equalizerAdvancedOpen[section]);
+    },
+    applyEqualizerDashboardPreset: function (preset) {
+      if (!preset) return;
+      if (this.dspOwner === 'apple-squeezer') {
+        this.applyNativePreset(preset.key);
+        this.equalizerPreset = preset.label;
+        return;
+      }
+      var match = this.equalizerPresetOptions.filter(function (option) {
+        return String(option.name).toLowerCase() === String(preset.label).toLowerCase();
+      })[0];
+      if (match) this.chooseEqualizerPreset(match);
+    },
+    activateEqualizerWorkspace: async function () {
+      if (this.dspOwner !== 'apple-squeezer' || !this.appleSqueezerCompatible) return false;
+      return this.changeAppleSqueezerMode('equalizer');
     },
     refreshEqualizer: async function () {
       await LmsStore.refreshEqualizer(true);
@@ -3027,7 +3132,8 @@ Vue.component('lms-settings', {
       if (!this.equalizerDirty || this.equalizerSaving) return;
       this.equalizerSaving = true;
       try {
-        await LmsStore.saveEqualizer(JSON.parse(JSON.stringify(this.equalizerDraft)));
+        var saved = await LmsStore.saveEqualizer(JSON.parse(JSON.stringify(this.equalizerDraft)));
+        if (saved === false) return;
         this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
       } finally { this.equalizerSaving = false; }
     },
@@ -3196,18 +3302,28 @@ Vue.component('lms-settings', {
         this.equalizerHoldRestore = JSON.parse(JSON.stringify(this.equalizerDraft));
         var bypassed = JSON.parse(JSON.stringify(this.equalizerDraft));
         bypassed.Client.Bypass = 1;
-        await LmsApi.squeezeDspSave(this.store.playerId, bypassed).catch(function () {});
+        try { await LmsApi.squeezeDspSave(this.store.playerId, bypassed); }
+        catch (e) {
+          this.equalizerHoldRestore = null;
+          LmsUi.notify(LmsStore.friendlyError(e, 'Could not start equalizer comparison.'), 'error', 6500);
+        }
       } else if (this.equalizerHoldRestore) {
         var restore = this.equalizerHoldRestore;
-        this.equalizerHoldRestore = null;
-        await LmsApi.squeezeDspSave(this.store.playerId, restore).catch(function () {});
+        try {
+          await LmsApi.squeezeDspSave(this.store.playerId, restore);
+          this.equalizerHoldRestore = null;
+        } catch (e) {
+          LmsUi.notify(LmsStore.friendlyError(e, 'Could not restore equalizer processing.'), 'error', 6500);
+          await LmsStore.refreshEqualizer(true);
+        }
       }
     },
     toggleEqualizerRule: function (type) {
       return LmsStore.toggleEqualizerRule(type, JSON.parse(JSON.stringify(this.equalizerDraft)));
     },
     removeEqualizerRule: async function (ruleId) {
-      await LmsStore.removeEqualizerRule(ruleId);
+      var removed = await LmsStore.removeEqualizerRule(ruleId);
+      if (removed === false) return;
       this.equalizerDraft = this.prepareEqualizerDraft(this.store.equalizer.settings);
       this.equalizerPreset = '';
     },
@@ -3279,6 +3395,7 @@ Vue.component('lms-settings', {
       if (key === 'kioskMode') { LmsUi.requestKioskMode(!this.ui.kioskMode); return; }
       LmsUi.setPreference(key, !this.ui[key]);
     },
+    artistDetailPreference: function (key, value) { LmsUi.setArtistDetailPreference(key, value); },
     setVolumeStep: function (value) { LmsUi.setVolumeStep(value); },
     control: function (p) { LmsStore.selectPlayer(p.id); },
     handoff: function (p) { LmsStore.handoffTo(p.id); },
@@ -3305,6 +3422,11 @@ Vue.component('lms-settings', {
       return String(value).split(';').filter(Boolean).map(function (entry) {
         var pair = entry.split('='), values = (pair[1] || '').split(':');
         return { type: pair[0] || 'peak', frequency: Number(values[0] || 1000), q: Number(values[1] || 1), gain: Number(values[2] || 0), enabled: values[3] !== 'off' };
+      }).filter(function (filter) {
+        return ['peak','notch','lowshelf','highshelf','lowpass','highpass'].indexOf(filter.type) >= 0 &&
+          isFinite(filter.frequency) && filter.frequency >= 10 && filter.frequency <= 96000 &&
+          isFinite(filter.q) && filter.q >= 0.1 && filter.q <= 20 &&
+          isFinite(filter.gain) && filter.gain >= -24 && filter.gain <= 24;
       });
     },
     prepareNativeDsp: function (config) {
@@ -3374,7 +3496,7 @@ Vue.component('lms-settings', {
     },
     setNativeBand: function (index, value) { Vue.set(this.nativeDspDraft.graphic_eq_db, index, Number(value)); },
     applyNativePreset: function (name) {
-      var presets = { flat:[0,0,0,0,0,0,0,0,0,0,0,0], warm:[1.5,1.2,0.8,0.4,0,0,-0.2,-0.3,-0.2,0,0,0], presence:[0,0,0,0,0,0.3,0.8,1.2,0.6,0.2,0,0], air:[0,0,0,0,0,0,0,0.2,0.8,1.2,1.5,1.5] };
+      var presets = { flat:[0,0,0,0,0,0,0,0,0,0,0,0], warm:[1.5,1.2,0.8,0.4,0,0,-0.2,-0.3,-0.2,0,0,0], presence:[0,0,0,0,0,0.3,0.8,1.2,0.6,0.2,0,0], air:[0,0,0,0,0,0,0,0.2,0.8,1.2,1.5,1.5], bass:[3,2.6,2,1.2,.5,0,-.2,-.3,-.2,0,0,0], detail:[0,0,0,0,0,.2,.5,.9,1.1,.8,.4,.2], night:[1.2,1,.6,.2,0,-.2,-.3,-.2,0,.2,.4,.5] };
       this.nativeDspDraft.graphic_eq_db = (presets[name] || presets.flat).slice(); this.nativeDspDraft.graphic_eq_enabled = [true,true,true,true,true,true,true,true,true,true,true,true];
     },
     addNativeFilter: function () { this.nativeDspDraft.parametric_filters.push({ type: 'peak', frequency: 1000, q: 1, gain: 0, enabled: true }); },
@@ -3428,10 +3550,16 @@ Vue.component('lms-settings', {
       catch (e) { this.nativeDspResponse = []; }
     },
     saveNativeAB: function (slot) {
-      if (!this.nativeDspDraft) return; try { localStorage.setItem('echoclassic.native-dsp-' + slot + '.' + (this.store.playerId || 'default'), JSON.stringify(this.serializeNativeDsp())); this.nativeDspAB = slot; LmsUi.notify('Saved comparison ' + slot + '.', 'success', 2000); } catch (e) {}
+      if (!this.nativeDspDraft) return;
+      try { localStorage.setItem('echoclassic.native-dsp-' + slot + '.' + (this.store.playerId || 'default'), JSON.stringify(this.serializeNativeDsp())); this.nativeDspAB = slot; LmsUi.notify('Saved comparison ' + slot + '.', 'success', 2000); }
+      catch (e) { LmsUi.notify(LmsStore.friendlyError(e, 'Could not save the comparison slot.'), 'error', 6500); }
     },
     loadNativeAB: function (slot) {
-      try { var value = localStorage.getItem('echoclassic.native-dsp-' + slot + '.' + (this.store.playerId || 'default')); if (value) { this.nativeDspDraft = this.prepareNativeDsp(JSON.parse(value)); this.nativeDspAB = slot; } } catch (e) {}
+      try {
+        var value = localStorage.getItem('echoclassic.native-dsp-' + slot + '.' + (this.store.playerId || 'default'));
+        if (value) { this.nativeDspDraft = this.prepareNativeDsp(JSON.parse(value)); this.nativeDspAB = slot; }
+        else { LmsUi.notify('Nothing saved in slot ' + slot + ' yet. Use Save ' + slot + ' to store the current curve there first.', 'warning', 4500); }
+      } catch (e) { LmsUi.notify(LmsStore.friendlyError(e, 'Could not load the comparison slot.'), 'error', 6500); }
     },
     importSqueezeDspToNative: function () {
       if (!this.equalizerDraft || !this.equalizerDraft.Client) return;
@@ -3444,8 +3572,11 @@ Vue.component('lms-settings', {
       this.nativeDspDraft = value; this.selectDspOwner('apple-squeezer'); LmsUi.notify('Imported ' + value.parametric_filters.length + ' parametric filters' + (skipped ? '; skipped ' + skipped + ' unsupported filters' : '') + '. Review and apply.', skipped ? 'warning' : 'success', 5500);
     },
     loadAppleSqueezer: async function () {
+      var playerId = this.store.playerId;
+      var token = ++this.appleSqueezerLoadToken;
       try {
-        var state = await LmsApi.appleSqueezerStatus(this.store.playerId);
+        var state = await LmsApi.appleSqueezerStatus(playerId);
+        if (token !== this.appleSqueezerLoadToken || this.store.playerId !== playerId) return false;
         this.appleSqueezer.available = !!Number(state.available);
         this.appleSqueezer.running = !!Number(state.running);
         this.appleSqueezer.lifecycle = state.lifecycle || (this.appleSqueezer.running ? 'running' : (this.appleSqueezer.available ? 'stopped' : 'not-installed'));
@@ -3455,31 +3586,58 @@ Vue.component('lms-settings', {
         this.appleSqueezer.mode = state.mode === 'audiophile' ? 'dac-priority' : state.mode === 'pcm-studio' ? 'osf' : (state.mode || 'native');
         this.appleSqueezer.upsampleRate = state.upsampleRate || 'auto';
         this.appleSqueezer.resampleFilter = state.resampleFilter || 'linear';
-        if (state.resampleExpert) { var expert = String(state.resampleExpert).split(':'); if (expert.length === 4) this.appleSqueezer.expert = { precision:Number(expert[0]), passband:Number(expert[1]), stopband:Number(expert[2]), phase:Number(expert[3]) }; }
+        if (state.resampleExpert) {
+          var expert = String(state.resampleExpert).split(':').map(Number);
+          if (expert.length === 4 && expert.every(isFinite) && expert[0] >= 16 && expert[0] <= 32 &&
+              expert[1] >= 80 && expert[1] <= 100 && expert[2] >= expert[1] && expert[2] <= 120 &&
+              expert[3] >= 0 && expert[3] <= 100) {
+            this.appleSqueezer.expert = { precision:expert[0], passband:expert[1], stopband:expert[2], phase:expert[3] };
+          }
+        }
         this.appleSqueezer.diagnostics = this.parseAppleObject(state.diagnostics);
         this.appleSqueezer.telemetry = this.parseAppleObject(state.dspTelemetry || state.dsp_telemetry);
-        var config = null; try { config = JSON.parse(state.dspConfig || state.dsp_config || 'null'); } catch (e) {}
+        var config = null;
+        try {
+          var parsedConfig = JSON.parse(state.dspConfig || state.dsp_config || 'null');
+          if (parsedConfig && typeof parsedConfig === 'object' && !Array.isArray(parsedConfig)) config = parsedConfig;
+        } catch (e) {}
         this.nativeDspDraft = this.prepareNativeDsp(config); this.nativeDspSaved = JSON.stringify(this.nativeDspDraft);
         this.dspOwner = state.dspOwner || state.dsp_owner || (config ? 'apple-squeezer' : 'squeezedsp');
+        this.appleSqueezer.error = '';
         if (config) this.loadNativeResponse();
+        return true;
       } catch (e) {
+        if (token !== this.appleSqueezerLoadToken || this.store.playerId !== playerId) return false;
         this.appleSqueezer.available = false;
         this.appleSqueezer.running = false;
+        this.appleSqueezer.error = LmsStore.friendlyError(e, 'Could not load Apple Squeezer.');
+        if (window.console && console.debug) console.debug('[Echo Classic] Apple Squeezer load: ' + this.appleSqueezer.error);
+        return false;
       }
     },
     refreshAppleSqueezerTelemetry: async function () {
       if (!this.isEqualizerScreen || !this.appleSqueezer.available || this.appleSqueezer.busy) return;
+      var playerId = this.store.playerId;
+      var token = ++this.appleSqueezerTelemetryToken;
       try {
         if (this.appleCapability('telemetry')) {
-          var telemetry = await LmsApi.appleSqueezerTelemetry(this.store.playerId);
+          var telemetry = await LmsApi.appleSqueezerTelemetry(playerId);
+          if (token !== this.appleSqueezerTelemetryToken || this.store.playerId !== playerId) return;
           this.appleSqueezer.telemetry = this.parseAppleObject(telemetry.telemetry || telemetry.dspTelemetry || telemetry.dsp_telemetry || telemetry);
+          this.appleSqueezer.telemetryError = ''; this.appleSqueezer.telemetryUpdatedAt = Date.now();
           return;
         }
-        var state = await LmsApi.appleSqueezerStatus(this.store.playerId);
+        var state = await LmsApi.appleSqueezerStatus(playerId);
+        if (token !== this.appleSqueezerTelemetryToken || this.store.playerId !== playerId) return;
         this.appleSqueezer.running = !!Number(state.running);
         this.appleSqueezer.diagnostics = this.parseAppleObject(state.diagnostics);
         this.appleSqueezer.telemetry = this.parseAppleObject(state.dspTelemetry || state.dsp_telemetry);
-      } catch (e) {}
+        this.appleSqueezer.telemetryError = ''; this.appleSqueezer.telemetryUpdatedAt = Date.now();
+      } catch (e) {
+        this.appleSqueezer.telemetryError = LmsStore.friendlyError(e, 'Telemetry is temporarily unavailable.');
+        this.appleSqueezer.telemetry = {};
+        if (window.console && console.debug) console.debug('[Echo Classic] Apple Squeezer telemetry: ' + this.appleSqueezer.telemetryError);
+      }
     },
     changeAppleSqueezerLifecycle: async function (action) {
       if (this.appleSqueezer.busy || !this.appleSqueezerCanLifecycle) return;
@@ -3495,42 +3653,63 @@ Vue.component('lms-settings', {
     changeAppleSqueezerMode: async function (mode) {
       if (this.appleSqueezer.busy) return false;
       if (mode === this.appleSqueezer.mode) return true;
+      var previousMode = this.appleSqueezer.mode;
       this.appleSqueezer.busy = true;
+      this.appleSqueezer.modeTransition = { from: previousMode, to: mode };
+      /* Reflect the requested destination immediately. The modal explains the
+         short audio interruption while the Store plugin rebuilds its path. */
+      this.appleSqueezer.mode = mode;
       try {
         var state = await LmsApi.setAppleSqueezerMode(mode);
 		if (state.error) throw new Error(state.error);
         this.appleSqueezer.mode = state.mode || mode;
-        this.appleSqueezer.running = !!Number(state.running);
+        if (state.running != null) this.appleSqueezer.running = !!Number(state.running);
         LmsUi.notify('Apple Squeezer changed to ' + this.appleSqueezer.mode + '.', 'success', 3000);
-        this.appleSqueezer.busy = false;
         return this.appleSqueezer.mode === mode;
       } catch (e) {
+        this.appleSqueezer.mode = previousMode;
         LmsUi.notify(LmsStore.friendlyError(e, 'Could not change Apple Squeezer mode.'), 'error', 6500);
         await this.loadAppleSqueezer();
+        return false;
+      } finally {
+        this.appleSqueezer.modeTransition = null;
+        this.appleSqueezer.busy = false;
       }
-      this.appleSqueezer.busy = false;
-      return false;
     },
     changeAppleSqueezerUpsampleRate: async function (rate) {
       if (this.appleSqueezer.busy || rate === this.appleSqueezer.upsampleRate) return;
+      var previousRate = this.appleSqueezer.upsampleRate;
       this.appleSqueezer.busy = true;
+      this.appleSqueezer.upsampleRate = rate;
       try {
         var state = await LmsApi.setAppleSqueezerUpsampleRate(rate);
 		if (state.error) throw new Error(state.error);
         this.appleSqueezer.upsampleRate = state.upsampleRate || rate;
-        this.appleSqueezer.running = !!Number(state.running);
-        LmsUi.notify('PCM Studio rate changed to ' + this.appleSqueezerRateLabel + '.', 'success', 3000);
+        if (state.running != null) this.appleSqueezer.running = !!Number(state.running);
       } catch (e) {
+        this.appleSqueezer.upsampleRate = previousRate;
         LmsUi.notify(LmsStore.friendlyError(e, 'Could not change the PCM Studio rate.'), 'error', 6500);
         await this.loadAppleSqueezer();
+      } finally {
+        this.appleSqueezer.busy = false;
       }
-      this.appleSqueezer.busy = false;
     },
     changeAppleSqueezerResampleFilter: async function (filter) {
-      if (this.appleSqueezer.busy || filter === this.appleSqueezer.resampleFilter) return; this.appleSqueezer.busy = true;
-      try { var state = await LmsApi.setAppleSqueezerResampleFilter(filter); if (state.error) throw new Error(state.error); this.appleSqueezer.resampleFilter = state.resampleFilter || filter; LmsUi.notify('Resampling filter changed to ' + filter + '.', 'success', 3000); }
-      catch (e) { LmsUi.notify(LmsStore.friendlyError(e, 'Could not change the resampling filter.'), 'error', 6500); await this.loadAppleSqueezer(); }
-      this.appleSqueezer.busy = false;
+      if (this.appleSqueezer.busy || filter === this.appleSqueezer.resampleFilter) return;
+      var previousFilter = this.appleSqueezer.resampleFilter;
+      this.appleSqueezer.busy = true;
+      this.appleSqueezer.resampleFilter = filter;
+      try {
+        var state = await LmsApi.setAppleSqueezerResampleFilter(filter);
+        if (state.error) throw new Error(state.error);
+        this.appleSqueezer.resampleFilter = state.resampleFilter || filter;
+      } catch (e) {
+        this.appleSqueezer.resampleFilter = previousFilter;
+        LmsUi.notify(LmsStore.friendlyError(e, 'Could not change the resampling filter.'), 'error', 6500);
+        await this.loadAppleSqueezer();
+      } finally {
+        this.appleSqueezer.busy = false;
+      }
     },
     applyAppleSqueezerExpert: async function () {
       var value = this.appleSqueezer.expert; if (this.appleSqueezer.busy) return; this.appleSqueezer.busy = true;
@@ -3772,17 +3951,34 @@ Vue.component('lms-settings', {
         var value = localStorage.getItem(key);
         if (value !== null) snapshot.values[key] = value;
       });
-      try { localStorage.setItem('echoclassic.import-backup.v1', JSON.stringify(snapshot)); }
-      catch (e) {}
+      try {
+        localStorage.setItem('echoclassic.import-backup.v1', JSON.stringify(snapshot));
+        return snapshot;
+      } catch (e) {
+        LmsUi.notify(LmsStore.friendlyError(e, 'Could not create the import backup.'), 'error', 6500);
+        return null;
+      }
     },
     confirmImport: function () {
       if (!this.pendingImport) return;
-      this.backupCurrentSettings();
+      var snapshot = this.backupCurrentSettings();
+      if (!snapshot) return;
       var values = this.pendingImport.values;
-      Object.keys(values).forEach(function (key) {
-        try { localStorage.setItem(key, values[key]); }
-        catch (e) {}
-      });
+      var keys = Object.keys(values);
+      try {
+        keys.forEach(function (key) { localStorage.setItem(key, values[key]); });
+      } catch (e) {
+        keys.forEach(function (key) {
+          try {
+            if (Object.prototype.hasOwnProperty.call(snapshot.values, key)) localStorage.setItem(key, snapshot.values[key]);
+            else localStorage.removeItem(key);
+          } catch (rollbackError) {
+            if (window.console && console.error) console.error('[Echo Classic] import rollback', rollbackError);
+          }
+        });
+        LmsUi.notify(LmsStore.friendlyError(e, 'Could not import preferences; previous values were restored.'), 'error', 6500);
+        return;
+      }
       location.reload();
     },
     cancelImport: function () { this.pendingImport = null; },

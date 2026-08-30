@@ -280,7 +280,8 @@ Vue.component('lms-queue', {
         title: 'Remove from queue?', message: t.title || 'This track', confirmLabel: 'Remove', destructive: true
       });
       if (!accepted) return;
-      await LmsStore.removeFromQueue(t.index);
+      var removed = await LmsStore.removeFromQueue(t.index);
+      if (removed === false) return;
       this.announce((t.title || 'Track') + ' removed from queue');
     },
     playNext: function (t) {
@@ -323,7 +324,8 @@ Vue.component('lms-queue', {
       var self = this;
       /* A linha e recriada a cada reordenacao; sem devolver o foco ao botao o
          teclado cai no body e o passo seguinte fica inalcancavel. */
-      Promise.resolve(LmsStore.moveInQueue(t.index, to)).then(function () {
+      Promise.resolve(LmsStore.moveInQueue(t.index, to)).then(function (moved) {
+        if (moved === false) return;
         self.announce((t.title || 'Track') + ' moved to position ' + (to + 1));
         self.$nextTick(function () { self.focusMove(to, delta); });
       });

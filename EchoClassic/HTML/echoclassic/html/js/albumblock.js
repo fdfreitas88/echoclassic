@@ -127,6 +127,7 @@ Vue.component('lms-album-block', {
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l5 5 5-5"/></svg>
     </button>
   </div>
+  <div v-else-if="relatedError" class="loading-more warning" role="status">{{ relatedError }}</div>
 
   <div v-if="loading" class="empty"><div class="p">Loading tracks…</div></div>
   <div v-else-if="error" class="empty">
@@ -181,7 +182,7 @@ Vue.component('lms-album-block', {
 	</div>`,
   data: function () {
     return { store: LmsStore.state, ui: LmsUi.state, tracks: [], artFailed: false,
-	             relatedArtists: [], relatedVisibleCount: 1, relatedExpanded: false,
+	             relatedArtists: [], relatedVisibleCount: 1, relatedExpanded: false, relatedError: '',
 	             tracksHasMore: false, albumInfoStatus: '', albumInfo: { review: '', covers: [] },
 	             albumInfoVisible: false, albumReviewExpanded: false, albumSourceVisible: false,
 	             albumInfoRequestToken: 0,
@@ -459,17 +460,22 @@ Vue.component('lms-album-block', {
 	      this.loading = true;
 	      this.error = '';
 	      this.relatedArtists = [];
+	      this.relatedError = '';
 	      this.tracksHasMore = false;
       try {
         var pid = this.store.playerId || '';
+        var self = this;
         var result = await Promise.all([
           LmsApi.tracks(pid, this.album.id, 0, 500),
-          LmsApi.artistsOfAlbum(pid, this.album.id).catch(function () { return []; })
+          LmsApi.artistsOfAlbum(pid, this.album.id).catch(function (e) {
+            self.relatedError = self.tr('Related artists could not be loaded.');
+            if (window.console && console.debug) console.debug('[Echo Classic] related artists: ' + self.relatedError);
+            return [];
+          })
         ]);
 	        this.tracks = result[0];
 	        this.tracksHasMore = (result[0].sourceCount == null ? result[0].length : result[0].sourceCount) === 500;
         var main = String(this.album.artist || (this.artist && this.artist.name) || '');
-        var self = this;
         this.relatedArtists = result[1].filter(function (artist) {
           return self.normalizeName(artist.name) !== self.normalizeName(main);
         });

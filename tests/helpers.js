@@ -294,6 +294,19 @@ function queueInstance(extra) {
 }
 
 module.exports = {
+  /* strings.txt indexado por chave e idioma. Testes que so querem saber se um
+     par EN/PT existe devem usar isto, e nao um regex de linhas vizinhas: a
+     ordem das linhas de idioma dentro do bloco muda a cada idioma novo. */
+  strings: function () {
+    const text = module.exports.read('EchoClassic/strings.txt');
+    const out = {}; let key = null;
+    for (const line of text.split(/\r?\n/)) {
+      if (/^[A-Z][A-Z0-9_]*$/.test(line)) { key = line; out[key] = out[key] || {}; continue; }
+      const m = line.match(/^\t([A-Z]{2})\t([\s\S]*)$/);
+      if (m && key) out[key][m[1]] = m[2];
+    }
+    return out;
+  },
   root,
   skin,
   read,

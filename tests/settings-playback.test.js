@@ -3,9 +3,15 @@ const assert = require('node:assert/strict');
 const helpers = require('./helpers');
 
 test('language settings heading and reload explanation ship in EN/PT', function () {
-  const strings = helpers.read('EchoClassic/strings.txt');
-  assert.match(strings, /\tEN\tLanguage\n\tPT\tIdioma/);
-  assert.match(strings, /\tEN\tChoosing a language reloads the page\. English is the original text; the others are translations shipped with the skin\.\n\tPT\tEscolher um idioma recarrega a página\./);
+  const entries = helpers.strings();
+  const pair = function (en, pt) {
+    const hit = Object.values(entries).find(function (v) { return v.EN === en; });
+    assert.ok(hit, 'missing English string: ' + en);
+    assert.equal(hit.PT, pt);
+  };
+  pair('Language', 'Idioma');
+  pair('Choosing a language reloads the page. English is the original text; the others are translations shipped with the skin.',
+    'Escolher um idioma recarrega a página. O inglês é o texto original; os demais são traduções incluídas na skin.');
 });
 
 /* C3 (3.2.6c): volume leaves Settings entirely (it is operated in the

@@ -4,14 +4,45 @@ const helpers = require('./helpers');
 
 test('ARTMETA-01: artist-only overlay keeps local navigation authoritative', function () {
   const detail = helpers.read('EchoClassic/HTML/echoclassic/html/js/detail.js');
-  assert.match(detail, /v-if="frame\.kind === 'artist'" class="artist-enrichment"/);
+  assert.match(detail, /v-if="frame\.kind === 'artist'" class="artist-detail-compact"/);
   assert.match(detail, /LmsApi\.musicArtistInfo\(this\.store\.playerId \|\| '', this\.frame\.id, this\.frame\.label\)/);
   assert.match(detail, /kind: 'artist', id: this\.artist\.id, ids: this\.artist\.ids/,
     'canonical LMS artist navigation remains unchanged');
   assert.doesNotMatch(detail, /this\.frame\.(?:id|label)\s*=(?!=)/,
     'the enrichment overlay must not rewrite the canonical frame');
-  assert.equal((detail.match(/class="opml-new-label"/g) || []).length, 1,
-    'the new feature has exactly one New badge');
+  assert.doesNotMatch(detail, /class="opml-new-label"/,
+    'the restored Artist information card does not carry the rejected New badge');
+});
+
+test('artist detail defaults to a compact sidecar with small controls and responsive alternatives', function () {
+  const detail = helpers.read('EchoClassic/HTML/echoclassic/html/js/detail.js');
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  const ui = helpers.read('EchoClassic/HTML/echoclassic/html/js/ui.js');
+  const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
+  assert.match(detail, /artist-layout-'\+ui\.artistDetailLayout/);
+  assert.match(detail, /artist-controls-'\+ui\.artistDetailControls/);
+  assert.match(detail, /class="artist-compact-controls"/);
+  assert.match(css, /\.artist-detail-compact\{display:grid;grid-template-columns:/);
+  assert.match(css, /\.artist-compact-photo\{[^}]*width:44px;height:44px/);
+  assert.match(css, /\.artist-compact-controls button\{[^}]*min-height:38px/);
+  assert.match(ui, /artistDetailLayout: saved\.artistDetailLayout === 'under' \? 'under' : 'sidecar'/);
+  assert.match(ui, /artistDetailControls: saved\.artistDetailControls === 'icons' \? 'icons' : 'buttons'/);
+  assert.match(settings, /Artist detail <span class="opml-new-label settings-new-label">NEW<\/span>/);
+  assert.match(detail, /Read biography/);
+  assert.match(detail, /class="artist-enrichment-links"/);
+});
+
+test('artist primary album opens Equalizer with album rule context on the Settings tab', function () {
+  const detail = helpers.read('EchoClassic/HTML/echoclassic/html/js/detail.js');
+  const method = detail.match(/openPrimaryEqualizer: function \(\) \{[\s\S]*?\n    \},/);
+  assert.ok(method, 'openPrimaryEqualizer method is present');
+  assert.match(method[0], /type: 'album', albumKey: String\(this\.primaryAlbum\.id\), albumTitle: this\.primaryAlbum\.title \|\| ''/);
+  assert.match(method[0], /artist: this\.primaryAlbum\.artist \|\| '', artistLabel: this\.primaryAlbum\.artist \|\| ''/);
+  assert.match(method[0], /year: this\.primaryAlbum\.originalYear \|\| this\.primaryAlbum\.year \|\| ''/);
+  assert.match(method[0], /LmsUi\.setTab\('settings'\);[\s\S]*LmsNav\.push\('settings', \{ label:'Equalizer', screen:'equalizer' \}\)/,
+    'the Settings tab must be active before its Equalizer frame is pushed');
+  assert.doesNotMatch(method[0], /\bkey:String|\bvalue:|\blabel:this\.primaryAlbum/,
+    'generic context fields cannot substitute for the album rule schema');
 });
 
 test('ARTMETA-01: artist cache is persistent, bounded and refuses remote or query-bearing photo URLs', function () {
@@ -53,13 +84,13 @@ test('ARTMETA-01: unavailable plugin hands off to the native filtered plugin man
   assert.match(settings, /menu\.setAttribute\('data-ec-plugin-filter', 'all'\)/);
 });
 
-test('ARTMETA-01: provenance and user-facing states are translated in EN/PT', function () {
+test('ARTMETA-01: original Artist information surface and states are translated in EN/PT', function () {
   const detail = helpers.read('EchoClassic/HTML/echoclassic/html/js/detail.js');
   const strings = helpers.read('EchoClassic/strings.txt');
-  assert.match(detail, /Provided by MusicArtistInfo from Wikipedia, Last\.fm, Discogs and MusicBrainz\./);
+  assert.doesNotMatch(detail, /Provided by MusicArtistInfo from Wikipedia, Last\.fm, Discogs and MusicBrainz\./);
   [
     'Artist information', 'Finding artist information…', 'Install plugin',
-    'No artist biography was found.', 'Photo credit', 'Retrieved'
+    'No artist biography was found.', 'Read biography', 'Refresh', 'Hide for now'
   ].forEach(function (text) {
     assert.ok(strings.indexOf('\tEN\t' + text) >= 0, 'missing EN: ' + text);
   });
@@ -72,7 +103,7 @@ test('ARTMETA-01: progressive album information and refresh are explicit', funct
   const album = helpers.read('EchoClassic/HTML/echoclassic/html/js/albumblock.js');
   assert.match(detail, /frame\.id == null && !this\.nameMatchAccepted/);
   assert.match(detail, /Review match: only the artist name is available/);
-  assert.match(detail, /Matched by stable local artist identity/);
+  assert.doesNotMatch(detail, /Matched by stable local artist identity/);
   assert.match(detail, /localAlbums\.length/);
   assert.match(detail, /Also on connected services/);
   assert.match(detail, /removeEnrichment/);

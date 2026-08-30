@@ -15,6 +15,61 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.4] — 2026-08-30
+
+### Changed
+
+- Apple Squeezer mode switches now show a blocking, localized wait state while
+  the audio path restarts. OSF/CSF rate and filter controls update immediately,
+  avoid success-toast churn, restore their prior value on failure, and
+  invalidate cached status after every mutation. [code/measured: Apple Squeezer
+  UI and API regression tests]
+- Equalizer settings now use the approved full-width workspace with persistent
+  navigation, saved-response preview, direct mode recovery and responsive band
+  controls. [code/measured: focused Equalizer workspace and responsive tests]
+- Every Equalizer destination now stays inside that full-width workspace:
+  presets, automatic rules, advanced processing, DSP ownership and playback
+  modes share persistent navigation and collapse to overflow-safe mobile
+  controls instead of reverting to a narrow legacy settings column.
+  [code/measured: Equalizer sub-workspace regression tests]
+- Advanced processing no longer becomes an empty screen when DAC Priority,
+  OSF or CSF is active; it preserves the settings context and offers a direct
+  switch to Equalizer mode. [live/measured: deployed destination walkthrough]
+
+### Added
+
+- German and French now cover the complete runtime dictionary alongside English
+  and Portuguese, with an automated completeness gate for all four languages.
+  [live/measured: deployed language walkthrough and localization checker]
+
+### Fixed
+
+- Malformed JSON-RPC envelopes, invalid paging values, absent album identities
+  and invalid queue positions now fail safely instead of becoming ambiguous
+  data, overflowed integers or unintended mutations. Player-scoped requests
+  discard responses that arrive after the active player changes. [code/measured:
+  edge-case and stale-response regression tests]
+- Queue, favourites, playlists, related artists, player settings, playback
+  intelligence, track information and Apple Squeezer diagnostics now expose or
+  report failures instead of silently presenting empty or successful states.
+  Equalizer preset/rule operations stop dependent success paths after an error,
+  and comparison restores remain recoverable. [code/measured: error-handling
+  regression tests]
+- Preference import now requires a successful backup and rolls back every
+  affected key if a write fails, preventing a partial settings document from
+  being reloaded as though the import succeeded. [code/measured: import
+  rollback regression test]
+- Opening Equalizer from an artist's primary album now preserves the album rule
+  identity and selects the Settings tab; missing album identities no longer
+  trigger actions. [code/measured: artist metadata and edge-case tests]
+- The Mini Player signal line no longer increases the player bar height or
+  overlaps the bottom navigation. [live/measured: deployed layout measurements]
+- Artist fallback initials are compact again—92px on wide layouts and 78px on
+  phones. Artist information is restored to its original simple card with the
+  biography and inline Read biography, Refresh and Hide for now actions; the
+  rejected badge, portrait, match and provenance treatment is removed.
+  [code/measured: artist-detail regression test]
+
 ## [3.5.3] — 2026-08-29
 
 ### Changed

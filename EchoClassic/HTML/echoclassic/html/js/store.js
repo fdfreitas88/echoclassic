@@ -26,6 +26,7 @@
     syncGroup: null, syncBusy: false,
     volumeModeSynced: false, volumeModeBusy: false, volumeDragging: false,
     initialized: false, reconnecting: false, lastError: '', lastSuccess: 0,
+    auxiliaryErrors: { queue:'', playerSettings:'', sync:'', trackInfo:'', playbackIntelligence:'' },
     mode: 'stop', time: 0, duration: 0, volume: 0,
     queue: [], queueIndex: 0, queueTotal: 0, shuffle: 0, repeat: 0,
     /* queueUndo continua sendo array (a interface le .length); o dono fica numa
@@ -77,6 +78,15 @@
      it touches the server. */
   var equalizerApplyQueue = Object.create(null);
   var equalizerApplySequence = Object.create(null);
+
+  function backgroundError(area, error) {
+    var message = friendlyError(error, area + ' could not be refreshed.');
+    if (state.auxiliaryErrors && Object.prototype.hasOwnProperty.call(state.auxiliaryErrors, area)) {
+      state.auxiliaryErrors[area] = message;
+    }
+    if (global.console && console.debug) console.debug('[Echo Classic] ' + area + ': ' + message);
+    return message;
+  }
 
   function readJson(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key) || '') || fallback; }
@@ -199,6 +209,9 @@
       } catch (e) {
         if (state.playerId === playerId) {
           state.equalizer.error = friendlyError(e, 'Could not apply the equalizer rule.');
+          if (global.LmsUi && global.LmsUi.notify) {
+            global.LmsUi.notify(state.equalizer.error, 'error', 6500);
+          }
         }
       } finally {
         if (state.playerId === playerId && equalizerApplySequence[playerId] === request) {
@@ -299,7 +312,9 @@
       if (kept) ps = [kept].concat(ps);
     }
     state.players = ps;
-    await refreshSyncGroup().catch(function () {});
+    await refreshSyncGroup().then(function () { state.auxiliaryErrors.sync = ''; }, function (e) {
+      backgroundError('sync', e);
+    });
     return ps;
   }
 
@@ -426,10 +441,14 @@
 
   async function loadPlayerSettings() {
     var playerId = state.playerId;
+    state.auxiliaryErrors.playerSettings = '';
     try {
       await loadVolumeMode(playerId);
     } catch (e) {
-      if (state.playerId === playerId) state.volumeModeSynced = false;
+      if (state.playerId === playerId) {
+        state.volumeModeSynced = false;
+        backgroundError('playerSettings', e);
+      }
     }
     try {
       var transitionType = Number(await api.playerPref(playerId, 'transitionType')) || 0;
@@ -441,9 +460,11 @@
       state.transitionDuration = transitionDuration;
       state.replayGainMode = replayGainMode;
       state.sleepRemaining = sleepRemaining;
-    } catch (e) {}
+    } catch (e) { if (state.playerId === playerId) backgroundError('playerSettings', e); }
     await loadEqualizer(false);
-    await refreshSyncGroup().catch(function () {});
+    await refreshSyncGroup().then(function () { state.auxiliaryErrors.sync = ''; }, function (e) {
+      backgroundError('sync', e);
+    });
   }
 
   function setEqualizer(playerId, value) {
@@ -541,8 +562,10 @@
     var tasks = [];
     if (state.capabilities.randomplay && api.randomPlayActive) {
       tasks.push(api.randomPlayActive(playerId).then(function (mode) {
-        if (state.playerId === playerId) state.randomPlay.active = mode || '';
-      }).catch(function () {}));
+        if (state.playerId === playerId) { state.randomPlay.active = mode || ''; state.auxiliaryErrors.playbackIntelligence = ''; }
+      }).catch(function (e) {
+        if (state.playerId === playerId) { state.randomPlay.active = ''; backgroundError('playbackIntelligence', e); }
+      }));
     } else state.randomPlay.active = '';
     if (state.capabilities.dontstopthemusicsetting && api.dontStopProviders) {
       tasks.push(Promise.all([
@@ -553,7 +576,13 @@
         state.dontStopMusic.providers = result[0];
         var selected = result[0].filter(function (provider) { return provider.selected; })[0];
         state.dontStopMusic.provider = selected ? selected.id : String(result[1] || '0');
-      }).catch(function () {}));
+      }).catch(function (e) {
+        if (state.playerId === playerId) {
+          state.dontStopMusic.providers = [];
+          state.dontStopMusic.provider = '0';
+          backgroundError('playbackIntelligence', e);
+        }
+      }));
     } else {
       state.dontStopMusic.providers = [];
       state.dontStopMusic.provider = '0';
@@ -700,16 +729,18 @@
             }
             applyEqualizerRule();
           }
-        }).catch(function () {});
+        }).catch(function (e) {
+          if (state.playerId === playerId) backgroundError('trackInfo', e);
+        });
       }
     }
     saveSession();
     refreshFavorite(false);
-    refreshPlaybackIntelligence(false).catch(function () {});
+    refreshPlaybackIntelligence(false).catch(function (e) { backgroundError('playbackIntelligence', e); });
     updateMediaSession();
     // revalidacao da lista de players pega carona no poll, sem segundo timer
     if (Date.now() - lastPlayersCheck >= PLAYERS_REVALIDATE_MS) {
-      refreshPlayers().catch(function () {});
+      refreshPlayers().catch(function (e) { backgroundError('sync', e); });
     }
   }
 
@@ -846,9 +877,7 @@
       } else {
         await api.favoriteAdd(url, state.np.title || url);
       }
-    } catch (e) {
-      // deixa o estado como esta; a proxima consulta corrige
-    }
+    } catch (e) { throw e; }
     await refreshFavorite(true);
   }
 
@@ -941,8 +970,10 @@
       state.queueTotal = q.total;
       state.shuffle = q.shuffle;
       state.repeat = q.repeat;
+      state.auxiliaryErrors.queue = '';
     } catch (e) {
-      // manter a ultima fila conhecida; o indicador de conexao ja avisa
+      backgroundError('queue', e);
+      throw e;
     }
   }
 
@@ -984,21 +1015,34 @@
     await api.queueRemove(playerId, index);
     if (item) setQueueUndo([{ item: item, index: index }], playerId);
     await loadQueue();
+    return true;
   }
 
   async function moveInQueue(from, to) {
-    if (!state.playerId || from === to) return;
-    await api.queueMove(state.playerId, from, to);
+    if (!state.playerId) return false;
+    from = Number(from); to = Number(to);
+    var total = Math.max(state.queueTotal || 0, state.queue.length);
+    if (!Number.isInteger(from) || !Number.isInteger(to) || from < 0 || to < 0 ||
+        from >= total || to >= total || from === to) return false;
+    var playerId = state.playerId;
+    await api.queueMove(playerId, from, to);
+    if (state.playerId !== playerId) return false;
     await loadQueue();
+    return true;
   }
 
   async function queueItem(action, key, id) {
+    if (['insert', 'add'].indexOf(action) < 0 ||
+        !/^(?:track_id|album_id|artist_id|genre_id|playlist_id|year_id|url)$/.test(String(key || '')) ||
+        id == null || String(id).trim() === '') return false;
     if (!state.playerId || !state.connected) {
       var found = await discoverPlayer();
       if (!found) throw new Error(state.lastError || 'No player is available.');
       await loadPlayerSettings();
     }
-    await api.queueControl(state.playerId, action, key, id);
+    var playerId = state.playerId;
+    await api.queueControl(playerId, action, key, id);
+    if (state.playerId !== playerId) return false;
     await loadQueue();
     return true;
   }
@@ -1072,13 +1116,17 @@
 
   async function cycleShuffle() {
     if (!state.playerId) return;
-    await api.setShuffle(state.playerId, (state.shuffle + 1) % 3);
+    var current = Number(state.shuffle);
+    if (!Number.isInteger(current) || current < 0 || current > 2) current = 0;
+    await api.setShuffle(state.playerId, (current + 1) % 3);
     await loadQueue();
   }
 
   async function cycleRepeat() {
     if (!state.playerId) return;
-    await api.setRepeat(state.playerId, (state.repeat + 1) % 3);
+    var current = Number(state.repeat);
+    if (!Number.isInteger(current) || current < 0 || current > 2) current = 0;
+    await api.setRepeat(state.playerId, (current + 1) % 3);
     await loadQueue();
   }
 
@@ -1183,11 +1231,19 @@
   }
 
   async function setTransition(type, duration) {
-    if (!state.playerId) return;
-    await api.setPlayerPref(state.playerId, 'transitionType', type | 0);
-    await api.setPlayerPref(state.playerId, 'transitionDuration', Math.max(0, duration | 0));
-    state.transitionType = type | 0;
-    state.transitionDuration = Math.max(0, duration | 0);
+    var playerId = state.playerId;
+    if (!playerId) return false;
+    var parsedType = Number(type), parsedDuration = Number(duration);
+    if (!Number.isSafeInteger(parsedType) || !Number.isSafeInteger(parsedDuration)) return false;
+    parsedType = Math.max(0, Math.min(3, parsedType));
+    parsedDuration = Math.max(0, Math.min(60, parsedDuration));
+    await api.setPlayerPref(playerId, 'transitionType', parsedType);
+    if (state.playerId !== playerId) return false;
+    await api.setPlayerPref(playerId, 'transitionDuration', parsedDuration);
+    if (state.playerId !== playerId) return false;
+    state.transitionType = parsedType;
+    state.transitionDuration = parsedDuration;
+    return true;
   }
 
   /* O player fica num local ANTES do primeiro await, e a escrita so vale se
@@ -1219,9 +1275,14 @@
   }
 
   async function setSleep(seconds) {
-    if (!state.playerId) return;
-    await api.sleep(state.playerId, seconds);
-    state.sleepRemaining = Math.max(0, seconds | 0);
+    var playerId = state.playerId;
+    var value = Number(seconds);
+    if (!playerId || !Number.isSafeInteger(value) || value < 0) return false;
+    value = Math.min(value, 2147483647);
+    await api.sleep(playerId, value);
+    if (state.playerId !== playerId) return false;
+    state.sleepRemaining = value;
+    return true;
   }
 
   function sleepAfterTrack() {
@@ -1234,10 +1295,16 @@
   }
 
   async function setRating(stars) {
-    if (!state.canRate || state.np.id == null) return;
-    await api.setRating(state.playerId, state.np.id, stars);
+    var playerId = state.playerId;
+    var trackId = state.np.id;
+    if (!state.canRate || !playerId || trackId == null) return false;
+    await api.setRating(playerId, trackId, stars);
+    if (state.playerId !== playerId || state.np.id !== trackId) return false;
     api.forgetSongInfo();
-    state.trackInfo = await api.songInfo(state.playerId, state.np.id);
+    var info = await api.songInfo(playerId, trackId);
+    if (state.playerId !== playerId || state.np.id !== trackId) return false;
+    state.trackInfo = info;
+    return true;
   }
 
   /* Transporte. Apagadas por engano ao reescrever a fila; o export continuava
@@ -1289,10 +1356,15 @@
 
   async function seek(seconds) {
     if (!state.playerId || state.np.live || !state.duration) return;
+    var playerId = state.playerId;
     var value = Math.max(0, Math.min(state.duration, Math.round(Number(seconds) || 0)));
+    var previous = state.time;
     state.time = value;
-    await api.seek(state.playerId, value);
+    try { await api.seek(playerId, value); }
+    catch (e) { if (state.playerId === playerId) state.time = previous; throw e; }
+    if (state.playerId !== playerId) return false;
     await refresh();
+    return true;
   }
 
   async function setVolume(volume) {

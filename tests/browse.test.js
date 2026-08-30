@@ -2,6 +2,45 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const helpers = require('./helpers');
 
+test('every My Music category keeps a populated wide split detail and phone drill-in behavior', function () {
+  const browse = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const app = helpers.read('EchoClassic/HTML/echoclassic/html/js/app.js');
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  assert.match(app, /isSplit: function \(\) \{ return this\.ui\.tab === 'music' && !this\.ui\.searching; \}/);
+  assert.match(browse, /ensureRootSelection: function \(\) \{\s*if \(window\.innerWidth <= 700\) return;/);
+  assert.match(browse, /var first = this\.displayRows\[0\]/);
+  assert.match(browse, /this\.selectWithoutDrill\(first\)/);
+  assert.doesNotMatch(browse, /ensureRecentSelection/);
+  assert.match(css, /\.body\.split\.drilled \.pane-left\{display:none\}/);
+  assert.match(css, /\.body\.split\.drilled \.pane-right\{display:block\}/);
+});
+
+test('specialized and taxonomy roots stay registered with dedicated loaders', function () {
+  const ui = helpers.read('EchoClassic/HTML/echoclassic/html/js/ui.js');
+  const browse = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
+  const roots = [
+    ['albumartists', 'Album Artists'],
+    ['composers', 'Composers'],
+    ['conductors', 'Conductors'],
+    ['ensembles', 'Ensembles'],
+    ['works', 'Works'],
+    ['genres', 'Genres'],
+    ['years', 'Years'],
+    ['releasetypes', 'Release Types']
+  ];
+
+  roots.forEach(function (root) {
+    assert.match(ui, new RegExp("key: '" + root[0] + "', label: '" + root[1] + "'"),
+      root[1] + ' remains reachable from the My Music root picker');
+  });
+  assert.match(browse, /this\.view === 'albumartists'/);
+  assert.match(browse, /this\.view === 'composers' \|\| this\.view === 'conductors' \|\| this\.view === 'ensembles'/);
+  assert.match(browse, /this\.view === 'works'/);
+  assert.match(browse, /this\.view === 'genres'/);
+  assert.match(browse, /this\.view === 'years'/);
+  assert.match(browse, /this\.view === 'releasetypes'/);
+});
+
 test('superseded library detail placeholder is not implemented', function () {
   const src = helpers.read('EchoClassic/HTML/echoclassic/html/js/browse.js');
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
@@ -798,7 +837,7 @@ function listaCom(rows, options) {
     self[name] = def.methods[name].bind(self);
   });
   ['preferMode', 'allowsMediaFilter', 'hasMediaFilter', 'activeFilters', 'sectionKey',
-   'sortKey', 'sortDesc', 'showsAlbums', 'groupsAlbumsByArtist', 'groupsAlbumsByRelatedArtist',
+   'sortKey', 'sortDesc', 'showsAlbums', 'viewUsesAlphabeticIndex', 'groupsAlbumsByArtist', 'groupsAlbumsByRelatedArtist',
    'groupsMainArtists', 'rowH', 'headerH', 'displayRows', 'displayItems', 'itemOffsets',
    'windowed', 'topPad', 'botPad', 'sectionOverlap', 'hasRail', 'filterCount',
    'toolsActive', 'activeChips', 'resultCount'].forEach(function (name) {

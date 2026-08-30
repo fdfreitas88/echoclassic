@@ -100,10 +100,32 @@ test('Apple Squeezer modes use a readable checkmarked settings list', function (
   assert.match(css, /\.setting-copy small\{[^}]*display:block/);
 });
 
-test('native DSP editor is only presented in Equalizer mode and missing telemetry is not fabricated', function () {
+test('mode changes block the interface with a localized wait state and always clean up', function () {
+  const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
+  const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
+  assert.match(settings, /v-if="appleSqueezer\.modeTransition" class="apple-squeezer-transition" role="alertdialog" aria-modal="true"/);
+  assert.match(settings, /Changing playback mode…/);
+  assert.match(settings, /Please wait while Apple Squeezer restarts the audio path\./);
+  assert.match(settings, /modeTransition = \{ from: previousMode, to: mode \}/);
+  assert.match(settings, /finally \{[\s\S]*modeTransition = null;[\s\S]*busy = false;/);
+  assert.match(css, /\.apple-squeezer-transition\{position:fixed/);
+});
+
+test('rate and filter changes are optimistic, quiet on success, and roll back on failure', function () {
+  const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
+  assert.match(settings, /var previousRate = this\.appleSqueezer\.upsampleRate;[\s\S]*this\.appleSqueezer\.upsampleRate = rate;/);
+  assert.match(settings, /this\.appleSqueezer\.upsampleRate = previousRate;/);
+  assert.match(settings, /var previousFilter = this\.appleSqueezer\.resampleFilter;[\s\S]*this\.appleSqueezer\.resampleFilter = filter;/);
+  assert.match(settings, /this\.appleSqueezer\.resampleFilter = previousFilter;/);
+  assert.doesNotMatch(settings, /PCM Studio rate changed to/);
+  assert.doesNotMatch(settings, /Resampling filter changed to/);
+});
+
+test('advanced native DSP editor stays mode-gated while the root exposes a disabled saved preview', function () {
   const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
   assert.match(settings, /isSettingsScreen\('equalizer-graphic'\)[^>]*appleSqueezer\.mode === 'equalizer' && nativeDspDraft/);
-  assert.match(settings, /Equalizer is unavailable in \{\{ appleSqueezerModeLabel \}\}/);
+  assert.match(settings, /class="equalizer-workspace-surface" :class="\{paused:!equalizerAvailableNow\}"/);
+  assert.match(settings, /The saved curve is shown below but is not processing audio/);
   assert.match(settings, /Rate unavailable/);
   assert.match(settings, /Latency unavailable/);
   assert.match(settings, /Response unavailable/);
@@ -115,24 +137,23 @@ test('native DSP editor is only presented in Equalizer mode and missing telemetr
 test('inactive Apple Squeezer modes do not fall through to the SqueezeDSP editor', function () {
   const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
   assert.match(settings, /<template v-else-if="isSettingsScreen\('equalizer-graphic'\) && dspOwner === 'squeezedsp'">/);
-  assert.match(settings, /Equalizer is unavailable in \{\{ appleSqueezerModeLabel \}\}/);
+  assert.match(settings, /:disabled="!equalizerAvailableNow\|\|nativeDspSaving\|\|!band.enabled"/);
   assert.match(settings, /openAppearanceScreen\('equalizer-mode'\)/);
-  assert.match(settings, /Switch playback mode to Equalizer to edit or apply your saved settings/);
+  assert.match(settings, /activateEqualizerWorkspace/);
 });
 
-test('Equalizer hub follows the approved hierarchy and keeps sound controls together', function () {
+test('Equalizer workspace follows the approved full-screen hierarchy', function () {
   const settings = helpers.read('EchoClassic/HTML/echoclassic/html/js/settings.js');
   const css = helpers.read('EchoClassic/HTML/echoclassic/html/css/ios9.css');
-  const player = settings.indexOf("openAppearanceScreen('equalizer-player')");
-  const mode = settings.indexOf("openAppearanceScreen('equalizer-mode')");
-  const graphic = settings.indexOf("openAppearanceScreen('equalizer-graphic')");
-  assert.ok(player >= 0 && player < mode && mode < graphic, 'player, playback and graphic settings keep the approved order');
-  assert.match(settings, /Player DSP settings<small>\{\{ dspOwner/);
-  assert.match(settings, /Graphic Equalizer<small>Bands, filters, tone and processing<\/small>/);
-  assert.match(settings, /Automatic EQ rules<small>Apply settings by song, album, artist, genre or folder<\/small>/);
-  assert.doesNotMatch(settings, /Advanced processing<small>/);
-  assert.match(settings, /class="setting-copy">\{\{ equalizerContextName \}\}<small>\{\{ equalizerContextMeta \}\}<\/small>/);
-  assert.match(css, /\.equalizer-screen\{[^}]*width:min\(100%,960px\)/);
+  assert.match(settings, /class="equalizer-dashboard-path"/);
+  assert.match(settings, /class="[^"]*equalizer-dashboard-presets/);
+  assert.match(settings, /class="[^"]*equalizer-dashboard-rules/);
+  assert.match(settings, /class="[^"]*equalizer-dashboard-curve/);
+  assert.match(settings, /class="[^"]*equalizer-dashboard-advanced/);
+  assert.match(settings, /appleSqueezerModes\.slice\(0,2\)/);
+  assert.match(settings, /appleSqueezerModes\.slice\(2\)/);
+  assert.match(css, /\.equalizer-screen\{width:100%/);
+  assert.match(css, /\.equalizer-dashboard\{min-height:calc\(100vh/);
   assert.match(css, /\.eq-apply-group\{[^}]*position:sticky/);
   assert.match(css, /Swipe for higher frequencies/);
 });

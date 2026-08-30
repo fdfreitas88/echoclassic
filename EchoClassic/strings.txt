@@ -1,67 +1,98 @@
 ECHOCLASSIC_SKIN
 	EN	Echo Classic
+	DE	Echo Classic
+	FR	Echo Classic
 	PT	Echo Classic
 
 PLUGIN_ECHOCLASSIC_SKIN
 	EN	The iPad Music look of iOS 9, over your own library. Shows the native sample rate and bit depth of what actually reaches the DAC.
+	DE	Die Optik der iPad-Musik-App aus iOS 9 für Ihre eigene Mediathek. Zeigt native Abtastrate und Bittiefe dessen, was tatsächlich am DAC ankommt.
+	FR	L'apparence de l'app Musique de l'iPad sous iOS 9, appliquée à votre propre bibliothèque. Affiche la fréquence d'échantillonnage et la profondeur de bits natives de ce qui parvient réellement au DAC.
 	PT	A aparência do app Música do iPad no iOS 9, sobre a sua biblioteca. Mostra a taxa nativa e a profundidade de bits do que realmente chega ao DAC.
 
 PLUGIN_ECHOCLASSIC_SKIN_SETTINGS
 	EN	Echo Classic
+	DE	Echo Classic
+	FR	Echo Classic
 	PT	Echo Classic
 
 PLUGIN_ECHOCLASSIC_SHOWSPECBADGES
 	EN	Show sample rate and bit depth
+	DE	Abtastrate und Bittiefe anzeigen
+	FR	Afficher la fréquence et la profondeur de bits
 	PT	Mostrar taxa de amostragem e profundidade de bits
 
 PLUGIN_ECHOCLASSIC_SHOWSPECBADGES_DESC
 	EN	Adds the native sample rate and bit depth of the current track to the bottom bar and to the full player.
+	DE	Fügt der unteren Leiste und dem Vollbild-Player die native Abtastrate und Bittiefe des aktuellen Titels hinzu.
+	FR	Ajoute la fréquence d'échantillonnage et la profondeur de bits natives du morceau en cours à la barre inférieure et au lecteur complet.
 	PT	Acrescenta a taxa nativa e a profundidade de bits da faixa atual na barra inferior e no player completo.
 
 PLUGIN_ECHOCLASSIC_MARKHIRES
 	EN	Highlight high resolution audio
+	DE	Hochauflösendes Audio hervorheben
+	FR	Mettre en avant l'audio haute résolution
 	PT	Destacar áudio de alta resolução
 
 PLUGIN_ECHOCLASSIC_MARKHIRES_DESC
 	EN	Highlights the sample rate or the bit depth when it is above CD quality.
+	DE	Hebt Abtastrate oder Bittiefe hervor, wenn sie über CD-Qualität liegen.
+	FR	Met en avant la fréquence d'échantillonnage ou la profondeur de bits lorsqu'elle dépasse la qualité CD.
 	PT	Destaca a taxa ou a profundidade de bits quando ela está acima da qualidade de CD.
 
 PLUGIN_ECHOCLASSIC_DARKTHEME
 	EN	Start in dark theme
+	DE	Im dunklen Thema starten
+	FR	Démarrer avec le thème sombre
 	PT	Iniciar no tema escuro
 
 PLUGIN_ECHOCLASSIC_DARKTHEME_DESC
 	EN	Initial theme for a browser that has not opened this skin before. Each browser keeps its own choice after that.
+	DE	Anfangsthema für einen Browser, der diese Skin noch nie geöffnet hat. Danach behält jeder Browser seine eigene Wahl.
+	FR	Thème initial pour un navigateur qui n'a jamais ouvert cet habillage. Ensuite, chaque navigateur conserve son propre choix.
 	PT	Tema inicial para um navegador que ainda não abriu esta skin. Depois disso, cada navegador guarda a própria escolha.
 
 PLUGIN_ECHOCLASSIC_SETTINGS_NOTE
 	EN	These are the defaults for a new browser. The skin's own Settings tab has the full set of options, including colour scheme, fonts and player layout.
+	DE	Dies sind die Standardwerte für einen neuen Browser. Die Registerkarte „Einstellungen“ der Skin enthält alle Optionen, einschließlich Farbschema, Schriften und Player-Layout.
+	FR	Ce sont les réglages par défaut pour un nouveau navigateur. L'onglet Réglages de l'habillage contient toutes les options, dont le jeu de couleurs, les polices et la disposition du lecteur.
 	PT	Estes são os padrões para um navegador novo. A aba Ajustes da própria skin tem o conjunto completo de opções, incluindo esquema de cores, fontes e layout do player.
 
 ECHOCLASSIC_UI_ENTER_KIOSK_MODE_QUESTION
 	EN	Enter kiosk mode?
+	DE	Kioskmodus aktivieren?
+	FR	Activer le mode kiosque ?
 	PT	Entrar no modo quiosque?
 
 ECHOCLASSIC_UI_ENTER_KIOSK_MODE
 	EN	Enter kiosk mode
+	DE	Kioskmodus aktivieren
+	FR	Activer le mode kiosque
 	PT	Entrar no modo quiosque
 
 ECHOCLASSIC_UI_KIOSK_ENTRY_EXPLANATION
 	EN	Navigation will be hidden. To leave, use the lock control in the player or press Esc, then confirm.
+	DE	Die Navigation wird ausgeblendet. Zum Verlassen die Sperre im Player verwenden oder Esc drücken und bestätigen.
+	FR	La navigation sera masquée. Pour quitter, utilisez le verrou du lecteur ou appuyez sur Échap, puis confirmez.
 	PT	A navegação ficará oculta. Para sair, use o controle de bloqueio no player ou pressione Esc e confirme.
 
 ECHOCLASSIC_UI_EXIT_KIOSK_MODE_QUESTION
 	EN	Exit kiosk mode?
+	DE	Kioskmodus beenden?
+	FR	Quitter le mode kiosque ?
 	PT	Sair do modo quiosque?
 
 ECHOCLASSIC_UI_EXIT_KIOSK_MODE
 	EN	Exit kiosk mode
+	DE	Kioskmodus beenden
+	FR	Quitter le mode kiosque
 	PT	Sair do modo quiosque
 
 ECHOCLASSIC_UI_KIOSK_EXIT_EXPLANATION
 	EN	Echo Classic navigation and the mini player will return.
+	DE	Die Echo-Classic-Navigation und der Mini-Player kehren zurück.
+	FR	La navigation d'Echo Classic et le mini-lecteur réapparaîtront.
 	PT	A navegação do Echo Classic e o mini player voltarão.
-
 # ====================================================================
 # Texto da interface. A linha PT e a chave que o JavaScript procura:
 # ela precisa bater exatamente com a frase escrita no template.
@@ -70,2918 +101,4710 @@ ECHOCLASSIC_UI_KIOSK_EXIT_EXPLANATION
 
 ECHOCLASSIC_UI_15_MINUTES
 	EN	15 minutes
+	DE	15 Minuten
+	FR	15 minutes
 	PT	15 minutos
 
 ECHOCLASSIC_UI_1_HOUR
 	EN	1 hour
+	DE	1 Stunde
+	FR	1 heure
 	PT	1 hora
 
 ECHOCLASSIC_UI_30_MINUTES
 	EN	30 minutes
+	DE	30 Minuten
+	FR	30 minutes
 	PT	30 minutos
 
 ECHOCLASSIC_UI_ACCENT_COLOUR
 	EN	Accent colour
+	DE	Akzentfarbe
+	FR	Couleur d'accentuation
 	PT	Cor de destaque
 
 ECHOCLASSIC_UI_ACTIONS_FOR
 	EN	Actions for 
+	DE	Aktionen für 
+	FR	Actions pour 
 	PT	Ações para 
 
 ECHOCLASSIC_UI_ACTIVE_FILTER
 	EN	Active filter:
+	DE	Aktiver Filter:
+	FR	Filtre actif :
 	PT	Filtro ativo:
 
 ECHOCLASSIC_UI_ACTIVE_PLAYER
 	EN	Active player
+	DE	Aktiver Player
+	FR	Lecteur actif
 	PT	Player ativo
 
 ECHOCLASSIC_UI_ADAPTIVE
 	EN	Adaptive
+	DE	Adaptiv
+	FR	Adaptatif
 	PT	Adaptável
 
 ECHOCLASSIC_UI_ADD
 	EN	Add
+	DE	Hinzufügen
+	FR	Ajouter
 	PT	Adicionar
 
 ECHOCLASSIC_UI_ADDING_TO_PLAYLIST
 	EN	Adding to playlist…
+	DE	Wird zur Playlist hinzugefügt…
+	FR	Ajout à la liste de lecture…
 	PT	Adicionando à playlist…
 
 ECHOCLASSIC_UI_ADDING_TO_THE_QUEUE
 	EN	Adding to the queue
+	DE	Wird zur Warteschlange hinzugefügt
+	FR	Ajout à la file d'attente
 	PT	A inclusão na fila
 
 ECHOCLASSIC_UI_ADD_TO_END_OF_QUEUE
 	EN	Add to end of queue
+	DE	Am Ende der Warteschlange einfügen
+	FR	Ajouter à la fin de la file d'attente
 	PT	Adicionar ao final da fila
 
 ECHOCLASSIC_UI_ADD_TO_PLAYBACK_QUEUE
 	EN	Add to playback queue
+	DE	Zur Warteschlange hinzufügen
+	FR	Ajouter à la file d'attente
 	PT	Adicionar à fila de reprodução
 
 ECHOCLASSIC_UI_ADD_TO_PLAYLIST
 	EN	Add to playlist…
+	DE	Zur Playlist hinzufügen…
+	FR	Ajouter à la liste de lecture…
 	PT	Adicionar à playlist…
 
 ECHOCLASSIC_UI_ADVANCED_LMS_SETTINGS
 	EN	Advanced LMS settings
+	DE	Erweiterte LMS-Einstellungen
+	FR	Réglages LMS avancés
 	PT	Configurações avançadas do LMS
 
 ECHOCLASSIC_UI_ALBUM
 	EN	Album
+	DE	Album
+	FR	Album
 	PT	Álbum
 
 ECHOCLASSIC_UI_ALBUMS
 	EN	Albums
+	DE	Alben
+	FR	Albums
 	PT	Álbuns
 
 ECHOCLASSIC_UI_ALBUM_ARTIST
 	EN	Album artist
+	DE	Album-Interpret
+	FR	Artiste de l'album
 	PT	Artista do álbum
 
 ECHOCLASSIC_UI_ALBUM_TECHNICAL_DETAILS
 	EN	Album technical details
+	DE	Technische Albumdetails
+	FR	Détails techniques de l'album
 	PT	Informações técnicas do álbum
 
 ECHOCLASSIC_UI_ALPHABETICAL_INDEX
 	EN	Alphabetical index
+	DE	Alphabetischer Index
+	FR	Index alphabétique
 	PT	Índice alfabético
 
 ECHOCLASSIC_UI_APPEARANCE
 	EN	Appearance
+	DE	Erscheinungsbild
+	FR	Apparence
 	PT	Aparência
 
 ECHOCLASSIC_UI_APPEARANCE_AND_PREFERENCES
 	EN	Appearance and preferences
+	DE	Erscheinungsbild und Einstellungen
+	FR	Apparence et préférences
 	PT	Aparência e preferências
 
 ECHOCLASSIC_UI_ARTIST
 	EN	Artist
+	DE	Interpret
+	FR	Artiste
 	PT	Artista
 
 ECHOCLASSIC_UI_ARTISTS
 	EN	Artists
+	DE	Interpreten
+	FR	Artistes
 	PT	Artistas
 
 ECHOCLASSIC_UI_ASCENDING_ORDER
 	EN	Ascending order
+	DE	Aufsteigend
+	FR	Ordre croissant
 	PT	Ordem crescente
 
 ECHOCLASSIC_UI_ATLANTIC_TEAL
 	EN	Atlantic Teal
+	DE	Atlantik-Türkis
+	FR	Bleu Atlantique
 	PT	Teal Atlântico
 
 ECHOCLASSIC_UI_AVAILABLE
 	EN	available
+	DE	verfügbar
+	FR	disponible
 	PT	disponíveis
 
 ECHOCLASSIC_UI_AVAILABLE_DURING_PLAYBACK_WITH_NOTHING_PLAYI
 	EN	Available during playback: with nothing playing there is no end to wait for.
+	DE	Während der Wiedergabe verfügbar: Ohne Wiedergabe gibt es kein Ende, auf das gewartet werden könnte.
+	FR	Disponible pendant la lecture : sans lecture, il n'y a pas de fin à attendre.
 	PT	Disponível durante a reprodução: sem nada tocando não há fim para esperar.
 
 ECHOCLASSIC_UI_A_PLAYLIST_WITH_THAT_NAME_ALREADY_EXISTED_IT
 	EN	A playlist with that name already existed; it was reused.
+	DE	Eine Playlist mit diesem Namen war bereits vorhanden; sie wurde wiederverwendet.
+	FR	Une liste de lecture portant ce nom existait déjà ; elle a été réutilisée.
 	PT	Já existia uma playlist com esse nome; ela foi reaproveitada.
 
 ECHOCLASSIC_UI_ABOUT
 	EN	About
+	DE	Über
+	FR	À propos
 	PT	Sobre
 
 ECHOCLASSIC_UI_BACK
 	EN	Back
+	DE	Zurück
+	FR	Retour
 	PT	Voltar
 
 ECHOCLASSIC_UI_BACKUP
 	EN	Backup
+	DE	Backup
+	FR	Sauvegarde
 	PT	Backup
 
 ECHOCLASSIC_UI_BACK_TO_ADAPTIVE_MODE
 	EN	Back to adaptive mode
+	DE	Zurück zum adaptiven Modus
+	FR	Retour au mode adaptatif
 	PT	Voltar ao modo adaptável
 
 ECHOCLASSIC_UI_CANCEL
 	EN	Cancel
+	DE	Abbrechen
+	FR	Annuler
 	PT	Cancelar
 
 ECHOCLASSIC_UI_CHANGING_FAVOURITES
 	EN	Changing favourites
+	DE	Favoriten werden geändert
+	FR	Modification des favoris
 	PT	A alteração dos favoritos
 
 ECHOCLASSIC_UI_CHANGING_REPEAT
 	EN	Changing repeat
+	DE	Wiederholung wird geändert
+	FR	Modification de la répétition
 	PT	A alteração da repetição
 
 ECHOCLASSIC_UI_CHANGING_SHUFFLE
 	EN	Changing shuffle
+	DE	Zufallswiedergabe wird geändert
+	FR	Modification de la lecture aléatoire
 	PT	A alteração do modo aleatório
 
 ECHOCLASSIC_UI_CHANGING_THE_VOLUME_MODE
 	EN	Changing the volume mode
+	DE	Lautstärkemodus wird geändert
+	FR	Modification du mode de volume
 	PT	A alteração do modo de volume
 
 ECHOCLASSIC_UI_CHOOSE_AN_ITEM_FROM_THE_LIST_ON_THE_LEFT
 	EN	Choose an item from the list on the left.
+	DE	Wählen Sie einen Eintrag aus der Liste links.
+	FR	Choisissez un élément dans la liste de gauche.
 	PT	Escolha um item na lista à esquerda.
 
 ECHOCLASSIC_UI_CLASSIC
 	EN	Classic
+	DE	Klassisch
+	FR	Classique
 	PT	Clássico
 
 ECHOCLASSIC_UI_CLEARING_THE_UPCOMING_TRACKS
 	EN	Clearing the upcoming tracks
+	DE	Folgende Titel werden gelöscht
+	FR	Effacement des morceaux à venir
 	PT	A limpeza das próximas faixas
 
 ECHOCLASSIC_UI_CLEAR_ALL
 	EN	Clear all
+	DE	Alle löschen
+	FR	Tout effacer
 	PT	Limpar tudo
 
 ECHOCLASSIC_UI_CLEAR_FILTER
 	EN	Clear filter
+	DE	Filter löschen
+	FR	Effacer le filtre
 	PT	Limpar filtro
 
 ECHOCLASSIC_UI_CLEAR_SETTINGS_SEARCH
 	EN	Clear settings search
+	DE	Einstellungssuche löschen
+	FR	Effacer la recherche dans les réglages
 	PT	Limpar busca de ajustes
 
 ECHOCLASSIC_UI_CLEAR_THE_WHOLE_QUEUE
 	EN	Clear the whole queue?
+	DE	Die gesamte Warteschlange löschen?
+	FR	Effacer toute la file d'attente ?
 	PT	Limpar a fila inteira?
 
 ECHOCLASSIC_UI_CLEAR_UPCOMING
 	EN	Clear upcoming
+	DE	Folgende löschen
+	FR	Effacer la suite
 	PT	Limpar próximas
 
 ECHOCLASSIC_UI_CLOSE
 	EN	Close
+	DE	Schließen
+	FR	Fermer
 	PT	Fechar
 
 ECHOCLASSIC_UI_CLOSE_SETTINGS_PAGES
 	EN	Close settings pages
+	DE	Einstellungsseiten schließen
+	FR	Fermer les pages de réglages
 	PT	Fechar páginas de ajustes
 
 ECHOCLASSIC_UI_CLOSE_QUEUE
 	EN	Close queue
+	DE	Warteschlange schließen
+	FR	Fermer la file d'attente
 	PT	Fechar fila
 
 ECHOCLASSIC_UI_COMPOSER
 	EN	Composer
+	DE	Komponist
+	FR	Compositeur
 	PT	Compositor
 
 ECHOCLASSIC_UI_COMPOSITION
 	EN	Composition
+	DE	Komposition
+	FR	Composition
 	PT	Composição
 
 ECHOCLASSIC_UI_CONDUCTOR
 	EN	Conductor
+	DE	Dirigent
+	FR	Chef d'orchestre
 	PT	Regência
 
 ECHOCLASSIC_UI_CONNECTED
 	EN	connected
+	DE	verbunden
+	FR	connecté
 	PT	conectado
 
 ECHOCLASSIC_UI_CONNECTION
 	EN	Connection
+	DE	Verbindung
+	FR	Connexion
 	PT	Conexão
 
 ECHOCLASSIC_UI_CONNECTION_RESTORED
 	EN	Connection restored.
+	DE	Verbindung wiederhergestellt.
+	FR	Connexion rétablie.
 	PT	Conexão restaurada.
 
 ECHOCLASSIC_UI_CONTINUE_PLAYBACK_ON_THIS_PLAYER
 	EN	Continue playback on this player
+	DE	Wiedergabe auf diesem Player fortsetzen
+	FR	Poursuivre la lecture sur ce lecteur
 	PT	Continuar a reprodução neste player
 
 ECHOCLASSIC_UI_COULD_NOT_ADD_TO_THE_PLAYLIST
 	EN	Could not add to the playlist. 
+	DE	Konnte nicht zur Playlist hinzugefügt werden. 
+	FR	Impossible d'ajouter à la liste de lecture. 
 	PT	Não foi possível adicionar à playlist. 
 
 ECHOCLASSIC_UI_COULD_NOT_FIND_THE_SERVER
 	EN	Could not find the server.
+	DE	Der Server wurde nicht gefunden.
+	FR	Serveur introuvable.
 	PT	Não foi possível localizar o servidor.
 
 ECHOCLASSIC_UI_COULD_NOT_IMPORT
 	EN	Could not import: 
+	DE	Import fehlgeschlagen: 
+	FR	Importation impossible : 
 	PT	Não foi possível importar: 
 
 ECHOCLASSIC_UI_COULD_NOT_OPEN
 	EN	Could not open
+	DE	Konnte nicht geöffnet werden
+	FR	Ouverture impossible
 	PT	Não deu para abrir
 
 ECHOCLASSIC_UI_COULD_NOT_REACH_THE_SERVER
 	EN	Could not reach the server.
+	DE	Der Server war nicht erreichbar.
+	FR	Impossible de joindre le serveur.
 	PT	Não foi possível alcançar o servidor.
 
 ECHOCLASSIC_UI_COULD_NOT_READ_THE_LIBRARY
 	EN	Could not read the library
+	DE	Die Mediathek konnte nicht gelesen werden
+	FR	Impossible de lire la bibliothèque
 	PT	Não deu para ler a biblioteca
 
 ECHOCLASSIC_UI_COULD_NOT_READ_THE_PLAYLISTS
 	EN	Could not read the playlists
+	DE	Die Playlists konnten nicht gelesen werden
+	FR	Impossible de lire les listes de lecture
 	PT	Não deu para ler as playlists
 
 ECHOCLASSIC_UI_COULD_NOT_READ_THE_SERVER
 	EN	Could not read the server: 
+	DE	Der Server konnte nicht gelesen werden: 
+	FR	Impossible de lire le serveur : 
 	PT	Não deu para ler o servidor: 
 
 ECHOCLASSIC_UI_COULD_NOT_UPDATE_FAVOURITES
 	EN	Could not update favourites. 
+	DE	Favoriten konnten nicht aktualisiert werden. 
+	FR	Impossible de mettre à jour les favoris. 
 	PT	Não foi possível atualizar os favoritos. 
 
 ECHOCLASSIC_UI_CREDITS
 	EN	Credits
+	DE	Mitwirkende
+	FR	Crédits
 	PT	Créditos
 
 ECHOCLASSIC_UI_CREDITS_AND_INFORMATION
 	EN	Credits and information
+	DE	Mitwirkende und Informationen
+	FR	Crédits et informations
 	PT	Créditos e informações
 
 ECHOCLASSIC_UI_CROSSFADE
 	EN	Crossfade
+	DE	Überblenden
+	FR	Fondu enchaîné
 	PT	Transição
 
 ECHOCLASSIC_UI_CURRENT_POSITION
 	EN	Current position: 
+	DE	Aktuelle Position: 
+	FR	Position actuelle : 
 	PT	Posição atual: 
 
 ECHOCLASSIC_UI_DARK
 	EN	dark
+	DE	dunkel
+	FR	sombre
 	PT	escuro
 
 ECHOCLASSIC_UI_DARK_THEME
 	EN	Dark theme
+	DE	Dunkles Thema
+	FR	Thème sombre
 	PT	Tema escuro
 
 ECHOCLASSIC_UI_BLACK
 	EN	Black
+	DE	Schwarz
+	FR	Noir
 	PT	Preto
 
 ECHOCLASSIC_UI_DESCENDING_ORDER
 	EN	Descending order
+	DE	Absteigend
+	FR	Ordre décroissant
 	PT	Ordem decrescente
 
 ECHOCLASSIC_UI_DISPLAY
 	EN	Display
+	DE	Anzeige
+	FR	Affichage
 	PT	Exibição
 
 ECHOCLASSIC_UI_DONE
 	EN	Done
+	DE	Fertig
+	FR	Terminé
 	PT	Concluído
 
 ECHOCLASSIC_UI_EDITION
 	EN	Edition 
+	DE	Edition 
+	FR	Édition 
 	PT	Edição 
 
 ECHOCLASSIC_UI_EDITORIAL_CRIMSON
 	EN	Editorial Crimson
+	DE	Editorial-Karmesin
+	FR	Cramoisi Éditorial
 	PT	Carmim Editorial
 
 ECHOCLASSIC_UI_ENTER_A_FULL_ADDRESS_STARTING_WITH_HTTP_OR_H
 	EN	Enter a full address starting with http:// or https://.
+	DE	Geben Sie eine vollständige Adresse ein, die mit http:// oder https:// beginnt.
+	FR	Saisissez une adresse complète commençant par http:// ou https://.
 	PT	Informe um endereço completo, começando por http:// ou https://.
 
 ECHOCLASSIC_UI_ENTER_THE_FULL_STREAM_ADDRESS_INCLUDING_HTTP
 	EN	Enter the full stream address, including http:// or https://
+	DE	Geben Sie die vollständige Stream-Adresse ein, einschließlich http:// oder https://
+	FR	Saisissez l'adresse complète du flux, y compris http:// ou https://
 	PT	Informe o endereço completo do stream, incluindo http:// ou https://
 
 ECHOCLASSIC_UI_EXPORT
 	EN	Export
+	DE	Exportieren
+	FR	Exporter
 	PT	Exportar
 
 ECHOCLASSIC_UI_FAVOURITES
 	EN	Favourites
+	DE	Favoriten
+	FR	Favoris
 	PT	Favoritos
 
 ECHOCLASSIC_UI_FILE_INCOMPATIBLE_WITH_THIS_VERSION_OF_THE_S
 	EN	file incompatible with this version of the skin
+	DE	Datei nicht kompatibel mit dieser Version der Skin
+	FR	fichier incompatible avec cette version de l'habillage
 	PT	arquivo incompatível com esta versão da skin
 
 ECHOCLASSIC_UI_FILTER
 	EN	Filter
+	DE	Filter
+	FR	Filtrer
 	PT	Filtrar
 
 ECHOCLASSIC_UI_FIXED_OUTPUT
 	EN	Fixed output
+	DE	Feste Ausgabe
+	FR	Sortie fixe
 	PT	Saída fixa
 
 ECHOCLASSIC_UI_FIXED_OUTPUT_CONFIRMED_SET_THE_VOLUME_ON_THE
 	EN	Fixed output confirmed. Set the volume on the DAC.
+	DE	Feste Ausgabe bestätigt. Stellen Sie die Lautstärke am DAC ein.
+	FR	Sortie fixe confirmée. Réglez le volume sur le DAC.
 	PT	Saída fixa confirmada. Ajuste o volume no DAC.
 
 ECHOCLASSIC_UI_FIXED_OUTPUT_NO_ATTENUATION
 	EN	Fixed output (no attenuation)
+	DE	Feste Ausgabe (keine Dämpfung)
+	FR	Sortie fixe (sans atténuation)
 	PT	Saída fixa (sem atenuação)
 
 ECHOCLASSIC_UI_FIXED_OUTPUT_VOLUME_IS_SET_ON_THE_DAC
 	EN	Fixed output: volume is set on the DAC.
+	DE	Feste Ausgabe: Die Lautstärke wird am DAC eingestellt.
+	FR	Sortie fixe : le volume se règle sur le DAC.
 	PT	Saída fixa: o volume é ajustado no DAC.
 
 ECHOCLASSIC_UI_FLAT
 	EN	Flat
+	DE	Linear
+	FR	Plat
 	PT	Plano
 
 ECHOCLASSIC_UI_FOLLOW_THEME
 	EN	Follow theme
+	DE	Thema folgen
+	FR	Suivre le thème
 	PT	Acompanhar tema
 
 ECHOCLASSIC_UI_FORMAT
 	EN	Format
+	DE	Format
+	FR	Format
 	PT	Formato
 
 ECHOCLASSIC_UI_FULL_PLAYER
 	EN	Full player
+	DE	Vollbild-Player
+	FR	Lecteur complet
 	PT	Player completo
 
 ECHOCLASSIC_UI_FULL_SCREEN
 	EN	Full screen
+	DE	Vollbild
+	FR	Plein écran
 	PT	Tela cheia
 
 ECHOCLASSIC_UI_GENRE
 	EN	Genre
+	DE	Genre
+	FR	Genre
 	PT	Gênero
 
 ECHOCLASSIC_UI_GENRES
 	EN	Genres
+	DE	Genres
+	FR	Genres
 	PT	Gêneros
 
 ECHOCLASSIC_UI_GROUP_OR_FILTER
 	EN	Group or filter
+	DE	Gruppieren oder filtern
+	FR	Grouper ou filtrer
 	PT	Agrupar ou filtrar
 
 ECHOCLASSIC_UI_GROUP_OR_SORT
 	EN	Group or sort
+	DE	Gruppieren oder sortieren
+	FR	Grouper ou trier
 	PT	Agrupar ou ordenar
 
 ECHOCLASSIC_UI_GROUP_SORT_OR_FILTER
 	EN	Group, sort or filter
+	DE	Gruppieren, sortieren oder filtern
+	FR	Grouper, trier ou filtrer
 	PT	Agrupar, ordenar ou filtrar
 
 ECHOCLASSIC_UI_HIDE_QUEUE
 	EN	Hide queue
+	DE	Warteschlange ausblenden
+	FR	Masquer la file d'attente
 	PT	Ocultar Próximas
 
 ECHOCLASSIC_UI_HIGHLIGHT_HIGH_RESOLUTION_AUDIO
 	EN	Highlight high resolution audio
+	DE	Hochauflösendes Audio hervorheben
+	FR	Mettre en avant l'audio haute résolution
 	PT	Destacar áudio de alta resolução
 
 ECHOCLASSIC_UI_HIGHLIGHT_HI_RES
 	EN	Highlight hi-res
+	DE	Hi-Res hervorheben
+	FR	Mettre en avant la haute résolution
 	PT	Destacar hi-res
 
 ECHOCLASSIC_UI_HI_FI_AMBER
 	EN	Hi-Fi Amber
+	DE	Hi-Fi-Bernstein
+	FR	Ambre Hi-Fi
 	PT	Âmbar Hi-Fi
 
 ECHOCLASSIC_UI_HOME
 	EN	Home
+	DE	Start
+	FR	Accueil
 	PT	Início
 
 ECHOCLASSIC_UI_HOURS_H
 	EN	{{hours}} h
+	DE	{{hours}} Std.
+	FR	{{hours}} h
 	PT	{{hours}} h
 
 ECHOCLASSIC_UI_HOURS_MINUTES
 	EN	{{hours}} h {{minutes}} min
+	DE	{{hours}} Std. {{minutes}} Min.
+	FR	{{hours}} h {{minutes}} min
 	PT	{{hours}} h {{minutes}} min
 
 ECHOCLASSIC_UI_IMPORT
 	EN	Import
+	DE	Importieren
+	FR	Importer
 	PT	Importar
 
 ECHOCLASSIC_UI_IMPORT_AND_RELOAD
 	EN	Import and reload
+	DE	Importieren und neu laden
+	FR	Importer et recharger
 	PT	Importar e recarregar
 
 ECHOCLASSIC_UI_IMPORT_PREFERENCES_FROM_THIS_FILE
 	EN	Import preferences from this file?
+	DE	Einstellungen aus dieser Datei importieren?
+	FR	Importer les préférences de ce fichier ?
 	PT	Importar preferências deste arquivo?
 
 ECHOCLASSIC_UI_INFORMATION
 	EN	Information
+	DE	Informationen
+	FR	Informations
 	PT	Informações
 
 ECHOCLASSIC_UI_READ_LYRICS
 	EN	Read lyrics
+	DE	Liedtext lesen
+	FR	Lire les paroles
 	PT	Ler letra
 
 ECHOCLASSIC_UI_INVALID_JSON
 	EN	invalid JSON
+	DE	ungültiges JSON
+	FR	JSON non valide
 	PT	JSON inválido
 
 ECHOCLASSIC_UI_LESS_THAN_ONE_MINUTE
 	EN	less than 1 minute
+	DE	weniger als 1 Minute
+	FR	moins d'une minute
 	PT	menos de 1 minuto
 
 ECHOCLASSIC_UI_LIBRARY
 	EN	Library
+	DE	Mediathek
+	FR	Bibliothèque
 	PT	Biblioteca
 
 ECHOCLASSIC_UI_LIGHT
 	EN	light
+	DE	hell
+	FR	clair
 	PT	claro
 
 ECHOCLASSIC_UI_LIGHT_THEME
 	EN	Light theme
+	DE	Helles Thema
+	FR	Thème clair
 	PT	Tema claro
 
 ECHOCLASSIC_UI_LIMIT_ARTIST_INDEX
 	EN	The artist index stopped at 10,000 names. Albums by artists beyond that point appear as albums in this list.
+	DE	Der Interpretenindex endet bei 10.000 Namen. Alben von Interpreten darüber hinaus erscheinen in dieser Liste als Alben.
+	FR	L'index des artistes s'arrête à 10 000 noms. Les albums d'artistes au-delà apparaissent comme albums dans cette liste.
 	PT	O índice de artistas parou em 10.000 nomes. Álbuns de artistas além desse ponto aparecem como álbum nesta lista.
 
 ECHOCLASSIC_UI_LIMIT_GENRES
 	EN	This library has more than 2,000 genres; this screen shows the first 2,000.
+	DE	Diese Mediathek enthält mehr als 2.000 Genres; dieser Bildschirm zeigt die ersten 2.000.
+	FR	Cette bibliothèque contient plus de 2 000 genres ; cet écran affiche les 2 000 premiers.
 	PT	Esta biblioteca tem mais de 2.000 gêneros; esta tela mostra os 2.000 primeiros.
 
 ECHOCLASSIC_UI_LIMIT_LIBRARY_TRUNCATED
 	EN	The library has more items than this screen loaded. Use the filter to narrow the list.
+	DE	Die Mediathek enthält mehr Einträge, als dieser Bildschirm geladen hat. Grenzen Sie die Liste mit dem Filter ein.
+	FR	La bibliothèque contient plus d'éléments que cet écran n'en a chargés. Utilisez le filtre pour affiner la liste.
 	PT	A biblioteca tem mais itens do que esta tela carregou. Use o filtro para refinar a lista.
 
 ECHOCLASSIC_UI_LIMIT_UNATTRIBUTED_MANY
 	EN	{n} albums could not be attributed to an artist in the index and appear as albums in this list.
+	DE	{n} Alben konnten im Index keinem Interpreten zugeordnet werden und erscheinen in dieser Liste als Alben.
+	FR	{n} albums n'ont pas pu être attribués à un artiste dans l'index et apparaissent comme albums dans cette liste.
 	PT	{n} álbuns não puderam ser atribuídos a um artista do índice e aparecem como álbum nesta lista.
 
 ECHOCLASSIC_UI_LIMIT_UNATTRIBUTED_ONE
 	EN	1 album could not be attributed to an artist in the index and appears as an album in this list.
+	DE	1 Album konnte im Index keinem Interpreten zugeordnet werden und erscheint in dieser Liste als Album.
+	FR	1 album n'a pas pu être attribué à un artiste dans l'index et apparaît comme album dans cette liste.
 	PT	1 álbum não pôde ser atribuído a um artista do índice e aparece como álbum nesta lista.
 
 ECHOCLASSIC_UI_LIMIT_YEARS
 	EN	This library has more than 500 distinct years; this screen shows the first 500.
+	DE	Diese Mediathek enthält mehr als 500 verschiedene Jahre; dieser Bildschirm zeigt die ersten 500.
+	FR	Cette bibliothèque contient plus de 500 années distinctes ; cet écran affiche les 500 premières.
 	PT	Esta biblioteca tem mais de 500 anos distintos; esta tela mostra os 500 primeiros.
 
 ECHOCLASSIC_UI_LIVE
 	EN	LIVE
+	DE	LIVE
+	FR	LIVE
 	PT	AO VIVO
 
 ECHOCLASSIC_UI_LIVE_2
 	EN	live
+	DE	live
+	FR	en direct
 	PT	ao vivo
 
 ECHOCLASSIC_UI_LMS_ADJUSTS_THE_OUTPUT_LEVEL
 	EN	LMS adjusts the output level
+	DE	LMS passt den Ausgangspegel an
+	FR	LMS ajuste le niveau de sortie
 	PT	O LMS ajusta o nível de saída
 
 ECHOCLASSIC_UI_LMS_DID_NOT_CONFIRM_THE_VOLUME_MODE
 	EN	LMS did not confirm the volume mode.
+	DE	LMS hat den Lautstärkemodus nicht bestätigt.
+	FR	LMS n'a pas confirmé le mode de volume.
 	PT	O LMS não confirmou o modo de volume.
 
 ECHOCLASSIC_UI_LMS_HAS_NOT_CONFIRMED_THIS_PLAYER_S_VOLUME_M
 	EN	LMS has not confirmed this player's volume mode yet.
+	DE	LMS hat den Lautstärkemodus dieses Players noch nicht bestätigt.
+	FR	LMS n'a pas encore confirmé le mode de volume de ce lecteur.
 	PT	O LMS ainda não confirmou o modo de volume deste player.
 
 ECHOCLASSIC_UI_LMS_SERVER
 	EN	LMS Server
+	DE	LMS-Server
+	FR	Serveur LMS
 	PT	Servidor LMS
 
 ECHOCLASSIC_UI_LMS_SETTINGS
 	EN	LMS settings
+	DE	LMS-Einstellungen
+	FR	Réglages LMS
 	PT	Configurações do LMS
 
 ECHOCLASSIC_UI_LOAD_MORE_SONGS
 	EN	Load more songs
+	DE	Weitere Titel laden
+	FR	Charger plus de morceaux
 	PT	Carregar mais músicas
 
 ECHOCLASSIC_UI_LOADED_OF_TOTAL
 	EN	{{loaded}} of {{total}} loaded
+	DE	{{loaded}} von {{total}} geladen
+	FR	{{loaded}} sur {{total}} chargés
 	PT	{{loaded}} de {{total}} carregadas
 
 ECHOCLASSIC_UI_LOCAL
 	EN	Local
+	DE	Lokal
+	FR	Local
 	PT	Local
 
 ECHOCLASSIC_UI_LOCAL_LIBRARY
 	EN	Local library
+	DE	Lokale Mediathek
+	FR	Bibliothèque locale
 	PT	Biblioteca local
 
 ECHOCLASSIC_UI_LOCK_SCREEN_CONTROLS
 	EN	Lock screen controls
+	DE	Sperrbildschirm-Steuerung
+	FR	Commandes de l'écran verrouillé
 	PT	Controles na tela bloqueada
 
 ECHOCLASSIC_UI_LOCK_SPLIT
 	EN	Lock split
+	DE	Teilung sperren
+	FR	Verrouiller la séparation
 	PT	Bloquear divisão
 
 ECHOCLASSIC_UI_MAIN_NAVIGATION
 	EN	Main navigation
+	DE	Hauptnavigation
+	FR	Navigation principale
 	PT	Navegação principal
 
 ECHOCLASSIC_UI_MINI_PLAYER
 	EN	Mini player
+	DE	Mini-Player
+	FR	Mini-lecteur
 	PT	Mini player
 
 ECHOCLASSIC_UI_MINUTES_MIN
 	EN	{{minutes}} min
+	DE	{{minutes}} Min.
+	FR	{{minutes}} min
 	PT	{{minutes}} min
 
 ECHOCLASSIC_UI_MORE_ACTIONS
 	EN	More actions
+	DE	Weitere Aktionen
+	FR	Plus d'actions
 	PT	Mais ações
 
 ECHOCLASSIC_UI_MORE_ACTIONS_FOR
 	EN	More actions for 
+	DE	Weitere Aktionen für 
+	FR	Plus d'actions pour 
 	PT	Mais ações para 
 
 ECHOCLASSIC_UI_NOTHING_MATCHES_FILTER
 	EN	Nothing in this category matches the filter
+	DE	Nichts in dieser Kategorie entspricht dem Filter
+	FR	Rien dans cette catégorie ne correspond au filtre
 	PT	Nada nesta categoria corresponde ao filtro
 
 ECHOCLASSIC_UI_OPEN_MY_MUSIC
 	EN	Open My Music
+	DE	Meine Musik öffnen
+	FR	Ouvrir Ma musique
 	PT	Abrir Minha Música
 
 ECHOCLASSIC_UI_MY_MUSIC
 	EN	My Music
+	DE	Meine Musik
+	FR	Ma musique
 	PT	Minha Música
 
 ECHOCLASSIC_UI_NATIVE_LMS_PAGES_OPEN_INSIDE_SETTINGS_KEEPIN
 	EN	Native LMS pages open inside Settings, keeping Echo Classic navigation.
+	DE	Native LMS-Seiten öffnen sich innerhalb der Einstellungen und behalten die Echo-Classic-Navigation.
+	FR	Les pages LMS natives s'ouvrent dans les Réglages, en conservant la navigation d'Echo Classic.
 	PT	As páginas nativas do LMS abrem dentro dos Ajustes, preservando a navegação do Echo Classic.
 
 ECHOCLASSIC_UI_NAVIGATION
 	EN	Navigation
+	DE	Navigation
+	FR	Navigation
 	PT	Navegação
 
 ECHOCLASSIC_UI_NEW_PLAYLIST
 	EN	New playlist…
+	DE	Neue Playlist…
+	FR	Nouvelle liste de lecture…
 	PT	Nova playlist…
 
 ECHOCLASSIC_UI_NEXT
 	EN	Next
+	DE	Weiter
+	FR	Suivant
 	PT	Próxima
 
 ECHOCLASSIC_UI_NEXT_TRACK
 	EN	Next track
+	DE	Nächster Titel
+	FR	Morceau suivant
 	PT	Próxima faixa
 
 ECHOCLASSIC_UI_NOTHING_PLAYING
 	EN	Nothing playing
+	DE	Nichts wird wiedergegeben
+	FR	Aucune lecture en cours
 	PT	Nada tocando
 
 ECHOCLASSIC_UI_NOT_AVAILABLE
 	EN	not available
+	DE	nicht verfügbar
+	FR	non disponible
 	PT	não informado
 
 ECHOCLASSIC_UI_NOT_AVAILABLE_2
 	EN	Not available
+	DE	Nicht verfügbar
+	FR	Non disponible
 	PT	Não informado
 
 ECHOCLASSIC_UI_NOT_CONFIRMED_BY_LMS
 	EN	Not confirmed by LMS
+	DE	Von LMS nicht bestätigt
+	FR	Non confirmé par LMS
 	PT	Estado não confirmado pelo LMS
 
 ECHOCLASSIC_UI_NOT_SUPPORTED_IN_THIS_BROWSER
 	EN	not supported in this browser
+	DE	in diesem Browser nicht unterstützt
+	FR	non pris en charge dans ce navigateur
 	PT	não suportados neste navegador
 
 ECHOCLASSIC_UI_NO_ALBUMS_FOR_THIS_ITEM
 	EN	No albums for this item.
+	DE	Keine Alben für diesen Eintrag.
+	FR	Aucun album pour cet élément.
 	PT	Nenhum álbum para este item.
 
 ECHOCLASSIC_UI_NO_CONNECTION_TO_THE_PLAYER
 	EN	No connection to the player.
+	DE	Keine Verbindung zum Player.
+	FR	Aucune connexion au lecteur.
 	PT	Sem conexão com o player.
 
 ECHOCLASSIC_UI_NO_CREDITS_IN_THE_METADATA
 	EN	No credits in the metadata.
+	DE	Keine Mitwirkenden in den Metadaten.
+	FR	Aucun crédit dans les métadonnées.
 	PT	Créditos não informados nos metadados.
 
 ECHOCLASSIC_UI_NO_EDITABLE_PLAYLISTS
 	EN	No editable playlists.
+	DE	Keine bearbeitbaren Playlists.
+	FR	Aucune liste de lecture modifiable.
 	PT	Nenhuma playlist editável.
 
 ECHOCLASSIC_UI_NO_ITEMS_FOUND_IN_THIS_CATEGORY
 	EN	No items found in this category.
+	DE	Keine Einträge in dieser Kategorie gefunden.
+	FR	Aucun élément trouvé dans cette catégorie.
 	PT	Nenhum item encontrado nesta categoria.
 
 ECHOCLASSIC_UI_NO_PLAYER_IS_AVAILABLE
 	EN	No player is available.
+	DE	Es ist kein Player verfügbar.
+	FR	Aucun lecteur n'est disponible.
 	PT	Nenhum player está disponível.
 
 ECHOCLASSIC_UI_NO_PLAYER_IS_CONNECTED
 	EN	No player is connected.
+	DE	Es ist kein Player verbunden.
+	FR	Aucun lecteur n'est connecté.
 	PT	Nenhum player está conectado.
 
 ECHOCLASSIC_UI_NO_RADIO_SOURCE_IS_AVAILABLE_ENABLE_A_RADIO_
 	EN	No radio source is available. Enable a radio service in the advanced LMS settings.
+	DE	Keine Radioquelle verfügbar. Aktivieren Sie einen Radiodienst in den erweiterten LMS-Einstellungen.
+	FR	Aucune source radio disponible. Activez un service de radio dans les réglages LMS avancés.
 	PT	Nenhuma fonte de rádio está disponível. Ative um serviço de rádio nas configurações avançadas do LMS.
 
 ECHOCLASSIC_UI_NO_RESULTS
 	EN	No results
+	DE	Keine Ergebnisse
+	FR	Aucun résultat
 	PT	Nenhum resultado
 
 ECHOCLASSIC_UI_ORIGINAL_YEAR
 	EN	Original year
+	DE	Originaljahr
+	FR	Année d'origine
 	PT	Ano original
 
 ECHOCLASSIC_UI_PAUSE
 	EN	Pause
+	DE	Pause
+	FR	Pause
 	PT	Pausar
 
 ECHOCLASSIC_UI_PINNED_ITEMS
 	EN	Pinned items
+	DE	Angeheftete Einträge
+	FR	Éléments épinglés
 	PT	Itens fixados
 
 ECHOCLASSIC_UI_PIN_TO_ECHO_CLASSIC
 	EN	Pin to Echo Classic
+	DE	An Echo Classic anheften
+	FR	Épingler à Echo Classic
 	PT	Fixar no Echo Classic
 
 ECHOCLASSIC_UI_PLAY
 	EN	Play
+	DE	Wiedergabe
+	FR	Lecture
 	PT	Tocar
 
 ECHOCLASSIC_UI_PLAYBACK
 	EN	Playback
+	DE	Wiedergabe
+	FR	Lecture
 	PT	Reprodução
 
 ECHOCLASSIC_UI_PLAYBACK_2
 	EN	playback
+	DE	Wiedergabe
+	FR	lecture
 	PT	reprodução
 
 ECHOCLASSIC_UI_PLAYBACK_HISTORY
 	EN	Playback history
+	DE	Wiedergabeverlauf
+	FR	Historique de lecture
 	PT	Histórico de reprodução
 
 ECHOCLASSIC_UI_PLAYBACK_QUEUE
 	EN	Playback queue
+	DE	Warteschlange
+	FR	File d'attente
 	PT	Fila de reprodução
 
 ECHOCLASSIC_UI_PLAYER
 	EN	Player
+	DE	Player
+	FR	Lecteur
 	PT	Player
 
 ECHOCLASSIC_UI_PLAYER_CONNECTION_LOST_SHOWING_THE_LAST_KN
 	EN	Player connection lost. Showing the last known track.
+	DE	Verbindung zum Player verloren. Der zuletzt bekannte Titel wird angezeigt.
+	FR	Connexion au lecteur perdue. Affichage du dernier morceau connu.
 	PT	Conexão com o player perdida. Exibindo a última faixa conhecida.
 
 ECHOCLASSIC_UI_PLAYER_SESSION
 	EN	Player session
+	DE	Player-Sitzung
+	FR	Session du lecteur
 	PT	Sessão do player
 
 ECHOCLASSIC_UI_PLAYER_SYNCHRONISATION
 	EN	Player synchronisation
+	DE	Player-Synchronisierung
+	FR	Synchronisation des lecteurs
 	PT	A sincronização dos players
 
 ECHOCLASSIC_UI_PLAYER_LAYOUT
 	EN	Player layout
+	DE	Player-Layout
+	FR	Disposition du lecteur
 	PT	Layout do player
 
 ECHOCLASSIC_UI_PLAYLISTS
 	EN	Playlists
+	DE	Playlists
+	FR	Listes de lecture
 	PT	Playlists
 
 ECHOCLASSIC_UI_PLAYS
 	EN	Plays
+	DE	Wiedergaben
+	FR	Lectures
 	PT	Reproduções
 
 ECHOCLASSIC_UI_PLAYS_2
 	EN	plays
+	DE	Wiedergaben
+	FR	lectures
 	PT	reproduções
 
 ECHOCLASSIC_UI_PLAY_NEXT
 	EN	Play next
+	DE	Als Nächstes wiedergeben
+	FR	Lire ensuite
 	PT	Reproduzir a seguir
 
 ECHOCLASSIC_UI_PLAY_NOW
 	EN	Play now
+	DE	Jetzt wiedergeben
+	FR	Lire maintenant
 	PT	Reproduzir agora
 
 ECHOCLASSIC_UI_PLAY_WILL_START
 	EN	Play will start:
+	DE	Die Wiedergabe beginnt:
+	FR	La lecture commencera :
 	PT	Play iniciará:
 
 ECHOCLASSIC_UI_PREFERENCES_EXPORTED
 	EN	Preferences exported.
+	DE	Einstellungen exportiert.
+	FR	Préférences exportées.
 	PT	Preferências exportadas.
 
 ECHOCLASSIC_UI_PREVIOUS
 	EN	Previous
+	DE	Zurück
+	FR	Précédent
 	PT	Anterior
 
 ECHOCLASSIC_UI_PREVIOUS_TRACK
 	EN	Previous track
+	DE	Vorheriger Titel
+	FR	Morceau précédent
 	PT	Faixa anterior
 
 ECHOCLASSIC_UI_APPS
 	EN	Apps
+	DE	Apps
+	FR	Apps
 	PT	Apps
 
 ECHOCLASSIC_UI_APPS_EMPTY
 	EN	No service is installed. Install a service plugin, such as Qobuz, in Server Settings > Plugins.
+	DE	Kein Dienst installiert. Installieren Sie ein Dienst-Plug-in, etwa Qobuz, unter Servereinstellungen > Plug-ins.
+	FR	Aucun service n'est installé. Installez un plug-in de service, tel que Qobuz, dans Réglages du serveur > Plug-ins.
 	PT	Nenhum serviço está instalado. Instale um plugin de serviço, como o Qobuz, em Ajustes do servidor › Plugins.
 
 ECHOCLASSIC_UI_RADIO
 	EN	Radio
+	DE	Radio
+	FR	Radio
 	PT	Rádio
 
 ECHOCLASSIC_UI_RATE_AND_BITS_IN_THE_BOTTOM_BAR
 	EN	Rate and bits in the bottom bar
+	DE	Abtastrate und Bittiefe in der unteren Leiste
+	FR	Fréquence et bits dans la barre inférieure
 	PT	Taxa e bits na barra inferior
 
 ECHOCLASSIC_UI_RATING
 	EN	Rating
+	DE	Bewertung
+	FR	Note
 	PT	Avaliação
 
 ECHOCLASSIC_UI_RECENT
 	EN	Recent
+	DE	Zuletzt
+	FR	Récents
 	PT	Recentes
 
 ECHOCLASSIC_UI_RECENTLY_ADDED
 	EN	Recently added
+	DE	Zuletzt hinzugefügt
+	FR	Ajoutés récemment
 	PT	Adicionados recentemente
 
 ECHOCLASSIC_UI_RECENTLY_PLAYED
 	EN	Recently played
+	DE	Zuletzt gespielt
+	FR	Écoutés récemment
 	PT	Reproduzidos recentemente
 
 ECHOCLASSIC_UI_RECENT_SHOWS_THE_250_NEWEST_ALBUMS_USE_THE_F
 	EN	Recent shows the 250 newest albums. Use the filter to narrow it down.
+	DE	„Zuletzt“ zeigt die 250 neuesten Alben. Grenzen Sie die Auswahl mit dem Filter ein.
+	FR	Récents affiche les 250 albums les plus récents. Utilisez le filtre pour affiner.
 	PT	Recentes mostra os 250 álbuns mais novos. Use o filtro para refinar.
 
 ECHOCLASSIC_UI_RECONNECTING
 	EN	Reconnecting…
+	DE	Verbindung wird wiederhergestellt…
+	FR	Reconnexion…
 	PT	Reconectando…
 
 ECHOCLASSIC_UI_RELATED_ARTIST
 	EN	Related artist
+	DE	Ähnlicher Interpret
+	FR	Artiste similaire
 	PT	Artista relacionado
 
 ECHOCLASSIC_UI_RELEASE
 	EN	Release
+	DE	Veröffentlichung
+	FR	Sortie
 	PT	Lançamento
 
 ECHOCLASSIC_UI_REMAINING
 	EN	remaining
+	DE	verbleibend
+	FR	restant
 	PT	restantes
 
 ECHOCLASSIC_UI_REMOTE_STREAMING
 	EN	Remote / streaming
+	DE	Remote / Streaming
+	FR	Distant / streaming
 	PT	Remoto / streaming
 
 ECHOCLASSIC_UI_REMOVING_FROM_THE_QUEUE
 	EN	Removing from the queue
+	DE	Wird aus der Warteschlange entfernt
+	FR	Retrait de la file d'attente
 	PT	A remoção da fila
 
 ECHOCLASSIC_UI_REMOVING_SONGS
 	EN	Removing songs…
+	DE	Titel werden entfernt…
+	FR	Retrait des morceaux…
 	PT	Removendo músicas…
 
 ECHOCLASSIC_UI_REORDERING_THE_QUEUE
 	EN	Reordering the queue
+	DE	Warteschlange wird neu geordnet
+	FR	Réorganisation de la file d'attente
 	PT	A reordenação da fila
 
 ECHOCLASSIC_UI_REPEAT_OFF
 	EN	Repeat off
+	DE	Wiederholung aus
+	FR	Répétition désactivée
 	PT	Repetição desativada
 
 ECHOCLASSIC_UI_REPEAT_ONE_SONG
 	EN	Repeat one song
+	DE	Einen Titel wiederholen
+	FR	Répéter un morceau
 	PT	Repetir uma música
 
 ECHOCLASSIC_UI_REPEAT_QUEUE
 	EN	Repeat queue
+	DE	Warteschlange wiederholen
+	FR	Répéter la file d'attente
 	PT	Repetir a fila
 
 ECHOCLASSIC_UI_RESET_SPLIT
 	EN	Reset split
+	DE	Teilung zurücksetzen
+	FR	Réinitialiser la séparation
 	PT	Restaurar divisão
 
 ECHOCLASSIC_UI_RESIZE_PANELS
 	EN	Resize panels
+	DE	Bereiche anpassen
+	FR	Redimensionner les panneaux
 	PT	Redimensionar painéis
 
 ECHOCLASSIC_UI_RESOLUTION
 	EN	Resolution
+	DE	Auflösung
+	FR	Résolution
 	PT	Resolução
 
 ECHOCLASSIC_UI_RESTORING_THE_QUEUE
 	EN	Restoring the queue
+	DE	Warteschlange wird wiederhergestellt
+	FR	Restauration de la file d'attente
 	PT	A restauração da fila
 
 ECHOCLASSIC_UI_SAVE
 	EN	Save
+	DE	Sichern
+	FR	Enregistrer
 	PT	Salvar
 
 ECHOCLASSIC_UI_SCAN_FOLDER_FOR_MUSIC
 	EN	Scan {folder} for music
+	DE	{folder} nach Musik durchsuchen
+	FR	Analyser {folder} à la recherche de musique
 	PT	Escanear {folder} para música
 
 ECHOCLASSIC_UI_SEARCH
 	EN	Search
+	DE	Suchen
+	FR	Rechercher
 	PT	Buscar
 
 ECHOCLASSIC_UI_SEARCH_FAILED
 	EN	Search failed
+	DE	Suche fehlgeschlagen
+	FR	Échec de la recherche
 	PT	Não deu para buscar
 
 ECHOCLASSIC_UI_SEARCH_SETTINGS_PAGES
 	EN	Search settings pages
+	DE	Einstellungsseiten durchsuchen
+	FR	Rechercher dans les pages de réglages
 	PT	Buscar páginas de ajustes
 
 ECHOCLASSIC_UI_SEARCH_THE_LIBRARY
 	EN	Search the library
+	DE	Mediathek durchsuchen
+	FR	Rechercher dans la bibliothèque
 	PT	Buscar na biblioteca
 
 ECHOCLASSIC_UI_SELECT
 	EN	Select
+	DE	Auswählen
+	FR	Sélectionner
 	PT	Selecionar
 
 ECHOCLASSIC_UI_SERVER_VERSION
 	EN	Server version
+	DE	Serverversion
+	FR	Version du serveur
 	PT	Versão do servidor
 
 ECHOCLASSIC_UI_SETTINGS
 	EN	Settings
+	DE	Einstellungen
+	FR	Réglages
 	PT	Ajustes
 
 ECHOCLASSIC_UI_SETTING
 	EN	Setting
+	DE	Einstellung
+	FR	Réglage
 	PT	Ajuste
 
 ECHOCLASSIC_UI_SETTINGS_PAGES
 	EN	Settings pages
+	DE	Einstellungsseiten
+	FR	Pages de réglages
 	PT	Páginas de ajustes
 
 ECHOCLASSIC_UI_SHOW_FULL_SCREEN
 	EN	Show full screen
+	DE	Vollbild anzeigen
+	FR	Afficher en plein écran
 	PT	Mostrar em tela cheia
 
 ECHOCLASSIC_UI_SHOW_QUEUE
 	EN	Show queue
+	DE	Warteschlange einblenden
+	FR	Afficher la file d'attente
 	PT	Mostrar Próximas
 
 ECHOCLASSIC_UI_SHUFFLE
 	EN	Shuffle
+	DE	Zufällig
+	FR	Aléatoire
 	PT	Aleatório
 
 ECHOCLASSIC_UI_SHUFFLE_ALBUMS
 	EN	Shuffle albums
+	DE	Alben zufällig
+	FR	Albums aléatoires
 	PT	Aleatório por álbuns
 
 ECHOCLASSIC_UI_SHUFFLE_OFF
 	EN	Shuffle off
+	DE	Zufall aus
+	FR	Aléatoire désactivé
 	PT	Aleatório desativado
 
 ECHOCLASSIC_UI_SHUFFLE_SONGS
 	EN	Shuffle songs
+	DE	Titel zufällig
+	FR	Morceaux aléatoires
 	PT	Aleatório por músicas
 
 ECHOCLASSIC_UI_SKIN_PREFERENCES
 	EN	Skin preferences
+	DE	Skin-Einstellungen
+	FR	Préférences de l'habillage
 	PT	Preferências da skin
 
 ECHOCLASSIC_UI_SKIN_VERSION
 	EN	Skin version
+	DE	Skin-Version
+	FR	Version de l'habillage
 	PT	Versão da skin
 
 ECHOCLASSIC_UI_SLEEP_TIMER
 	EN	Sleep timer
+	DE	Sleep-Timer
+	FR	Minuteur de veille
 	PT	Temporizador
 
-ECHOCLASSIC_UI_SONG
+ECHOCLASSIC_UI_SONG_2
 	EN	song
+	DE	Titel
+	FR	morceau
 	PT	música
 
 ECHOCLASSIC_UI_SONGS
 	EN	Songs
+	DE	Titel
+	FR	Morceaux
 	PT	Músicas
 
 ECHOCLASSIC_UI_SONGS_2
 	EN	songs
+	DE	Titel
+	FR	morceaux
 	PT	músicas
 
 ECHOCLASSIC_UI_SORT
 	EN	Sort
+	DE	Sortieren
+	FR	Trier
 	PT	Ordenar
 
 ECHOCLASSIC_UI_SORT_BY
 	EN	Sort by
+	DE	Sortieren nach
+	FR	Trier par
 	PT	Ordenar por
 
 ECHOCLASSIC_UI_SORT_OR_FILTER
 	EN	Sort or filter
+	DE	Sortieren oder filtern
+	FR	Trier ou filtrer
 	PT	Ordenar ou filtrar
 
 ECHOCLASSIC_UI_SPLIT_LOCKED
 	EN	Split locked
+	DE	Teilung gesperrt
+	FR	Séparation verrouillée
 	PT	Divisão bloqueada
 
 ECHOCLASSIC_UI_SPLIT_OPTIONS
 	EN	Split options
+	DE	Teilungsoptionen
+	FR	Options de séparation
 	PT	Opções da divisão
 
 ECHOCLASSIC_UI_STANDARD_RESOLUTION
 	EN	Standard resolution
+	DE	Standardauflösung
+	FR	Résolution standard
 	PT	Resolução padrão
 
 ECHOCLASSIC_UI_STOP
 	EN	Stop
+	DE	Stopp
+	FR	Arrêter
 	PT	Parar
 
 ECHOCLASSIC_UI_STOPPED
 	EN	Stopped
+	DE	Gestoppt
+	FR	Arrêté
 	PT	Parado
 
 ECHOCLASSIC_UI_STOP_AT_END
 	EN	Stop at end
+	DE	Am Ende stoppen
+	FR	Arrêter à la fin
 	PT	Parar ao terminar
 
 ECHOCLASSIC_UI_STOP_WHEN_THIS_PLAYBACK_ENDS
 	EN	Stop when this playback ends
+	DE	Nach dieser Wiedergabe stoppen
+	FR	Arrêter à la fin de cette lecture
 	PT	Desligar quando esta reprodução terminar
 
 ECHOCLASSIC_UI_STREAMING_SERVICES
 	EN	Streaming services
+	DE	Streamingdienste
+	FR	Services de streaming
 	PT	Serviços de streaming
 
 ECHOCLASSIC_UI_STUDIO_INDIGO
 	EN	Studio Indigo
+	DE	Studio-Indigo
+	FR	Indigo Studio
 	PT	Índigo Studio
 
 ECHOCLASSIC_UI_SYSTEM_BLUE
 	EN	System Blue
+	DE	Systemblau
+	FR	Bleu système
 	PT	Azul Sistema
 
 ECHOCLASSIC_UI_SYSTEM_DEFAULT
 	EN	System (default)
+	DE	System (Standard)
+	FR	Système (par défaut)
 	PT	Sistema (padrão)
 
 ECHOCLASSIC_UI_THEME
 	EN	Theme
+	DE	Thema
+	FR	Thème
 	PT	Tema
 
 ECHOCLASSIC_UI_THE_CONNECTION_TO_THE_PLAYER_WAS_LOST
 	EN	The connection to the player was lost.
+	DE	Die Verbindung zum Player wurde unterbrochen.
+	FR	La connexion au lecteur a été perdue.
 	PT	A conexão com o player foi interrompida.
 
 ECHOCLASSIC_UI_THE_CROSSFADE_SETTING
 	EN	The crossfade setting
+	DE	Die Überblendeinstellung
+	FR	Le réglage de fondu enchaîné
 	PT	A configuração da transição
 
 ECHOCLASSIC_UI_THE_FILE_COULD_NOT_BE_READ
 	EN	the file could not be read
+	DE	die Datei konnte nicht gelesen werden
+	FR	le fichier n'a pas pu être lu
 	PT	o arquivo não pôde ser lido
 
 ECHOCLASSIC_UI_THE_FILE_HAS_NO_ECHO_CLASSIC_PREFERENCES
 	EN	the file has no Echo Classic preferences
+	DE	die Datei enthält keine Echo-Classic-Einstellungen
+	FR	le fichier ne contient aucune préférence Echo Classic
 	PT	o arquivo não traz nenhuma preferência do Echo Classic
 
 ECHOCLASSIC_UI_THE_FILE_IS_NOT_VALID_JSON
 	EN	the file is not valid JSON
+	DE	die Datei ist kein gültiges JSON
+	FR	le fichier n'est pas un JSON valide
 	PT	o arquivo não é JSON válido
 
 ECHOCLASSIC_UI_THE_NEXT_TRACK
 	EN	The next track
+	DE	Der nächste Titel
+	FR	Le morceau suivant
 	PT	A próxima faixa
 
 ECHOCLASSIC_UI_THE_OPERATION_DID_NOT_COMPLETE
 	EN	The operation did not complete.
+	DE	Der Vorgang wurde nicht abgeschlossen.
+	FR	L'opération ne s'est pas terminée.
 	PT	A operação não foi concluída.
 
 ECHOCLASSIC_UI_THE_QUEUE
 	EN	The queue
+	DE	Die Warteschlange
+	FR	La file d'attente
 	PT	A fila
 
 ECHOCLASSIC_UI_THE_RATING
 	EN	The rating
+	DE	Die Bewertung
+	FR	La note
 	PT	A avaliação
 
 ECHOCLASSIC_UI_THE_SEARCH_DID_NOT_COMPLETE
 	EN	The search did not complete.
+	DE	Die Suche wurde nicht abgeschlossen.
+	FR	La recherche ne s'est pas terminée.
 	PT	A busca não foi concluída.
 
 ECHOCLASSIC_UI_THE_SERVER_REJECTED_THIS_COMMAND
 	EN	The server rejected this command.
+	DE	Der Server hat diesen Befehl abgelehnt.
+	FR	Le serveur a rejeté cette commande.
 	PT	O servidor não aceitou este comando.
 
 ECHOCLASSIC_UI_THE_SERVER_RESPONSE_WAS_INCOMPLETE_OR_UNREAD
 	EN	The server response was incomplete or unreadable.
+	DE	Die Serverantwort war unvollständig oder nicht lesbar.
+	FR	La réponse du serveur était incomplète ou illisible.
 	PT	A resposta do servidor veio incompleta ou ilegível.
 
 ECHOCLASSIC_UI_THE_SLEEP_TIMER_SETTING
 	EN	The sleep timer setting
+	DE	Die Sleep-Timer-Einstellung
+	FR	Le réglage du minuteur de veille
 	PT	A configuração do temporizador
 
 ECHOCLASSIC_UI_THIS_ALBUM_RETURNED_NO_TRACKS
 	EN	This album returned no tracks.
+	DE	Dieses Album lieferte keine Titel.
+	FR	Cet album n'a renvoyé aucun morceau.
 	PT	Este álbum não devolveu faixas.
 
 ECHOCLASSIC_UI_THIS_LIST_HAS_NO_ITEMS_RIGHT_NOW
 	EN	This list has no items right now.
+	DE	Diese Liste enthält derzeit keine Einträge.
+	FR	Cette liste ne contient aucun élément pour l'instant.
 	PT	Esta lista não tem itens no momento.
 
 ECHOCLASSIC_UI_THIS_PLAYLIST_HAS_NO_SONGS_YET
 	EN	This playlist has no songs yet.
+	DE	Diese Playlist enthält noch keine Titel.
+	FR	Cette liste de lecture ne contient encore aucun morceau.
 	PT	Esta playlist ainda não tem músicas.
 
 ECHOCLASSIC_UI_THIS_REMOVES_THE_PLAYLIST_FROM_LMS
 	EN	This removes the playlist from LMS.
+	DE	Dadurch wird die Playlist aus LMS entfernt.
+	FR	Cela supprime la liste de lecture de LMS.
 	PT	Esta ação remove a playlist do LMS.
 
 ECHOCLASSIC_UI_THIS_SONG
 	EN	This song
+	DE	Dieser Titel
+	FR	Ce morceau
 	PT	Esta música
 
 ECHOCLASSIC_UI_THIS_TRACK_DOES_NOT_BELONG_TO_AN_ALBUM_USE_T
 	EN	This track does not belong to an album. Use the actions to play it or add it to the queue.
+	DE	Dieser Titel gehört zu keinem Album. Verwenden Sie die Aktionen, um ihn wiederzugeben oder zur Warteschlange hinzuzufügen.
+	FR	Ce morceau n'appartient à aucun album. Utilisez les actions pour le lire ou l'ajouter à la file d'attente.
 	PT	Esta faixa não pertence a um álbum. Use as ações para reproduzir ou adicionar à fila.
 
 ECHOCLASSIC_UI_TO_QUEUE
 	EN	to queue
+	DE	zur Warteschlange
+	FR	vers la file d'attente
 	PT	à fila
 
 ECHOCLASSIC_UI_TRACK
 	EN	track
+	DE	Titel
+	FR	morceau
 	PT	faixa
 
 ECHOCLASSIC_UI_TRACKS
 	EN	Tracks
+	DE	Titel
+	FR	Morceaux
 	PT	Faixas
 
 ECHOCLASSIC_UI_TRACKS_2
 	EN	tracks
+	DE	Titel
+	FR	morceaux
 	PT	faixas
 
 ECHOCLASSIC_UI_TRACK_INFORMATION
 	EN	Track information
+	DE	Titelinformationen
+	FR	Informations sur le morceau
 	PT	Informações da faixa
 
 ECHOCLASSIC_UI_SIGNAL_PATH
 	EN	Signal path
+	DE	Signalweg
+	FR	Chemin du signal
 	PT	Caminho do sinal
 
 ECHOCLASSIC_UI_TRACK_POSITION
 	EN	Track position
+	DE	Titelposition
+	FR	Position dans le morceau
 	PT	Posição da faixa
 
 ECHOCLASSIC_UI_TRANSFERRING_PLAYBACK
 	EN	Transferring playback
+	DE	Wiedergabe wird übertragen
+	FR	Transfert de la lecture
 	PT	A transferência da reprodução
 
 ECHOCLASSIC_UI_TRY_AGAIN
 	EN	Try again
+	DE	Erneut versuchen
+	FR	Réessayer
 	PT	Tentar novamente
 
 ECHOCLASSIC_UI_TYPE_AN_ARTIST_ALBUM_OR_TRACK
 	EN	Type an artist, album or track.
+	DE	Interpret, Album oder Titel eingeben.
+	FR	Saisissez un artiste, un album ou un morceau.
 	PT	Digite um artista, álbum ou faixa.
 
 ECHOCLASSIC_UI_UNAVAILABLE
 	EN	unavailable
+	DE	nicht verfügbar
+	FR	indisponible
 	PT	indisponível
 
 ECHOCLASSIC_UI_UNDO
 	EN	Undo
+	DE	Widerrufen
+	FR	Annuler
 	PT	Desfazer
 
 ECHOCLASSIC_UI_UNLOCK_SPLIT
 	EN	Unlock split
+	DE	Teilung entsperren
+	FR	Déverrouiller la séparation
 	PT	Desbloquear divisão
 
 ECHOCLASSIC_UI_VOLUME
 	EN	Volume
+	DE	Lautstärke
+	FR	Volume
 	PT	Volume
 
 ECHOCLASSIC_UI_VOLUME_CONTROLLED_BY_LMS
 	EN	Volume controlled by LMS
+	DE	Lautstärke von LMS gesteuert
+	FR	Volume contrôlé par LMS
 	PT	Volume controlado pelo LMS
 
 ECHOCLASSIC_UI_YEAR
 	EN	Year
+	DE	Jahr
+	FR	Année
 	PT	Ano
 
 ECHOCLASSIC_UI_YEARS
 	EN	Years
+	DE	Jahre
+	FR	Années
 	PT	Anos
 
 ECHOCLASSIC_UI_YEAR_OF_THIS_EDITION
 	EN	Year of this edition
+	DE	Jahr dieser Edition
+	FR	Année de cette édition
 	PT	Ano desta edição
 
 ECHOCLASSIC_UI_YOU_HAVE_NOT_ADDED_ANY_FAVOURITES_YET_USE_AD
 	EN	You have not added any favourites yet. Use “Add to Favourites” in the menu of a track or station.
+	DE	Sie haben noch keine Favoriten hinzugefügt. Verwenden Sie „Zu Favoriten hinzufügen“ im Menü eines Titels oder Senders.
+	FR	Vous n'avez encore ajouté aucun favori. Utilisez « Ajouter aux favoris » dans le menu d'un morceau ou d'une station.
 	PT	Você ainda não adicionou favoritos. Use “Adicionar aos Favoritos” no menu de uma faixa ou estação.
 
 ECHOCLASSIC_UI_FILTERS
 	EN	Filters
+	DE	Filter
+	FR	Filtres
 	PT	Filtros
 
 ECHOCLASSIC_UI_FILTER_ACTIVE_ONE
 	EN	active filter
+	DE	aktiver Filter
+	FR	filtre actif
 	PT	filtro ativo
 
 ECHOCLASSIC_UI_FILTER_ACTIVE_MANY
 	EN	active filters
+	DE	aktive Filter
+	FR	filtres actifs
 	PT	filtros ativos
 
 ECHOCLASSIC_UI_TOOLS_ACTIVE_ONE
 	EN	active setting
+	DE	aktive Einstellung
+	FR	réglage actif
 	PT	ajuste ativo
 
 ECHOCLASSIC_UI_TOOLS_ACTIVE_MANY
 	EN	active settings
+	DE	aktive Einstellungen
+	FR	réglages actifs
 	PT	ajustes ativos
 
 ECHOCLASSIC_UI_RESULT_ONE
 	EN	result
+	DE	Ergebnis
+	FR	résultat
 	PT	resultado
 
 ECHOCLASSIC_UI_RESULT_MANY
 	EN	results
+	DE	Ergebnisse
+	FR	résultats
 	PT	resultados
 
 ECHOCLASSIC_UI_CHIPS_ACTIVE
 	EN	Active:
+	DE	Aktiv:
+	FR	Actif :
 	PT	Ativos:
 
 ECHOCLASSIC_UI_REMOVE_FILTER
 	EN	Remove filter
+	DE	Filter entfernen
+	FR	Retirer le filtre
 	PT	Remover filtro
 
 ECHOCLASSIC_UI_REMOVE_GROUPING
 	EN	Remove grouping
+	DE	Gruppierung entfernen
+	FR	Retirer le groupement
 	PT	Remover agrupamento
 
 ECHOCLASSIC_UI_REMOVE_PREFERENCE
 	EN	Remove playback preference
+	DE	Wiedergabevorgabe entfernen
+	FR	Retirer la préférence de lecture
 	PT	Remover preferência de reprodução
 
 ECHOCLASSIC_UI_VIEW_FILTERS
 	EN	View filters
+	DE	Ansichtsfilter
+	FR	Filtres de la vue
 	PT	Ver filtros
 
 ECHOCLASSIC_UI_FILTERS_IGNORED_RELATED
 	EN	Related artist builds the list from the server's artists, so media filters do not apply here.
+	DE	„Ähnlicher Interpret“ erstellt die Liste aus den Interpreten des Servers, daher gelten Medienfilter hier nicht.
+	FR	« Artiste similaire » construit la liste à partir des artistes du serveur ; les filtres de média ne s'appliquent donc pas ici.
 	PT	Artista relacionado monta a lista a partir dos artistas do servidor, então os filtros de mídia não se aplicam aqui.
 
 ECHOCLASSIC_UI_SORT_FORMAT
 	EN	Format
+	DE	Format
+	FR	Format
 	PT	Formato
 
 ECHOCLASSIC_UI_SORT_LOCAL_FIRST
 	EN	Local library first
+	DE	Lokale Mediathek zuerst
+	FR	Bibliothèque locale d'abord
 	PT	Biblioteca local primeiro
 
 ECHOCLASSIC_UI_SORT_QUALITY_FIRST
 	EN	Highest resolution first
+	DE	Höchste Auflösung zuerst
+	FR	Résolution la plus élevée d'abord
 	PT	Maior resolução primeiro
 
 ECHOCLASSIC_UI_PREFER_NONE
 	EN	No preference
+	DE	Keine Vorgabe
+	FR	Aucune préférence
 	PT	Sem preferência
 
 ECHOCLASSIC_UI_PREFER_LOCAL
 	EN	Prefer local library
+	DE	Lokale Mediathek bevorzugen
+	FR	Préférer la bibliothèque locale
 	PT	Preferir biblioteca local
 
 ECHOCLASSIC_UI_PREFER_STREAM
 	EN	Prefer streaming
+	DE	Streaming bevorzugen
+	FR	Préférer le streaming
 	PT	Preferir streaming
 
 ECHOCLASSIC_UI_PREFER_QUALITY
 	EN	Prefer highest resolution
+	DE	Höchste Auflösung bevorzugen
+	FR	Préférer la résolution la plus élevée
 	PT	Preferir maior resolução
 
 ECHOCLASSIC_UI_SECTION_DECADE
 	EN	Decade
+	DE	Jahrzehnt
+	FR	Décennie
 	PT	Década
 
 ECHOCLASSIC_UI_SECTION_ORIGIN
 	EN	Source
+	DE	Quelle
+	FR	Source
 	PT	Origem
 
 ECHOCLASSIC_UI_SECTION_STREAM
 	EN	Streaming service
+	DE	Streamingdienst
+	FR	Service de streaming
 	PT	Serviço de streaming
 
 ECHOCLASSIC_UI_SECTION_UNKNOWN_YEAR
 	EN	Unknown year
+	DE	Unbekanntes Jahr
+	FR	Année inconnue
 	PT	Ano desconhecido
 
 ECHOCLASSIC_UI_SECTION_YEARS
 	EN	Years
+	DE	Jahre
+	FR	Années
 	PT	Anos
 
 ECHOCLASSIC_UI_SECTION_NO_MEDIA
 	EN	No media information
+	DE	Keine Medieninformationen
+	FR	Aucune information sur le média
 	PT	Sem informação de mídia
 
 ECHOCLASSIC_UI_SECTION_NO_STREAM
 	EN	No streaming service
+	DE	Kein Streamingdienst
+	FR	Aucun service de streaming
 	PT	Sem serviço de streaming
 
 ECHOCLASSIC_UI_QUALITY_LOSSLESS
 	EN	Lossless
+	DE	Verlustfrei
+	FR	Sans perte
 	PT	Sem perdas
 
 ECHOCLASSIC_UI_QUALITY_LOSSY
 	EN	Lossy
+	DE	Verlustbehaftet
+	FR	Avec perte
 	PT	Com perdas
 
 ECHOCLASSIC_UI_PANEL_APPLY
 	EN	Apply
+	DE	Anwenden
+	FR	Appliquer
 	PT	Aplicar
 
 ECHOCLASSIC_UI_PANEL_SEARCH
 	EN	Search within filters
+	DE	Innerhalb der Filter suchen
+	FR	Rechercher parmi les filtres
 	PT	Buscar dentro dos filtros
 
 ECHOCLASSIC_UI_PANEL_NO_FILTERS
 	EN	This root cannot filter by media. Source, format, resolution, genre and year filters apply in Albums and in Recently added.
+	DE	Dieser Bereich kann nicht nach Medien filtern. Filter für Quelle, Format, Auflösung, Genre und Jahr gelten in „Alben“ und „Zuletzt hinzugefügt“.
+	FR	Cette racine ne peut pas filtrer par média. Les filtres de source, format, résolution, genre et année s'appliquent dans Albums et dans Ajoutés récemment.
 	PT	Esta raiz não sabe filtrar por mídia. Filtros de origem, formato, resolução, gênero e ano valem em Álbuns e em Recentes.
 
 ECHOCLASSIC_UI_PANEL_LOADING_GENRES
 	EN	Loading genres…
+	DE	Genres werden geladen…
+	FR	Chargement des genres…
 	PT	Carregando gêneros…
 
 ECHOCLASSIC_UI_PANEL_GENRES_LONG
 	EN	The genre list is long. Use the search above to find the rest.
+	DE	Die Genreliste ist lang. Verwenden Sie die Suche oben, um den Rest zu finden.
+	FR	La liste des genres est longue. Utilisez la recherche ci-dessus pour trouver le reste.
 	PT	A lista de gêneros é longa. Use a busca acima para achar o resto.
 
 ECHOCLASSIC_UI_PANEL_YEAR_FROM
 	EN	From
+	DE	Von
+	FR	De
 	PT	De
 
 ECHOCLASSIC_UI_PANEL_YEAR_TO
 	EN	To
+	DE	Bis
+	FR	À
 	PT	Até
 
 ECHOCLASSIC_UI_PANEL_YEAR_FROM_LABEL
 	EN	Start year
+	DE	Startjahr
+	FR	Année de début
 	PT	Ano inicial
 
 ECHOCLASSIC_UI_PANEL_YEAR_TO_LABEL
 	EN	End year
+	DE	Endjahr
+	FR	Année de fin
 	PT	Ano final
 
 ECHOCLASSIC_UI_PANEL_CLEAR_YEAR
 	EN	Clear year
+	DE	Jahr löschen
+	FR	Effacer l'année
 	PT	Limpar ano
 
 ECHOCLASSIC_UI_PANEL_YEAR_DIGITS
 	EN	Use four-digit years.
+	DE	Vierstellige Jahreszahlen verwenden.
+	FR	Utilisez des années à quatre chiffres.
 	PT	Use anos com quatro dígitos.
 
 ECHOCLASSIC_UI_PANEL_YEAR_ORDER
 	EN	The start year must be lower than or equal to the end year.
+	DE	Das Startjahr muss kleiner oder gleich dem Endjahr sein.
+	FR	L'année de début doit être inférieure ou égale à l'année de fin.
 	PT	O ano inicial precisa ser menor ou igual ao final.
 
 ECHOCLASSIC_UI_PANEL_AUDIO_QUALITY
 	EN	Audio quality
+	DE	Audioqualität
+	FR	Qualité audio
 	PT	Qualidade de áudio
 
 ECHOCLASSIC_UI_PANEL_QUALITY_NOTE
 	EN	High resolution is not proof of better mastering. These filters describe what the file is, not how good it sounds.
+	DE	Hohe Auflösung ist kein Beweis für besseres Mastering. Diese Filter beschreiben, was die Datei ist, nicht wie gut sie klingt.
+	FR	La haute résolution ne prouve pas un meilleur mastering. Ces filtres décrivent ce qu'est le fichier, pas la qualité de son rendu.
 	PT	Resolução alta não é prova de masterização melhor. Estes filtros dizem o que o arquivo é, não o quanto ele soa bem.
 
 ECHOCLASSIC_UI_PANEL_SORT_ASC
 	EN	Ascending order (A–Z)
+	DE	Aufsteigend (A–Z)
+	FR	Ordre croissant (A–Z)
 	PT	Ordem crescente (A–Z)
 
 ECHOCLASSIC_UI_PANEL_SORT_DESC
 	EN	Descending order (Z–A)
+	DE	Absteigend (Z–A)
+	FR	Ordre décroissant (Z–A)
 	PT	Ordem decrescente (Z–A)
 
 ECHOCLASSIC_UI_PANEL_GROUP_BY
 	EN	Group by
+	DE	Gruppieren nach
+	FR	Grouper par
 	PT	Agrupar por
 
 ECHOCLASSIC_UI_PANEL_GROUP_NONE
 	EN	No grouping
+	DE	Keine Gruppierung
+	FR	Aucun groupement
 	PT	Sem agrupamento
 
 ECHOCLASSIC_UI_PANEL_GROUP_ARTIST
 	EN	Artist (the list switches to artists)
+	DE	Interpret (die Liste wechselt zu Interpreten)
+	FR	Artiste (la liste passe aux artistes)
 	PT	Artista (a lista passa a mostrar artistas)
 
 ECHOCLASSIC_UI_PANEL_GROUP_NOTE
 	EN	Grouping organises the list and never removes anything from it. An album with more than one format appears in each section it belongs to.
+	DE	Die Gruppierung ordnet die Liste und entfernt nie etwas daraus. Ein Album mit mehreren Formaten erscheint in jedem Abschnitt, zu dem es gehört.
+	FR	Le groupement organise la liste sans jamais en retirer quoi que ce soit. Un album présent en plusieurs formats apparaît dans chaque section à laquelle il appartient.
 	PT	Agrupar organiza a lista, nunca tira item dela. Um álbum com mais de um formato aparece em cada seção a que pertence.
 
 ECHOCLASSIC_UI_PANEL_PREFER_TITLE
 	EN	Playback preference
+	DE	Wiedergabevorgabe
+	FR	Préférence de lecture
 	PT	Preferência de reprodução
 
 ECHOCLASSIC_UI_PANEL_PREFER_NOTE
 	EN	The preference ranks equivalent editions and picks which one plays. It never hides the others: they stay in the list.
+	DE	Die Vorgabe ordnet gleichwertige Editionen und bestimmt, welche wiedergegeben wird. Die anderen werden nie ausgeblendet: Sie bleiben in der Liste.
+	FR	La préférence classe les éditions équivalentes et détermine celle qui est lue. Elle ne masque jamais les autres : elles restent dans la liste.
 	PT	A preferência ordena edições equivalentes e escolhe qual toca. Ela nunca esconde as outras: elas continuam na lista.
 
 ECHOCLASSIC_UI_PANEL_VIEWS
 	EN	Saved views
-	PT	Vistas salvas
+	DE	Gesicherte Ansichten
+	FR	Vues enregistrées
+	PT	Visualizações salvas
 
 ECHOCLASSIC_UI_PANEL_NO_VIEWS
 	EN	No saved views yet.
+	DE	Noch keine gesicherten Ansichten.
+	FR	Aucune vue enregistrée pour l'instant.
 	PT	Nenhuma vista salva ainda.
 
 ECHOCLASSIC_UI_PANEL_VIEW_NAME
 	EN	View name
+	DE	Name der Ansicht
+	FR	Nom de la vue
 	PT	Nome da vista
 
 ECHOCLASSIC_UI_PANEL_SAVE_VIEW
 	EN	Save view
+	DE	Ansicht sichern
+	FR	Enregistrer la vue
 	PT	Salvar vista
 
 ECHOCLASSIC_UI_PANEL_VIEW_SAVED
 	EN	View saved.
+	DE	Ansicht gesichert.
+	FR	Vue enregistrée.
 	PT	Vista salva.
 
 ECHOCLASSIC_UI_PANEL_VIEW_DEFAULT
 	EN	Default
+	DE	Standard
+	FR	Par défaut
 	PT	Padrão
 
 ECHOCLASSIC_UI_PANEL_VIEW_RENAME
 	EN	Rename
+	DE	Umbenennen
+	FR	Renommer
 	PT	Renomear
 
 ECHOCLASSIC_UI_PANEL_VIEW_DUPLICATE
 	EN	Duplicate
+	DE	Duplizieren
+	FR	Dupliquer
 	PT	Duplicar
 
 ECHOCLASSIC_UI_PANEL_VIEW_DELETE
 	EN	Delete
+	DE	Löschen
+	FR	Supprimer
 	PT	Apagar
 
 ECHOCLASSIC_UI_PANEL_VIEW_NEW_NAME
 	EN	New name
+	DE	Neuer Name
+	FR	Nouveau nom
 	PT	Novo nome
 
 ECHOCLASSIC_UI_EDITIONS_NOTE
 	EN	editions of this work in the library. The preference picks the first one and the others stay visible in the list.
+	DE	Editionen dieses Werks in der Mediathek. Die Vorgabe wählt die erste, die anderen bleiben in der Liste sichtbar.
+	FR	éditions de cette œuvre dans la bibliothèque. La préférence choisit la première et les autres restent visibles dans la liste.
 	PT	edições desta obra na biblioteca. A preferência escolhe a primeira e as outras continuam visíveis na lista.
 
 ECHOCLASSIC_UI_EDITION_PLAYING
 	EN	Playing the preferred edition: {edition}.
+	DE	Bevorzugte Edition wird wiedergegeben: {edition}.
+	FR	Lecture de l'édition préférée : {edition}.
 	PT	Tocando a edição preferida: {edition}.
 
 ECHOCLASSIC_UI_NAME
 	EN	Name
+	DE	Name
+	FR	Nom
 	PT	Nome
 
 ECHOCLASSIC_UI_UNKNOWN_MEDIA_ONE
 	EN	1 album was left out because it has no media information.
+	DE	1 Album wurde ausgelassen, weil es keine Medieninformationen hat.
+	FR	1 album a été exclu car il ne comporte aucune information sur le média.
 	PT	1 álbum ficou de fora por não ter informação de mídia.
 
 ECHOCLASSIC_UI_UNKNOWN_MEDIA_MANY
 	EN	{n} albums were left out because they have no media information.
+	DE	{n} Alben wurden ausgelassen, weil sie keine Medieninformationen haben.
+	FR	{n} albums ont été exclus car ils ne comportent aucune information sur le média.
 	PT	{n} álbuns ficaram de fora por não terem informação de mídia.
 
 ECHOCLASSIC_UI_QUEUE_ADDED_ONE
 	EN	One item added to the playback queue.
+	DE	Ein Eintrag zur Warteschlange hinzugefügt.
+	FR	Un élément ajouté à la file d'attente.
 	PT	Um item adicionado à fila de reprodução.
 
 ECHOCLASSIC_UI_QUEUE_ADDED_MANY
 	EN	{n} items added to the playback queue.
+	DE	{n} Einträge zur Warteschlange hinzugefügt.
+	FR	{n} éléments ajoutés à la file d'attente.
 	PT	{n} itens adicionados à fila de reprodução.
 
 ECHOCLASSIC_UI_SECTION_OVERLAP
 	EN	Some albums appear in more than one section.
+	DE	Einige Alben erscheinen in mehreren Abschnitten.
+	FR	Certains albums apparaissent dans plusieurs sections.
 	PT	Alguns álbuns aparecem em mais de uma seção.
 
 ECHOCLASSIC_UI_ERR_TIMEOUT
 	EN	The server took too long to answer.
+	DE	Der Server hat zu lange für die Antwort gebraucht.
+	FR	Le serveur a mis trop de temps à répondre.
 	PT	O servidor demorou demais para responder.
 
 ECHOCLASSIC_UI_REMOVE_FAVOURITES
 	EN	Remove from Favourites
+	DE	Aus Favoriten entfernen
+	FR	Retirer des favoris
 	PT	Remover dos Favoritos
 
 ECHOCLASSIC_UI_REMOVE_FAVOURITES_LC
 	EN	Remove from favourites
+	DE	Aus Favoriten entfernen
+	FR	Retirer des favoris
 	PT	Remover dos favoritos
 
 ECHOCLASSIC_UI_REMOVE_PINNED
 	EN	Remove from pinned items
+	DE	Aus angehefteten Einträgen entfernen
+	FR	Retirer des éléments épinglés
 	PT	Remover dos itens fixados
 
 ECHOCLASSIC_UI_NO_ITEM_SELECTED
 	EN	No item selected
+	DE	Kein Eintrag ausgewählt
+	FR	Aucun élément sélectionné
 	PT	Nenhum item selecionado
 
 ECHOCLASSIC_UI_SORT_TO_ASC
 	EN	Switch to ascending order
+	DE	Aufsteigend sortieren
+	FR	Trier par ordre croissant
 	PT	Mudar para ordem crescente
 
 ECHOCLASSIC_UI_SORT_TO_DESC
 	EN	Switch to descending order
+	DE	Absteigend sortieren
+	FR	Trier par ordre décroissant
 	PT	Mudar para ordem decrescente
 
 ECHOCLASSIC_UI_VOLUME_MODE_BUSY
 	EN	Confirming volume mode…
+	DE	Lautstärkemodus wird bestätigt…
+	FR	Confirmation du mode de volume…
 	PT	Confirmando modo de volume…
 
 ECHOCLASSIC_UI_VOLUME_AT_DAC
 	EN	Set the volume on the DAC
+	DE	Lautstärke am DAC einstellen
+	FR	Régler le volume sur le DAC
 	PT	Ajuste o volume no DAC
 
 ECHOCLASSIC_UI_NO_PLAYLIST_MATCH
 	EN	No playlist matches this filter.
+	DE	Keine Playlist entspricht diesem Filter.
+	FR	Aucune liste de lecture ne correspond à ce filtre.
 	PT	Nenhuma playlist encontrada com esse filtro.
 
 ECHOCLASSIC_UI_NO_PLAYLIST_SAVED
 	EN	No saved playlists. Tap “New playlist…” to create the first one.
+	DE	Keine gesicherten Playlists. Tippen Sie auf „Neue Playlist…“, um die erste zu erstellen.
+	FR	Aucune liste de lecture enregistrée. Touchez « Nouvelle liste de lecture… » pour créer la première.
 	PT	Nenhuma playlist salva. Toque em “Nova playlist…” para criar a primeira.
 
 ECHOCLASSIC_UI_NO_PLAYER_CONNECTED
 	EN	No player connected.
+	DE	Kein Player verbunden.
+	FR	Aucun lecteur connecté.
 	PT	Nenhum player conectado.
 
 ECHOCLASSIC_UI_KEPT_FIXED_OUTPUT
 	EN	LMS kept fixed output.
+	DE	LMS hat die feste Ausgabe beibehalten.
+	FR	LMS a conservé la sortie fixe.
 	PT	O LMS manteve a saída fixa.
 
 ECHOCLASSIC_UI_KEPT_SOFTWARE_VOLUME
 	EN	LMS kept software volume.
+	DE	LMS hat die Software-Lautstärke beibehalten.
+	FR	LMS a conservé le volume logiciel.
 	PT	O LMS manteve o volume por software.
 
 ECHOCLASSIC_UI_VOLUME_LMS_SHORT
 	EN	LMS volume
+	DE	LMS-Lautstärke
+	FR	Volume LMS
 	PT	Volume LMS
 
 ECHOCLASSIC_UI_NO_PLAYER_SHORT
 	EN	no player
+	DE	kein Player
+	FR	aucun lecteur
 	PT	sem player
 
 ECHOCLASSIC_UI_FAILED_SUFFIX
 	EN	failed.
+	DE	fehlgeschlagen.
+	FR	a échoué.
 	PT	falhou.
 
 ECHOCLASSIC_UI_OPML_LIST_TRUNCATED
 	EN	This list has more than 200 items and this screen shows the first 200. Use search to reach the rest.
+	DE	Diese Liste enthält mehr als 200 Einträge; dieser Bildschirm zeigt die ersten 200. Verwenden Sie die Suche für den Rest.
+	FR	Cette liste contient plus de 200 éléments et cet écran affiche les 200 premiers. Utilisez la recherche pour atteindre le reste.
 	PT	Esta lista tem mais de 200 itens e esta tela mostra os 200 primeiros. Use a busca para chegar ao resto.
 
 ECHOCLASSIC_UI_NEW
 	EN	New
+	DE	Neu
+	FR	Nouveau
 	PT	Novo
 
 ECHOCLASSIC_UI_NEW_FEATURE
 	EN	New feature
+	DE	Neue Funktion
+	FR	Nouvelle fonctionnalité
 	PT	Novo recurso
 
 ECHOCLASSIC_UI_LOAD_NEXT_100
 	EN	Load next 100
+	DE	Nächste 100 laden
+	FR	Charger les 100 suivants
 	PT	Carregar os próximos 100
 
 ECHOCLASSIC_UI_LOADING_NEXT_100
 	EN	Loading next 100…
+	DE	Nächste 100 werden geladen…
+	FR	Chargement des 100 suivants…
 	PT	Carregando os próximos 100…
 
 ECHOCLASSIC_UI_COULD_NOT_LOAD_MORE_ITEMS
 	EN	Could not load more items
+	DE	Weitere Einträge konnten nicht geladen werden
+	FR	Impossible de charger plus d'éléments
 	PT	Não foi possível carregar mais itens
 
 ECHOCLASSIC_UI_ITEMS_ALREADY_LOADED_AVAILABLE
 	EN	The items already loaded are still available.
+	DE	Die bereits geladenen Einträge sind weiterhin verfügbar.
+	FR	Les éléments déjà chargés restent disponibles.
 	PT	Os itens já carregados continuam disponíveis.
 
 ECHOCLASSIC_UI_NO_NEW_ITEMS_RETURNED
 	EN	No new items were returned. The items already loaded are still available.
+	DE	Es wurden keine neuen Einträge zurückgegeben. Die bereits geladenen Einträge sind weiterhin verfügbar.
+	FR	Aucun nouvel élément n'a été renvoyé. Les éléments déjà chargés restent disponibles.
 	PT	Nenhum item novo foi retornado. Os itens já carregados continuam disponíveis.
 
 ECHOCLASSIC_UI_ALL_ONE_ITEM_LOADED
 	EN	All 1 item loaded.
+	DE	1 Eintrag geladen.
+	FR	1 élément chargé.
 	PT	O único item foi carregado.
 
 ECHOCLASSIC_UI_ALL_COUNT_ITEMS_LOADED
 	EN	All {count} items loaded.
+	DE	Alle {count} Einträge geladen.
+	FR	Les {count} éléments sont chargés.
 	PT	Todos os {count} itens foram carregados.
 
 ECHOCLASSIC_UI_LOADED_ONE_MORE_ITEM
 	EN	Loaded one more item. {total} items loaded.
+	DE	Ein weiterer Eintrag geladen. {total} Einträge geladen.
+	FR	Un élément supplémentaire chargé. {total} éléments chargés.
 	PT	Mais um item carregado. {total} itens carregados.
 
 ECHOCLASSIC_UI_LOADED_COUNT_MORE_ITEMS
 	EN	Loaded {count} more items. {total} items loaded.
+	DE	{count} weitere Einträge geladen. {total} Einträge geladen.
+	FR	{count} éléments supplémentaires chargés. {total} éléments chargés.
 	PT	Mais {count} itens carregados. {total} itens carregados.
 
 ECHOCLASSIC_UI_DISCOGRAPHY_TRUNCATED
 	EN	This artist's discography has more than 200 albums and this screen shows the first 200.
+	DE	Die Diskografie dieses Interpreten umfasst mehr als 200 Alben; dieser Bildschirm zeigt die ersten 200.
+	FR	La discographie de cet artiste compte plus de 200 albums et cet écran affiche les 200 premiers.
 	PT	A discografia deste artista tem mais de 200 álbuns e esta tela mostra os 200 primeiros.
 
 ECHOCLASSIC_UI_PLAYER_HELP_1
 	EN	Control changes which player Echo Classic uses. Transfer moves the current playback.
+	DE	„Steuerung“ ändert, welchen Player Echo Classic verwendet. „Übertragen“ verschiebt die laufende Wiedergabe.
+	FR	« Contrôle » change le lecteur utilisé par Echo Classic. « Transférer » déplace la lecture en cours.
 	PT	Controlar muda o player usado pelo Echo Classic. Transferir leva a reprodução atual.
 
 ECHOCLASSIC_UI_ALBUM_LIST_TRUNCATED
 	EN	This list has more than 1,000 albums and this screen shows the first 1,000.
+	DE	Diese Liste enthält mehr als 1.000 Alben; dieser Bildschirm zeigt die ersten 1.000.
+	FR	Cette liste contient plus de 1 000 albums et cet écran affiche les 1 000 premiers.
 	PT	Esta lista tem mais de 1.000 álbuns e esta tela mostra os 1.000 primeiros.
 
 ECHOCLASSIC_UI_IMPORT_KEEPS_REST
 	EN	Anything not in the file stays as it is. A copy of the current state is kept in the browser before the write happens. The page reloads afterwards.
+	DE	Alles, was nicht in der Datei enthalten ist, bleibt unverändert. Vor dem Schreiben wird eine Kopie des aktuellen Zustands im Browser gesichert. Anschließend wird die Seite neu geladen.
+	FR	Tout ce qui ne figure pas dans le fichier reste inchangé. Une copie de l'état actuel est conservée dans le navigateur avant l'écriture. La page se recharge ensuite.
 	PT	O que não estiver no arquivo continua como está. Uma cópia do estado atual fica guardada no navegador antes da gravação. A página recarrega em seguida.
 
 ECHOCLASSIC_UI_QUEUE_EMPTY_1
 	EN	The queue is empty. Play an album or a playlist and the tracks that follow appear here.
+	DE	Die Warteschlange ist leer. Geben Sie ein Album oder eine Playlist wieder, und die folgenden Titel erscheinen hier.
+	FR	La file d'attente est vide. Lisez un album ou une liste de lecture et les morceaux suivants apparaîtront ici.
 	PT	A fila está vazia. Toque um álbum ou uma playlist e as faixas seguintes aparecerão aqui.
 
 ECHOCLASSIC_UI_CHANGE_PLAYER
 	EN	Change player
+	DE	Player wechseln
+	FR	Changer de lecteur
 	PT	Trocar de player
 
 ECHOCLASSIC_UI_COVER_ART_ON_EVERY_TRACK
 	EN	Cover art on every track
+	DE	Cover bei jedem Titel
+	FR	Pochette sur chaque morceau
 	PT	Capa em cada faixa
 
 ECHOCLASSIC_UI_COVER_ART_ONCE_PER_ALBUM
 	EN	Cover art once per run of the same album
+	DE	Cover einmal je Folge desselben Albums
+	FR	Pochette une fois par série du même album
 	PT	Capa uma vez por sequência do mesmo álbum
 
 ECHOCLASSIC_UI_COVER_ART_ONCE_PER_ALBUM_WITH_CAPTION
 	EN	Cover art once per album, with a caption above the group
+	DE	Cover einmal pro Album, mit Überschrift über der Gruppe
+	FR	Pochette une fois par album, avec un titre au-dessus du groupe
 	PT	Capa uma vez por álbum, com uma legenda acima do grupo
 
 ECHOCLASSIC_UI_DEFAULT_PLAYER
 	EN	Default player
+	DE	Standard-Player
+	FR	Lecteur par défaut
 	PT	Player padrão
 
 ECHOCLASSIC_UI_DEFAULT_PLAYER_HELP
 	EN	Choose which player Echo Classic connects to when it starts. “Last used” follows whichever player you pick, even after a refresh.
+	DE	Wählen Sie, mit welchem Player sich Echo Classic beim Start verbindet. „Zuletzt verwendet“ folgt dem von Ihnen gewählten Player, auch nach einem Neuladen.
+	FR	Choisissez le lecteur auquel Echo Classic se connecte au démarrage. « Dernière utilisation » suit le lecteur que vous sélectionnez, même après un rechargement.
 	PT	Escolha o player ao qual o Echo Classic se conecta ao iniciar. "Último usado" segue qualquer player que você escolher, mesmo após atualizar.
 
 ECHOCLASSIC_UI_DISCONNECTED
 	EN	Disconnected
+	DE	Getrennt
+	FR	Déconnecté
 	PT	Desconectado
 
 ECHOCLASSIC_UI_EVERY_TRACK
 	EN	Every track
+	DE	Jeder Titel
+	FR	Chaque morceau
 	PT	Cada faixa
 
 ECHOCLASSIC_UI_LAST_USED
 	EN	Last used
+	DE	Zuletzt verwendet
+	FR	Dernière utilisation
 	PT	Último usado
 
 ECHOCLASSIC_UI_NO_PLAYER
 	EN	No player
+	DE	Kein Player
+	FR	Aucun lecteur
 	PT	Sem player
 
 ECHOCLASSIC_UI_NO_PLAYERS_FOUND
 	EN	No players found.
+	DE	Keine Player gefunden.
+	FR	Aucun lecteur trouvé.
 	PT	Nenhum player encontrado.
 
 ECHOCLASSIC_UI_ONCE_PER_ALBUM
 	EN	Once per album
+	DE	Einmal pro Album
+	FR	Une fois par album
 	PT	Uma vez por álbum
 
 ECHOCLASSIC_UI_ONCE_PER_ALBUM_WITH_HEADINGS
 	EN	Once per album, with headings
+	DE	Einmal pro Album, mit Überschriften
+	FR	Une fois par album, avec en-têtes
 	PT	Uma vez por álbum, com legendas
 
 ECHOCLASSIC_UI_QUEUE
 	EN	Queue
+	DE	Warteschlange
+	FR	File d'attente
 	PT	Fila
 
 ECHOCLASSIC_UI_QUEUE_ARTWORK
 	EN	Queue artwork
+	DE	Cover in der Warteschlange
+	FR	Pochettes de la file d'attente
 	PT	Capas da fila
 
 ECHOCLASSIC_UI_QUEUE_ARTWORK_HELP
 	EN	Choose how often album art repeats in the playback queue.
+	DE	Wählen Sie, wie oft sich das Cover in der Warteschlange wiederholt.
+	FR	Choisissez la fréquence de répétition des pochettes dans la file d'attente.
 	PT	Escolha com que frequência a capa do álbum se repete na fila de reprodução.
 
 ECHOCLASSIC_UI_QUERYING_SERVER
 	EN	Querying the server…
+	DE	Server wird abgefragt…
+	FR	Interrogation du serveur…
 	PT	Consultando o servidor…
 
 ECHOCLASSIC_UI_SLEEPING
 	EN	Sleeping
+	DE	Ruhezustand
+	FR	Veille
 	PT	Dormindo
 
 ECHOCLASSIC_UI_UNKNOWN_PLAYER
 	EN	Unknown player
+	DE	Unbekannter Player
+	FR	Lecteur inconnu
 	PT	Player desconhecido
 
 ECHOCLASSIC_UI_PLAYER_HELP_2
 	EN	Sync makes both players play together.
+	DE	Mit Sync geben beide Player gemeinsam wieder.
+	FR	La synchronisation fait jouer les deux lecteurs ensemble.
 	PT	Sincronizar faz os dois players tocarem juntos.
 
 ECHOCLASSIC_UI_SCREEN_PARTIAL
 	EN	Part of this screen could not be loaded. 
+	DE	Ein Teil dieses Bildschirms konnte nicht geladen werden. 
+	FR	Une partie de cet écran n'a pas pu être chargée. 
 	PT	Parte desta tela não pôde ser carregada. 
 
 ECHOCLASSIC_UI_PLAY_TOGETHER
 	EN	Play together with the current player
+	DE	Zusammen mit dem aktuellen Player wiedergeben
+	FR	Lire avec le lecteur actuel
 	PT	Reproduzir em conjunto com o player atual
 
 ECHOCLASSIC_UI_IMPORT_GROUPS
 	EN	Only these groups will be replaced:
+	DE	Nur diese Gruppen werden ersetzt:
+	FR	Seuls ces groupes seront remplacés :
 	PT	Serão substituídos apenas estes grupos:
 
 ECHOCLASSIC_UI_VOLUME_LMS_CONFIRMED
 	EN	LMS volume control confirmed.
+	DE	LMS-Lautstärkeregelung bestätigt.
+	FR	Contrôle du volume LMS confirmé.
 	PT	Controle de volume pelo LMS confirmado.
 
 ECHOCLASSIC_UI_VOLUME_ON_DAC
 	EN	Disabled: set the volume on the DAC
+	DE	Deaktiviert: Lautstärke am DAC einstellen
+	FR	Désactivé : réglez le volume sur le DAC
 	PT	Desativado: controle o volume pelo DAC
 
 ECHOCLASSIC_UI_CHOOSE_ROOT
 	EN	Choose a My Music root. Current: 
+	DE	Bereich in „Meine Musik“ wählen. Aktuell: 
+	FR	Choisir une racine de Ma musique. Actuel : 
 	PT	Escolher raiz de Minha Música. Atual: 
 
 ECHOCLASSIC_UI_NO_PLAYER_FOUND
 	EN	No player was found on LMS.
+	DE	Auf LMS wurde kein Player gefunden.
+	FR	Aucun lecteur n'a été trouvé sur LMS.
 	PT	Nenhum player foi encontrado no LMS.
 
 ECHOCLASSIC_UI_SERVER_ERROR_CODE
 	EN	The server answered with an error (HTTP 
+	DE	Der Server antwortete mit einem Fehler (HTTP 
+	FR	Le serveur a répondu par une erreur (HTTP 
 	PT	O servidor respondeu com erro (HTTP 
 
 ECHOCLASSIC_UI_NOT_VALID_SCREENS
 	EN	” is not a list of valid screens
+	DE	” ist keine Liste gültiger Bildschirme
+	FR	” n'est pas une liste d'écrans valides
 	PT	” não é uma lista de telas válidas
 
 ECHOCLASSIC_UI_QUEUE_READ_PARTIAL
 	EN	 tracks and only this many could be read: 
+	DE	 Titel, und nur so viele konnten gelesen werden: 
+	FR	 morceaux, et seul ce nombre a pu être lu : 
 	PT	 faixas e só foi possível ler 
 
 ECHOCLASSIC_UI_SERVER_ERROR
 	EN	The server answered with an error.
+	DE	Der Server antwortete mit einem Fehler.
+	FR	Le serveur a répondu par une erreur.
 	PT	O servidor respondeu com erro.
 
 ECHOCLASSIC_UI_ITEMS_NOT_OBJECTS
 	EN	 has items that are not objects
+	DE	 enthält Einträge, die keine Objekte sind
+	FR	 contient des éléments qui ne sont pas des objets
 	PT	 tem itens que não são objetos
 
 ECHOCLASSIC_UI_QUEUE_TRANSFER_TAKES
 	EN	. The transfer takes the first 
+	DE	. Die Übertragung übernimmt die ersten 
+	FR	. Le transfert prend les 
 	PT	. A transferência leva as 
 
 ECHOCLASSIC_UI_TYPE_TO_SEARCH
 	EN	Type something to search for.
+	DE	Suchbegriff eingeben.
+	FR	Saisissez un terme à rechercher.
 	PT	Digite algo para buscar.
 
 ECHOCLASSIC_UI_NO_GROUP_RECOGNISED
 	EN	no recognised group
+	DE	keine erkannte Gruppe
+	FR	aucun groupe reconnu
 	PT	nenhum grupo reconhecido
 
 ECHOCLASSIC_UI_SEARCH_FOUND_NOTHING
 	EN	” found nothing. 
+	DE	” ergab keine Treffer. 
+	FR	” n'a donné aucun résultat. 
 	PT	” não encontrou nada. 
 
 ECHOCLASSIC_UI_LOADING_MORE_ITEMS
 	EN	Loading more items…
+	DE	Weitere Einträge werden geladen…
+	FR	Chargement d'autres éléments…
 	PT	Carregando mais itens…
 
 ECHOCLASSIC_UI_SHOULD_BE_LIST
 	EN	 should be a list
+	DE	 sollte eine Liste sein
+	FR	 devrait être une liste
 	PT	 deveria ser uma lista
 
 ECHOCLASSIC_UI_NAV_STACK
 	EN	the navigation stack “
+	DE	der Navigationsstapel “
+	FR	la pile de navigation “
 	PT	a pilha de navegação “
 
 ECHOCLASSIC_UI_TO_PLAYBACK_QUEUE
 	EN	 to the playback queue.
+	DE	 zur Warteschlange.
+	FR	 à la file d'attente.
 	PT	 à fila de reprodução.
 
 ECHOCLASSIC_UI_COULD_NOT_PLAY
 	EN	Could not play “
+	DE	Wiedergabe nicht möglich: “
+	FR	Lecture impossible : “
 	PT	Não deu para tocar “
 
 ECHOCLASSIC_UI_IN_YOUR_LIBRARY
 	EN	” in your library.
+	DE	” in Ihrer Mediathek.
+	FR	” dans votre bibliothèque.
 	PT	” na sua biblioteca.
 
 ECHOCLASSIC_UI_REPEAT_WHOLE_QUEUE
 	EN	Repeat the whole queue
+	DE	Die gesamte Warteschlange wiederholen
+	FR	Répéter toute la file d'attente
 	PT	Repetir toda a fila
 
 ECHOCLASSIC_UI_LOADING_TRACKS
 	EN	Loading tracks…
+	DE	Titel werden geladen…
+	FR	Chargement des morceaux…
 	PT	Carregando faixas…
 
 ECHOCLASSIC_UI_NOT_VALID_JSON
 	EN	 is not valid JSON
+	DE	 ist kein gültiges JSON
+	FR	 n'est pas un JSON valide
 	PT	 não é JSON válido
 
 ECHOCLASSIC_UI_WE_DID_NOT_FIND
 	EN	We did not find “
+	DE	Nicht gefunden: “
+	FR	Introuvable : “
 	PT	Não encontramos “
 
 ECHOCLASSIC_UI_CLEARING_QUEUE
 	EN	Clearing the queue
+	DE	Warteschlange wird geleert
+	FR	Effacement de la file d'attente
 	PT	A limpeza da fila
 
 ECHOCLASSIC_UI_MOVE_DOWN
 	EN	Move down
+	DE	Nach unten
+	FR	Descendre
 	PT	Mover para baixo
 
 ECHOCLASSIC_UI_DELETE_PLAYLIST
 	EN	Delete playlist
+	DE	Playlist löschen
+	FR	Supprimer la liste de lecture
 	PT	Apagar playlist
 
 ECHOCLASSIC_UI_MOVE_UP
 	EN	Move up
+	DE	Nach oben
+	FR	Monter
 	PT	Mover para cima
 
 ECHOCLASSIC_UI_CONTENTS_OF
 	EN	the contents of 
+	DE	der Inhalt von 
+	FR	le contenu de 
 	PT	o conteúdo de 
 
 ECHOCLASSIC_UI_SEARCH_FOR
 	EN	The search for “
+	DE	Die Suche nach “
+	FR	La recherche de “
 	PT	A busca por “
 
 ECHOCLASSIC_UI_THIS_STATION
 	EN	this station
+	DE	diesen Sender
+	FR	cette station
 	PT	esta estação
 
 ECHOCLASSIC_UI_LAYOUT
 	EN	Layout
+	DE	Layout
+	FR	Disposition
 	PT	Layout
 
 ECHOCLASSIC_UI_PANEL_POSITION
 	EN	Panel position
+	DE	Position des Bereichs
+	FR	Position du panneau
 	PT	Posição do painel
 
 ECHOCLASSIC_UI_SIDE_PANEL
 	EN	Side panel
+	DE	Seitenfenster
+	FR	Panneau latéral
 	PT	Painel lateral
 
 ECHOCLASSIC_UI_BOTTOM_BAR
 	EN	Bottom bar
+	DE	Untere Leiste
+	FR	Barre inférieure
 	PT	Barra inferior
 
 ECHOCLASSIC_UI_PLAYER_SURFACE
 	EN	Player surface
+	DE	Player-Oberfläche
+	FR	Surface du lecteur
 	PT	Superfície do player
 
 ECHOCLASSIC_UI_CUSTOMIZE_PLAYER_APPEARANCE
 	EN	Customize player appearance
+	DE	Erscheinungsbild des Players anpassen
+	FR	Personnaliser l'apparence du lecteur
 	PT	Personalizar a aparência do player
 
 ECHOCLASSIC_UI_USE_APP_APPEARANCE
 	EN	Use app appearance
+	DE	App-Erscheinungsbild verwenden
+	FR	Utiliser l'apparence de l'app
 	PT	Usar a aparência do app
 
 ECHOCLASSIC_UI_MATCH_APP_APPEARANCE_ALL
 	EN	Match app appearance on every player surface
+	DE	App-Erscheinungsbild auf allen Player-Oberflächen übernehmen
+	FR	Suivre l'apparence de l'app sur toutes les surfaces du lecteur
 	PT	Seguir a aparência do app em todas as superfícies do player
 
 ECHOCLASSIC_UI_ALL_SURFACES_FOLLOW_APP
 	EN	All player surfaces use the app theme, accent and font.
+	DE	Alle Player-Oberflächen verwenden Thema, Akzent und Schrift der App.
+	FR	Toutes les surfaces du lecteur utilisent le thème, l'accent et la police de l'app.
 	PT	Todas as superfícies do player usam o tema, o destaque e a fonte do app.
 
 ECHOCLASSIC_UI_SOME_SURFACES_CUSTOM
 	EN	Some player surfaces use custom appearance.
+	DE	Einige Player-Oberflächen verwenden ein eigenes Erscheinungsbild.
+	FR	Certaines surfaces du lecteur utilisent une apparence personnalisée.
 	PT	Algumas superfícies do player têm aparência própria.
 
 ECHOCLASSIC_UI_PRESENTATION_ADAPTIVE_HELP
 	EN	Uses a side panel on larger screens and full screen on phones.
+	DE	Verwendet auf größeren Bildschirmen ein Seitenfenster und auf Telefonen Vollbild.
+	FR	Utilise un panneau latéral sur les grands écrans et le plein écran sur les téléphones.
 	PT	Usa um painel lateral em telas maiores e tela cheia no celular.
 
 ECHOCLASSIC_UI_PRESENTATION_FULLSCREEN_HELP
 	EN	Always opens over the app.
+	DE	Wird immer über der App geöffnet.
+	FR	S'ouvre toujours par-dessus l'app.
 	PT	Abre sempre por cima do app.
 
 ECHOCLASSIC_UI_ALSO_APPLIES_SIDE_PANEL
 	EN	Also applies to the side panel.
+	DE	Gilt auch für das Seitenfenster.
+	FR	S'applique aussi au panneau latéral.
 	PT	Vale também para o painel lateral.
 
 ECHOCLASSIC_UI_PROGRESS_SHARED_WITH_FULL
 	EN	Progress bar settings are shared with Full player.
+	DE	Die Einstellungen der Fortschrittsleiste werden mit dem Vollbild-Player geteilt.
+	FR	Les réglages de la barre de progression sont partagés avec le lecteur complet.
 	PT	As opções da barra de progresso são as mesmas do Player cheio.
 
 ECHOCLASSIC_UI_BOTTOM_BAR_COLOUR
 	EN	Bottom bar colour
+	DE	Farbe der unteren Leiste
+	FR	Couleur de la barre inférieure
 	PT	Cor da barra inferior
 
 ECHOCLASSIC_UI_SERVICE_CHECK_AND_RETRY
 	EN	Check the connection or the service status and try again.
+	DE	Prüfen Sie die Verbindung oder den Status des Dienstes und versuchen Sie es erneut.
+	FR	Vérifiez la connexion ou l'état du service, puis réessayez.
 	PT	Confira a conexão ou o estado do serviço e tente de novo.
 
 ECHOCLASSIC_UI_SERVICE_NO_ANSWER
 	EN	This service did not answer.
+	DE	Dieser Dienst hat nicht geantwortet.
+	FR	Ce service n'a pas répondu.
 	PT	Este serviço não respondeu.
 
 ECHOCLASSIC_UI_SCREEN_NO_ANSWER
 	EN	This screen did not load.
+	DE	Dieser Bildschirm wurde nicht geladen.
+	FR	Cet écran ne s'est pas chargé.
 	PT	Esta tela não carregou.
 
 ECHOCLASSIC_UI_STATION_NO_ANSWER
 	EN	The station did not answer.
+	DE	Der Sender hat nicht geantwortet.
+	FR	La station n'a pas répondu.
 	PT	A estação não respondeu.
 
 ECHOCLASSIC_UI_BACK_TO
 	EN	Back to 
+	DE	Zurück zu 
+	FR	Retour à 
 	PT	Voltar para 
 
 ECHOCLASSIC_UI_QUEUE_HAS
 	EN	The queue has 
+	DE	Die Warteschlange enthält 
+	FR	La file d'attente contient 
 	PT	A fila tem 
 
 ECHOCLASSIC_UI_NEXT_POSITION
 	EN	. Next: 
+	DE	. Als Nächstes: 
+	FR	. Ensuite : 
 	PT	. Próxima: 
 
 ECHOCLASSIC_UI_LOADING
 	EN	Loading…
+	DE	Wird geladen…
+	FR	Chargement…
 	PT	Carregando…
 
 ECHOCLASSIC_UI_SYNC
 	EN	Sync
+	DE	Sync
+	FR	Sync
 	PT	Sincronizar
 
 ECHOCLASSIC_UI_DELETE_QUOTED
 	EN	Delete “
+	DE	Löschen “
+	FR	Supprimer “
 	PT	Apagar “
 
 ECHOCLASSIC_UI_SUFFIX_FROM_QUEUE
 	EN	 from the queue
+	DE	 aus der Warteschlange
+	FR	 de la file d'attente
 	PT	 da fila
 
 ECHOCLASSIC_UI_REMOVE_PREFIX
 	EN	Remove 
+	DE	Entfernen 
+	FR	Retirer 
 	PT	Remover 
 
 ECHOCLASSIC_UI_MOVE_PREFIX
 	EN	Move 
+	DE	Verschieben 
+	FR	Déplacer 
 	PT	Mover 
 
 ECHOCLASSIC_UI_NONE_LOWER
 	EN	none
+	DE	keine
+	FR	aucun
 	PT	nenhum
 
 ECHOCLASSIC_UI_PLAYLIST_NAME
 	EN	Playlist name
+	DE	Name der Playlist
+	FR	Nom de la liste de lecture
 	PT	Nome da playlist
 
 ECHOCLASSIC_UI_FILTER_PLAYLISTS
 	EN	Filter playlists
+	DE	Playlists filtern
+	FR	Filtrer les listes de lecture
 	PT	Filtrar playlists
 
 ECHOCLASSIC_UI_INCOMPATIBLE_VALUE
 	EN	 has an incompatible value
+	DE	 hat einen inkompatiblen Wert
+	FR	 a une valeur incompatible
 	PT	 tem valor incompatível
 
 ECHOCLASSIC_UI_COPY_SUFFIX
 	EN	 (copy)
+	DE	 (Kopie)
+	FR	 (copie)
 	PT	 (cópia)
 
 ECHOCLASSIC_UI_EDIT
 	EN	Edit
+	DE	Bearbeiten
+	FR	Modifier
 	PT	Editar
 
 ECHOCLASSIC_UI_CREATE
 	EN	Create
+	DE	Erstellen
+	FR	Créer
 	PT	Criar
 
 ECHOCLASSIC_UI_CHANGING_TRACK
 	EN	Changing track
+	DE	Titel wird gewechselt
+	FR	Changement de morceau
 	PT	A troca de faixa
 
 ECHOCLASSIC_UI_CHANGING_PLAYER
 	EN	Changing player
+	DE	Player wird gewechselt
+	FR	Changement de lecteur
 	PT	A troca de player
 
 ECHOCLASSIC_UI_PREVIOUS_TRACK_LABEL
 	EN	The previous track
+	DE	Der vorherige Titel
+	FR	Le morceau précédent
 	PT	A faixa anterior
 
 ECHOCLASSIC_UI_SEEKING
 	EN	Seeking
+	DE	Position wird gesucht
+	FR	Recherche de position
 	PT	O deslocamento na faixa
 
 ECHOCLASSIC_UI_VOLUME_CHANGE
 	EN	The volume change
+	DE	Die Lautstärkeänderung
+	FR	Le changement de volume
 	PT	O ajuste de volume
 
 ECHOCLASSIC_UI_STOPPING
 	EN	Stopping
+	DE	Wird gestoppt
+	FR	Arrêt en cours
 	PT	A parada
 
 ECHOCLASSIC_UI_PAUSING
 	EN	Pausing
+	DE	Wird pausiert
+	FR	Mise en pause
 	PT	A pausa
 
 ECHOCLASSIC_UI_ADD_TO_FAVOURITES_CAP
 	EN	Add to Favourites
+	DE	Zu Favoriten hinzufügen
+	FR	Ajouter aux favoris
 	PT	Adicionar aos Favoritos
 
 ECHOCLASSIC_UI_ADD_TO_FAVOURITES
 	EN	Add to favourites
+	DE	Zu Favoriten hinzufügen
+	FR	Ajouter aux favoris
 	PT	Adicionar aos favoritos
 
 ECHOCLASSIC_UI_FILE_SECTION
 	EN	File
+	DE	Datei
+	FR	Fichier
 	PT	Arquivo
 
 ECHOCLASSIC_UI_DEFAULT_TAG
 	EN	 · default
+	DE	 · Standard
+	FR	 · par défaut
 	PT	 · padrão
 
 ECHOCLASSIC_UI_REMOVE
 	EN	Remove
+	DE	Entfernen
+	FR	Retirer
 	PT	Remover
 
 ECHOCLASSIC_UI_MINI_GAUGE_STYLE_DARK
 	EN	Mini player style (dark theme)
+	DE	Stil des Mini-Players (dunkles Thema)
+	FR	Style du mini-lecteur (thème sombre)
 	PT	Estilo no mini player (tema escuro)
 
 ECHOCLASSIC_UI_MINI_GAUGE_STYLE_LIGHT
 	EN	Mini player style (light theme)
+	DE	Stil des Mini-Players (helles Thema)
+	FR	Style du mini-lecteur (thème clair)
 	PT	Estilo no mini player (tema claro)
 
 ECHOCLASSIC_UI_PLAYER_GAUGE_STYLE_DARK
 	EN	Full player style (dark theme)
+	DE	Stil des Vollbild-Players (dunkles Thema)
+	FR	Style du lecteur complet (thème sombre)
 	PT	Estilo no player completo (tema escuro)
 
 ECHOCLASSIC_UI_PLAYER_GAUGE_STYLE_LIGHT
 	EN	Full player style (light theme)
+	DE	Stil des Vollbild-Players (helles Thema)
+	FR	Style du lecteur complet (thème clair)
 	PT	Estilo no player completo (tema claro)
 
 ECHOCLASSIC_UI_MINI_GAUGE_STYLE_LEGACY
 	EN	Mini player style (Legacy theme)
+	DE	Stil des Mini-Players (Legacy-Thema)
+	FR	Style du mini-lecteur (thème Legacy)
 	PT	Estilo no mini player (tema Legado)
 
 ECHOCLASSIC_UI_PLAYER_GAUGE_STYLE_LEGACY
 	EN	Full player style (Legacy theme)
+	DE	Stil des Vollbild-Players (Legacy-Thema)
+	FR	Style du lecteur complet (thème Legacy)
 	PT	Estilo no player completo (tema Legado)
 
 ECHOCLASSIC_UI_SILVER
 	EN	Silver
+	DE	Silber
+	FR	Argent
 	PT	Prata
 
 ECHOCLASSIC_UI_MINI_PLAYER_COLOUR
 	EN	Mini player colour
+	DE	Farbe des Mini-Players
+	FR	Couleur du mini-lecteur
 	PT	Cor no mini player
 
 ECHOCLASSIC_UI_FULL_PLAYER_COLOUR
 	EN	Full player colour
+	DE	Farbe des Vollbild-Players
+	FR	Couleur du lecteur complet
 	PT	Cor no player completo
 
 ECHOCLASSIC_UI_ITEM_SELECTED
 	EN	item selected
+	DE	Eintrag ausgewählt
+	FR	élément sélectionné
 	PT	item selecionado
 
 ECHOCLASSIC_UI_ITEMS_SELECTED
 	EN	items selected
+	DE	Einträge ausgewählt
+	FR	éléments sélectionnés
 	PT	itens selecionados
 
 ECHOCLASSIC_UI_ASCENDING_ORDER_LABEL
 	EN	Ascending order
+	DE	Aufsteigend
+	FR	Ordre croissant
 	PT	Ordem crescente
 
 ECHOCLASSIC_UI_DESCENDING_ORDER_LABEL
 	EN	Descending order
+	DE	Absteigend
+	FR	Ordre décroissant
 	PT	Ordem decrescente
 
 ECHOCLASSIC_UI_CENTER
 	EN	Center
+	DE	Mitte
+	FR	Centre
 	PT	Centro
 
 ECHOCLASSIC_UI_DARK_OPTION
 	EN	Dark
+	DE	Dunkel
+	FR	Sombre
 	PT	Escuro
 
 ECHOCLASSIC_UI_FONT
 	EN	Font
+	DE	Schrift
+	FR	Police
 	PT	Fonte
 
 ECHOCLASSIC_UI_GENERAL
 	EN	General
+	DE	Allgemein
+	FR	Général
 	PT	Geral
 
 ECHOCLASSIC_UI_LEFT
 	EN	Left
+	DE	Links
+	FR	Gauche
 	PT	Esquerda
 
 ECHOCLASSIC_UI_LIGHT_OPTION
 	EN	Light
+	DE	Hell
+	FR	Clair
 	PT	Claro
 
 ECHOCLASSIC_UI_LEGACY_OPTION
 	EN	Legacy
+	DE	Legacy
+	FR	Legacy
 	PT	Legado
 
 ECHOCLASSIC_UI_NOT_SPECIFIED
 	EN	Not specified
+	DE	Nicht angegeben
+	FR	Non spécifié
 	PT	Não especificado
 
 ECHOCLASSIC_UI_PREVIEW
 	EN	Preview
+	DE	Vorschau
+	FR	Aperçu
 	PT	Visualização
 
 ECHOCLASSIC_UI_PRESENTATION
 	EN	Presentation
+	DE	Darstellung
+	FR	Présentation
 	PT	Apresentação
 
 ECHOCLASSIC_UI_PROGRESS_BAR
 	EN	Progress bar
+	DE	Fortschrittsleiste
+	FR	Barre de progression
 	PT	Barra de progresso
 
 ECHOCLASSIC_UI_RIGHT
 	EN	Right
+	DE	Rechts
+	FR	Droite
 	PT	Direita
 
 ECHOCLASSIC_UI_SMALL_PLAYER
 	EN	Small player
+	DE	Kleiner Player
+	FR	Petit lecteur
 	PT	Player pequeno
 
 ECHOCLASSIC_UI_THIS_ALBUM_HAS_MORE_TRACKS
 	EN	This album has more tracks than the screen loaded.
+	DE	Dieses Album hat mehr Titel, als der Bildschirm geladen hat.
+	FR	Cet album contient plus de morceaux que l'écran n'en a chargés.
 	PT	Este álbum tem mais faixas do que a tela carregou.
 
 ECHOCLASSIC_UI_POSITION
 	EN	Position
+	DE	Position
+	FR	Position
 	PT	Posição
 
 ECHOCLASSIC_UI_DURATION
 	EN	Duration
+	DE	Dauer
+	FR	Durée
 	PT	Duração
 
 ECHOCLASSIC_UI_SECONDS
 	EN	seconds
+	DE	Sekunden
+	FR	secondes
 	PT	segundos
 
 ECHOCLASSIC_UI_CROSSFADE_OFF_HINT
 	EN	Off: gapless playback — songs join with no gap and no blend
+	DE	Aus: Lückenlose Wiedergabe – Titel gehen ohne Pause und ohne Überblendung ineinander über
+	FR	Désactivé : lecture sans blanc — les morceaux s'enchaînent sans silence ni fondu
 	PT	Desligado: reprodução sem intervalo — as faixas se sucedem sem espaço e sem mistura
 
 ECHOCLASSIC_UI_CROSSFADE_ON_HINT
 	EN	On: crossfade — the end of one song blends into the start of the next
+	DE	Ein: Überblenden – das Ende eines Titels geht in den Anfang des nächsten über
+	FR	Activé : fondu enchaîné — la fin d'un morceau se fond dans le début du suivant
 	PT	Ligado: transição — o final de uma faixa se mistura ao início da próxima
 
 ECHOCLASSIC_UI_REPLAY_GAIN
 	EN	Replay gain
+	DE	Replay Gain
+	FR	Replay Gain
 	PT	Ganho de reprodução
 
 ECHOCLASSIC_UI_REPLAY_GAIN_OFF
 	EN	Off
+	DE	Aus
+	FR	Désactivé
 	PT	Desligado
 
 ECHOCLASSIC_UI_REPLAY_GAIN_TRACK
 	EN	Track
+	DE	Titel
+	FR	Morceau
 	PT	Faixa
 
 ECHOCLASSIC_UI_REPLAY_GAIN_ALBUM
 	EN	Album
+	DE	Album
+	FR	Album
 	PT	Álbum
 
 ECHOCLASSIC_UI_REPLAY_GAIN_SMART
 	EN	Smart
+	DE	Smart
+	FR	Intelligent
 	PT	Inteligente
 
 ECHOCLASSIC_UI_REPLAY_GAIN_OFF_HINT
 	EN	Off: every recording plays at the loudness it was mastered at.
+	DE	Aus: Jede Aufnahme wird mit der Lautheit wiedergegeben, mit der sie gemastert wurde.
+	FR	Désactivé : chaque enregistrement est lu au niveau sonore de son mastering.
 	PT	Desligado: cada gravação toca no volume em que foi masterizada.
 
 ECHOCLASSIC_UI_REPLAY_GAIN_TRACK_HINT
 	EN	Track: every song plays at a similar loudness.
+	DE	Titel: Jeder Titel wird mit ähnlicher Lautheit wiedergegeben.
+	FR	Morceau : chaque morceau est lu à un niveau sonore similaire.
 	PT	Faixa: todas as músicas tocam num volume parecido.
 
 ECHOCLASSIC_UI_REPLAY_GAIN_ALBUM_HINT
 	EN	Album: loudness differences within an album are kept.
+	DE	Album: Lautheitsunterschiede innerhalb eines Albums bleiben erhalten.
+	FR	Album : les différences de niveau sonore au sein d'un album sont conservées.
 	PT	Álbum: as diferenças de volume dentro de um álbum são preservadas.
 
 ECHOCLASSIC_UI_REPLAY_GAIN_SMART_HINT
 	EN	Smart: album gain for a whole album, track gain when shuffling.
+	DE	Smart: Album-Gain für ein ganzes Album, Track-Gain bei Zufallswiedergabe.
+	FR	Intelligent : gain d'album pour un album entier, gain de morceau en lecture aléatoire.
 	PT	Inteligente: ganho de álbum ao ouvir um álbum inteiro, ganho de faixa no modo aleatório.
 
 ECHOCLASSIC_UI_REPLAY_GAIN_NO_PLAYER
 	EN	Available when a player is connected.
+	DE	Verfügbar, wenn ein Player verbunden ist.
+	FR	Disponible lorsqu'un lecteur est connecté.
 	PT	Disponível quando há um player conectado.
 
 ECHOCLASSIC_UI_ACCENT
 	EN	Accent
+	DE	Akzent
+	FR	Accent
 	PT	Destaque
 
 ECHOCLASSIC_UI_BAR_COLOUR
 	EN	Bar colour
+	DE	Leistenfarbe
+	FR	Couleur de la barre
 	PT	Cor da barra
 
 ECHOCLASSIC_UI_MATCH_APP_APPEARANCE
 	EN	Match app appearance
+	DE	An App-Erscheinungsbild anpassen
+	FR	Suivre l'apparence de l'app
 	PT	Acompanhar a aparência do app
 
 ECHOCLASSIC_UI_SHOW_PREVIEWS
 	EN	Show previews
+	DE	Vorschauen anzeigen
+	FR	Afficher les aperçus
 	PT	Mostrar prévias
 
 ECHOCLASSIC_UI_ALSO_APPLIES_TO_THE_SMALL_PLAYER
 	EN	Also applies to the small player.
+	DE	Gilt auch für den kleinen Player.
+	FR	S'applique aussi au petit lecteur.
 	PT	Também vale para o player pequeno.
 
 ECHOCLASSIC_UI_BAR_STYLE_REMEMBERED_PER_THEME
 	EN	Bar style is remembered per theme.
+	DE	Der Leistenstil wird pro Thema gesichert.
+	FR	Le style de barre est mémorisé par thème.
 	PT	O estilo da barra é lembrado por tema.
 
 ECHOCLASSIC_UI_IN_USE
 	EN	In use
+	DE	In Verwendung
+	FR	Utilisé
 	PT	Em uso
 
 ECHOCLASSIC_UI_USE_THIS_PLAYER_IN_ECHO_CLASSIC
 	EN	Use this player in Echo Classic
+	DE	Diesen Player in Echo Classic verwenden
+	FR	Utiliser ce lecteur dans Echo Classic
 	PT	Usar este player no Echo Classic
 
 ECHOCLASSIC_UI_CONTROL
 	EN	Control
+	DE	Steuerung
+	FR	Contrôle
 	PT	Controlar
 
 ECHOCLASSIC_UI_TRANSFER
 	EN	Transfer
+	DE	Übertragen
+	FR	Transférer
 	PT	Transferir
 
 ECHOCLASSIC_UI_NOW_PLAYING
 	EN	Now playing
+	DE	Aktuelle Wiedergabe
+	FR	En cours de lecture
 	PT	Reproduzindo agora
 
 ECHOCLASSIC_UI_CLOSE_PLAYER
 	EN	Close player
+	DE	Player schließen
+	FR	Fermer le lecteur
 	PT	Fechar player
 
 ECHOCLASSIC_UI_OPEN_PLAYER
 	EN	Open player
+	DE	Player öffnen
+	FR	Ouvrir le lecteur
 	PT	Abrir o player
 
 ECHOCLASSIC_UI_STAR
 	EN	star
+	DE	Stern
+	FR	étoile
 	PT	estrela
 
 ECHOCLASSIC_UI_STARS
 	EN	stars
+	DE	Sterne
+	FR	étoiles
 	PT	estrelas
 
 ECHOCLASSIC_UI_FIXED_VOLUME_ON_SERVER
 	EN	Fixed volume on server
+	DE	Feste Lautstärke auf dem Server
+	FR	Volume fixe sur le serveur
 	PT	Volume fixo no servidor
 
 ECHOCLASSIC_UI_EXTERNAL_AMPLIFIER_VOLUME
 	EN	External amplifier volume
+	DE	Lautstärke des externen Verstärkers
+	FR	Volume de l'amplificateur externe
 	PT	Volume do amplificador externo
 
 ECHOCLASSIC_UI_CONFIRMING_SHORT
 	EN	Confirming…
+	DE	Wird bestätigt…
+	FR	Confirmation…
 	PT	Confirmando…
 
 ECHOCLASSIC_UI_CURRENT_POSITION_COMPACT
 	EN	Current position:
+	DE	Aktuelle Position:
+	FR	Position actuelle :
 	PT	Posição atual:
 
 ECHOCLASSIC_UI_NEXT_COMPACT
 	EN	Next:
+	DE	Als Nächstes:
+	FR	Ensuite :
 	PT	Próxima:
 
 ECHOCLASSIC_UI_FORMAT_COLON
 	EN	Format:
+	DE	Format:
+	FR	Format :
 	PT	Formato:
 
 ECHOCLASSIC_UI_SOURCE_COLON
 	EN	Source:
+	DE	Quelle:
+	FR	Source :
 	PT	Origem:
 
 ECHOCLASSIC_UI_SHOW_MORE
 	EN	Show more
+	DE	Mehr anzeigen
+	FR	Afficher plus
 	PT	Mostrar mais
 
 ECHOCLASSIC_UI_SHOW_LESS
 	EN	Show less
+	DE	Weniger anzeigen
+	FR	Afficher moins
 	PT	Mostrar menos
 
 ECHOCLASSIC_UI_RANDOM_MIX
 	EN	Random mix
+	DE	Zufallsmix
+	FR	Mix aléatoire
 	PT	Mix aleatório
 
 ECHOCLASSIC_UI_CONTINUE
 	EN	Continue
+	DE	Fortfahren
+	FR	Continuer
 	PT	Continuar
 
 ECHOCLASSIC_UI_RANDOM_MIX_CHOICES
 	EN	Random mix choices
+	DE	Optionen für den Zufallsmix
+	FR	Options du mix aléatoire
 	PT	Opções de mix aleatório
 
 ECHOCLASSIC_UI_REPLACES_THE_CURRENT_QUEUE_WITH_A_SERVER_GENERATED_MIX
 	EN	Replaces the current queue with a server-generated mix.
+	DE	Ersetzt die aktuelle Warteschlange durch einen vom Server erzeugten Mix.
+	FR	Remplace la file d'attente actuelle par un mix généré par le serveur.
 	PT	Substitui a fila atual por um mix gerado pelo servidor.
 
 ECHOCLASSIC_UI_REPLACE_THE_UNPLAYED_TRACKS_WITH_MODE
 	EN	Replace the unplayed tracks with {{mode}}?
+	DE	Die noch nicht gespielten Titel durch {{mode}} ersetzen?
+	FR	Remplacer les morceaux non lus par {{mode}} ?
 	PT	Substituir as faixas ainda não reproduzidas por {{mode}}?
 
 ECHOCLASSIC_UI_REPLACE
 	EN	Replace
+	DE	Ersetzen
+	FR	Remplacer
 	PT	Substituir
 
 ECHOCLASSIC_UI_CLASSICAL_WORKS
 	EN	Classical works
+	DE	Klassische Werke
+	FR	Œuvres classiques
 	PT	Obras clássicas
 
 ECHOCLASSIC_UI_STOP_MIX
 	EN	Stop mix
+	DE	Mix stoppen
+	FR	Arrêter le mix
 	PT	Parar mix
 
 ECHOCLASSIC_UI_DONT_STOP_THE_MUSIC_CHOICES
 	EN	Don't Stop The Music choices
+	DE	Optionen für „Don't Stop The Music“
+	FR	Options de Don't Stop The Music
 	PT	Opções do Não Pare a Música
 
 ECHOCLASSIC_UI_DONT_STOP_THE_MUSIC
 	EN	Don’t Stop The Music
+	DE	Don’t Stop The Music
+	FR	Don’t Stop The Music
 	PT	Não Pare a Música
 
 ECHOCLASSIC_UI_CONTINUATION_PROVIDER
 	EN	Continuation provider
+	DE	Fortsetzungsanbieter
+	FR	Fournisseur de continuation
 	PT	Fonte de continuação
 
 ECHOCLASSIC_UI_RANDOM_MIX_MODE
 	EN	Random mix: {{mode}}
+	DE	Zufallsmix: {{mode}}
+	FR	Mix aléatoire : {{mode}}
 	PT	Mix aleatório: {{mode}}
 
 ECHOCLASSIC_UI_CONTINUES_WITH_PROVIDER
 	EN	Continues with: {{provider}}
+	DE	Fortsetzung mit: {{provider}}
+	FR	Poursuite avec : {{provider}}
 	PT	Continua com: {{provider}}
 
 ECHOCLASSIC_UI_DONT_STOP_THE_MUSIC_IS_ON
 	EN	Don’t Stop The Music is on
+	DE	„Don’t Stop The Music“ ist aktiv
+	FR	Don’t Stop The Music est activé
 	PT	Não Pare a Música está ativo
 
 ECHOCLASSIC_UI_DSTM_OFF_HELP
 	EN	Off: playback stops when the queue ends.
+	DE	Aus: Die Wiedergabe endet mit der Warteschlange.
+	FR	Désactivé : la lecture s'arrête à la fin de la file d'attente.
 	PT	Desligado: a reprodução para quando a fila termina.
 
 ECHOCLASSIC_UI_DSTM_ON_HELP
 	EN	On: playback continues automatically when the queue ends.
+	DE	Ein: Die Wiedergabe wird am Ende der Warteschlange automatisch fortgesetzt.
+	FR	Activé : la lecture se poursuit automatiquement à la fin de la file d'attente.
 	PT	Ligado: a reprodução continua automaticamente quando a fila termina.
 
 ECHOCLASSIC_UI_EQUALIZER
 	EN	Equalizer
+	DE	Equalizer
+	FR	Égaliseur
 	PT	Equalizador
 
 ECHOCLASSIC_UI_SQUEEZEDSP
 	EN	SqueezeDSP
+	DE	SqueezeDSP
+	FR	SqueezeDSP
 	PT	SqueezeDSP
 
 ECHOCLASSIC_UI_EQUALIZER_SETTINGS_ARE_NOT_AVAILABLE_FOR_THIS_PLAYER
 	EN	Equalizer settings are not available for this player.
+	DE	Für diesen Player sind keine Equalizer-Einstellungen verfügbar.
+	FR	Les réglages de l'égaliseur ne sont pas disponibles pour ce lecteur.
 	PT	As configurações do equalizador não estão disponíveis para este player.
-
-ECHOCLASSIC_UI_TRY_AGAIN
-	EN	Try again
-	PT	Tentar novamente
 
 ECHOCLASSIC_UI_BYPASS
 	EN	Bypass
+	DE	Bypass
+	FR	Bypass
 	PT	Ignorar processamento
 
 ECHOCLASSIC_UI_PREAMP
 	EN	Preamp
+	DE	Vorverstärkung
+	FR	Préampli
 	PT	Pré-amplificação
 
 ECHOCLASSIC_UI_CHANGES_ARE_STAGED_APPLY_MAY_BRIEFLY_RESTART_THE_CURRENT_TRACK
 	EN	Changes are staged. Apply may briefly restart the current track.
+	DE	Änderungen sind vorgemerkt. „Anwenden“ kann den aktuellen Titel kurz neu starten.
+	FR	Les modifications sont en attente. « Appliquer » peut relancer brièvement le morceau en cours.
 	PT	As alterações ficam pendentes. Aplicar pode reiniciar brevemente a faixa atual.
 
 ECHOCLASSIC_UI_APPLY_CHANGES
 	EN	Apply changes
+	DE	Änderungen anwenden
+	FR	Appliquer les modifications
 	PT	Aplicar alterações
 
 ECHOCLASSIC_UI_APPLYING
 	EN	Applying…
+	DE	Wird angewendet…
+	FR	Application…
 	PT	Aplicando…
 
 ECHOCLASSIC_UI_PARAMETRIC_FILTERS
 	EN	Parametric filters
+	DE	Parametrische Filter
+	FR	Filtres paramétriques
 	PT	Filtros paramétricos
 
 ECHOCLASSIC_UI_NO_FILTERS_CONFIGURED
 	EN	No filters configured.
+	DE	Keine Filter konfiguriert.
+	FR	Aucun filtre configuré.
 	PT	Nenhum filtro configurado.
 
 ECHOCLASSIC_UI_CHECKING
 	EN	checking…
+	DE	wird geprüft…
+	FR	vérification…
 	PT	verificando…
 
 ECHOCLASSIC_UI_INSTALL_SQUEEZEDSP
 	EN	Install SqueezeDSP
+	DE	SqueezeDSP installieren
+	FR	Installer SqueezeDSP
 	PT	Instalar SqueezeDSP
 
 ECHOCLASSIC_UI_BYPASSED
 	EN	bypassed
+	DE	umgangen
+	FR	contourné
 	PT	ignorado
 
 ECHOCLASSIC_UI_ON
 	EN	on
+	DE	ein
+	FR	activé
 	PT	ligado
 
 ECHOCLASSIC_UI_COULD_NOT_LOAD_THE_EQUALIZER
 	EN	Could not load the equalizer.
+	DE	Der Equalizer konnte nicht geladen werden.
+	FR	Impossible de charger l'égaliseur.
 	PT	Não foi possível carregar o equalizador.
 
 ECHOCLASSIC_UI_THE_EQUALIZER_SETTINGS
 	EN	The equalizer settings
+	DE	Die Equalizer-Einstellungen
+	FR	Les réglages de l'égaliseur
 	PT	As configurações do equalizador
 
 ECHOCLASSIC_UI_AUTOMATIC_EQ
 	EN	Automatic EQ
+	DE	Automatischer EQ
+	FR	Égaliseur automatique
 	PT	EQ automático
 
 ECHOCLASSIC_UI_REMEMBER_FOR_THIS_SONG
 	EN	Remember for this song
+	DE	Für diesen Titel merken
+	FR	Mémoriser pour ce morceau
 	PT	Lembrar para esta música
 
 ECHOCLASSIC_UI_REMEMBER_FOR_THIS_ARTIST
 	EN	Remember for this artist
+	DE	Für diesen Interpreten merken
+	FR	Mémoriser pour cet artiste
 	PT	Lembrar para este artista
 
 ECHOCLASSIC_UI_REMEMBER_FOR_THIS_FOLDER
 	EN	Remember for this folder
+	DE	Für diesen Ordner merken
+	FR	Mémoriser pour ce dossier
 	PT	Lembrar para esta pasta
 
 ECHOCLASSIC_UI_REMEMBER_FOR_THIS_YEAR
 	EN	Remember for this year
+	DE	Für dieses Jahr merken
+	FR	Mémoriser pour cette année
 	PT	Lembrar para este ano
 
 ECHOCLASSIC_UI_PRIORITY_SONG_ARTIST_FOLDER_THEN_YEAR_RULES_SWITCH_AUTOMATICALLY_WHILE_ECHO_CLASSIC_IS_OPEN
 	EN	Priority: song, artist, folder, then year. Rules switch automatically while Echo Classic is open.
+	DE	Priorität: Titel, Interpret, Ordner, dann Jahr. Die Regeln wechseln automatisch, solange Echo Classic geöffnet ist.
+	FR	Priorité : morceau, artiste, dossier, puis année. Les règles changent automatiquement tant qu'Echo Classic est ouvert.
 	PT	Prioridade: música, artista, pasta e, por fim, ano. As regras mudam automaticamente enquanto o Echo Classic estiver aberto.
 
 ECHOCLASSIC_UI_SAVED_RULES
 	EN	Saved rules
+	DE	Gesicherte Regeln
+	FR	Règles enregistrées
 	PT	Regras salvas
 
 ECHOCLASSIC_UI_SONG
 	EN	Song
+	DE	Titel
+	FR	Morceau
 	PT	Música
-
-ECHOCLASSIC_UI_ARTIST
-	EN	Artist
-	PT	Artista
 
 ECHOCLASSIC_UI_FOLDER
 	EN	Folder
+	DE	Ordner
+	FR	Dossier
 	PT	Pasta
-
-ECHOCLASSIC_UI_YEAR
-	EN	Year
-	PT	Ano
 
 ECHOCLASSIC_UI_ACTIVE
 	EN	active
+	DE	aktiv
+	FR	actif
 	PT	ativa
 
 ECHOCLASSIC_UI_SAVED
 	EN	saved
+	DE	gesichert
+	FR	enregistré
 	PT	salva
 
 ECHOCLASSIC_UI_THE_EQUALIZER_RULE
 	EN	The equalizer rule
+	DE	Die Equalizer-Regel
+	FR	La règle d'égaliseur
 	PT	A regra do equalizador
 
 ECHOCLASSIC_UI_COULD_NOT_APPLY_THE_EQUALIZER_RULE
 	EN	Could not apply the equalizer rule.
+	DE	Die Equalizer-Regel konnte nicht angewendet werden.
+	FR	Impossible d'appliquer la règle d'égaliseur.
 	PT	Não foi possível aplicar a regra do equalizador.
 
 ECHOCLASSIC_UI_READ_REVIEW
 	EN	Read review
+	DE	Rezension lesen
+	FR	Lire la critique
 	PT	Ler resenha
 
 ECHOCLASSIC_UI_SHOW_ALBUM_INFO
 	EN	Show album info
+	DE	Albuminfos einblenden
+	FR	Afficher les infos de l'album
 	PT	Mostrar informações do álbum
 
 ECHOCLASSIC_UI_HIDE_ALBUM_INFO
 	EN	Hide album info
+	DE	Albuminfos ausblenden
+	FR	Masquer les infos de l'album
 	PT	Ocultar informações do álbum
 
 ECHOCLASSIC_UI_SHOW_REVIEW
 	EN	Show review
+	DE	Rezension einblenden
+	FR	Afficher la critique
 	PT	Mostrar resenha
 
 ECHOCLASSIC_UI_HIDE_REVIEW
 	EN	Hide review
+	DE	Rezension ausblenden
+	FR	Masquer la critique
 	PT	Ocultar resenha
 
 ECHOCLASSIC_UI_SHOW_SOURCE
 	EN	Show source
+	DE	Quelle einblenden
+	FR	Afficher la source
 	PT	Mostrar fonte
 
 ECHOCLASSIC_UI_HIDE_SOURCE
 	EN	Hide source
+	DE	Quelle ausblenden
+	FR	Masquer la source
 	PT	Ocultar fonte
 
 ECHOCLASSIC_UI_MIXED_SOURCES
 	EN	Mixed sources
+	DE	Gemischte Quellen
+	FR	Sources mixtes
 	PT	Origens mistas
 
 ECHOCLASSIC_UI_IDENTIFYING_SOURCE
 	EN	Identifying source
+	DE	Quelle wird ermittelt
+	FR	Identification de la source
 	PT	Identificando a origem
 
 ECHOCLASSIC_UI_PINNED
 	EN	Pinned
+	DE	Angeheftet
+	FR	Épinglé
 	PT	Fixados
 
 ECHOCLASSIC_UI_SEARCH_IN
 	EN	Search in
+	DE	Suchen in
+	FR	Rechercher dans
 	PT	Buscar em
 
 ECHOCLASSIC_UI_TUNE
 	EN	Tune
+	DE	Einschalten
+	FR	Écouter
 	PT	Sintonizar
 
 ECHOCLASSIC_UI_RESULTS_COLON
 	EN	Results:
+	DE	Ergebnisse:
+	FR	Résultats :
 	PT	Resultados:
 
 ECHOCLASSIC_UI_UPDATING_FAVOURITES
 	EN	Updating favourites…
+	DE	Favoriten werden aktualisiert…
+	FR	Mise à jour des favoris…
 	PT	Atualizando favoritos…
 
 ECHOCLASSIC_UI_COULD_NOT_LOAD_FAVOURITES
 	EN	Could not load favourites
+	DE	Favoriten konnten nicht geladen werden
+	FR	Impossible de charger les favoris
 	PT	Não foi possível carregar os favoritos
 
 ECHOCLASSIC_UI_FAVOURITES_INVALID_ITEMS
 	EN	The server returned items that cannot be opened.
+	DE	Der Server hat Einträge zurückgegeben, die nicht geöffnet werden können.
+	FR	Le serveur a renvoyé des éléments qui ne peuvent pas être ouverts.
 	PT	O servidor retornou itens que não podem ser abertos.
 
 ECHOCLASSIC_UI_SEARCHING
 	EN	Searching…
+	DE	Wird gesucht…
+	FR	Recherche…
 	PT	Buscando…
 
 ECHOCLASSIC_UI_SHOW_MORE_RESULTS
 	EN	Show more results
+	DE	Weitere Ergebnisse anzeigen
+	FR	Afficher plus de résultats
 	PT	Mostrar mais resultados
 
 ECHOCLASSIC_UI_USES_APP_APPEARANCE
 	EN	Uses the app theme, accent and font.
+	DE	Verwendet Thema, Akzent und Schrift der App.
+	FR	Utilise le thème, l'accent et la police de l'app.
 	PT	Usa o tema, o destaque e a fonte do app.
 
 ECHOCLASSIC_UI_LYRICS
 	EN	Lyrics
+	DE	Liedtexte
+	FR	Paroles
 	PT	Letra
 
 ECHOCLASSIC_UI_FROM_THE_FILE_S_OWN_TAGS
 	EN	From the file's own tags
+	DE	Aus den Tags der Datei
+	FR	D'après les tags du fichier
 	PT	Das próprias tags do arquivo
 
 ECHOCLASSIC_UI_WORKING
 	EN	Working
+	DE	Wird ausgeführt
+	FR	Traitement en cours
 	PT	Em andamento
 
 ECHOCLASSIC_UI_NOW_SCANNING
 	EN	Now scanning
+	DE	Wird gescannt
+	FR	Analyse en cours
 	PT	Verificando agora
 
 ECHOCLASSIC_UI_THE_SERVER_IS_REPORTING_THIS_ACTIVITY_NOW
 	EN	The server is reporting this activity now.
+	DE	Der Server meldet derzeit diese Aktivität.
+	FR	Le serveur signale cette activité actuellement.
 	PT	O servidor está informando esta atividade agora.
 
 ECHOCLASSIC_UI_SCAN_ERRORS
 	EN	Scan errors
+	DE	Scan-Fehler
+	FR	Erreurs d'analyse
 	PT	Erros da varredura
 
 ECHOCLASSIC_UI_NONE
 	EN	None
+	DE	Keine
+	FR	Aucun
 	PT	Nenhum
 
 ECHOCLASSIC_UI_THE_SCAN_CONTINUES_AUTOMATICALLY_AFTER_RECOVERABLE_ERRORS
 	EN	The scan continues automatically after recoverable errors.
+	DE	Der Scan wird nach behebbaren Fehlern automatisch fortgesetzt.
+	FR	L'analyse se poursuit automatiquement après des erreurs récupérables.
 	PT	A varredura continua automaticamente após erros recuperáveis.
 
 ECHOCLASSIC_UI_NO_SCAN_ERRORS_RECORDED
 	EN	No scan errors recorded.
+	DE	Keine Scan-Fehler aufgezeichnet.
+	FR	Aucune erreur d'analyse enregistrée.
 	PT	Nenhum erro de varredura registrado.
 
 ECHOCLASSIC_UI_NOT_RETRYABLE_BY_THIS_LMS
 	EN	Not retryable by this LMS
+	DE	Von diesem LMS nicht wiederholbar
+	FR	Non réessayable par ce LMS
 	PT	Não é possível repetir neste LMS
 
 ECHOCLASSIC_UI_IGNORE
 	EN	Ignore
+	DE	Ignorieren
+	FR	Ignorer
 	PT	Ignorar
 
 ECHOCLASSIC_UI_CLEAR_IGNORED
 	EN	Clear ignored
+	DE	Ignorierte löschen
+	FR	Effacer les éléments ignorés
 	PT	Limpar ignorados
 
 ECHOCLASSIC_UI_IGNORED_ERRORS
 	EN	Ignored errors
+	DE	Ignorierte Fehler
+	FR	Erreurs ignorées
 	PT	Erros ignorados
 
 ECHOCLASSIC_UI_CLEAR_IGNORED_SCAN_ERRORS
 	EN	Clear ignored scan errors?
+	DE	Ignorierte Scan-Fehler löschen?
+	FR	Effacer les erreurs d'analyse ignorées ?
 	PT	Limpar os erros de varredura ignorados?
 
 ECHOCLASSIC_UI_CONTINUING_AFTER_RECOVERABLE_ERRORS
 	EN	Continuing after recoverable errors.
+	DE	Fortsetzung nach behebbaren Fehlern.
+	FR	Poursuite après des erreurs récupérables.
 	PT	Continuando após erros recuperáveis.
 
 ECHOCLASSIC_UI_RETRY_FOLDER
 	EN	Retry folder
+	DE	Ordner wiederholen
+	FR	Réessayer le dossier
 	PT	Repetir pasta
 
 ECHOCLASSIC_UI_RETRY_ALL
 	EN	Retry all
+	DE	Alle wiederholen
+	FR	Tout réessayer
 	PT	Repetir todos
 
 ECHOCLASSIC_UI_THE_SCAN_STOPPED_START_IT_AGAIN_FROM_LMS_SETTINGS
 	EN	The scan stopped. Start it again from LMS settings.
+	DE	Der Scan wurde beendet. Starten Sie ihn erneut in den LMS-Einstellungen.
+	FR	L'analyse s'est arrêtée. Relancez-la depuis les réglages LMS.
 	PT	A varredura parou. Inicie-a novamente nos ajustes do LMS.
 
 ECHOCLASSIC_UI_THE_SCAN_STATUS_IS_UNAVAILABLE_WHILE_THE_SERVER_IS_DISCONNECTED
 	EN	The scan status is unavailable while the server is disconnected.
+	DE	Der Scan-Status ist nicht verfügbar, solange der Server getrennt ist.
+	FR	L'état de l'analyse est indisponible tant que le serveur est déconnecté.
 	PT	O estado da varredura não está disponível enquanto o servidor está desconectado.
 
 ECHOCLASSIC_UI_FILE_FORMAT
 	EN	File format
+	DE	Dateiformat
+	FR	Format de fichier
 	PT	Formato do arquivo
 
 ECHOCLASSIC_UI_VALUE
 	EN	Value
+	DE	Wert
+	FR	Valeur
 	PT	Valor
 
 ECHOCLASSIC_UI_ARTIST_INFORMATION
 	EN	Artist information
+	DE	Interpreteninformationen
+	FR	Informations sur l'artiste
 	PT	Informações do artista
 
 ECHOCLASSIC_UI_FINDING_ARTIST_INFORMATION
 	EN	Finding artist information…
+	DE	Interpreteninformationen werden gesucht…
+	FR	Recherche d'informations sur l'artiste…
 	PT	Buscando informações do artista…
 
 ECHOCLASSIC_UI_ARTIST_INFORMATION_REQUIRES_MUSICARTISTINFO
 	EN	Artist information requires MusicArtistInfo.
+	DE	Interpreteninformationen erfordern MusicArtistInfo.
+	FR	Les informations sur l'artiste nécessitent MusicArtistInfo.
 	PT	As informações do artista requerem o MusicArtistInfo.
 
 ECHOCLASSIC_UI_INSTALL_PLUGIN
 	EN	Install plugin
+	DE	Plug-in installieren
+	FR	Installer le plug-in
 	PT	Instalar plugin
 
 ECHOCLASSIC_UI_MUSICARTISTINFO_IS_TEMPORARILY_UNAVAILABLE_YOUR_LOCAL_LIBRARY_IS_UNCHANGED
 	EN	MusicArtistInfo is temporarily unavailable. Your local library is unchanged.
+	DE	MusicArtistInfo ist vorübergehend nicht verfügbar. Ihre lokale Mediathek bleibt unverändert.
+	FR	MusicArtistInfo est temporairement indisponible. Votre bibliothèque locale reste inchangée.
 	PT	O MusicArtistInfo está temporariamente indisponível. Sua biblioteca local não foi alterada.
 
 ECHOCLASSIC_UI_ARTIST_PHOTO
 	EN	Artist photo
+	DE	Interpretenfoto
+	FR	Photo de l'artiste
 	PT	Foto do artista
 
 ECHOCLASSIC_UI_NO_ARTIST_BIOGRAPHY_WAS_FOUND
 	EN	No artist biography was found.
+	DE	Es wurde keine Interpretenbiografie gefunden.
+	FR	Aucune biographie d'artiste n'a été trouvée.
 	PT	Nenhuma biografia do artista foi encontrada.
 
 ECHOCLASSIC_UI_PHOTO_CREDIT
 	EN	Photo credit
+	DE	Bildnachweis
+	FR	Crédit photo
 	PT	Crédito da foto
 
 ECHOCLASSIC_UI_PROVIDED_BY_MUSICARTISTINFO_FROM_WIKIPEDIA_LASTFM_DISCOGS_AND_MUSICBRAINZ
 	EN	Provided by MusicArtistInfo from Wikipedia, Last.fm, Discogs and MusicBrainz.
+	DE	Bereitgestellt von MusicArtistInfo aus Wikipedia, Last.fm, Discogs und MusicBrainz.
+	FR	Fourni par MusicArtistInfo à partir de Wikipédia, Last.fm, Discogs et MusicBrainz.
 	PT	Fornecido pelo MusicArtistInfo a partir de Wikipedia, Last.fm, Discogs e MusicBrainz.
 
 ECHOCLASSIC_UI_RETRIEVED
 	EN	Retrieved
+	DE	Abgerufen
+	FR	Récupéré
 	PT	Obtido em
 
 ECHOCLASSIC_UI_MATCHED_BY_STABLE_LOCAL_ARTIST_IDENTITY
 	EN	Matched by stable local artist identity.
+	DE	Über eine stabile lokale Interpretenkennung zugeordnet.
+	FR	Associé par une identité d'artiste locale stable.
 	PT	Correspondência pela identidade local estável do artista.
 
 ECHOCLASSIC_UI_REVIEW_MATCH_ONLY_THE_ARTIST_NAME_IS_AVAILABLE_CONFIRM_BEFORE_LOADING_ENRICHMENT
 	EN	Review match: only the artist name is available. Confirm before loading enrichment.
+	DE	Zuordnung prüfen: Nur der Interpretenname ist verfügbar. Bestätigen Sie, bevor Zusatzinformationen geladen werden.
+	FR	Vérifier la correspondance : seul le nom de l'artiste est disponible. Confirmez avant de charger l'enrichissement.
 	PT	Revise a correspondência: apenas o nome do artista está disponível. Confirme antes de carregar informações adicionais.
 
 ECHOCLASSIC_UI_USE_THIS_MATCH
 	EN	Use this match
+	DE	Diese Zuordnung verwenden
+	FR	Utiliser cette correspondance
 	PT	Usar esta correspondência
 
 ECHOCLASSIC_UI_REFRESH
 	EN	Refresh
+	DE	Aktualisieren
+	FR	Actualiser
 	PT	Atualizar
-
-ECHOCLASSIC_UI_REMOVE
-	EN	Remove
-	PT	Remover
 
 ECHOCLASSIC_UI_ENRICHMENT_REMOVED_YOUR_LOCAL_LIBRARY_IS_UNCHANGED
 	EN	Enrichment removed. Your local library is unchanged.
+	DE	Zusatzinformationen entfernt. Ihre lokale Mediathek bleibt unverändert.
+	FR	Enrichissement supprimé. Votre bibliothèque locale reste inchangée.
 	PT	As informações adicionais foram removidas. Sua biblioteca local não foi alterada.
 
 ECHOCLASSIC_UI_FIND_METADATA
 	EN	Find metadata
+	DE	Metadaten suchen
+	FR	Rechercher des métadonnées
 	PT	Buscar metadados
 
 ECHOCLASSIC_UI_ALSO_ON_CONNECTED_SERVICES
 	EN	Also on connected services
+	DE	Auch bei verbundenen Diensten
+	FR	Également sur les services connectés
 	PT	Também em serviços conectados
 
 ECHOCLASSIC_UI_ALBUM_INFORMATION
 	EN	Album information
+	DE	Albuminformationen
+	FR	Informations sur l'album
 	PT	Informações do álbum
 
 ECHOCLASSIC_UI_FINDING_ALBUM_INFORMATION
 	EN	Finding album information…
+	DE	Albuminformationen werden gesucht…
+	FR	Recherche d'informations sur l'album…
 	PT	Buscando informações do álbum…
 
 ECHOCLASSIC_UI_COVER_CANDIDATES
 	EN	Cover candidates
+	DE	Cover-Vorschläge
+	FR	Pochettes proposées
 	PT	Opções de capa
 
 ECHOCLASSIC_UI_COVER_CANDIDATE
 	EN	Cover candidate
+	DE	Cover-Vorschlag
+	FR	Pochette proposée
 	PT	Opção de capa
 
 ECHOCLASSIC_UI_REFERENCE_ARTWORK
 	EN	Reference artwork
+	DE	Referenz-Cover
+	FR	Pochette de référence
 	PT	Capas de referência
 
 ECHOCLASSIC_UI_HIDE_FOR_NOW
 	EN	Hide for now
+	DE	Vorerst ausblenden
+	FR	Masquer pour l'instant
 	PT	Ocultar por enquanto
 
 ECHOCLASSIC_UI_LANGUAGE
 	EN	Language
+	DE	Sprache
+	FR	Langue
 	PT	Idioma
 
 ECHOCLASSIC_UI_CHOOSING_A_LANGUAGE_RELOADS_THE_PAGE_ENGLISH_IS_THE_ORIGINAL_TEXT_THE_OTHERS_ARE_TRANSLATIONS_SHIPPED_WITH_THE_SKIN
 	EN	Choosing a language reloads the page. English is the original text; the others are translations shipped with the skin.
+	DE	Die Wahl einer Sprache lädt die Seite neu. Englisch ist der Originaltext; die anderen sind mit der Skin ausgelieferte Übersetzungen.
+	FR	Le choix d'une langue recharge la page. L'anglais est le texte d'origine ; les autres sont des traductions livrées avec l'habillage.
 	PT	Escolher um idioma recarrega a página. O inglês é o texto original; os demais são traduções incluídas na skin.
 
 ECHOCLASSIC_UI_ALBUM_INFORMATION_REQUIRES_MUSICARTISTINFO
 	EN	Album information requires MusicArtistInfo.
+	DE	Albuminformationen erfordern MusicArtistInfo.
+	FR	Les informations sur l'album nécessitent MusicArtistInfo.
 	PT	As informações do álbum requerem o MusicArtistInfo.
 
 ECHOCLASSIC_UI_PROVIDED_BY_MUSICARTISTINFO_FROM_LASTFM_DISCOGS_AND_MUSICBRAINZ
 	EN	Provided by MusicArtistInfo from Last.fm, Discogs and MusicBrainz.
+	DE	Bereitgestellt von MusicArtistInfo aus Last.fm, Discogs und MusicBrainz.
+	FR	Fourni par MusicArtistInfo à partir de Last.fm, Discogs et MusicBrainz.
 	PT	Fornecido pelo MusicArtistInfo a partir de Last.fm, Discogs e MusicBrainz.
 
 ECHOCLASSIC_UI_ALBUM_INFORMATION_IS_TEMPORARILY_UNAVAILABLE
 	EN	Album information is temporarily unavailable.
+	DE	Albuminformationen sind vorübergehend nicht verfügbar.
+	FR	Les informations sur l'album sont temporairement indisponibles.
 	PT	As informações do álbum estão temporariamente indisponíveis.
 
 ECHOCLASSIC_UI_READ_BIOGRAPHY
 	EN	Read biography
+	DE	Biografie lesen
+	FR	Lire la biographie
 	PT	Ler biografia
 
-ECHOCLASSIC_UI_SHOW_LESS
-	EN	Show less
-	PT	Mostrar menos
 ECHOCLASSIC_UI_THIS_LIBRARY_HAS_MORE_THAN_2_000_COMPOSERS_USE_THE_FILTER_TO_NARROW_THE_LIST
 	EN	This library has more than 2,000 composers; use the filter to narrow the list.
+	DE	Diese Mediathek enthält mehr als 2.000 Komponisten; grenzen Sie die Liste mit dem Filter ein.
+	FR	Cette bibliothèque contient plus de 2 000 compositeurs ; utilisez le filtre pour affiner la liste.
 	PT	Esta biblioteca tem mais de 2.000 compositores; use o filtro para restringir a lista.
 
 ECHOCLASSIC_UI_THIS_LIBRARY_HAS_MORE_THAN_2_000_WORKS_USE_THE_FILTER_TO_NARROW_THE_LIST
 	EN	This library has more than 2,000 works; use the filter to narrow the list.
+	DE	Diese Mediathek enthält mehr als 2.000 Werke; grenzen Sie die Liste mit dem Filter ein.
+	FR	Cette bibliothèque contient plus de 2 000 œuvres ; utilisez le filtre pour affiner la liste.
 	PT	Esta biblioteca tem mais de 2.000 obras; use o filtro para restringir a lista.
 
 ECHOCLASSIC_UI_LIBRARY_ROOT
 	EN	Library root
+	DE	Mediathek-Bereich
+	FR	Racine de la bibliothèque
 	PT	Raiz da biblioteca
 
 ECHOCLASSIC_UI_CONDUCTORS
 	EN	Conductors
+	DE	Dirigenten
+	FR	Chefs d'orchestre
 	PT	Regentes
 
 ECHOCLASSIC_UI_ENSEMBLES
 	EN	Ensembles
+	DE	Ensembles
+	FR	Ensembles
 	PT	Conjuntos
 
 ECHOCLASSIC_UI_WORK
 	EN	Work
+	DE	Werk
+	FR	Œuvre
 	PT	Obra
 
 ECHOCLASSIC_UI_COMPOSER_NAME
 	EN	Composer name
+	DE	Name des Komponisten
+	FR	Nom du compositeur
 	PT	Nome do compositor
 
 ECHOCLASSIC_UI_WORK_TITLE
 	EN	Work title
+	DE	Werktitel
+	FR	Titre de l'œuvre
 	PT	Título da obra
 
 ECHOCLASSIC_UI_ALL_MUSIC
 	EN	All music
+	DE	Alle Musik
+	FR	Toute la musique
 	PT	Todas as músicas
 
 ECHOCLASSIC_UI_SEARCH_ARTISTS_ALBUMS_CLASSICAL_WORKS_TRACKS_AND_PLAYLISTS_ACROSS_ONE_OR_MORE_LIBRARY_ROOTS
 	EN	Search artists, albums, classical works, tracks and playlists across one or more library roots.
+	DE	Durchsuchen Sie Interpreten, Alben, klassische Werke, Titel und Playlists in einem oder mehreren Mediathek-Bereichen.
+	FR	Recherchez des artistes, albums, œuvres classiques, morceaux et listes de lecture dans une ou plusieurs racines de bibliothèque.
 	PT	Pesquise artistas, álbuns, obras clássicas, faixas e playlists em uma ou mais raízes da biblioteca.
 
 ECHOCLASSIC_UI_THIS_LIBRARY_HAS_MORE_THAN_2_000_CONTRIBUTORS_IN_THIS_ROLE_USE_THE_FILTER_TO_NARROW_THE_LIST
 	EN	This library has more than 2,000 contributors in this role; use the filter to narrow the list.
+	DE	Diese Mediathek enthält mehr als 2.000 Mitwirkende in dieser Rolle; grenzen Sie die Liste mit dem Filter ein.
+	FR	Cette bibliothèque contient plus de 2 000 contributeurs dans ce rôle ; utilisez le filtre pour affiner la liste.
 	PT	Esta biblioteca tem mais de 2.000 colaboradores nesta função; use o filtro para restringir a lista.
+
 ECHOCLASSIC_UI_APPLE_SQUEEZER_MODE
 	EN	Apple Squeezer mode
+	DE	Apple-Squeezer-Modus
+	FR	Mode Apple Squeezer
 	PT	Modo do Apple Squeezer
 
 ECHOCLASSIC_UI_PLAYBACK_MODE
 	EN	Playback mode
+	DE	Wiedergabemodus
+	FR	Mode de lecture
 	PT	Modo de reprodução
 
 ECHOCLASSIC_UI_UPSAMPLE_RATE
 	EN	Upsample rate
+	DE	Upsampling-Rate
+	FR	Fréquence de suréchantillonnage
 	PT	Taxa de upsampling
 
 ECHOCLASSIC_UI_AUTOMATIC_PRESERVES_THE_SOURCE_CLOCK_FAMILY
 	EN	Automatic preserves the source clock family.
+	DE	„Automatisch“ behält die Taktfamilie der Quelle bei.
+	FR	« Automatique » conserve la famille d'horloge de la source.
 	PT	Automático preserva a família de clock da fonte.
 
 ECHOCLASSIC_UI_AUTOMATIC_RATE
 	EN	Automatic rate
+	DE	Automatische Abtastrate
+	FR	Fréquence automatique
 	PT	Taxa automática
 
 ECHOCLASSIC_UI_APPLE_SQUEEZER_RESTARTS
 	EN	The player restarts when the mode changes.
+	DE	Der Player startet neu, wenn der Modus wechselt.
+	FR	Le lecteur redémarre lorsque le mode change.
 	PT	O player reinicia quando o modo muda.
 
 ECHOCLASSIC_UI_APPLE_SQUEEZER_EXCLUSIVE_HELP
 	EN	Exclusive access prevents standard Squeezelite from using the same audio device.
+	DE	Exklusiver Zugriff verhindert, dass das normale Squeezelite dasselbe Audiogerät verwendet.
+	FR	L'accès exclusif empêche Squeezelite standard d'utiliser le même périphérique audio.
 	PT	O acesso exclusivo impede que o Squeezelite padrão use o mesmo dispositivo de áudio.
 
 ECHOCLASSIC_UI_APPLE_SQUEEZER_NATIVE
 	EN	Native
+	DE	Nativ
+	FR	Natif
 	PT	Nativo
 
 ECHOCLASSIC_UI_APPLE_SQUEEZER_BITPERFECT
 	EN	Bit-perfect
+	DE	Bitgenau
+	FR	Bit-perfect
 	PT	Bit-perfect
 
 ECHOCLASSIC_UI_APPLE_SQUEEZER_EXCLUSIVE
 	EN	Exclusive
+	DE	Exklusiv
+	FR	Exclusif
 	PT	Exclusivo
 
 ECHOCLASSIC_UI_APPLE_SQUEEZER_AUDIOPHILE
 	EN	Audiophile
+	DE	Audiophil
+	FR	Audiophile
 	PT	Audiófilo
 
 ECHOCLASSIC_UI_APPLE_SQUEEZER_PCM_STUDIO
 	EN	PCM Studio
+	DE	PCM Studio
+	FR	PCM Studio
 	PT	PCM Studio
 
 ECHOCLASSIC_UI_SWITCHING
 	EN	Switching…
+	DE	Wird gewechselt…
+	FR	Changement…
 	PT	Alternando…
 
 ECHOCLASSIC_UI_APPLE_SQUEEZER_NATIVE_PATH
 	EN	Native rate · LMS volume · shared CoreAudio
+	DE	Native Rate · LMS-Lautstärke · gemeinsames CoreAudio
+	FR	Fréquence native · volume LMS · CoreAudio partagé
 	PT	Taxa nativa · volume do LMS · CoreAudio compartilhado
 
 ECHOCLASSIC_UI_APPLE_SQUEEZER_BITPERFECT_PATH
 	EN	Native rate · fixed volume · exclusive CoreAudio
+	DE	Native Rate · feste Lautstärke · exklusives CoreAudio
+	FR	Fréquence native · volume fixe · CoreAudio exclusif
 	PT	Taxa nativa · volume fixo · CoreAudio exclusivo
 
 ECHOCLASSIC_UI_APPLE_SQUEEZER_PCM_STUDIO_PATH
 	EN	VHQ upsampling · 1 dB headroom · TPDF dither · exclusive CoreAudio
+	DE	VHQ-Upsampling · 1 dB Headroom · TPDF-Dither · exklusives CoreAudio
+	FR	Suréchantillonnage VHQ · 1 dB de marge · dither TPDF · CoreAudio exclusif
 	PT	Upsampling VHQ · 1 dB de headroom · dither TPDF · CoreAudio exclusivo
 
 ECHOCLASSIC_UI_LIBRARY_UNAVAILABLE
 	EN	Library unavailable
+	DE	Mediathek nicht verfügbar
+	FR	Bibliothèque indisponible
 	PT	Biblioteca indisponível
 
 ECHOCLASSIC_UI_YOUR_FILTERS_AND_POSITION_ARE_STILL_HERE
 	EN	Your filters and position are still here.
+	DE	Ihre Filter und Ihre Position sind weiterhin vorhanden.
+	FR	Vos filtres et votre position sont toujours là.
 	PT	Seus filtros e sua posição foram preservados.
 
 ECHOCLASSIC_UI_SERVER_SETTINGS
 	EN	Server settings
+	DE	Servereinstellungen
+	FR	Réglages du serveur
 	PT	Ajustes do servidor
 
 ECHOCLASSIC_UI_GO_TO_MUSIC
 	EN	Go to Music
+	DE	Zu Musik
+	FR	Aller à Musique
 	PT	Ir para Música
 
 ECHOCLASSIC_UI_SEARCHING_THE_LIBRARY
 	EN	Searching the library…
+	DE	Mediathek wird durchsucht…
+	FR	Recherche dans la bibliothèque…
 	PT	Buscando na biblioteca…
 
 ECHOCLASSIC_UI_YOUR_SEARCH_AND_FILTERS_ARE_STILL_HERE
 	EN	Your search and filters are still here.
+	DE	Ihre Suche und Ihre Filter sind weiterhin vorhanden.
+	FR	Votre recherche et vos filtres sont toujours là.
 	PT	Sua busca e seus filtros foram preservados.
 
 ECHOCLASSIC_UI_CLEAR_SEARCH
 	EN	Clear search
+	DE	Suche löschen
+	FR	Effacer la recherche
 	PT	Limpar busca
 
 ECHOCLASSIC_UI_CHANGE_SEARCH
 	EN	Change search
+	DE	Suche ändern
+	FR	Modifier la recherche
 	PT	Alterar busca
 
 ECHOCLASSIC_UI_LOADING_DETAILS
 	EN	Loading details…
+	DE	Details werden geladen…
+	FR	Chargement des détails…
 	PT	Carregando detalhes…
 
 ECHOCLASSIC_UI_LOADING_PLAYLISTS
 	EN	Loading playlists…
+	DE	Playlists werden geladen…
+	FR	Chargement des listes de lecture…
 	PT	Carregando playlists…
 
 ECHOCLASSIC_UI_PLAYLISTS_UNAVAILABLE
 	EN	Playlists unavailable
+	DE	Playlists nicht verfügbar
+	FR	Listes de lecture indisponibles
 	PT	Playlists indisponíveis
 
 ECHOCLASSIC_UI_MORE
 	EN	More
+	DE	Mehr
+	FR	Plus
 	PT	Mais
 
 ECHOCLASSIC_UI_MUSIC_SERVICES_AND_PLUGINS
 	EN	Music services and plugins
+	DE	Musikdienste und Plug-ins
+	FR	Services musicaux et plug-ins
 	PT	Serviços de música e plugins
 
 ECHOCLASSIC_UI_PLAYER_APPEARANCE_AND_SERVER
 	EN	Player, appearance and server
+	DE	Player, Erscheinungsbild und Server
+	FR	Lecteur, apparence et serveur
 	PT	Player, aparência e servidor
 
 ECHOCLASSIC_UI_SERVER_INFORMATION
 	EN	Server information
+	DE	Serverinformationen
+	FR	Informations sur le serveur
 	PT	Informações do servidor
 
 ECHOCLASSIC_UI_ORGANIZE
 	EN	Organize
+	DE	Organisieren
+	FR	Organiser
 	PT	Organizar
 
 ECHOCLASSIC_UI_SAVED_VIEWS
 	EN	Saved views
+	DE	Gesicherte Ansichten
+	FR	Vues enregistrées
 	PT	Visualizações salvas
 
 ECHOCLASSIC_UI_FIND_A_GENRE
 	EN	Find a genre
+	DE	Genre suchen
+	FR	Rechercher un genre
 	PT	Buscar um gênero
 
 ECHOCLASSIC_UI_REUSE_A_FILTER_AND_ORGANISATION_SETUP
 	EN	Reuse a filter and organisation setup
+	DE	Filter- und Ordnungseinstellung wiederverwenden
+	FR	Réutiliser une configuration de filtre et d'organisation
 	PT	Reutilize uma configuração de filtros e organização
 
 ECHOCLASSIC_UI_TAP_A_VIEW_TO_APPLY_IT_USE_EDIT_TO_MANAGE_SEVERAL_VIEWS_WITHOUT_OPENING_EACH_ONE
 	EN	Tap a view to apply it. Use Edit to manage several views without opening each one.
+	DE	Tippen Sie auf eine Ansicht, um sie anzuwenden. Mit „Bearbeiten“ verwalten Sie mehrere Ansichten, ohne jede einzeln zu öffnen.
+	FR	Touchez une vue pour l'appliquer. Utilisez « Modifier » pour gérer plusieurs vues sans les ouvrir une à une.
 	PT	Toque em uma visualização para aplicá-la. Use Editar para gerenciar várias sem abrir uma por uma.
 
 ECHOCLASSIC_UI_NO_SAVED_VIEWS_YET
 	EN	No saved views yet.
-	PT	Nenhuma visualização salva.
+	DE	Noch keine gesicherten Ansichten.
+	FR	Aucune vue enregistrée pour l'instant.
+	PT	Nenhuma vista salva ainda.
 
 ECHOCLASSIC_UI_NAME_THIS_VIEW
 	EN	Name this view
+	DE	Diese Ansicht benennen
+	FR	Nommer cette vue
 	PT	Nomeie esta visualização
 
 ECHOCLASSIC_UI_SAVE_CURRENT_VIEW
 	EN	Save current view
+	DE	Aktuelle Ansicht sichern
+	FR	Enregistrer la vue actuelle
 	PT	Salvar visualização atual
 
 ECHOCLASSIC_UI_DELETE_SAVED_VIEW
 	EN	Delete saved view?
+	DE	Gesicherte Ansicht löschen?
+	FR	Supprimer la vue enregistrée ?
 	PT	Excluir visualização salva?
 
 ECHOCLASSIC_UI_SELECTED
 	EN	selected
+	DE	ausgewählt
+	FR	sélectionné
 	PT	selecionados
 
 ECHOCLASSIC_UI_MUSIC
 	EN	Music
+	DE	Musik
+	FR	Musique
 	PT	Música
 
 ECHOCLASSIC_UI_CONTENTS
 	EN	Contents
+	DE	Inhalt
+	FR	Contenu
 	PT	Conteúdo
 
 ECHOCLASSIC_UI_ITEM
 	EN	item
+	DE	Eintrag
+	FR	élément
 	PT	item
 
 ECHOCLASSIC_UI_ITEMS
 	EN	items
+	DE	Einträge
+	FR	éléments
 	PT	itens
 
 ECHOCLASSIC_UI_THIS_FOLDER_IS_EMPTY
 	EN	This folder is empty
+	DE	Dieser Ordner ist leer
+	FR	Ce dossier est vide
 	PT	Esta pasta está vazia
 
 ECHOCLASSIC_UI_RETURN_TO_MUSIC_TO_CHOOSE_ANOTHER_FOLDER
 	EN	Return to Music to choose another folder.
+	DE	Kehren Sie zu „Musik“ zurück, um einen anderen Ordner zu wählen.
+	FR	Retournez à Musique pour choisir un autre dossier.
 	PT	Volte para Música para escolher outra pasta.
 
 ECHOCLASSIC_UI_BACK_TO_MUSIC
 	EN	Back to Music
+	DE	Zurück zu Musik
+	FR	Retour à Musique
 	PT	Voltar para Música
+
+ECHOCLASSIC_UI_CHANGE
+	EN	Change
+	DE	Ändern
+	FR	Changer
+	PT	Trocar
+
+ECHOCLASSIC_UI_FREQUENT_SETTINGS
+	EN	Frequent settings
+	DE	Häufige Einstellungen
+	FR	Réglages fréquents
+	PT	Ajustes frequentes
+
+ECHOCLASSIC_UI_SHOWN
+	EN	shown
+	DE	angezeigt
+	FR	affichés
+	PT	exibidos
+
+ECHOCLASSIC_UI_SOUND_PRESET
+	EN	Sound preset
+	DE	Klangvoreinstellung
+	FR	Préréglage sonore
+	PT	Predefinição de som
+
+ECHOCLASSIC_UI_EDIT_FREQUENT_SETTINGS
+	EN	Edit frequent settings
+	DE	Häufige Einstellungen bearbeiten
+	FR	Modifier les réglages fréquents
+	PT	Editar ajustes frequentes
+
+ECHOCLASSIC_UI_PLAYER_AMP_APP
+	EN	Player &amp; app
+	DE	Player &amp; App
+	FR	Lecteur &amp; app
+	PT	Player &amp; app
+
+ECHOCLASSIC_UI_PLAYER_SETTINGS
+	EN	Player settings
+	DE	Player-Einstellungen
+	FR	Réglages du lecteur
+	PT	Ajustes do player
+
+ECHOCLASSIC_UI_DEFAULT_PLAYER_VOLUME_STEP_AND_STOP_AT_END
+	EN	Default player, volume step and stop at end
+	DE	Standard-Player, Lautstärkeschritt und Stopp am Ende
+	FR	Lecteur par défaut, pas de volume et arrêt à la fin
+	PT	Player padrão, passo de volume e parar ao terminar
+
+ECHOCLASSIC_UI_PLAYBACK_SETTINGS
+	EN	Playback settings
+	DE	Wiedergabeeinstellungen
+	FR	Réglages de lecture
+	PT	Ajustes de reprodução
+
+ECHOCLASSIC_UI_CROSSFADE_REPLAY_GAIN_AND_SLEEP_TIMER
+	EN	Crossfade, Replay Gain and sleep timer
+	DE	Überblenden, Replay Gain und Sleep-Timer
+	FR	Fondu enchaîné, Replay Gain et minuteur de veille
+	PT	Transição, Replay Gain e temporizador
+
+ECHOCLASSIC_UI_EQUALIZER_SETTINGS
+	EN	Equalizer settings
+	DE	Equalizer-Einstellungen
+	FR	Réglages de l'égaliseur
+	PT	Ajustes do equalizador
+
+ECHOCLASSIC_UI_ENGINE_PRESETS_BANDS_RULES_AND_HEADROOM
+	EN	Engine, presets, bands, rules and headroom
+	DE	Engine, Voreinstellungen, Bänder, Regeln und Headroom
+	FR	Moteur, préréglages, bandes, règles et marge
+	PT	Motor, predefinições, bandas, regras e headroom
+
+ECHOCLASSIC_UI_THEME_COLOUR_FONT_AND_PLAYER_LAYOUT
+	EN	Theme, colour, font and player layout
+	DE	Thema, Farbe, Schrift und Player-Layout
+	FR	Thème, couleur, police et disposition du lecteur
+	PT	Tema, cor, fonte e layout do player
+
+ECHOCLASSIC_UI_ARTWORK_AND_ALBUM_GROUPING
+	EN	Artwork and album grouping
+	DE	Cover und Albumgruppierung
+	FR	Pochettes et regroupement par album
+	PT	Capas e agrupamento por álbum
+
+ECHOCLASSIC_UI_INTERFACE_AMP_ACCESS
+	EN	Interface &amp; access
+	DE	Oberfläche &amp; Zugriff
+	FR	Interface &amp; accès
+	PT	Interface &amp; acesso
+
+ECHOCLASSIC_UI_INTERFACE_ACCESS
+	EN	Interface & access
+	DE	Oberfläche & Zugriff
+	FR	Interface & accès
+	PT	Interface & acesso
+
+ECHOCLASSIC_UI_PARTY_MODE_KIOSK_MODE_TECHNICAL_BADGES_AND_LANGUAGE
+	EN	Party mode, kiosk mode, technical badges and language
+	DE	Partymodus, Kioskmodus, technische Angaben und Sprache
+	FR	Mode soirée, mode kiosque, badges techniques et langue
+	PT	Modo festa, modo quiosque, selos técnicos e idioma
+
+ECHOCLASSIC_UI_SYSTEM
+	EN	System
+	DE	System
+	FR	Système
+	PT	Sistema
+
+ECHOCLASSIC_UI_SERVER_SETTINGS_PLUGINS_NETWORK_AND_LIBRARY
+	EN	Server settings, plugins, network and library
+	DE	Servereinstellungen, Plug-ins, Netzwerk und Mediathek
+	FR	Réglages du serveur, plug-ins, réseau et bibliothèque
+	PT	Ajustes do servidor, plugins, rede e biblioteca
+
+ECHOCLASSIC_UI_MEDIA_SCAN
+	EN	Media scan
+	DE	Medien-Scan
+	FR	Analyse des médias
+	PT	Varredura de mídia
+
+ECHOCLASSIC_UI_GROUP_VOLUME
+	EN	Group volume
+	DE	Gruppenlautstärke
+	FR	Volume du groupe
+	PT	Volume do grupo
+
+ECHOCLASSIC_UI_SETS_EVERY_ADJUSTABLE_PLAYER_TO_THE_SAME_LEVEL
+	EN	Sets every adjustable player to the same level.
+	DE	Setzt jeden regelbaren Player auf denselben Pegel.
+	FR	Règle tous les lecteurs ajustables au même niveau.
+	PT	Coloca todos os players ajustáveis no mesmo nível.
+
+ECHOCLASSIC_UI_UNSYNC
+	EN	Unsync
+	DE	Sync aufheben
+	FR	Désynchroniser
+	PT	Dessincronizar
+
+ECHOCLASSIC_UI_SYNCED
+	EN	Synced
+	DE	Synchronisiert
+	FR	Synchronisé
+	PT	Sincronizado
+
+ECHOCLASSIC_UI_NOT_SYNCHRONIZED
+	EN	Not synchronized.
+	DE	Nicht synchronisiert.
+	FR	Non synchronisé.
+	PT	Não sincronizado.
+
+ECHOCLASSIC_UI_PLAYER_SELECTION
+	EN	Player selection
+	DE	Player-Auswahl
+	FR	Sélection du lecteur
+	PT	Seleção de player
+
+ECHOCLASSIC_UI_MORE_SETTINGS
+	EN	More settings
+	DE	Weitere Einstellungen
+	FR	Plus de réglages
+	PT	Mais ajustes
+
+ECHOCLASSIC_UI_SHOWN_IN_SETTINGS
+	EN	Shown in Settings
+	DE	In Einstellungen angezeigt
+	FR	Affiché dans Réglages
+	PT	Exibido em Ajustes
+
+ECHOCLASSIC_UI_PLAYER_DSP_SETTINGS
+	EN	Player DSP settings
+	DE	DSP-Einstellungen des Players
+	FR	Réglages DSP du lecteur
+	PT	Ajustes de DSP do player
+
+ECHOCLASSIC_UI_GRAPHIC_EQUALIZER
+	EN	Graphic Equalizer
+	DE	Grafischer Equalizer
+	FR	Égaliseur graphique
+	PT	Equalizador gráfico
+
+ECHOCLASSIC_UI_EQUALIZER_PRESETS
+	EN	Equalizer presets
+	DE	Equalizer-Voreinstellungen
+	FR	Préréglages d'égaliseur
+	PT	Predefinições do equalizador
+
+ECHOCLASSIC_UI_AUTOMATIC_EQ_RULES
+	EN	Automatic EQ rules
+	DE	Automatische EQ-Regeln
+	FR	Règles d'EQ automatiques
+	PT	Regras de EQ automáticas
+
+ECHOCLASSIC_UI_KIOSK_MODE
+	EN	Kiosk mode
+	DE	Kioskmodus
+	FR	Mode kiosque
+	PT	Modo quiosque
+
+ECHOCLASSIC_UI_PARTY_MODE
+	EN	Party mode
+	DE	Partymodus
+	FR	Mode soirée
+	PT	Modo festa
+
+ECHOCLASSIC_UI_VOLUME_BUTTON_STEP
+	EN	Volume button step
+	DE	Lautstärkeschritt
+	FR	Pas des boutons de volume
+	PT	Passo dos botões de volume
+
+ECHOCLASSIC_UI_CURVE
+	EN	Curve
+	DE	Kurve
+	FR	Courbe
+	PT	Curva
+
+ECHOCLASSIC_UI_BANDS_AND_RESPONSE_FRAGMENT
+	EN	 bands and response
+	DE	 Bänder und Frequenzgang
+	FR	 bandes et réponse
+	PT	 bandas e resposta
+
+ECHOCLASSIC_UI_PRESETS_SHORT
+	EN	Presets
+	DE	Voreinstellungen
+	FR	Préréglages
+	PT	Predefinições
+
+ECHOCLASSIC_UI_SAVED_SOUND_PROFILES
+	EN	Saved sound profiles
+	DE	Gespeicherte Klangprofile
+	FR	Profils sonores enregistrés
+	PT	Perfis de som salvos
+
+ECHOCLASSIC_UI_RULES_SHORT
+	EN	Rules
+	DE	Regeln
+	FR	Règles
+	PT	Regras
+
+ECHOCLASSIC_UI_AUTOMATIC_MATCHING
+	EN	Automatic matching
+	DE	Automatische Zuordnung
+	FR	Correspondance automatique
+	PT	Correspondência automática
+
+ECHOCLASSIC_UI_ADVANCED_SHORT
+	EN	Advanced
+	DE	Erweitert
+	FR	Avancé
+	PT	Avançado
+
+ECHOCLASSIC_UI_FILTERS_AND_PROTECTION
+	EN	Filters and protection
+	DE	Filter und Schutz
+	FR	Filtres et protection
+	PT	Filtros e proteção
+
+ECHOCLASSIC_UI_HOW_AUDIO_IS_PROCESSED
+	EN	How audio is processed
+	DE	Wie Audio verarbeitet wird
+	FR	Mode de traitement audio
+	PT	Como o áudio é processado
+
+ECHOCLASSIC_UI_CONNECTED_TITLE
+	EN	Connected
+	DE	Verbunden
+	FR	Connecté
+	PT	Conectado
+
+ECHOCLASSIC_UI_AVAILABLE_TITLE
+	EN	Available
+	DE	Verfügbar
+	FR	Disponible
+	PT	Disponível
+
+ECHOCLASSIC_UI_CUSTOM_TITLE
+	EN	Custom
+	DE	Benutzerdefiniert
+	FR	Personnalisé
+	PT	Personalizado
+
+ECHOCLASSIC_UI_PAUSED
+	EN	Paused
+	DE	Pausiert
+	FR	En pause
+	PT	Pausado
+
+ECHOCLASSIC_UI_ACTIVE_TITLE
+	EN	Active
+	DE	Aktiv
+	FR	Actif
+	PT	Ativo
+
+ECHOCLASSIC_UI_SAVED_RESPONSE
+	EN	Saved response
+	DE	Gespeicherter Frequenzgang
+	FR	Réponse enregistrée
+	PT	Resposta salva
+
+ECHOCLASSIC_UI_RATE_UNAVAILABLE
+	EN	Rate unavailable
+	DE	Abtastrate nicht verfügbar
+	FR	Fréquence indisponible
+	PT	Taxa indisponível
+
+ECHOCLASSIC_UI_SAVED_RESPONSE_PREVIEW_UNAVAILABLE
+	EN	Saved response preview unavailable
+	DE	Vorschau des gespeicherten Frequenzgangs nicht verfügbar
+	FR	Aperçu de la réponse enregistrée indisponible
+	PT	Prévia da resposta salva indisponível
+
+ECHOCLASSIC_UI_MODE_IS_ACTIVE_FRAGMENT
+	EN	 is active.
+	DE	 ist aktiv.
+	FR	 est actif.
+	PT	 está ativo.
+
+ECHOCLASSIC_UI_SAVED_CURVE_PAUSED_EXPLANATION
+	EN	The saved curve is shown below but is not processing audio. Nothing will be lost.
+	DE	Die gespeicherte Kurve wird unten angezeigt, verarbeitet aber kein Audio. Es geht nichts verloren.
+	FR	La courbe enregistrée est affichée ci-dessous, mais ne traite pas le son. Rien ne sera perdu.
+	PT	A curva salva é exibida abaixo, mas não está processando o áudio. Nada será perdido.
+
+ECHOCLASSIC_UI_USE_EQUALIZER_MODE
+	EN	Use Equalizer mode
+	DE	Equalizer-Modus verwenden
+	FR	Utiliser le mode Égaliseur
+	PT	Usar modo Equalizador
+
+ECHOCLASSIC_UI_COMPARE_SHORT
+	EN	Compare
+	DE	Vergleichen
+	FR	Comparer
+	PT	Comparar
+
+ECHOCLASSIC_UI_RESET_SHORT
+	EN	Reset
+	DE	Zurücksetzen
+	FR	Réinitialiser
+	PT	Redefinir
+
+ECHOCLASSIC_UI_SAVED_CURVE_PREVIEW_PAUSED
+	EN	Saved curve preview · processing paused
+	DE	Vorschau der gespeicherten Kurve · Verarbeitung pausiert
+	FR	Aperçu de la courbe enregistrée · traitement en pause
+	PT	Prévia da curva salva · processamento pausado
+
+ECHOCLASSIC_UI_CHANGING_PLAYBACK_MODE
+	EN	Changing playback mode…
+	DE	Wiedergabemodus wird geändert…
+	FR	Changement du mode de lecture…
+	PT	Alterando o modo de reprodução…
+
+ECHOCLASSIC_UI_APPLE_SQUEEZER_WAIT_FOR_AUDIO_PATH
+	EN	Please wait while Apple Squeezer restarts the audio path.
+	DE	Bitte warten Sie, während Apple Squeezer den Audiopfad neu startet.
+	FR	Veuillez patienter pendant qu’Apple Squeezer redémarre le chemin audio.
+	PT	Aguarde enquanto o Apple Squeezer reinicia o caminho de áudio.

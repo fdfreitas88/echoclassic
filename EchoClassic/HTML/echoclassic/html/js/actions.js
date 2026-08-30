@@ -102,7 +102,8 @@
     </template>
     <section v-else class="action-playlist-view" aria-label="Choose a playlist">
       <label class="action-playlist-search"><span aria-hidden="true">⌕</span><input ref="playlistSearch" v-model.trim="playlistQuery" type="search" placeholder="Search playlists" aria-label="Search playlists"></label>
-      <div class="action-playlist-list" role="list">
+      <div v-if="playlistError" class="sheet-note error">{{ playlistError }} <button type="button" @click="loadPlaylists">Retry</button></div>
+      <div v-else class="action-playlist-list" role="list">
         <div v-if="recentPlaylists.length" class="action-list-label">Recent</div>
         <button v-for="p in recentPlaylists" :key="'recent-'+p.id" type="button" @click="addToPlaylist(p)"><span class="action-glyph" aria-hidden="true">♫</span><span class="ell">{{ p.name }}</span></button>
         <div v-if="otherPlaylists.length" class="action-list-label">{{ recentPlaylists.length ? 'All playlists' : 'Playlists' }}</div>
@@ -113,8 +114,8 @@
   </div>
 </div>`,
     data: function () {
-      return { ui: LmsUi.state, store: LmsStore.state, playlists: [], view: 'actions', playlistQuery: '',
-               busy: false, favoriteExists: false, favoriteIndex: null, sheetStyle: {},
+	      return { ui: LmsUi.state, store: LmsStore.state, playlists: [], view: 'actions', playlistQuery: '', playlistError: '', favoriteError: '',
+	               busy: false, favoriteExists: false, favoriteIndex: null, sheetStyle: {},
                previousFocus: null, swipeStartY: null, swipeOffset: 0 };
     },
     computed: {
@@ -361,12 +362,16 @@
         this.ui.appearanceScreen = 'player-settings';
       },
       loadFavorite: async function (url) {
+        this.favoriteError = '';
         try {
           var found = await LmsApi.favoriteExists(url);
           if (!this.item || this.item.url !== url) return;
           this.favoriteExists = found.exists;
           this.favoriteIndex = found.index;
-        } catch (e) {}
+        } catch (e) {
+          this.favoriteError = LmsStore.friendlyError(e, 'Could not check favourite status.');
+          if (window.console && console.debug) console.debug('[Echo Classic] favourite status: ' + this.favoriteError);
+        }
       },
       favorite: async function () {
         /* busy era ligado e desligado, mas nunca testado aqui - ao contrario de
@@ -396,8 +401,13 @@
         this.ui.infoItem = item;
       },
       loadPlaylists: async function () {
+        this.playlistError = '';
         try { this.playlists = await LmsApi.playlists(0, 500); }
-        catch (e) { this.playlists = []; }
+        catch (e) {
+          this.playlists = [];
+          this.playlistError = LmsStore.friendlyError(e, 'Could not load playlists.');
+          if (window.console && console.debug) console.debug('[Echo Classic] playlists: ' + this.playlistError);
+        }
       },
       addToPlaylist: async function (playlist) {
         if (!this.item || !this.item.url || this.busy) return;

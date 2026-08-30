@@ -34,7 +34,7 @@ Vue.component('lms-browse', {
   template: `
 <div ref="split" class="split-body" :class="{'split-locked': splitLocked}"
      :style="{'--pane-current': paneWidth + 'px'}">
-  <div class="pane-left">
+  <div class="pane-left" :class="{'no-rail':!hasRail}">
     <div class="library-context">
       <span class="library-context-title">{{ viewLabel }}</span>
       <span v-if="!loading && !error" class="library-context-count">{{ resultCountLabel }}</span>
@@ -472,14 +472,18 @@ Vue.component('lms-browse', {
       return (this.view === 'albums' && !this.groupsAlbumsByArtist &&
               !this.groupsAlbumsByRelatedArtist) || this.view === 'recent';
     },
+    viewUsesAlphabeticIndex: function () {
+      var view = LmsUi.MUSIC_VIEWS.filter(function (item) { return item.key === this.view; }, this)[0];
+      return !!(view && view.alphabeticIndex);
+    },
     hasRail: function () {
       /* O indice alfabetico so faz sentido sobre uma lista alfabetica; em
          'recent' as letras nao sobem e saltar levaria a lugar none. Com
          secoes a lista tambem deixa de ser monotonica: a letra M aparece uma
          vez por secao, e o salto escolheria uma delas sem criterio. */
-      return !this.loading && this.rows.length > 30 && this.sortKey !== 'recent' &&
+      return !this.loading && this.rows.length > 0 && this.sortKey !== 'recent' &&
              !this.sectionKey && !LmsUi.sortNeedsMedia(this.sortKey) &&
-             (this.view === 'artists' || this.view === 'albums' || this.view === 'recent');
+             this.viewUsesAlphabeticIndex;
     },
     rowH: function () { return this.showsAlbums ? 88 : 72; },
     headerH: function () { return 34; },
@@ -669,7 +673,7 @@ Vue.component('lms-browse', {
     onSplitWindowResize: function () {
       if (window.innerWidth > 700) {
         this.setPaneWidth(this.paneWidth, false);
-        this.ensureRecentSelection();
+        this.ensureRootSelection();
       }
     },
     closeSplitMenu: function (event) {
@@ -769,16 +773,19 @@ Vue.component('lms-browse', {
         year: r.year, originalYear: r.originalYear
       };
     },
-    ensureRecentSelection: function () {
-      if (this.view !== 'recent' || window.innerWidth <= 700) return;
+    ensureRootSelection: function () {
+      if (window.innerWidth <= 700) return;
       /* A guarda precisa ser sobre a lista que o usuario ve: com um filtro que
          nao casa com nada, rows tem itens e displayRows nao, e redimensionar a
          janela lia displayRows[0] indefinido. */
       var first = this.displayRows[0];
       if (!first) return;
       var current = this.frame;
-      var currentExists = current && current.kind === 'album' && this.rows.some(function (row) {
-        return String(row.id) === String(current.id);
+      var currentExists = current && this.displayRows.some(function (row) {
+        if (row.kind !== current.kind) return false;
+        var rowIds = (row.ids || [row.id]).map(String);
+        var frameIds = (current.ids || [current.id]).map(String);
+        return rowIds.some(function (id) { return frameIds.indexOf(id) >= 0; });
       });
       if (currentExists) return;
 
@@ -1616,7 +1623,7 @@ Vue.component('lms-browse', {
           self.$refs.scroller.scrollTop = 0;
           self.visible = Math.ceil(self.$refs.scroller.clientHeight / self.rowH) || 14;
         }
-        self.ensureRecentSelection();
+        self.ensureRootSelection();
       });
     }
   },

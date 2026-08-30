@@ -48,8 +48,9 @@ test('native DSP controls expose switch and radio state to assistive technology'
 });
 
 test('Compare hold is a real keyboard-operable button and always releases bypass', function () {
-  const row = src.slice(src.indexOf('class="srow eq-hold-row"'), src.indexOf('class="srow eq-hold-row"') + 1400);
-  assert.match(row, /<button type="button" class="eq-hold-button"/);
+  const start = src.indexOf('<button v-if="dspOwner === \'squeezedsp\'" type="button" class="eq-hold-button"');
+  const row = src.slice(start, start + 1400);
+  assert.match(row, /<button[^>]*type="button" class="eq-hold-button"/);
   assert.match(row, /@keydown\.space\.prevent="holdEqualizerBypass\(true\)"/);
   assert.match(row, /@keyup\.space\.prevent="holdEqualizerBypass\(false\)"/);
   assert.match(row, /@blur="holdEqualizerBypass\(false\)"/);

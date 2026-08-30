@@ -48,7 +48,7 @@ Vue.component('lms-detail', {
   </template>
 
   <template v-else>
-    <div class="hero">
+    <div v-if="frame.kind !== 'artist'" class="hero">
       <div class="photo" :class="{placeholder: !frame.art || photoFailed}">
         <img v-if="frame.art && !photoFailed" :src="largeArt(frame.art)"
              alt="" @error="photoFailed = true">
@@ -57,10 +57,31 @@ Vue.component('lms-detail', {
       <div class="name ell">{{ frame.label }}</div>
     </div>
 
-    <section v-if="frame.kind === 'artist'" class="artist-enrichment" aria-labelledby="artist-enrichment-title">
-      <span class="opml-new-label">{{ tr('New') }}</span>
+    <section v-if="frame.kind === 'artist'" class="artist-detail-compact"
+             :class="['artist-layout-'+ui.artistDetailLayout,'artist-controls-'+ui.artistDetailControls]">
+      <button v-if="primaryAlbum" type="button" class="artist-primary-album pointer" @click="openAlbum(primaryAlbum)">
+        <span class="artist-primary-art" :class="{placeholder:!hasArt(primaryAlbum)}"><img v-if="hasArt(primaryAlbum)" :src="largeArt(primaryAlbum.art)" alt="" @error="markArtFailed(primaryAlbum)"><span v-else aria-hidden="true">♫</span></span>
+        <span class="artist-primary-copy"><strong>{{ primaryAlbum.title }}</strong><span>{{ primaryAlbum.artist || frame.label }}</span><small>{{ editionLine(primaryAlbum) }}</small><small>{{ primaryAlbum.source || tr('Local library') }}</small></span>
+      </button>
+      <div class="artist-compact-sidecar" aria-labelledby="artist-enrichment-title">
+        <div class="artist-compact-identity"><span class="artist-compact-photo" :class="{placeholder:!frame.art||photoFailed}"><img v-if="frame.art&&!photoFailed" :src="largeArt(frame.art)" alt="" @error="photoFailed=true"><span v-else aria-hidden="true">{{ initial }}</span></span><span><strong>{{ frame.label }}</strong><small id="artist-enrichment-title">{{ tr('Artist information') }}</small></span></div>
+        <div v-if="enrichmentLoading" class="artist-enrichment-status" role="status">{{ tr('Finding artist information…') }}</div>
+        <div v-else-if="enrichmentStatus === 'ready'">
+          <p v-if="enrichment.biography" class="artist-biography" :class="{expanded:enrichmentExpanded}">{{ enrichment.biography }}</p>
+          <p v-else class="artist-enrichment-status">{{ tr('No artist biography was found.') }}</p>
+          <div class="artist-enrichment-links"><button v-if="enrichment.biography" type="button" :aria-expanded="enrichmentExpanded?'true':'false'" @click="enrichmentExpanded=!enrichmentExpanded">{{ tr(enrichmentExpanded?'Show less':'Read biography') }}</button><button type="button" @click="retryEnrichment">{{ tr('Refresh') }}</button><button type="button" @click="removeEnrichment">{{ tr('Hide for now') }}</button></div>
+        </div>
+        <div v-else class="artist-enrichment-status"><p>{{ artistEnrichmentMessage }}</p><button v-if="enrichmentStatus==='unavailable'" type="button" class="retry-command" @click="openPluginManager">{{ tr('Install plugin') }}</button><button v-else type="button" class="retry-command" @click="retryEnrichment">{{ tr('Try again') }}</button></div>
+        <div v-if="primaryAlbum" class="artist-compact-controls" aria-label="Album playback">
+          <button type="button" class="primary" aria-label="Play" title="Play" @click="playPrimaryAlbum"><span aria-hidden="true">▶</span><b>{{ tr('Play') }}</b></button>
+          <button type="button" aria-label="Shuffle" title="Shuffle" @click="shufflePrimaryAlbum"><span aria-hidden="true">⇄</span><b>{{ tr('Shuffle') }}</b></button>
+          <button v-if="store.equalizer.status==='ready'" type="button" aria-label="Equalizer" title="Equalizer" @click="openPrimaryEqualizer"><span aria-hidden="true">☷</span><b>{{ tr('Equalizer') }}</b></button>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="false" class="artist-enrichment" aria-labelledby="artist-enrichment-title">
       <h2 id="artist-enrichment-title">{{ tr('Artist information') }}</h2>
-      <p v-if="frame.id != null" class="artist-enrichment-match">{{ tr('Matched by stable local artist identity.') }}</p>
       <div v-if="enrichmentLoading" class="artist-enrichment-status" role="status">
         {{ tr('Finding artist information…') }}
       </div>
@@ -81,25 +102,12 @@ Vue.component('lms-detail', {
         <button type="button" class="retry-command" @click="retryEnrichment">{{ tr('Find metadata') }}</button>
       </div>
       <template v-else-if="enrichmentStatus === 'ready'">
-        <div class="artist-enrichment-content">
-          <img v-if="enrichment.photoUrl" class="artist-enrichment-photo" :src="enrichment.photoUrl"
-               :alt="tr('Artist photo')" @error="enrichment.photoUrl = ''">
-          <p v-if="enrichment.biography" class="artist-biography" :class="{expanded: enrichmentExpanded}">{{ enrichment.biography }}</p>
-          <p v-else class="artist-enrichment-status">{{ tr('No artist biography was found.') }}</p>
-        </div>
-        <button v-if="enrichment.biography" type="button" class="retry-command artist-biography-toggle"
-                :aria-expanded="enrichmentExpanded ? 'true' : 'false'"
-                @click="enrichmentExpanded = !enrichmentExpanded">
-          {{ tr(enrichmentExpanded ? 'Show less' : 'Read biography') }}
-        </button>
-        <p v-if="enrichment.photoCredits" class="artist-enrichment-credit">
-          {{ tr('Photo credit') }}: {{ enrichment.photoCredits }}
-        </p>
-        <p class="artist-enrichment-source">
-          {{ tr('Provided by MusicArtistInfo from Wikipedia, Last.fm, Discogs and MusicBrainz.') }}
-          {{ tr('Retrieved') }} {{ enrichmentRetrieved }}
-        </p>
-        <div class="artist-enrichment-actions">
+        <p v-if="enrichment.biography" class="artist-biography" :class="{expanded: enrichmentExpanded}">{{ enrichment.biography }}</p>
+        <p v-else class="artist-enrichment-status">{{ tr('No artist biography was found.') }}</p>
+        <div class="artist-enrichment-links">
+          <button v-if="enrichment.biography" type="button" class="retry-command artist-biography-toggle"
+                  :aria-expanded="enrichmentExpanded ? 'true' : 'false'"
+                  @click="enrichmentExpanded = !enrichmentExpanded">{{ tr(enrichmentExpanded ? 'Show less' : 'Read biography') }}</button>
           <button type="button" @click="retryEnrichment">{{ tr('Refresh') }}</button>
           <button type="button" @click="removeEnrichment">{{ tr('Hide for now') }}</button>
         </div>
@@ -124,7 +132,7 @@ Vue.component('lms-detail', {
     <template v-else>
       <div class="sectitle">{{ tr('Local library') }} · {{ localAlbums.length }}</div>
       <div class="albumgrid">
-	        <button v-for="a in localAlbums" :key="'g' + a.id" type="button"
+	        <button v-for="a in remainingLocalAlbums" :key="'g' + a.id" type="button"
 	                class="gcell pointer" @click="openAlbum(a)">
 	          <span class="gart" :class="{placeholder: !hasArt(a)}">
 	            <img v-if="hasArt(a)" :src="largeArt(a.art)" alt="" @error="markArtFailed(a)">
@@ -172,6 +180,14 @@ Vue.component('lms-detail', {
       catch (e) { return String(this.enrichment.retrievedAt); }
     },
     localAlbums: function () { return this.albums.filter(function (a) { return !a.source || a.source === 'Local library'; }); },
+    primaryAlbum: function () { return this.localAlbums.length ? this.localAlbums[0] : null; },
+    remainingLocalAlbums: function () { return this.frame.kind === 'artist' ? this.localAlbums.slice(1) : this.localAlbums; },
+    artistEnrichmentMessage: function () {
+      if (this.enrichmentStatus === 'unavailable') return this.tr('Artist information requires MusicArtistInfo.');
+      if (this.enrichmentStatus === 'removed') return this.tr('Enrichment removed. Your local library is unchanged.');
+      if (this.enrichmentStatus === 'review') return this.tr('Review match: only the artist name is available. Confirm before loading enrichment.');
+      return this.tr('MusicArtistInfo is temporarily unavailable. Your local library is unchanged.');
+    },
     connectedAlbums: function () { return this.albums.filter(function (a) { return a.source && a.source !== 'Local library'; }); },
     folderCountLabel: function () {
       var count = this.folderItems.length;
@@ -187,6 +203,25 @@ Vue.component('lms-detail', {
     frame: function () { this.load(); }
   },
   methods: {
+    playPrimaryAlbum: function () {
+      if (this.primaryAlbum && this.primaryAlbum.id != null) return LmsStore.playContainer('album_id', this.primaryAlbum.id, 0);
+    },
+    shufflePrimaryAlbum: function () {
+      var album = this.primaryAlbum;
+      if (!album || album.id == null) return;
+      return LmsStore.playContainer('album_id', album.id, 0).then(function () { return LmsStore.cycleShuffle(); });
+    },
+    openPrimaryEqualizer: function () {
+      if (!this.primaryAlbum || this.primaryAlbum.id == null) return;
+      LmsStore.setEqualizerContext({
+        type: 'album', albumKey: String(this.primaryAlbum.id), albumTitle: this.primaryAlbum.title || '',
+        artist: this.primaryAlbum.artist || '', artistLabel: this.primaryAlbum.artist || '',
+        year: this.primaryAlbum.originalYear || this.primaryAlbum.year || ''
+      });
+      LmsUi.setTab('settings');
+      LmsNav.push('settings', { label:'Equalizer', screen:'equalizer' });
+      this.ui.appearanceScreen = 'equalizer';
+    },
     openFolderItem: function (item) {
       if (item.type === 'folder') {
         LmsNav.push('music', { kind: 'musicfolder', id: item.id, label: item.name, path: item.path });

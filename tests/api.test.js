@@ -69,6 +69,24 @@ test('Apple Squeezer Intel 1.0.2 mutations use the released underscore commands'
   assert.ok(ctx.calls.some(function (cmd) { return cmd.join(' ') === 'apple_squeezer dsp_rollback'; }));
 });
 
+test('Apple Squeezer control mutations invalidate cached status', async function () {
+  let statusCalls = 0;
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'can') return { _can: cmd[1] === 'apple_squeezer' ? 1 : 0 };
+    if (cmd[0] === 'apple_squeezer' && cmd[1] === 'status') { statusCalls++; return { available: 1, running: 1, mode: 'osf' }; }
+    if (cmd[0] === 'apple_squeezer' && cmd[1] === 'dsp_status') return {};
+    return { success: 1 };
+  });
+  await ctx.api.appleSqueezerStatus('player-1');
+  await ctx.api.setAppleSqueezerUpsampleRate('192000');
+  await ctx.api.appleSqueezerStatus('player-1');
+  await ctx.api.setAppleSqueezerResampleFilter('linear');
+  await ctx.api.appleSqueezerStatus('player-1');
+  await ctx.api.setAppleSqueezerMode('equalizer');
+  await ctx.api.appleSqueezerStatus('player-1');
+  assert.equal(statusCalls, 4);
+});
+
 /* 2a: sem a tag 'e' o LMS nao manda album_id, e a fila nao tem como agrupar
    por album sem recorrer ao nome (colide) ou ao coverid (e por faixa). */
 test('a fila pede a tag e, e o album_id volta como albumId sem quebrar faixas sem album', async function () {

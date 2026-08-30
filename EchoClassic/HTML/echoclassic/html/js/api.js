@@ -78,14 +78,21 @@
         throw new LmsError(cmd, err && err.name === 'AbortError' ? 'timeout' : 'parse',
                            (err && err.message) || 'invalid JSON');
       }
-      if (body && body.error) throw new LmsError(cmd, 'lms', String(body.error));
-      return (body && body.result) || {};
+      if (!body || typeof body !== 'object' || Array.isArray(body) ||
+          (!owns(body, 'result') && !owns(body, 'error'))) {
+        throw new LmsError(cmd, 'parse', 'invalid JSON-RPC response');
+      }
+      if (body.error) throw new LmsError(cmd, 'lms', String(body.error));
+      if (body.result == null || typeof body.result !== 'object' || Array.isArray(body.result)) {
+        throw new LmsError(cmd, 'parse', 'invalid JSON-RPC result');
+      }
+      return body.result;
     } finally {
       clearTimeout(timer);
     }
   }
 
-  function loop(res, key) { return (res && res[key]) || []; }
+  function loop(res, key) { return res && Array.isArray(res[key]) ? res[key] : []; }
   function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
   function owns(object, key) {
     return !!object && Object.prototype.hasOwnProperty.call(object, key);
@@ -133,8 +140,10 @@
     return value.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   }
   function pageMeta(items, sourceCount) {
+    var parsed = Number(sourceCount);
+    var safeCount = Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : items.length;
     Object.defineProperty(items, 'sourceCount', {
-      value: sourceCount | 0, enumerable: false, configurable: true
+      value: safeCount, enumerable: false, configurable: true
     });
     return items;
   }
@@ -609,30 +618,26 @@
   }
 
   async function libraries(playerId) {
-    try {
-      var r = await rpc(playerId, ['libraries', 0, 100]);
-      var rows = loop(r, 'libraries_loop').concat(loop(r, 'library_loop'));
-      return rows.map(function (item) {
-        return { id: item.id != null ? item.id : item.library_id,
-                 name: txt(item.name || item.library), enabled: item.enabled == null || num(item.enabled) === 1 };
-      }).filter(function (item) { return item.id != null && item.name && item.enabled; });
-    } catch (e) { return []; }
+    var r = await rpc(playerId, ['libraries', 0, 100]);
+    var rows = loop(r, 'libraries_loop').concat(loop(r, 'library_loop'));
+    return rows.map(function (item) {
+      return { id: item.id != null ? item.id : item.library_id,
+               name: txt(item.name || item.library), enabled: item.enabled == null || num(item.enabled) === 1 };
+    }).filter(function (item) { return item.id != null && item.name && item.enabled; });
   }
 
   async function musicFolders(playerId, parentId) {
-    try {
-      var cmd = ['musicfolder', 0, 500, 'tags:u'];
-      if (parentId != null && parentId !== '') cmd.push('folder_id:' + parentId);
-      var r = await rpc(playerId, cmd);
-      return loop(r, 'folder_loop').concat(loop(r, 'musicfolder_loop')).map(function (item) {
-        var id = item.id != null ? item.id : item.folder_id;
-        var isFolder = parentId == null || item.type === 'folder' || item.hasitems || item.has_items || item.isfolder;
-        return { type: isFolder ? 'folder' : 'track', id: id,
-          key: (isFolder ? 'folder:' : 'file:') + id,
-          name: txt(item.filename || item.name || item.path), path: txt(item.path || item.url),
-          url: txt(item.url), title: txt(item.title || item.filename || item.name) };
-      }).filter(function (item) { return item.id != null && item.name; });
-    } catch (e) { return []; }
+    var cmd = ['musicfolder', 0, 500, 'tags:u'];
+    if (parentId != null && parentId !== '') cmd.push('folder_id:' + parentId);
+    var r = await rpc(playerId, cmd);
+    return loop(r, 'folder_loop').concat(loop(r, 'musicfolder_loop')).map(function (item) {
+      var id = item.id != null ? item.id : item.folder_id;
+      var isFolder = parentId == null || item.type === 'folder' || item.hasitems || item.has_items || item.isfolder;
+      return { type: isFolder ? 'folder' : 'track', id: id,
+        key: (isFolder ? 'folder:' : 'file:') + id,
+        name: txt(item.filename || item.name || item.path), path: txt(item.path || item.url),
+        url: txt(item.url), title: txt(item.title || item.filename || item.name) };
+    }).filter(function (item) { return item.id != null && item.name; });
   }
 
   function albumArtists(playerId, start, count) {
@@ -815,7 +820,7 @@
   function queueRemove(playerId, index) { return rpc(playerId, ['playlist', 'delete', index]); }
   function queueClear(playerId)         { return rpc(playerId, ['playlist', 'clear']); }
   function queueMove(playerId, from, to) {
-    return rpc(playerId, ['playlist', 'move', from | 0, to | 0]);
+    return rpc(playerId, ['playlist', 'move', from, to]);
   }
   function queueControl(playerId, action, key, id) {
     return rpc(playerId, ['playlistcontrol', 'cmd:' + action, key + ':' + id]);
@@ -1417,17 +1422,23 @@
 
   async function setAppleSqueezerMode(mode) {
     var wire = await appleSqueezerWireContract();
-    return rpc('', [wire.namespace, 'mode', mode], { timeout: 20000 });
+    var result = await rpc('', [wire.namespace, 'mode', mode], { timeout: 20000 });
+    invalidateAppleSqueezerStatus();
+    return result;
   }
 
   async function setAppleSqueezerUpsampleRate(rate) {
     var wire = await appleSqueezerWireContract();
-    return rpc('', [wire.namespace, wire.apiVersion >= 2 ? 'upsample-rate' : 'upsample_rate', String(rate)], { timeout: 20000 });
+    var result = await rpc('', [wire.namespace, wire.apiVersion >= 2 ? 'upsample-rate' : 'upsample_rate', String(rate)], { timeout: 20000 });
+    invalidateAppleSqueezerStatus();
+    return result;
   }
 
   async function setAppleSqueezerResampleFilter(filter) {
     var wire = await appleSqueezerWireContract();
-    return rpc('', [wire.namespace, wire.apiVersion >= 2 ? 'resample-filter' : 'resample_filter', String(filter)], { timeout: 20000 });
+    var result = await rpc('', [wire.namespace, wire.apiVersion >= 2 ? 'resample-filter' : 'resample_filter', String(filter)], { timeout: 20000 });
+    invalidateAppleSqueezerStatus();
+    return result;
   }
   async function setAppleSqueezerResampleExpert(precision, passband, stopband, phase) {
     return rpc('', ['applesqueezer', 'resample-expert', String(precision), String(passband), String(stopband), String(phase)], { timeout: 20000 });

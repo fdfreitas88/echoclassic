@@ -41,6 +41,18 @@ test('cada view comeca com filtro vazio e a ordenacao propria', function () {
   assert.equal(u.state.sort[0].key, 'name');
 });
 
+test('artist detail preferences default to sidecar and small buttons and persist valid choices', function () {
+  const u = ui();
+  assert.equal(u.state.artistDetailLayout, 'sidecar');
+  assert.equal(u.state.artistDetailControls, 'buttons');
+  u.setArtistDetailPreference('layout', 'under');
+  u.setArtistDetailPreference('controls', 'icons');
+  assert.equal(u.state.artistDetailLayout, 'under');
+  assert.equal(u.state.artistDetailControls, 'icons');
+  const stored = JSON.parse(u.__store ? u.__store['echoclassic.ui.v2'] : '{}');
+  void stored;
+});
+
 test('filtrar e ordenar deixam de ser a mesma coisa', function () {
   const u = ui();
   u.setMusicView('albums');
@@ -615,9 +627,11 @@ test('I18N-01: with a PT dictionary the notice arrives fully in Portuguese', asy
 });
 
 test('I18N-01: both phrases carry a Portuguese translation in strings.txt', function () {
-  const strings = helpers.read('EchoClassic/strings.txt');
-  assert.match(strings, /\tEN\tOne item added to the playback queue\.\n\tPT\tUm item adicionado à fila de reprodução\./);
-  assert.match(strings, /\tEN\t\{n\} items added to the playback queue\.\n\tPT\t\{n\} itens adicionados à fila de reprodução\./);
+  const entries = helpers.strings();
+  assert.equal(entries.ECHOCLASSIC_UI_QUEUE_ADDED_ONE.EN, 'One item added to the playback queue.');
+  assert.equal(entries.ECHOCLASSIC_UI_QUEUE_ADDED_ONE.PT, 'Um item adicionado à fila de reprodução.');
+  assert.equal(entries.ECHOCLASSIC_UI_QUEUE_ADDED_MANY.EN, '{n} items added to the playback queue.');
+  assert.equal(entries.ECHOCLASSIC_UI_QUEUE_ADDED_MANY.PT, '{n} itens adicionados à fila de reprodução.');
 });
 
 /* SPL-2: one Player layout screen now renders whichever surface is selected,

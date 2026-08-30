@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const helpers = require('./helpers');
 const root = path.join(__dirname, '..');
 const detail = fs.readFileSync(path.join(root, 'EchoClassic/HTML/echoclassic/html/js/detail.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'EchoClassic/HTML/echoclassic/html/css/ios9.css'), 'utf8');
@@ -34,5 +35,7 @@ test('music folder copy is available in English and Portuguese', function () {
     'Return to Music to choose another folder.', 'Back to Music'].forEach(function (phrase) {
     assert.ok(strings.includes('\tEN\t' + phrase + '\n'), 'missing English string: ' + phrase);
   });
-  assert.match(strings, /ECHOCLASSIC_UI_BACK_TO_MUSIC\n\tEN\tBack to Music\n\tPT\tVoltar para Música/);
+  const entries = helpers.strings();
+  assert.equal(entries.ECHOCLASSIC_UI_BACK_TO_MUSIC.EN, 'Back to Music');
+  assert.equal(entries.ECHOCLASSIC_UI_BACK_TO_MUSIC.PT, 'Voltar para Música');
 });
