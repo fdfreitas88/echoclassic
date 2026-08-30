@@ -26,6 +26,11 @@ dist/
 *.log
 .loop-state.md
 
+# material local de desenvolvimento e validacao
+docs/
+tests/
+tools/
+
 # backups gerados pelo INSTALL.sh e por copias manuais
 *.backup-*
 EchoClassic.backup-*

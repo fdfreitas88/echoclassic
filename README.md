@@ -15,7 +15,7 @@ live signal-path information and optional server-side DSP into one interface.
 Version **3.5.4** uses Vue 2 without a compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
-![Echo Classic 3.5.4 library](docs/img/release-3.5.4-library.png)
+![Echo Classic 3.5.4 library](images/release-3.5.4-library.png)
 
 ## What is new in 3.5.4
 
@@ -32,7 +32,7 @@ competing settings screens. DAC Priority, Equalizer, OSF and CSF are explicit
 playback modes. If the current mode cannot process the saved curve, Echo Classic
 keeps the curve visible and offers a direct way back to Equalizer mode.
 
-![Echo Classic 3.5.4 Equalizer](docs/img/release-3.5.4-equalizer.png)
+![Echo Classic 3.5.4 Equalizer](images/release-3.5.4-equalizer.png)
 
 The workspace includes:
 
@@ -103,8 +103,6 @@ and can run across one or several library roots. Results retain their provenance
 rank exact matches first and preserve the query and scroll position when a result
 is opened.
 
-![Advanced search](docs/img/release-3.4.0-advanced-search.png)
-
 ### Playback and signal path
 
 - Full player, wide-screen side player and persistent bottom player bar.
@@ -146,8 +144,6 @@ omission of bit depth when a lossless source is transcoded to MP3 or AAC.
 - Safe large-queue reads with an explicit warning if LMS cannot return the
   complete list.
 
-![Playlist editing](docs/img/playlists.png)
-
 ### Favourites, Radio, Apps and pinned destinations
 
 - Native LMS menus and service actions remain available instead of being reduced
@@ -170,20 +166,13 @@ and primary actions remain reachable. Touch targets are at least 44×44 px, long
 translated labels wrap safely and the 390 px layout is checked for horizontal
 overflow.
 
-| | |
-|---|---|
-| ![Legacy theme](docs/img/legacy.png) | ![Dark theme](docs/img/dark.png) |
-| Legacy | Dark |
-
-<img src="docs/img/mobile.png" alt="Echo Classic on a phone" width="320">
-
 ### Settings and server administration
 
 Settings starts with user-curated Frequent Settings and groups the complete
 surface into Player, Playback, Equalizer, Appearance, Queue, Interface & Access,
 Backup and System destinations.
 
-![Echo Classic 3.5.4 settings](docs/img/release-3.5.4-settings.png)
+![Echo Classic 3.5.4 settings](images/release-3.5.4-settings.png)
 
 - Export and transactional import of skin preferences.
 - Party mode hides destructive commands from casual users.
@@ -288,27 +277,12 @@ EchoClassic/
   Settings.pm              server-side preferences
   install.xml              LMS extension manifest
   strings.txt              runtime translations
-docs/                      screenshots, specifications and release evidence
-tests/                     Node test suite
-tools/                     validation, deployment, screenshot and release tools
+images/                    screenshots used by this README
 ```
 
-Install dependencies and run the complete local gates:
-
-```sh
-npm ci
-npm test
-npm run validate
-npm run check-version
-```
-
-`npm run validate` checks every JavaScript file, compiles every Vue 2 template,
-detects orphaned cross-module references, recomputes all theme contrast pairs and
-verifies that every runtime string is complete and unique in all four languages.
-
-Release packaging goes through `tools/release.sh X.Y.Z`. It synchronizes the
-version manifests, runs the gates, builds the ZIP, compares the archive with the
-tested tree and writes its exact SHA-1 into `repo.xml`.
+Maintainer-only specifications, tests and release tooling are kept outside the
+public source tree. Published release ZIPs contain only the installable
+`EchoClassic/` plugin directory.
 
 `Plugin.pm` adds an asset revision based on the newest plugin file because LMS
 caches skin assets aggressively. This prevents new JavaScript from running beside
