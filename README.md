@@ -17,19 +17,6 @@ live signal-path information and optional server-side DSP into one interface.
 Version **3.5.4** uses Vue 2 without a compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
-## Enjoying Echo Classic? ❤️
-
-If Echo Classic makes your music system better, you can help support its
-continued development. Every contribution helps keep the project actively
-maintained.
-
-You can support the project through:
-
-<p>
-  <a href="https://patreon.com/fdfreitas88?utm_medium=unknown&amp;utm_source=join_link&amp;utm_campaign=creatorshare_creator&amp;utm_content=copyLink"><img src="https://img.shields.io/badge/Become_a_patron-ff424d?style=for-the-badge&amp;logo=patreon&amp;logoColor=white" height="48" alt="Become a patron on Patreon"></a>
-  <a href="https://buymeacoffee.com/fdfreitas"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="48" alt="Buy me a coffee"></a>
-</p>
-
 ![Echo Classic 3.5.4 library](images/release-3.5.4-library.png)
 
 ## What is new in 3.5.4
@@ -320,6 +307,19 @@ named validation step (`measured`).
 Podium Sans and Espy Sans currently fall back to Geneva/Verdana because their
 font files are not distributed pending a licensing decision. Chicago renders
 only on systems that provide it.
+
+## Enjoying Echo Classic? ❤️
+
+If Echo Classic makes your music system better, you can help support its
+continued development. Every contribution helps keep the project actively
+maintained.
+
+You can support the project through:
+
+<p>
+  <a href="https://patreon.com/fdfreitas88?utm_medium=unknown&amp;utm_source=join_link&amp;utm_campaign=creatorshare_creator&amp;utm_content=copyLink"><img src="https://img.shields.io/badge/Become_a_patron-ff424d?style=for-the-badge&amp;logo=patreon&amp;logoColor=white" height="48" alt="Become a patron on Patreon"></a>
+  <a href="https://buymeacoffee.com/fdfreitas"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="48" alt="Buy me a coffee"></a>
+</p>
 
 ## Author and license
 
