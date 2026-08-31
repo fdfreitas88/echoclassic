@@ -2302,6 +2302,8 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
 .rating-row button{width:44px;height:44px;color:var(--chev);font-size:21px}
 .rating-row button.on{color:var(--accent)}
 .rating-row span{margin-left:8px;color:var(--text2);font-size:11px}
+.head .t .title-rating{display:inline-block;margin-left:8px;color:var(--accent);font-size:.72em;
+  letter-spacing:.04em;vertical-align:.08em;white-space:nowrap}
 @media (min-width:701px) and (max-height:700px){
   /* The adaptive player normally lives inside .workspace, whose header and
      footer leave only ~446px at 1024x650. In a short viewport it must own the

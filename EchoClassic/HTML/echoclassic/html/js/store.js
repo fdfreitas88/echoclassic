@@ -42,7 +42,7 @@
       settings: null, presets: [], impulses: [], error: '', rules: [],
       activeRule: null, applyingRule: false, context: null
     },
-    history: [], trackInfo: null, canRate: false,
+    history: [], trackInfo: null, canRate: false, ratingBackend: null,
     /* Mapa de capacidades, resolvido uma vez no init(): quem precisa saber se
        um comando existe no servidor le daqui em vez de escrever a propria
        sonda `can`. Ausencia significa "nao mostrar", nunca "mostrar
@@ -525,6 +525,8 @@
      uma sonda propria. */
   var CAPABILITY_PROBES = {
     rating: ['rating'],
+    ratingsLightGet: ['ratingslight', 'getrating'],
+    ratingsLightSet: ['ratingslight', 'setratingpercentnoclient'],
     randomplay: ['randomplay'],
     dontstopthemusicsetting: ['dontstopthemusicsetting']
   };
@@ -550,7 +552,9 @@
     }
     // ausencia de player-tie: sempre expoe como false quando a sonda falha,
     // nunca deixa o controle visivel e desabilitado
-    state.canRate = !!state.capabilities.rating;
+    state.ratingBackend = state.capabilities.ratingsLightGet && state.capabilities.ratingsLightSet
+      ? 'ratingslight' : (state.capabilities.rating ? 'core' : null);
+    state.canRate = !!state.ratingBackend;
   }
 
   var playbackIntelligenceChecked = 0;
@@ -712,7 +716,11 @@
       state.trackInfo = null;
       rememberTrack();
       if (state.np.id != null) {
-        api.songInfo(playerId, state.np.id).then(function (info) {
+        api.songInfo(playerId, state.np.id).then(async function (info) {
+          if (state.ratingBackend === 'ratingslight') {
+            try { info.rating = await api.getRating(playerId, info.id, state.ratingBackend); }
+            catch (e) { backgroundError('trackInfo', e); }
+          }
           if (state.playerId === playerId && String(state.np.id) === String(info.id)) {
             state.trackInfo = info;
             if (info.albumId != null) {
@@ -1298,8 +1306,18 @@
     var playerId = state.playerId;
     var trackId = state.np.id;
     if (!state.canRate || !playerId || trackId == null) return false;
-    await api.setRating(playerId, trackId, stars);
+    var value = Math.max(0, Math.min(5, Number(stars) || 0)) * 20;
+    await api.setRating(playerId, trackId, stars, state.ratingBackend);
     if (state.playerId !== playerId || state.np.id !== trackId) return false;
+    if (state.ratingBackend === 'ratingslight') {
+      var current = state.trackInfo || { id: trackId };
+      state.trackInfo = Object.assign({}, current, { rating: value });
+      try { value = await api.getRating(playerId, trackId, state.ratingBackend); }
+      catch (e) { backgroundError('trackInfo', e); }
+      if (state.playerId !== playerId || state.np.id !== trackId) return false;
+      state.trackInfo = Object.assign({}, state.trackInfo || current, { rating: value });
+      return true;
+    }
     api.forgetSongInfo();
     var info = await api.songInfo(playerId, trackId);
     if (state.playerId !== playerId || state.np.id !== trackId) return false;

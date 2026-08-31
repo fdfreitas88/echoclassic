@@ -15,6 +15,21 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.6-rc1] — 2026-08-31
+
+### Added
+
+- Ratings Light is discovered through its published JSON-RPC dispatches and,
+  when available, owns rating reads and writes so its change notifications,
+  recently-rated records and backup workflow remain intact. Core LMS rating is
+  retained as a no-plugin fallback. [code/measured: API and Store regression
+  tests for plugin priority, partial capability fallback, command shape and
+  response normalization]
+- Now Playing can optionally append the current star rating beside the track
+  title while retaining the existing large rating controls. The preference is
+  stored locally under Interface & Access. [code/measured: template,
+  accessibility and UI-state regression checks]
+
 ## [3.5.5] — 2026-08-30
 
 ### Changed

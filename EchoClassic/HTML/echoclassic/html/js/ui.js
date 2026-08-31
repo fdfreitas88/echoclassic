@@ -545,6 +545,7 @@
     appearanceScreen: null,
     showBadges: saved.showBadges !== false,
     markHires: saved.markHires !== false,
+    appendRatingToTitle: saved.appendRatingToTitle === true,
     artistDetailLayout: saved.artistDetailLayout === 'under' ? 'under' : 'sidecar',
     artistDetailControls: saved.artistDetailControls === 'icons' ? 'icons' : 'buttons',
     busyMessage: '',
@@ -584,7 +585,8 @@
         quickQueueControls: state.quickQueueControls,
         defaultPlayer: state.defaultPlayer,
         showBadges: state.showBadges,
-        markHires: state.markHires, colorScheme: state.colorScheme,
+        markHires: state.markHires, appendRatingToTitle: state.appendRatingToTitle,
+        colorScheme: state.colorScheme,
         artistDetailLayout: state.artistDetailLayout,
         artistDetailControls: state.artistDetailControls,
         fontFamily: state.fontFamily, playerPresentation: state.playerPresentation,
@@ -1129,7 +1131,7 @@
   }
 
   function setPreference(key, value) {
-    if (['showBadges', 'markHires', 'partyMode', 'kioskMode'].indexOf(key) < 0) return;
+    if (['showBadges', 'markHires', 'appendRatingToTitle', 'partyMode', 'kioskMode'].indexOf(key) < 0) return;
     state[key] = !!value;
     if (key === 'kioskMode' && state[key]) {
       state.full = true;

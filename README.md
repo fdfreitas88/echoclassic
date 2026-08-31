@@ -14,7 +14,7 @@ touch-friendly music system for tablets, phones and desktop browsers. It brings
 library discovery, queue and playlist editing, synchronized-player control,
 live signal-path information and optional server-side DSP into one interface.
 
-Version **3.5.4** uses Vue 2 without a compilation or bundling step: the files in
+Version **3.5.6-rc1** uses Vue 2 without a compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
 ![Echo Classic 3.5.4 library](images/release-3.5.4-library.png)
@@ -206,6 +206,8 @@ Backup and System destinations.
   rules, signal controls and FIR processing.
 - **MusicArtistInfo** — enriched artist biographies, photographs and album
   information.
+- **Ratings Light** — plugin-aware rating reads and writes with a core LMS
+  fallback when the plugin is absent.
 - **RandomPlay / Don't Stop The Music** — capability-gated continuous-playback
   controls.
 
@@ -292,7 +294,7 @@ an older cached stylesheet.
 
 ## Project status
 
-Current release candidate: **3.5.4**.
+Current release candidate: **3.5.6-rc1**.
 
 - 542 automated tests passing.
 - Five validation stages passing.

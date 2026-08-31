@@ -52,8 +52,11 @@ Vue.component('lms-nowplaying', {
     </div>
 
     <div class="head">
-      <div class="t ell" :title="np.title || 'Nothing playing'"
-           :aria-label="np.title || 'Nothing playing'">{{ np.title || 'Nothing playing' }}</div>
+      <div class="t ell" :title="np.title || 'Nothing playing'" :aria-label="titleAriaLabel">
+        <span>{{ np.title || 'Nothing playing' }}</span>
+        <span v-if="ui.appendRatingToTitle && store.canRate && np.id" class="title-rating"
+              :aria-label="ratingLabel(rating)">{{ ratingStars }}</span>
+      </div>
       <button type="button" class="np-player-row pointer" :aria-label="playerPickerLabel"
               @click="openPlayerPicker">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h3l5 4V5L7 9z"/></svg>
@@ -287,6 +290,14 @@ Vue.component('lms-nowplaying', {
     },
     rating: function () {
       return Math.round((this.store.trackInfo && this.store.trackInfo.rating || 0) / 20);
+    },
+    ratingStars: function () {
+      return '★★★★★'.slice(0, this.rating) + '☆☆☆☆☆'.slice(this.rating);
+    },
+    titleAriaLabel: function () {
+      var title = this.np.title || 'Nothing playing';
+      return this.ui.appendRatingToTitle && this.store.canRate && this.np.id
+        ? title + '. ' + this.ratingLabel(this.rating) : title;
     },
     playCount: function () {
       return this.store.trackInfo ? this.store.trackInfo.playCount || 0 : 0;

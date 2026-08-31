@@ -1075,16 +1075,48 @@
     };
   }
 
+  function ratingValue(result) {
+    var preferred = ['_rating', 'rating', 'ratingpercent', '_ratingpercent'];
+    for (var i = 0; i < preferred.length; i++) {
+      if (result && result[preferred[i]] != null && isFinite(Number(result[preferred[i]]))) {
+        return Math.max(0, Math.min(100, Number(result[preferred[i]])));
+      }
+    }
+    var values = Object.keys(result || {}).map(function (key) { return result[key]; });
+    for (var j = 0; j < values.length; j++) {
+      if (values[j] !== '' && isFinite(Number(values[j]))) {
+        return Math.max(0, Math.min(100, Number(values[j])));
+      }
+    }
+    return 0;
+  }
+
+  function getRating(playerId, trackId, backend) {
+    if (backend === 'ratingslight') {
+      return rpc('', ['ratingslight', 'getrating', trackId]).then(ratingValue);
+    }
+    return songInfo(playerId, trackId).then(function (info) {
+      return ratingValue({ rating: info.rating });
+    });
+  }
+
+  /* Ratings Light owns the mutation when installed so its changed-rating
+     notification, recently-rated log and backup features see the action. Its
+     noclient dispatch is server-scoped; core LMS remains the zero-plugin
+     fallback and keeps the skin useful on an ordinary installation. */
+  function setRating(playerId, trackId, stars, backend) {
+    var value = Math.max(0, Math.min(5, Number(stars) || 0)) * 20;
+    if (backend === 'ratingslight') {
+      return rpc('', ['ratingslight', 'setratingpercentnoclient', trackId, value, 0]);
+    }
+    return rpc(playerId, ['rating', trackId, value]);
+  }
+
   /* Core LMS 'rating' (Slim/Control/Request.pm dispatches
      ['rating','_item','_rating'] to Commands.pm ratingCommand) uses a 0-100
      scale, 100 being 5 stars in units of 20 -- the same scale songinfo hands
      back in trackInfo.rating. The UI only ever deals in 0-5 stars, so the
      conversion belongs here, at the one module that knows the wire format. */
-  function setRating(playerId, trackId, stars) {
-    var value = Math.max(0, Math.min(5, stars | 0)) * 20;
-    return rpc(playerId, ['rating', trackId, value]);
-  }
-
   /* Radio, Favorites and Apps are the same thing in LMS: an OPML tree where
      each item carries actions.go with the command for its own children. One
      browser serves all three. */
@@ -1524,7 +1556,7 @@
     musicAlbumInfo: musicAlbumInfo,
     randomPlayActive: randomPlayActive, randomPlay: randomPlay,
     dontStopProviders: dontStopProviders,
-    setRating: setRating,
+    getRating: getRating, setRating: setRating,
     OPML_ROOTS: OPML_ROOTS, opmlRoot: opmlRoot,
     opmlBrowse: opmlBrowse, opmlSearch: opmlSearch, opmlPlay: opmlPlay,
     loadTrack: loadTrack, transport: transport,

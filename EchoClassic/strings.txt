@@ -4814,3 +4814,15 @@ ECHOCLASSIC_UI_APPLE_SQUEEZER_WAIT_FOR_AUDIO_PATH
 	DE	Bitte warten Sie, während Apple Squeezer den Audiopfad neu startet.
 	FR	Veuillez patienter pendant qu’Apple Squeezer redémarre le chemin audio.
 	PT	Aguarde enquanto o Apple Squeezer reinicia o caminho de áudio.
+
+ECHOCLASSIC_UI_RATING_BESIDE_TRACK_TITLE
+	EN	Rating beside track title
+	DE	Bewertung neben dem Titelnamen
+	FR	Note à côté du titre du morceau
+	PT	Avaliação ao lado do título da faixa
+
+ECHOCLASSIC_UI_PROMINENT_RATING_EXPLANATION
+	EN	Show the current rating in a prominent place on Now Playing.
+	DE	Zeigt die aktuelle Bewertung gut sichtbar in „Aktuelle Wiedergabe“ an.
+	FR	Affiche la note actuelle bien en évidence dans « Lecture en cours ».
+	PT	Mostra a avaliação atual em destaque na tela Reproduzindo agora.

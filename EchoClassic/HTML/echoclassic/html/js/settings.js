@@ -779,6 +779,11 @@ Vue.component('lms-settings', {
       <button type="button" class="sw" :class="{on: ui.markHires}" role="switch"
               :aria-checked="String(ui.markHires)" aria-label="Highlight high resolution audio"
               @click="preference('markHires')"><span class="visually-hidden">Highlight high resolution audio</span></button></div>
+    <button type="button" class="srow settings-command-row pointer" role="switch"
+            :aria-checked="String(ui.appendRatingToTitle)" @click="preference('appendRatingToTitle')">
+      <span>Rating beside track title<small>Show the current rating in a prominent place on Now Playing.</small></span>
+      <span class="switch" :class="{on:ui.appendRatingToTitle}"></span>
+    </button>
   </div>
 
   <div class="sgh">Language</div>
