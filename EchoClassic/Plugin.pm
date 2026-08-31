@@ -111,7 +111,25 @@ sub initPlugin {
 
 sub getDisplayName { return 'ECHOCLASSIC_SKIN' }
 
-sub getSkinVersion { return '3.5.4' }
+sub getSkinVersion { return '3.5.5' }
+
+# Published packages deliberately expose the plain semantic version. Local and
+# pre-release deployments can set ECHOCLASSIC_BUILD_ID (for example
+# "dev.3ca9c86") so diagnostics never confuse their code with the tagged
+# release. Keep this opt-in: an LMS service account often cannot inspect the
+# source repository, and guessing from paths would mislabel manual installs.
+sub getBuildIdentity {
+	my $version = getSkinVersion();
+	my $build = $ENV{ECHOCLASSIC_BUILD_ID};
+	return $version unless defined $build && length $build;
+
+	# This reaches a JavaScript literal and the About screen. Limit it to a
+	# compact diagnostic token even though jsLiteral also escapes it later.
+	$build =~ s/[^A-Za-z0-9._-]+/-/g;
+	$build =~ s/^-+|-+$//g;
+	$build = substr($build, 0, 48);
+	return length $build ? "$version+$build" : $version;
+}
 
 # Escapes a value for use inside a double-quoted JavaScript string literal.
 #

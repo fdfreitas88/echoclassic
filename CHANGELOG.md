@@ -15,6 +15,36 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.5] — 2026-08-30
+
+### Changed
+
+- The Support trigger has stronger text contrast while preserving the approved
+  compact capsule treatment. [code/measured: CSS contrast and interaction
+  regression checks]
+- Local and pre-release deployments can expose an opt-in build identity in
+  About diagnostics without changing the semantic version published to LMS.
+  [code/measured: template and plugin validation]
+
+### Added
+
+- Advanced LMS settings now displays a localized loading veil while an embedded
+  settings page changes, preventing the previous page from appearing active
+  during navigation. [code/measured: focused settings loading-state regression
+  test]
+
+### Fixed
+
+- Standard Squeezelite now remains the safe DSP owner until Apple Squeezer is
+  positively discovered for the selected player. Failed discovery clears stale
+  native DSP state and falls back to SqueezeDSP without sending Apple Squeezer
+  mutations. [live/measured: musicplayer incident recovery and focused API
+  regression tests]
+- Equalizer rendering no longer dereferences a missing Apple Squeezer DSP
+  document. Players using only standard Squeezelite can open settings before or
+  after capability discovery without aborting the Vue render. [code/measured:
+  null-state Equalizer regression test]
+
 ## [3.5.4] — 2026-08-30
 
 ### Changed

@@ -41,8 +41,9 @@ Vue.component('lms-settings', {
   template: `
 <div class="scroller settings-scroller">
 <div v-if="ui.advancedSettings" class="settings advanced-settings-shell">
+  <div v-if="advancedFrameLoading" class="advanced-settings-loading" role="status"><span class="feedback-spinner" aria-hidden="true"></span>{{ tr('Loading settings page…') }}</div>
   <iframe ref="advancedFrame" class="advanced-settings-frame" title="" aria-label="Advanced LMS settings"
-          @load="themeAdvancedFrame"
+          @load="advancedFrameLoaded"
           :src="advancedFrameSrc"></iframe>
 </div>
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
@@ -912,6 +913,7 @@ Vue.component('lms-settings', {
       appearanceReturnScroll: 0,
       advancedSettingsDirty: false,
       advancedSettingsPage: '',
+      advancedFrameLoading: false,
       advancedThemeObserver: null,
       /* Rascunho local: o numero ao lado do slider tem de acompanhar o
          arrasto, nao esperar o round-trip com o servidor. */
@@ -922,7 +924,11 @@ Vue.component('lms-settings', {
       equalizerMoreEnginesOpen: false, equalizerMoreModesOpen: false,
       equalizerMorePresetsOpen: false, equalizerMoreRulesOpen: false,
       equalizerAdvancedOpen: { headroom:false, filters:false, spatial:false }
-      ,dspOwner: 'apple-squeezer', nativeDspDraft: null, nativeDspSaved: '', nativeDspResponse: [], nativeDspSaving: false, nativeDspAB: 'A'
+      /* Fail closed to the ordinary LMS path until Apple Squeezer explicitly
+         reports that it owns DSP for this player. Standard Squeezelite has no
+         native DSP document and must never enter that render/control path
+         during the asynchronous capability probe. */
+      ,dspOwner: 'squeezedsp', nativeDspDraft: null, nativeDspSaved: '', nativeDspResponse: [], nativeDspSaving: false, nativeDspAB: 'A'
     };
   },
   computed: {
@@ -1016,6 +1022,7 @@ Vue.component('lms-settings', {
       return 'Synchronized with ' + (master ? master.name : 'other players');
     },
     skinVersion: function () {
+      if (typeof LMS_BUILD_IDENTITY === 'string' && LMS_BUILD_IDENTITY) return LMS_BUILD_IDENTITY;
       return typeof LMS_SKIN_VERSION === 'string' && LMS_SKIN_VERSION ? LMS_SKIN_VERSION : '—';
     },
     sleepLabel: function () { return LmsFmt.longDuration(this.store.sleepRemaining); },
@@ -1140,10 +1147,15 @@ Vue.component('lms-settings', {
     },
     nativeDspDirty: function () { return !!this.nativeDspDraft && JSON.stringify(this.nativeDspDraft) !== this.nativeDspSaved; },
     nativeDspBands: function () {
-      var gains = this.nativeDspDraft ? this.nativeDspDraft.graphic_eq_db : [];
+      /* nativeDspDraft is null until the player's DSP state arrives (and stays
+         null for players without one, e.g. Squeezelite). Guard both reads so
+         opening the Equalizer page never aborts the whole settings render. */
+      var draft = this.nativeDspDraft || {};
+      var gains = draft.graphic_eq_db || [];
+      var enabled = draft.graphic_eq_enabled || [];
       return APPLE_SQUEEZER_EQ_FREQUENCIES.map(function (frequency, index) {
-        return { frequency: frequency, label: frequency >= 1000 ? (frequency / 1000) + 'k' : String(frequency), gain: Number(gains[index] || 0), enabled: this.nativeDspDraft.graphic_eq_enabled[index] !== false, index: index };
-      }, this);
+        return { frequency: frequency, label: frequency >= 1000 ? (frequency / 1000) + 'k' : String(frequency), gain: Number(gains[index] || 0), enabled: enabled[index] !== false, index: index };
+      });
     },
     nativeDspResponsePath: function () {
       var points = this.nativeDspResponse || []; if (points.length < 2) return '';
@@ -1297,7 +1309,11 @@ Vue.component('lms-settings', {
     },
     'ui.theme': function () { this.themeAdvancedFrame(); },
     'ui.colorScheme': function () { this.themeAdvancedFrame(); },
-    'ui.fontFamily': function () { this.themeAdvancedFrame(); }
+    'ui.fontFamily': function () { this.themeAdvancedFrame(); },
+    /* Any pane change starts the loading veil; themeAdvancedFrame lifts it
+       once the new document is themed. Covers both the page selector and the
+       direct Manage Plugins entry. */
+    advancedFrameSrc: function () { this.advancedFrameLoading = true; }
   },
   beforeDestroy: function () {
     if (this.appleSqueezerTelemetryTimer) clearInterval(this.appleSqueezerTelemetryTimer);
@@ -1762,6 +1778,7 @@ Vue.component('lms-settings', {
         var href = self.advancedInternalHref(doc, link.getAttribute('href'));
         if (!href) return;
         event.preventDefault();
+        self.advancedFrameLoading = true;
         frame.src = href;
       });
     },
@@ -1809,6 +1826,9 @@ Vue.component('lms-settings', {
       if (selector.__echoclassicSectionController) return;
       selector.__echoclassicSectionController = true;
       selector.addEventListener('change', function () {
+        /* The select's own LMS handler navigates the iframe in place, so the
+           :src watcher never sees this transition -- raise the veil here. */
+        self.advancedFrameLoading = true;
         self.advancedSettingsPage = selector.value || '';
         self.ui.advancedSettingsPage = self.advancedSettingsPage;
         self.advancedSettingsDirty = false;
@@ -2819,6 +2839,13 @@ Vue.component('lms-settings', {
         self.themeAdvancedFrame({ target: frame || self.$refs.advancedFrame });
       }, 120);
     },
+    /* The load event is the only signal that a NEW document arrived; theme
+       passes (ui.theme watchers, scheduled retries) also run against the
+       still-displayed previous document, so they must not lift the veil. */
+    advancedFrameLoaded: function (event) {
+      this.themeAdvancedFrame(event);
+      this.advancedFrameLoading = false;
+    },
     themeAdvancedFrame: function (event) {
       var frame = (event && event.target) || this.$refs.advancedFrame;
       if (!frame) return false;
@@ -3613,6 +3640,10 @@ Vue.component('lms-settings', {
         if (token !== this.appleSqueezerLoadToken || this.store.playerId !== playerId) return false;
         this.appleSqueezer.available = false;
         this.appleSqueezer.running = false;
+        this.dspOwner = 'squeezedsp';
+        this.nativeDspDraft = null;
+        this.nativeDspSaved = '';
+        this.nativeDspResponse = [];
         this.appleSqueezer.error = LmsStore.friendlyError(e, 'Could not load Apple Squeezer.');
         if (window.console && console.debug) console.debug('[Echo Classic] Apple Squeezer load: ' + this.appleSqueezer.error);
         return false;

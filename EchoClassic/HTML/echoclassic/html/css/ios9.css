@@ -550,11 +550,12 @@ button:disabled{opacity:.35}
 .status-branding{min-width:0;display:flex;align-items:baseline;gap:7px;position:relative}
 /* Capsula tingida (aprovada): distingue o gatilho tocavel da marca estatica. */
 .support-trigger{min-height:16px;padding:1px 8px 2px;border:0;border-radius:999px;
-  color:var(--accent);font:600 9.5px var(--app-font);letter-spacing:.01em;
+  color:#005A88;color:color-mix(in srgb,var(--accent) 72%,var(--text));
+  font:600 9.5px var(--app-font);letter-spacing:.01em;
   background:rgba(0,119,176,.14);
   background:color-mix(in srgb,var(--accent) 14%,transparent);
-  text-shadow:none;opacity:.92}
-.support-trigger:hover,.support-trigger[aria-expanded=true]{opacity:1;
+  text-shadow:none;opacity:1}
+.support-trigger:hover,.support-trigger[aria-expanded=true]{
   background:rgba(0,119,176,.2);
   background:color-mix(in srgb,var(--accent) 20%,transparent)}
 .support-trigger:focus-visible{outline:2px solid currentColor;outline-offset:1px}
@@ -1187,7 +1188,10 @@ button.row{width:100%;border:0;background:transparent;color:inherit;font:inherit
 .equalizer-rules-help{margin:-4px var(--group-inset) 8px;border:0;padding:0 16px}
 .eq-hold-row .eq-hold-button{margin-left:auto}
 .equalizer-secondary-settings{margin-top:2px}
-.advanced-settings-shell{display:flex;height:100%;min-height:100%;flex-direction:column;padding:0;overflow:hidden}
+.advanced-settings-shell{display:flex;height:100%;min-height:100%;flex-direction:column;padding:0;overflow:hidden;position:relative}
+.advanced-settings-loading{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;gap:10px;
+  align-items:center;justify-content:center;background-color:var(--group-page);background-image:var(--texture);color:var(--text2);font-size:14px}
+.advanced-settings-loading .feedback-spinner{width:24px;height:24px;border-width:3px}
 .advanced-settings-frame{display:block;width:100%;min-height:0;
   flex:1;border:0;background:var(--content);color-scheme:light dark}
 .sgroup{background:var(--group-bg);border-top:.5px solid var(--hair);border-bottom:.5px solid var(--hair);

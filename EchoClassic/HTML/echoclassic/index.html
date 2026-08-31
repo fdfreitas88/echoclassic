@@ -19,12 +19,14 @@ print("<link href=\"html/css/ios9.css?r=$rev\" rel=\"stylesheet\">\n");
 [% PERL %]
 my $lms  = Plugins::EchoClassic::Plugin->getLmsVersion();
 my $skin = Plugins::EchoClassic::Plugin->getSkinVersion();
+my $build = Plugins::EchoClassic::Plugin->getBuildIdentity();
 my $hint = Plugins::EchoClassic::Plugin->getPlayerHint();
 my $rev  = Plugins::EchoClassic::Plugin->getAssetRevision();
 
 print("<script>\n");
 print('const LMS_VERSION="'        . Plugins::EchoClassic::Plugin::jsLiteral($lms)  . "\";\n");
 print('const LMS_SKIN_VERSION="'   . Plugins::EchoClassic::Plugin::jsLiteral($skin) . "\";\n");
+print('const LMS_BUILD_IDENTITY="' . Plugins::EchoClassic::Plugin::jsLiteral($build) . "\";\n");
 print('const LMS_PLAYER_HINT="'    . Plugins::EchoClassic::Plugin::jsLiteral($hint) . "\";\n");
 print('const LMS_ASSET_REVISION="' . Plugins::EchoClassic::Plugin::jsLiteral($rev)  . "\";\n");
 print('const LMS_LANG="' . Plugins::EchoClassic::Plugin->getLang() . "\";\n");
