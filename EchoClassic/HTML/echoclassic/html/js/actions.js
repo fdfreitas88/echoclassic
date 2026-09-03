@@ -19,23 +19,23 @@
     template: `
 <div v-if="item" class="sheet-stage" :class="{anchored: !!anchor}">
   <div class="sheet-back" @click="close"></div>
-  <div ref="sheet" class="action-sheet" :class="{anchored: !!anchor, swiping: swipeStartY !== null}" :style="[sheetStyle, swipeStyle]"
+  <div ref="sheet" class="action-sheet" :class="{anchored: !!anchor, swiping: swipeStartY !== null, 'playlist-mode': view === 'playlists'}" :style="[sheetStyle, swipeStyle]"
        role="dialog" :aria-label="'Actions for ' + (item.title || item.label || item.name)"
        :aria-modal="String(!anchor)" tabindex="-1"
        @keydown.esc.stop.prevent="escapeSheet" @keydown.tab="trapFocus"
        @pointerdown="startSwipe" @pointermove="moveSwipe" @pointerup="endSwipe" @pointercancel="cancelSwipe">
     <span v-if="!anchor" class="action-sheet-handle" aria-hidden="true"></span>
     <header v-if="item.kind === 'player-picker'" class="player-picker-head">
-      <button type="button" class="player-picker-done" @click="close">Done</button>
-      <strong>Players</strong><span aria-hidden="true"></span>
+      <button type="button" class="player-picker-done" :disabled="playerSwitchBusy" @click="close">Done</button>
+      <strong>Players</strong><button type="button" class="player-picker-refresh" :disabled="playerSwitchBusy" @click="refreshPlayerList">Refresh</button>
     </header>
     <header v-else class="action-sheet-head">
       <span class="action-sheet-art" :class="{placeholder: !artUrl}">
         <img v-if="artUrl" :src="artUrl" alt="">
       </span>
       <span class="action-sheet-heading">
-        <strong class="ell">{{ view === 'playlists' ? 'Add to playlist' : (item.title || item.label || item.name) }}</strong>
-        <small class="ell">{{ view === 'playlists' ? (item.title || item.label || item.name) : itemSubtitle }}</small>
+        <strong class="ell">{{ view === 'playlists' ? 'Add to playlist' : (view === 'playlist-success' ? 'Track added' : (item.title || item.label || item.name)) }}</strong>
+        <small class="ell">{{ view === 'actions' ? itemSubtitle : (item.title || item.label || item.name) }}</small>
       </span>
       <button type="button" class="action-sheet-done" @click="view === 'playlists' ? backToActions() : close()">
         {{ view === 'playlists' ? 'Back' : 'Done' }}
@@ -62,19 +62,19 @@
              @keydown.up.stop.prevent="movePlayerFocus(-1)"
              @keydown.down.stop.prevent="movePlayerFocus(1)">
       <div v-if="activePlayer" class="player-picker-summary">
-        <small>Active player</small><strong class="ell">{{ activePlayer.name }}</strong>
-        <span class="ell">{{ activePlayerSummary }}</span>
+        <small>Active player</small><strong class="ell">{{ activePlayer.name }} <em v-if="isDefaultPlayer(activePlayer)">LMS default</em></strong>
+        <span class="ell">{{ activePlayerSummary }}{{ playerOutput(activePlayer) }}</span>
       </div>
-      <template v-if="availablePlayers.length">
+      <p class="player-picker-intro">Choosing a player does not change playback until you apply the switch.</p>
+      <template v-if="stableAvailablePlayers.length">
         <div class="player-picker-label">Available</div>
         <div class="player-picker-group" role="listbox" aria-label="Available players">
-          <button v-for="p in availablePlayers" :key="p.id" type="button" class="player-picker-row"
-                  :class="{on: p.id === store.playerId}" role="option"
-                  :aria-selected="p.id === store.playerId ? 'true' : 'false'" @click="choosePlayer(p)">
+          <button v-for="p in stableAvailablePlayers" :key="p.id" type="button" class="player-picker-row"
+                  :class="{on: p.id === store.playerId, selected: pendingPlayerId === p.id}" role="option"
+                  :disabled="playerSwitchBusy" :aria-selected="pendingPlayerId === p.id ? 'true' : 'false'" @click="choosePlayer(p)">
             <span class="player-picker-icon" aria-hidden="true">▣</span>
-            <span class="player-picker-copy"><strong class="ell">{{ p.name }}</strong><small class="ell">{{ playerDetail(p) }}</small></span>
-            <span v-if="p.id === store.playerId" class="player-picker-check" aria-hidden="true">✓</span>
-            <span v-else class="player-picker-state"><i></i>{{ playerStatusLabel(p) }}</span>
+            <span class="player-picker-copy"><strong class="ell">{{ p.name }} <em v-if="isDefaultPlayer(p)">LMS default</em></strong><small class="ell">{{ playerDetail(p) }}{{ playerOutput(p) }}</small></span>
+            <span class="player-picker-radio" aria-hidden="true"></span>
           </button>
         </div>
       </template>
@@ -90,6 +90,26 @@
         </div>
       </template>
       <div v-if="!players.length" class="player-picker-empty"><strong>No players found</strong><span>Check that a player is connected to this LMS server.</span></div>
+      <div v-if="experimentalPlayers.length" class="player-picker-experimental">
+        <strong>Experimental players</strong>
+        <span v-for="p in experimentalPlayers" :key="p.id">{{ p.name }} · Test integration</span>
+        <small>Experimental players never replace the LMS default or fallback automatically.</small>
+      </div>
+      <div v-if="pendingPlayer" class="player-switch-review" aria-live="polite">
+        <span>Switch control from <b>{{ activePlayer ? activePlayer.name : 'Squeezelite' }}</b> to <b>{{ pendingPlayer.name }}</b>. Music will stop during validation.</span>
+        <div><button type="button" :disabled="playerSwitchBusy" @click="cancelPlayerChoice">Cancel</button><button type="button" class="primary" :disabled="playerSwitchBusy" @click="applyPlayerChoice">Apply switch</button></div>
+      </div>
+      <div v-if="playerSwitchPhase" class="player-switch-progress" role="status" aria-live="polite">
+        <strong>{{ playerSwitchTitle }}</strong><span>{{ playerSwitchMessage }}</span>
+        <ol>
+          <li :class="playerStepClass('stopping')">Stop current music</li>
+          <li :class="playerStepClass('switching')">Switch controlled player</li>
+          <li :class="playerStepClass('checking')">Verify connection and response</li>
+          <li :class="playerStepClass('resuming')">Resume playback if it was playing</li>
+        </ol>
+        <div v-if="playerSwitchPhase === 'failed'" class="player-switch-recovery"><button type="button" @click="cancelPlayerChoice">Keep Squeezelite</button><button type="button" @click="applyPlayerChoice">Try again</button></div>
+        <button v-if="playerSwitchPhase === 'complete'" type="button" class="player-switch-complete" @click="close">Done</button>
+      </div>
       <div class="player-picker-label">Current player</div>
       <div class="player-picker-group">
         <button type="button" class="player-picker-settings" @click="openPlayerSettings">Player settings <span aria-hidden="true">›</span></button>
@@ -100,22 +120,36 @@
     </div>
     <button v-if="!anchor" class="cancel" @click="close">Cancel</button>
     </template>
-    <section v-else class="action-playlist-view" aria-label="Choose a playlist">
+    <section v-else-if="view === 'playlists'" class="action-playlist-view" aria-label="Choose a playlist">
       <label class="action-playlist-search"><span aria-hidden="true">⌕</span><input ref="playlistSearch" v-model.trim="playlistQuery" type="search" placeholder="Search playlists" aria-label="Search playlists"></label>
+      <button v-if="!newPlaylistOpen" type="button" class="action-playlist-create" @click="showNewPlaylist">
+        <span class="action-glyph" aria-hidden="true">＋</span><span><strong>New playlist</strong><small>Create and add this track</small></span>
+      </button>
+      <form v-else class="action-playlist-new" @submit.prevent="createAndAdd">
+        <label for="action-new-playlist">Playlist name</label>
+        <input id="action-new-playlist" ref="newPlaylistName" v-model.trim="newPlaylistName" maxlength="120" autocomplete="off">
+        <div><button type="button" @click="hideNewPlaylist">Cancel</button><button type="submit" class="primary" :disabled="!newPlaylistName || busy">{{ busy ? 'Creating playlist…' : 'Create & add' }}</button></div>
+      </form>
       <div v-if="playlistError" class="sheet-note error">{{ playlistError }} <button type="button" @click="loadPlaylists">Retry</button></div>
-      <div v-else class="action-playlist-list" role="list">
+      <div v-else class="action-playlist-list" role="listbox" aria-label="Playlists">
         <div v-if="recentPlaylists.length" class="action-list-label">Recent</div>
-        <button v-for="p in recentPlaylists" :key="'recent-'+p.id" type="button" @click="addToPlaylist(p)"><span class="action-glyph" aria-hidden="true">♫</span><span class="ell">{{ p.name }}</span></button>
+        <button v-for="p in recentPlaylists" :key="'recent-'+p.id" type="button" class="action-playlist-option" :class="{selected: playlistSelected(p)}" role="option" :aria-selected="playlistSelected(p) ? 'true' : 'false'" @click="selectPlaylist(p)"><span class="action-glyph" aria-hidden="true">♫</span><span class="action-playlist-copy"><strong class="ell">{{ p.name }}</strong><small v-if="p.source" class="ell">{{ p.source }}</small></span><span class="action-playlist-check" aria-hidden="true">✓</span></button>
         <div v-if="otherPlaylists.length" class="action-list-label">{{ recentPlaylists.length ? 'All playlists' : 'Playlists' }}</div>
-        <button v-for="p in otherPlaylists" :key="p.id" type="button" @click="addToPlaylist(p)"><span class="action-glyph" aria-hidden="true">♫</span><span class="ell">{{ p.name }}</span></button>
+        <button v-for="p in otherPlaylists" :key="p.id" type="button" class="action-playlist-option" :class="{selected: playlistSelected(p)}" role="option" :aria-selected="playlistSelected(p) ? 'true' : 'false'" @click="selectPlaylist(p)"><span class="action-glyph" aria-hidden="true">♫</span><span class="action-playlist-copy"><strong class="ell">{{ p.name }}</strong><small v-if="p.source" class="ell">{{ p.source }}</small></span><span class="action-playlist-check" aria-hidden="true">✓</span></button>
         <div v-if="!filteredPlaylists.length" class="sheet-note">{{ playlists.length ? 'No matching playlists.' : 'No editable playlists.' }}</div>
       </div>
+      <footer class="action-playlist-footer"><span class="ell">{{ selectedPlaylist ? selectedPlaylist.name : 'Choose one playlist' }}</span><button type="button" class="primary" :disabled="!selectedPlaylist || busy" @click="addToPlaylist">{{ busy ? 'Adding…' : 'Add track' }}</button></footer>
+    </section>
+    <section v-else class="action-playlist-success" role="status" aria-live="polite">
+      <span aria-hidden="true">✓</span><strong>{{ 'Added to' }} “{{ addedPlaylistName }}”</strong><small>The track remains selected in Music Folder.</small><button type="button" @click="close">Done</button>
     </section>
   </div>
 </div>`,
     data: function () {
 	      return { ui: LmsUi.state, store: LmsStore.state, playlists: [], view: 'actions', playlistQuery: '', playlistError: '', favoriteError: '',
+	               selectedPlaylist: null, newPlaylistOpen: false, newPlaylistName: '', addedPlaylistName: '',
 	               busy: false, favoriteExists: false, favoriteIndex: null, sheetStyle: {},
+               pendingPlayerId: '', playerSwitchBusy: false, playerSwitchPhase: '', playerSwitchFailedAt: '', playerSwitchError: '',
                previousFocus: null, swipeStartY: null, swipeOffset: 0 };
     },
     computed: {
@@ -127,12 +161,38 @@
       availablePlayers: function () {
         return this.players.filter(function (p) { return p.connected; });
       },
+      stableAvailablePlayers: function () {
+        return this.availablePlayers.filter(function (p) { return !/apple\s*squeezer/i.test(p.name || ''); });
+      },
+      experimentalPlayers: function () {
+        return this.players.filter(function (p) { return /apple\s*squeezer/i.test(p.name || ''); });
+      },
       unavailablePlayers: function () {
-        return this.players.filter(function (p) { return !p.connected; });
+        return this.players.filter(function (p) {
+          return !p.connected && !/apple\s*squeezer/i.test(p.name || '');
+        });
       },
       activePlayer: function () {
         var id = this.store.playerId;
         return this.players.filter(function (p) { return p.id === id; })[0] || null;
+      },
+      pendingPlayer: function () {
+        var id = this.pendingPlayerId;
+        if (!id || id === this.store.playerId) return null;
+        return this.players.filter(function (p) { return p.id === id; })[0] || null;
+      },
+      playerSwitchTitle: function () {
+        if (this.playerSwitchPhase === 'complete') return 'Player switched';
+        if (this.playerSwitchPhase === 'failed') return 'Player switch failed';
+        return 'Applying player configuration';
+      },
+      playerSwitchMessage: function () {
+        if (this.playerSwitchPhase === 'complete') return 'The new player is connected and responding.';
+        if (this.playerSwitchPhase === 'failed') return this.playerSwitchError || 'Squeezelite was restored.';
+        if (this.playerSwitchPhase === 'stopping') return 'Waiting for the current player to confirm Stop…';
+        if (this.playerSwitchPhase === 'switching') return 'Changing the controlled player…';
+        if (this.playerSwitchPhase === 'checking') return 'Checking connection, power and status…';
+        return 'Restoring playback state…';
       },
       activePlayerSummary: function () {
         if (!this.activePlayer) return '';
@@ -182,8 +242,17 @@
       item: function (value) {
         this.view = 'actions';
         this.playlistQuery = '';
+        this.selectedPlaylist = null;
+        this.newPlaylistOpen = false;
+        this.newPlaylistName = '';
+        this.addedPlaylistName = '';
         this.favoriteExists = false;
         this.favoriteIndex = null;
+        this.pendingPlayerId = '';
+        this.playerSwitchBusy = false;
+        this.playerSwitchPhase = '';
+        this.playerSwitchFailedAt = '';
+        this.playerSwitchError = '';
         if (value) this.previousFocus = document.activeElement;
         if (value && value.url) {
           this.loadPlaylists();
@@ -202,16 +271,27 @@
     },
     methods: {
       close: function () {
+        if (this.playerSwitchBusy) return;
         var previous = this.previousFocus;
         LmsUi.closeActions();
         setTimeout(function () { if (previous && previous.focus) previous.focus(); }, 0);
       },
       escapeSheet: function () {
+        if (this.playerSwitchBusy) return;
         if (this.view === 'playlists') this.backToActions();
         else this.close();
       },
-      openPlaylists: function () { this.view = 'playlists'; },
-      backToActions: function () { this.view = 'actions'; this.playlistQuery = ''; },
+      openPlaylists: function () { this.view = 'playlists'; this.selectedPlaylist = null; },
+      backToActions: function () { this.view = 'actions'; this.playlistQuery = ''; this.selectedPlaylist = null; this.newPlaylistOpen = false; this.newPlaylistName = ''; },
+      selectPlaylist: function (playlist) { if (!this.busy) this.selectedPlaylist = playlist; },
+      playlistSelected: function (playlist) { return !!(this.selectedPlaylist && String(this.selectedPlaylist.id) === String(playlist.id)); },
+      showNewPlaylist: function () {
+        this.newPlaylistOpen = true;
+        this.selectedPlaylist = null;
+        var self = this;
+        this.$nextTick(function () { if (self.$refs.newPlaylistName) self.$refs.newPlaylistName.focus(); });
+      },
+      hideNewPlaylist: function () { this.newPlaylistOpen = false; this.newPlaylistName = ''; },
       prepareSheet: function () {
         this.positionSheet();
         if (this.$refs.sheet) {
@@ -221,7 +301,7 @@
       },
       trapFocus: function (event) {
         if (this.anchor || !this.$refs.sheet) return;
-        var nodes = Array.prototype.slice.call(this.$refs.sheet.querySelectorAll('button:not([disabled])'));
+        var nodes = Array.prototype.slice.call(this.$refs.sheet.querySelectorAll('button:not([disabled]), input:not([disabled])'));
         if (!nodes.length) return;
         if (event.shiftKey && document.activeElement === nodes[0]) {
           event.preventDefault(); nodes[nodes.length - 1].focus();
@@ -231,6 +311,7 @@
       },
       startSwipe: function (event) {
         if (this.anchor || event.button > 0) return;
+        if (this.playerSwitchBusy) return;
         var target = event.target;
         if (!target || (!target.closest('.action-sheet-head') && !target.closest('.player-picker-head') && !target.closest('.action-sheet-handle'))) return;
         this.swipeStartY = event.clientY;
@@ -259,7 +340,8 @@
         var gap = 7;
         var viewportWidth = window.innerWidth;
         var viewportHeight = window.innerHeight;
-        var width = Math.min(320, viewportWidth - margin * 2);
+        var preferredWidth = this.item && this.item.kind === 'player-picker' ? 430 : 320;
+        var width = Math.min(preferredWidth, viewportWidth - margin * 2);
         var sheet = this.$refs.sheet;
         var height = Math.min(sheet.scrollHeight, viewportHeight - margin * 2);
         var left = this.anchor.right + gap;
@@ -326,13 +408,67 @@
         LmsUi.togglePin(this.item);
         this.close();
       },
-      /* AUDIT-11: a linha do player dentro do proprio player abre esta folha
-         com a lista de LmsStore.state.players. selectPlayer ja existe e ja
-         troca sem recarregar -- reaproveitado aqui, nao reescrito. */
+      /* A linha so escolhe. O servidor permanece intocado ate Apply switch;
+         isso torna a parada, a validacao e o rollback uma unica transacao. */
       choosePlayer: function (p) {
-        if (!p || !p.connected) return;
-        LmsStore.selectPlayer(p.id);
-        this.close();
+        if (!p || !p.connected || this.playerSwitchBusy) return;
+        this.pendingPlayerId = p.id === this.store.playerId ? '' : p.id;
+        this.playerSwitchPhase = '';
+        this.playerSwitchFailedAt = '';
+        this.playerSwitchError = '';
+        this.$nextTick(this.positionSheet);
+      },
+      cancelPlayerChoice: function () {
+        if (this.playerSwitchBusy) return;
+        this.pendingPlayerId = '';
+        this.playerSwitchPhase = '';
+        this.playerSwitchFailedAt = '';
+        this.playerSwitchError = '';
+        this.$nextTick(this.positionSheet);
+      },
+      applyPlayerChoice: async function () {
+        if (!this.pendingPlayer || this.playerSwitchBusy) return;
+        var self = this;
+        this.playerSwitchBusy = true;
+        this.playerSwitchFailedAt = '';
+        this.playerSwitchError = '';
+        var result = await LmsStore.switchPlayerSafely(this.pendingPlayer.id, function (phase) {
+          if (/^(stopping|switching|checking|resuming)$/.test(phase)) self.playerSwitchFailedAt = phase;
+          self.playerSwitchPhase = phase;
+        });
+        this.playerSwitchBusy = false;
+        if (!result || !result.ok) {
+          this.playerSwitchPhase = 'failed';
+          this.playerSwitchError = result && result.error ? result.error : 'The player switch did not complete.';
+        } else {
+          this.pendingPlayerId = '';
+          this.playerSwitchPhase = 'complete';
+        }
+        this.$nextTick(this.positionSheet);
+      },
+      refreshPlayerList: async function () {
+        if (this.playerSwitchBusy) return;
+        this.playerSwitchError = '';
+        try { await LmsStore.refreshPlayers(); }
+        catch (e) { this.playerSwitchError = LmsStore.friendlyError(e, 'Could not refresh players.'); }
+      },
+      isDefaultPlayer: function (p) {
+        return !!(p && /squeezelite/i.test((p.model || '') + ' ' + (p.name || '')));
+      },
+      playerOutput: function (p) {
+        return p && p.output ? ' · Output: ' + p.output : '';
+      },
+      playerStepClass: function (name) {
+        var order = ['stopping', 'switching', 'checking', 'resuming'];
+        var current = order.indexOf(this.playerSwitchPhase);
+        var index = order.indexOf(name);
+        if (this.playerSwitchPhase === 'complete') return 'done';
+        if (this.playerSwitchPhase === 'failed') {
+          var failed = order.indexOf(this.playerSwitchFailedAt);
+          return index < failed ? 'done' : (index === failed ? 'error' : '');
+        }
+        if (current < 0) return '';
+        return index < current ? 'done' : (index === current ? 'active' : '');
       },
       /* Texto vai para uma interpolacao de template, entao a reescrita de
          i18n ja envolve isto em $t() sozinha -- sem chamada explicita aqui. */
@@ -409,23 +545,55 @@
           if (window.console && console.debug) console.debug('[Echo Classic] playlists: ' + this.playlistError);
         }
       },
-      addToPlaylist: async function (playlist) {
-        if (!this.item || !this.item.url || this.busy) return;
+      rememberPlaylist: function (playlist) {
+        try {
+          var id = String(playlist.id);
+          var recent = this.recentPlaylistIds.filter(function (entry) { return entry !== id; });
+          localStorage.setItem('echoRecentPlaylists', JSON.stringify([id].concat(recent).slice(0, 4)));
+        } catch (e) {}
+      },
+      finishPlaylistAdd: function (playlist) {
+        this.rememberPlaylist(playlist);
+        this.addedPlaylistName = playlist.name;
+        this.selectedPlaylist = null;
+        this.newPlaylistOpen = false;
+        this.newPlaylistName = '';
+        this.view = 'playlist-success';
+      },
+      addTrackToPlaylist: function (playlist) {
+        return LmsApi.editPlaylist(playlist.id, 'add', {
+          title: this.item.title || this.item.label,
+          url: this.item.url
+        });
+      },
+      addToPlaylist: async function () {
+        var playlist = this.selectedPlaylist;
+        if (!playlist || !this.item || !this.item.url || this.busy) return;
         this.busy = true;
         LmsUi.setBusy('Adding to playlist…');
         try {
-          await LmsApi.editPlaylist(playlist.id, 'add', {
-            title: this.item.title || this.item.label,
-            url: this.item.url
-          });
-          try {
-            var id = String(playlist.id);
-            var recent = this.recentPlaylistIds.filter(function (entry) { return entry !== id; });
-            localStorage.setItem('echoRecentPlaylists', JSON.stringify([id].concat(recent).slice(0, 4)));
-          } catch (e) {}
-          this.close();
+          await this.addTrackToPlaylist(playlist);
+          this.finishPlaylistAdd(playlist);
         } catch (e) {
           LmsUi.notify('Could not add to the playlist. ' + e.message, 'error', 6500);
+        } finally {
+          this.busy = false;
+          LmsUi.setBusy('');
+        }
+      },
+      createAndAdd: async function () {
+        var name = this.newPlaylistName.trim();
+        if (!name || !this.item || !this.item.url || this.busy) return;
+        this.busy = true;
+        LmsUi.setBusy('Creating playlist…');
+        try {
+          var created = await LmsApi.createPlaylist(name);
+          if (created.id == null) throw new Error('The server did not return a playlist.');
+          var playlist = { id: created.id, name: name, source: 'Local library' };
+          await this.addTrackToPlaylist(playlist);
+          this.finishPlaylistAdd(playlist);
+        } catch (e) {
+          LmsUi.notify('Could not create the playlist. ' + e.message, 'error', 6500);
         } finally {
           this.busy = false;
           LmsUi.setBusy('');

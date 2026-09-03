@@ -26,14 +26,14 @@
     <title lang="EN">Echo Classic</title>
   </details>
   <plugins>
-    <plugin name="EchoClassic" version="3.5.6-rc1" minTarget="8.0" maxTarget="*">
+    <plugin name="EchoClassic" version="3.5.6" minTarget="8.0" maxTarget="*">
       <title lang="EN">Echo Classic</title>
       <desc lang="EN">A responsive classic iPad-style LMS interface with advanced library, queue, player, signal-path and optional DSP controls.</desc>
-      <url>https://github.com/fdfreitas88/echoclassic/releases/download/v3.5.6-rc1/EchoClassic-3.5.6-rc1.zip</url>
+      <url>https://github.com/fdfreitas88/echoclassic/releases/download/v3.5.6/EchoClassic-3.5.6.zip</url>
       <link>https://github.com/fdfreitas88/echoclassic</link>
       <category>skin</category>
       <icon>https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/EchoClassic/HTML/echoclassic/html/images/icon.svg</icon>
-      <sha>772994fe9855bf6d7cd470d5d2bdfa64c3c82573</sha>
+      <sha>a91a2db305237b299df30111113cf03c889781bd</sha>
       <creator>Felipe Freitas</creator>
     </plugin>
   </plugins>

@@ -15,6 +15,52 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.6] — 2026-09-03
+
+### Added
+
+- Music Folder is now a dedicated source browser with persistent locations,
+  breadcrumbs, lazy outline expansion, filtering, sorting and keyboard tree
+  navigation. Its Playlist Builder accepts tracks by button, drag and drop or
+  exact-position insertion, then saves the displayed order without altering the
+  playback queue. [live/measured: deployed Music Folder workspace at 1440×900;
+  focused playlist builder, navigation, accessibility and localization
+  regression tests]
+- Track actions provide a searchable playlist chooser, recent destinations and
+  in-place playlist creation before adding the selected track. [code/measured:
+  action-sheet, focus-containment and playlist API regression tests]
+- Ratings Light is discovered through its published JSON-RPC dispatches and,
+  when available, owns rating reads and writes so its change notifications,
+  recently-rated records and backup workflow remain intact. Core LMS rating is
+  retained as a no-plugin fallback. Now Playing can optionally append the
+  current rating beside the track title. [code/measured: API, Store,
+  accessibility and UI-state regression tests]
+
+### Changed
+
+- Player selection is now explicit and recoverable: Echo Classic discovers the
+  complete server-wide player list, keeps a choice pending until Apply, stops
+  and validates the transition in visible stages, resumes playback when
+  appropriate and restores the safe player after a failed switch.
+  [code/measured: API, Store and player-picker transaction regression tests]
+- Album destinations across Recent and My Music now share the complete album
+  presentation: edition years, format and source details, artist information,
+  related local artists and stable Play, Shuffle and Equalizer actions appear
+  without falling back to a reduced detail view. [live/measured: deployed album
+  detail at 1440×900; album, artist-metadata and My Music root regression tests]
+
+### Fixed
+
+- Server-wide player discovery no longer places the active player in the
+  JSON-RPC envelope, which could hide alternate registered players on
+  compatible LMS implementations. Optional model and output metadata are kept
+  only when the server actually reports them. [code/measured: player discovery
+  regression tests]
+- Music Folder exits, expansion and filtering no longer recreate stale detail,
+  flatten the folder hierarchy or remove track actions while navigating between
+  desktop and phone layouts. [code/measured: Music Folder state, responsive and
+  keyboard regression tests]
+
 ## [3.5.6-rc1] — 2026-08-31
 
 ### Added

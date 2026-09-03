@@ -32,7 +32,7 @@ var LMS_ALBUM_ROWS_CACHE_KEY = 'echoclassic.albumrows.v1';
 
 Vue.component('lms-browse', {
   template: `
-<div ref="split" class="split-body" :class="{'split-locked': splitLocked}"
+<div ref="split" class="split-body" :class="{'split-locked': splitLocked, 'music-folder-standalone': view === 'musicfolders'}"
      :style="{'--pane-current': paneWidth + 'px'}">
   <div class="pane-left" :class="{'no-rail':!hasRail}">
     <div class="library-context">
@@ -102,6 +102,18 @@ Vue.component('lms-browse', {
         </button>
       </div>
     </div>
+    <section v-if="ui.busyMessage || ui.notice" class="library-feedback" :aria-label="tr('Status messages')">
+      <div v-if="ui.busyMessage" class="library-feedback-message" role="status" aria-live="polite">
+        <span class="feedback-spinner" aria-hidden="true"></span><span class="feedback-copy">{{ ui.busyMessage }}</span>
+      </div>
+      <div v-if="ui.notice" class="library-feedback-message" :class="ui.noticeKind"
+           :role="ui.noticeKind === 'error' ? 'alert' : 'status'"
+           :aria-live="ui.noticeKind === 'error' ? 'assertive' : 'polite'">
+        <span class="feedback-mark" aria-hidden="true">{{ ui.noticeKind === 'error' ? '!' : '✓' }}</span>
+        <span class="feedback-copy">{{ ui.notice }}</span>
+        <button type="button" class="feedback-dismiss" :aria-label="tr('Dismiss message')" @click="LmsUi.dismissNotice">×</button>
+      </div>
+    </section>
     <div v-if="view === 'recent' && store.history.length" class="history-strip">
       <div class="sectitle">Recently played</div>
       <div class="history-scroll">
@@ -110,7 +122,7 @@ Vue.component('lms-browse', {
           <span class="art" :style="historyArt(h)"></span>
           <span class="history-copy">
             <span class="history-title">{{ h.title }}</span>
-            <span v-if="h.artist" class="history-meta ell">{{ h.artist }}</span>
+            <span v-if="h.artist" class="history-meta">{{ h.artist }}</span>
           </span>
         </button>
       </div>
@@ -229,7 +241,7 @@ Vue.component('lms-browse', {
   </div>
 
   <div class="pane-right">
-    <lms-detail v-if="frame" :frame="frame"></lms-detail>
+    <lms-detail v-if="frame" :frame="frame" @exit="exitDetail"></lms-detail>
     <div v-else class="empty">
       <div class="h">{{ viewLabel }}</div>
       <div class="p">Choose an item from the list on the left.</div>
@@ -244,6 +256,7 @@ Vue.component('lms-browse', {
     return {
       ui: LmsUi.state, store: LmsStore.state, LmsUi: LmsUi,
       rows: [], refreshRows: null, libraries: [], loading: true, error: '', loadProgress: null, loadTotal: 0,
+      reloadQueued: false, reloadPreserveNavigation: true,
 	      loadingMore: false, limitWarning: '', requestToken: 0, unknownCount: 0,
 	      artistIndexTruncated: false,
       rootSelection: null,
@@ -572,14 +585,14 @@ Vue.component('lms-browse', {
     railIndex: function () { return Math.max(0, this.RAIL.indexOf(this.activeRail)); }
   },
   watch: {
-    view: function () { this.reload(false); },
-    'ui.rootKey': function () { this.reload(true); },
+    view: function () { this.scheduleReload(false); },
+    'ui.rootKey': function () { this.scheduleReload(true); },
     /* Filtrar e agrupar mudam o que e carregado; ordenar so reordena o que ja
        esta na tela, e displayRows cuida disso sozinho. Antes qualquer troca de
        sortKey em Albuns recarregava a biblioteca inteira, inclusive para mudar
        de A-Z para Ano. */
-    'ui.filters': function () { this.reload(false); },
-    'ui.group': function () { this.reload(false); },
+    'ui.filters': function () { this.scheduleReload(false); },
+    'ui.group': function () { this.scheduleReload(false); },
     /* Seccionar, ordenar e preferir nao mudam o CONJUNTO carregado -- so a
        apresentacao. Recarregar a biblioteca para acrescentar cabecalhos seria
        cobrar dez segundos por uma mudanca de layout. O que pode faltar e o
@@ -596,6 +609,25 @@ Vue.component('lms-browse', {
     }
   },
   methods: {
+    /* A single view change also adopts that view's filters and grouping. Vue
+       notifies all three watchers in the same turn; firing reload from each one
+       sent overlapping LMS requests before requestToken could discard their
+       results. Collapse that burst into one reload, with the stricter navigation
+       reset winning when any trigger requires it. */
+    scheduleReload: function (preserveNavigation) {
+      this.reloadPreserveNavigation = this.reloadQueued
+        ? this.reloadPreserveNavigation && !!preserveNavigation
+        : !!preserveNavigation;
+      if (this.reloadQueued) return;
+      this.reloadQueued = true;
+      var self = this;
+      Promise.resolve().then(function () {
+        var preserve = self.reloadPreserveNavigation;
+        self.reloadQueued = false;
+        self.reloadPreserveNavigation = true;
+        self.reload(preserve);
+      });
+    },
     openServerSettings: function () {
       LmsUi.setTab('settings');
       LmsNav.reset('settings');
@@ -603,6 +635,10 @@ Vue.component('lms-browse', {
     goToMusic: function () {
       this.clearAllTools();
       LmsUi.setTab('music');
+      LmsNav.reset('music');
+    },
+    exitDetail: function () {
+      this.rootSelection = null;
       LmsNav.reset('music');
     },
     chooseLibrary: function (key) {
@@ -1032,6 +1068,34 @@ Vue.component('lms-browse', {
          artista alem do limite deixa de ser atribuido. */
       this.artistIndexTruncated = keepGoing;
       return index;
+    },
+    /* The Artists root used to build its visible rows indirectly: download the
+       complete artist index, then page the complete album catalogue and map
+       every album back to that index. That made 364 artist rows wait behind the
+       much larger album library. The artists endpoint already supplies the
+       canonical, merged identities required by this screen. */
+    loadArtistsRoot: async function (pid, token) {
+      var start = 0;
+      var pageSize = 500;
+      var keepGoing = true;
+      while (keepGoing && start < 10000) {
+        var page = await LmsApi.artists(pid, start, pageSize);
+        if (token !== this.requestToken) return;
+        this.appendRows(page.map(function (artist) {
+          return { key: 'ar' + artist.id, kind: 'artist', id: artist.id, ids: artist.ids,
+                   label: artist.name, art: null };
+        }));
+        if (this.rows.length) this.loading = false;
+        var sourceCount = page.sourceCount == null ? page.length : page.sourceCount;
+        start += sourceCount;
+        if (this.loadTotal > 0) {
+          this.loadProgress = Math.min(99, Math.round(start / this.loadTotal * 100));
+        }
+        keepGoing = sourceCount === pageSize;
+        this.loadingMore = keepGoing;
+        if (keepGoing) await new Promise(function (resolve) { setTimeout(resolve, 0); });
+      }
+      this.artistIndexTruncated = keepGoing;
     },
     canonicalFormat: function (value) {
       var type = String(value || '').toLowerCase();
@@ -1469,7 +1533,17 @@ Vue.component('lms-browse', {
       }
       var pid = this.store.playerId || '';
       try {
-        if (this.view === 'artists' || this.view === 'albums') {
+        if (this.view === 'artists') {
+          try {
+            var artistTotals = await LmsApi.serverInfo();
+            if (token !== this.requestToken) return;
+            this.loadTotal = artistTotals.artists;
+            if (this.loadTotal > 0) this.loadProgress = 0;
+          } catch (ignoredArtistTotals) {
+            this.loadTotal = 0;
+          }
+          await this.loadArtistsRoot(pid, token);
+        } else if (this.view === 'albums') {
           var rootLastscan = '';
           var albumCacheCurrent = false;
           if (!this.hasMediaFilter) {

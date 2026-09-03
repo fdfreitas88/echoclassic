@@ -21,7 +21,7 @@
        Select) e o primeiro item do seletor de raiz. Ver UX-01, mesmo mecanismo
        de EC-003. A posicao aqui, entre o cabecalho e a .workspace, e o que o
        coloca abaixo da navbar: .app-header e display:contents. -->
-  <div v-if="store.initialized && !store.connected" class="connection-banner" role="alert">
+  <div v-if="store.initialized && !store.connected" class="connection-banner" :class="{'browsing-only':musicFolderBrowsing}" :role="musicFolderBrowsing ? 'status' : 'alert'">
     <span>{{ connectionMessage }}</span>
     <button :disabled="store.reconnecting" @click="reconnect">
       {{ reconnectLabel }}
@@ -39,10 +39,10 @@
 	    <h1 class="visually-hidden">{{ pageHeading }}</h1>
 	    <lms-nowplaying v-if="ui.full" :fullscreen="ui.playerFullscreen"></lms-nowplaying>
 
-    <!-- Feedback belongs to the reading order. On the default Music screen this
-         is immediately before "Recently played", so a result cannot hide behind
-         the mini player or cover a list control. -->
-    <section v-if="ui.busyMessage || ui.notice" class="feedback-region"
+    <div class="body" :class="{split: isSplit, drilled: drilled}">
+    <!-- Browse owns its inline strip so it can sit directly below the library
+         toolbar. Other screens keep the same in-flow feedback here. -->
+    <section v-if="!isSplit && (ui.busyMessage || ui.notice)" class="feedback-region"
              aria-label="Status messages">
       <div v-if="ui.busyMessage" class="operation-banner" role="status" aria-live="polite">
         <span class="feedback-spinner" aria-hidden="true"></span>
@@ -57,8 +57,6 @@
                 @click="LmsUi.dismissNotice">×</button>
       </div>
     </section>
-
-    <div class="body" :class="{split: isSplit, drilled: drilled}">
       <lms-search    v-if="ui.searching"></lms-search>
       <lms-browse    v-else-if="ui.tab === 'music'"></lms-browse>
       <lms-playlists v-else-if="ui.tab === 'playlists'" :key="plKey"></lms-playlists>
@@ -202,20 +200,25 @@
       /* Dentro de um artista o centro deixa de ser o picker e vira o toggle: a
          escolha de raiz nao faz sentido ali, e a de apresentacao faz. */
       segments: function () {
-        return (this.ui.tab === 'music' && this.depth) ? LmsUi.ALBUM_MODES : [];
+        return (this.ui.tab === 'music' && this.depth && this.ui.musicView !== 'musicfolders') ? LmsUi.ALBUM_MODES : [];
       },
       plKey: function () { return 'pl-' + (this.nav.playlists || []).length; },
       radioKey: function () { return 'radio-' + (this.nav.radio || []).length; },
       appsKey: function () { return 'apps-' + (this.nav.apps || []).length; },
       favKey: function () { return 'fav-' + (this.nav.favourites || []).length; },
+      musicFolderBrowsing: function () {
+        var current = LmsNav.top('music');
+        return this.ui.tab === 'music' && this.ui.musicView === 'musicfolders' && current && current.kind === 'musicfolder';
+      },
       connectionMessage: function () {
+        if (this.musicFolderBrowsing) return this.tr('Browsing is available. Connect a player to start playback.');
         if (this.store.lastSuccess && this.store.np && this.store.np.id) {
           return this.tr('Player connection lost. Showing the last known track.');
         }
         return this.store.lastError || this.tr('No connection to the player.');
       },
       reconnectLabel: function () {
-        return this.tr(this.store.reconnecting ? 'Reconnecting…' : 'Try again');
+        return this.tr(this.store.reconnecting ? 'Reconnecting…' : (this.musicFolderBrowsing ? 'Find player' : 'Try again'));
       }
     },
     methods: {

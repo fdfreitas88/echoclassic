@@ -14,54 +14,50 @@ touch-friendly music system for tablets, phones and desktop browsers. It brings
 library discovery, queue and playlist editing, synchronized-player control,
 live signal-path information and optional server-side DSP into one interface.
 
-Version **3.5.6-rc1** uses Vue 2 without a compilation or bundling step: the files in
+Version **3.5.6** uses Vue 2 without a compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
-![Echo Classic 3.5.4 library](images/release-3.5.4-library.png)
+![Echo Classic 3.5.6 library and album detail](images/release-3.5.6-library.png)
 
-## What is new in 3.5.4
+## What is new in 3.5.6
 
-### One full-width Equalizer workspace
+### Music Folder becomes a complete workspace
 
-Equalizer no longer moves between a narrow settings list and disconnected detail
-pages. Engine selection, playback mode, quick presets, automatic rules, the
-saved response curve and advanced processing now share one responsive workspace.
-Every Equalizer entry point opens this same view and preserves its navigation
-context.
+Music Folder now has persistent locations, breadcrumbs and a lazy outline tree
+instead of behaving like another flat library list. Folders can be expanded in
+place, filtered and sorted, while track actions remain available throughout the
+hierarchy. Keyboard navigation follows the standard tree pattern.
 
-Apple Squeezer and SqueezeDSP are presented as processing engines rather than
-competing settings screens. DAC Priority, Equalizer, OSF and CSF are explicit
-playback modes. If the current mode cannot process the saved curve, Echo Classic
-keeps the curve visible and offers a direct way back to Equalizer mode.
+The adjacent Playlist Builder accepts tracks from any visible folder, supports
+drag-and-drop and exact-position insertion, and saves the displayed order without
+changing the playback queue.
 
-![Echo Classic 3.5.4 Equalizer](images/release-3.5.4-equalizer.png)
+![Echo Classic 3.5.6 Music Folder](images/release-3.5.6-music-folder.png)
 
-The workspace includes:
+### Complete album detail everywhere
 
-- quick and saved sound profiles;
-- a saved frequency-response preview;
-- graphic and parametric equalization;
-- preamp, headroom, Replay Gain and true-peak protection;
-- balance, stereo width, delay, crossfeed and FIR convolution;
-- contextual rules for a song, album, folder, artist, genre, year or epoch;
-- momentary comparison with recoverable restore state;
-- staged changes with validation, confirmation and rollback.
+Albums opened from Recent or any My Music root now use the same complete
+presentation. Edition and original years, format, source details, artist
+information, related local artists and stable Play, Shuffle and Equalizer actions
+remain visible instead of falling back to a reduced detail page.
 
-### Safer Apple Squeezer control
+### Explicit, recoverable player switching
 
-Echo Classic discovers Apple Squeezer through its versioned, capability-driven
-LMS Store API. Mode changes show a blocking wait state while the audio path
-restarts. OSF/CSF rate and filter choices update immediately, return to their
-previous values if the server rejects the change, and invalidate cached status
-after every mutation.
+Player discovery now uses the complete server-wide LMS list. Selecting a player
+does not immediately affect playback: Echo Classic waits for **Apply switch**,
+shows the stop, connection, validation and resume stages, and restores the safe
+player if the transition fails. Server-reported output information is shown when
+available and never guessed.
 
-Native DSP state is scoped to the selected player and confirmed by revision.
-Unsupported controls stay hidden, and missing telemetry is reported as
-unavailable instead of being invented.
+### Better playlist and rating workflows
 
-### Complete four-language runtime
+Track actions now offer a searchable playlist picker, recent destinations and
+in-place playlist creation before adding the track. Ratings Light can own reads
+and writes through its published dispatches while the LMS core rating command
+remains the fallback. Now Playing can optionally append the current rating beside
+the title.
 
-All 801 runtime strings are complete in English, German, French and Portuguese.
+All 890 runtime strings are complete in English, German, French and Portuguese.
 The validation suite rejects missing translations, malformed blocks and duplicate
 keys before a release can be packaged.
 
@@ -294,12 +290,12 @@ an older cached stylesheet.
 
 ## Project status
 
-Current release candidate: **3.5.6-rc1**.
+Current stable release: **3.5.6**.
 
-- 542 automated tests passing.
-- Five validation stages passing.
+- 581 automated tests passing.
+- Six validation stages passing.
 - 21 Vue templates compiling.
-- 801 runtime strings complete in four languages with no duplicate keys.
+- 890 runtime strings complete in four languages with no duplicate keys.
 - 155/155 tested contrast pairs passing.
 
 The [changelog](CHANGELOG.md) distinguishes behavior verified in a running

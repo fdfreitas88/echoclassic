@@ -12,11 +12,33 @@ Vue.component('lms-album-block', {
   props: {
     album: { type: Object, required: true },
     artist: { type: Object, default: null },
-    enrich: { type: Boolean, default: true }
+    enrich: { type: Boolean, default: true },
+    showRelated: { type: Boolean, default: true },
+    continuation: { type: Boolean, default: false }
   },
   template: `
 <div class="albumblock">
-  <div class="albumhead">
+  <div v-if="showRelated && relatedArtists.length" ref="relatedRow" class="album-extra album-related"
+       :class="{expanded: relatedExpanded}">
+    <svg class="related-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M16 19.5v-1.3c0-2.1-1.8-3.7-4-3.7H7c-2.2 0-4 1.6-4 3.7v1.3M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM16 8h5M18.5 5.5v5"/>
+    </svg>
+    <div class="related-links">
+      <strong>{{ tr('Local library') }}</strong>
+      <template v-for="(a, index) in displayedRelatedArtists">
+        <span v-if="index" :key="'separator-' + a.id" class="related-separator" aria-hidden="true">•</span>
+        <button :key="a.id" @click="openRelatedArtist(a)">{{ a.name }}</button>
+      </template>
+    </div>
+    <button v-if="hasHiddenRelated" class="related-more"
+            :aria-expanded="String(relatedExpanded)" @click="relatedExpanded = !relatedExpanded">
+      <span>{{ tr(relatedExpanded ? 'Show less' : 'Show more') }}</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div v-else-if="relatedError" class="loading-more warning" role="status">{{ relatedError }}</div>
+
+  <div v-if="!continuation" class="albumhead">
     <div class="albumart" :class="{placeholder: !artUrl || artFailed}">
       <img v-if="artUrl && !artFailed" :src="artUrl" alt="" @error="artFailed = true">
       <span v-else class="art-placeholder" aria-hidden="true">♫</span>
@@ -57,7 +79,7 @@ Vue.component('lms-album-block', {
     </div>
   </div>
 
-  <div class="album-primary-actions" aria-label="Album playback">
+  <div v-if="!continuation" class="album-primary-actions" aria-label="Album playback">
     <button type="button" class="album-play-command" @click="playAlbum">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
       <span>{{ tr('Play') }}</span>
@@ -67,8 +89,8 @@ Vue.component('lms-album-block', {
       <span>{{ tr('Shuffle') }}</span>
     </button>
   </div>
-  <div v-if="store.equalizer.status === 'ready' || albumInfoStatus" class="album-secondary-tools">
-    <button v-if="store.equalizer.status === 'ready'" type="button" class="album-equalizer-disclosure"
+  <div v-if="(!continuation && store.equalizer.status === 'ready') || albumInfoStatus" class="album-secondary-tools">
+    <button v-if="!continuation && store.equalizer.status === 'ready'" type="button" class="album-equalizer-disclosure"
             @click="openAlbumEqualizer">
       <svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M4 2.5v15M10 2.5v15M16 2.5v15"/><circle cx="4" cy="12" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="16" cy="10" r="2.2"/></g></svg>
       <span>{{ tr('Equalizer') }}</span><span class="album-equalizer-value">{{ albumEqualizerRule ? tr('custom') : tr('Default') }} ›</span>
@@ -109,25 +131,10 @@ Vue.component('lms-album-block', {
     <div v-else role="status">{{ tr('Album information is temporarily unavailable.') }} <button type="button" class="retry-command" @click="loadAlbumInfo(true)">{{ tr('Try again') }}</button></div>
   </section>
 
-  <div v-if="relatedArtists.length" ref="relatedRow" class="album-extra album-related"
-       :class="{expanded: relatedExpanded}">
-    <svg class="related-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M16 19.5v-1.3c0-2.1-1.8-3.7-4-3.7H7c-2.2 0-4 1.6-4 3.7v1.3M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM16 8h5M18.5 5.5v5"/>
-    </svg>
-    <div class="related-links">
-      <strong>{{ tr('Local library') }}</strong>
-      <template v-for="(a, index) in displayedRelatedArtists">
-        <span v-if="index" :key="'separator-' + a.id" class="related-separator" aria-hidden="true">•</span>
-        <button :key="a.id" @click="openRelatedArtist(a)">{{ a.name }}</button>
-      </template>
-    </div>
-    <button v-if="hasHiddenRelated" class="related-more"
-            :aria-expanded="String(relatedExpanded)" @click="relatedExpanded = !relatedExpanded">
-      <span>{{ tr(relatedExpanded ? 'Show less' : 'Show more') }}</span>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l5 5 5-5"/></svg>
-    </button>
-  </div>
-  <div v-else-if="relatedError" class="loading-more warning" role="status">{{ relatedError }}</div>
+  <header v-if="continuation" class="album-continuation-heading">
+    <span class="album-continuation-label">{{ tr('Album') }}</span>
+    <span class="album-continuation-copy"><strong>{{ album.title }}</strong><small>{{ continuationMeta }}</small></span>
+  </header>
 
   <div v-if="loading" class="empty"><div class="p">Loading tracks…</div></div>
   <div v-else-if="error" class="empty">
@@ -197,6 +204,10 @@ Vue.component('lms-album-block', {
       var unit = (n === 1) ? 'song' : 'songs';
       if (window.LmsStr) unit = LmsStr.t(unit);
       return [this.album.releaseType || '', n ? n + ' ' + unit : '']
+        .filter(Boolean).join(' • ');
+    },
+    continuationMeta: function () {
+      return [this.metaLine, this.album.year ? String(this.album.year) : '']
         .filter(Boolean).join(' • ');
     },
     formatLine: function () {
@@ -478,6 +489,14 @@ Vue.component('lms-album-block', {
         var main = String(this.album.artist || (this.artist && this.artist.name) || '');
         this.relatedArtists = result[1].filter(function (artist) {
           return self.normalizeName(artist.name) !== self.normalizeName(main);
+        });
+        this.$emit('summary', {
+          id: this.album.id,
+          songCount: this.tracks.length,
+          formatLine: this.formatLine,
+          bitRateLine: this.bitRateLine,
+          originLine: this.originLine,
+          relatedArtists: this.relatedArtists.slice()
         });
         this.$nextTick(this.measureRelatedWidth);
       } catch (e) {

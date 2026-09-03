@@ -1155,6 +1155,91 @@
     await loadQueue();
   }
 
+  /* A troca pelo seletor e uma transacao, nao uma navegacao. A selecao visual
+     fica no componente ate o usuario aplicar; so esta funcao toca o servidor.
+     O player antigo e parado e confirmado antes de qualquer mudanca de estado.
+     Se a sonda do destino ou a retomada falhar, a escolha persistida e o estado
+     de reproducao anterior sao restaurados no player de origem. */
+  async function switchPlayerSafely(playerId, onPhase) {
+    var phase = typeof onPhase === 'function' ? onPhase : function () {};
+    var originId = state.playerId;
+    if (!playerId || playerId === originId) return { ok: true, unchanged: true };
+    var target = state.players.find(function (p) { return p.id === playerId; });
+    if (!target || !target.connected) {
+      return { ok: false, error: 'The selected player is no longer connected.' };
+    }
+
+    var wasPlaying = state.mode === 'play';
+    var originConnected = state.connected;
+    var fallback = state.players.find(function (p) {
+      var identity = (p.model || '') + ' ' + (p.name || '');
+      return p.connected && /squeezelite/i.test(identity) && !/apple\s*squeezer/i.test(identity);
+    }) || state.players.find(function (p) { return p.id === originId; });
+    try {
+      phase('stopping');
+      if (originId && originConnected) {
+        await api.transport(originId, 'stop');
+        var stopped = await api.status(originId);
+        if (stopped && stopped.mode === 'play') {
+          throw new Error('The current player did not confirm Stop.');
+        }
+      }
+
+      phase('switching');
+      var freshPlayers = await api.players();
+      var freshTarget = freshPlayers.find(function (p) { return p.id === playerId; });
+      if (!freshTarget || !freshTarget.connected) {
+        throw new Error('The selected player is no longer connected.');
+      }
+      if (!freshTarget.power) throw new Error('Wake the selected player before switching.');
+
+      phase('checking');
+      var targetStatus = await api.status(playerId);
+      if (!targetStatus || typeof targetStatus.mode !== 'string') {
+        throw new Error('The selected player did not return a valid status.');
+      }
+      state.players = freshPlayers;
+      await selectPlayer(playerId);
+
+      phase('resuming');
+      if (wasPlaying) {
+        await api.transport(playerId, 'play');
+        await refresh();
+        await loadQueue();
+      }
+      phase('complete');
+      return { ok: true, playerId: playerId, resumed: wasPlaying };
+    } catch (error) {
+      phase('rollback');
+      try {
+        var restoreId = fallback ? fallback.id : originId;
+        var restoreConnected = fallback ? fallback.connected : originConnected;
+        if (restoreId) {
+          var origin = state.players.find(function (p) { return p.id === restoreId; });
+          if (!origin) {
+            origin = { id: restoreId, name: 'Squeezelite', connected: restoreConnected, power: true };
+            state.players = [origin].concat(state.players);
+          }
+          state.playerId = restoreId;
+          preferredPlayerId = restoreId;
+          state.connected = restoreConnected;
+          state.commandable = restoreConnected;
+          state.volumeModeSynced = false;
+          saveSession();
+          if (restoreConnected && wasPlaying) await api.transport(restoreId, 'play');
+          if (restoreConnected) {
+            await refresh();
+            await loadQueue();
+          }
+        }
+      } catch (rollbackError) {
+        state.lastError = friendlyError(rollbackError, 'Could not restore the previous player.');
+      }
+      phase('failed');
+      return { ok: false, error: friendlyError(error, 'The player switch did not complete.') };
+    }
+  }
+
   /* state.queue e so a janela carregada (500). Transferir a partir dela
      descartava em silencio tudo a partir da faixa 501. Aqui a fila e relida
      inteira do servidor antes da transferencia; se ainda assim nao vier tudo, o
@@ -1503,6 +1588,7 @@
     cycleShuffle: guarded('Changing shuffle', cycleShuffle, false),
     cycleRepeat: guarded('Changing repeat', cycleRepeat, false),
     selectPlayer: guarded('Changing player', selectPlayer, true),
+    switchPlayerSafely: switchPlayerSafely,
     handoffTo: guarded('Transferring playback', handoffTo, true),
     syncWith: guarded('Player synchronisation', syncWith, true),
     unsyncPlayer: guarded('Player synchronisation', unsyncPlayer, true),

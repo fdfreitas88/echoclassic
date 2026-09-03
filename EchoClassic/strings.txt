@@ -183,6 +183,12 @@ ECHOCLASSIC_UI_ADD_TO_PLAYLIST
 	FR	Ajouter à la liste de lecture…
 	PT	Adicionar à playlist…
 
+ECHOCLASSIC_UI_ADD_TO_PLAYLIST_PLAIN
+	EN	Add to playlist
+	DE	Zur Playlist hinzufügen
+	FR	Ajouter à la liste de lecture
+	PT	Adicionar à playlist
+
 ECHOCLASSIC_UI_ADVANCED_LMS_SETTINGS
 	EN	Advanced LMS settings
 	DE	Erweiterte LMS-Einstellungen
@@ -4826,3 +4832,513 @@ ECHOCLASSIC_UI_PROMINENT_RATING_EXPLANATION
 	DE	Zeigt die aktuelle Bewertung gut sichtbar in „Aktuelle Wiedergabe“ an.
 	FR	Affiche la note actuelle bien en évidence dans « Lecture en cours ».
 	PT	Mostra a avaliação atual em destaque na tela Reproduzindo agora.
+
+ECHOCLASSIC_UI_MUSIC_FOLDERS
+	EN	Music folders
+	DE	Musikordner
+	FR	Dossiers de musique
+	PT	Pastas de música
+
+ECHOCLASSIC_UI_LOCATIONS
+	EN	Locations
+	DE	Orte
+	FR	Emplacements
+	PT	Locais
+
+ECHOCLASSIC_UI_CURRENT_LOCATION
+	EN	Current location
+	DE	Aktueller Ort
+	FR	Emplacement actuel
+	PT	Local atual
+
+ECHOCLASSIC_UI_COLLAPSE_ALL
+	EN	Collapse all
+	DE	Alle reduzieren
+	FR	Tout réduire
+	PT	Recolher tudo
+
+ECHOCLASSIC_UI_EXPAND_ALL
+	EN	Expand all
+	DE	Alle erweitern
+	FR	Tout développer
+	PT	Expandir tudo
+
+ECHOCLASSIC_UI_TYPE
+	EN	Type
+	DE	Typ
+	FR	Type
+	PT	Tipo
+
+ECHOCLASSIC_UI_ALL_MUSIC_2
+	EN	All Music
+	DE	Alle Musik
+	FR	Toute la musique
+	PT	Todas as músicas
+
+ECHOCLASSIC_UI_MUSIC_FOLDER_SOURCE
+	EN	Music folder source
+	DE	Musikordnerquelle
+	FR	Source du dossier de musique
+	PT	Origem da pasta de música
+
+ECHOCLASSIC_UI_FILTER_THIS_FOLDER
+	EN	Filter this folder
+	DE	Diesen Ordner filtern
+	FR	Filtrer ce dossier
+	PT	Filtrar esta pasta
+
+ECHOCLASSIC_UI_SORT_FOLDERS
+	EN	Sort folders
+	DE	Ordner sortieren
+	FR	Trier les dossiers
+	PT	Ordenar pastas
+
+ECHOCLASSIC_UI_NAME_A_Z
+	EN	Name A–Z
+	DE	Name A–Z
+	FR	Nom A–Z
+	PT	Nome A–Z
+
+ECHOCLASSIC_UI_NAME_Z_A
+	EN	Name Z–A
+	DE	Name Z–A
+	FR	Nom Z–A
+	PT	Nome Z–A
+
+ECHOCLASSIC_UI_ITEM_COUNT
+	EN	Item count
+	DE	Anzahl der Einträge
+	FR	Nombre d’éléments
+	PT	Quantidade de itens
+
+ECHOCLASSIC_UI_EXPAND_FIRST_LEVEL
+	EN	Expand first level
+	DE	Erste Ebene erweitern
+	FR	Développer le premier niveau
+	PT	Expandir primeiro nível
+
+ECHOCLASSIC_UI_EXPAND_FOLDER
+	EN	Expand folder
+	DE	Ordner erweitern
+	FR	Développer le dossier
+	PT	Expandir pasta
+
+ECHOCLASSIC_UI_COLLAPSE_FOLDER
+	EN	Collapse folder
+	DE	Ordner reduzieren
+	FR	Réduire le dossier
+	PT	Recolher pasta
+
+ECHOCLASSIC_UI_NOT_LOADED
+	EN	Not loaded
+	DE	Nicht geladen
+	FR	Non chargé
+	PT	Não carregado
+
+ECHOCLASSIC_UI_FOLDER_LOWERCASE
+	EN	folder
+	DE	Ordner
+	FR	dossier
+	PT	pasta
+
+ECHOCLASSIC_UI_FOLDERS_LOWERCASE
+	EN	folders
+	DE	Ordner
+	FR	dossiers
+	PT	pastas
+
+ECHOCLASSIC_UI_NO_MATCHING_ITEMS
+	EN	No matching items
+	DE	Keine passenden Einträge
+	FR	Aucun élément correspondant
+	PT	Nenhum item correspondente
+
+ECHOCLASSIC_UI_CLEAR_FOLDER_FILTER
+	EN	Clear the folder filter to see every item here.
+	DE	Löschen Sie den Ordnerfilter, um hier alle Einträge zu sehen.
+	FR	Effacez le filtre du dossier pour afficher tous les éléments.
+	PT	Limpe o filtro da pasta para ver todos os itens.
+
+ECHOCLASSIC_UI_BROWSING_AVAILABLE_CONNECT_PLAYER
+	EN	Browsing is available. Connect a player to start playback.
+	DE	Das Durchsuchen ist verfügbar. Verbinden Sie einen Player, um die Wiedergabe zu starten.
+	FR	La navigation est disponible. Connectez un lecteur pour démarrer la lecture.
+	PT	A navegação está disponível. Conecte um player para iniciar a reprodução.
+
+ECHOCLASSIC_UI_FIND_PLAYER
+	EN	Find player
+	DE	Player suchen
+	FR	Rechercher un lecteur
+	PT	Procurar player
+
+ECHOCLASSIC_UI_TRACK_ADDED
+	EN	Track added
+	DE	Titel hinzugefügt
+	FR	Morceau ajouté
+	PT	Faixa adicionada
+
+ECHOCLASSIC_UI_SEARCH_PLAYLISTS
+	EN	Search playlists
+	DE	Playlists durchsuchen
+	FR	Rechercher des listes de lecture
+	PT	Pesquisar playlists
+
+ECHOCLASSIC_UI_NEW_PLAYLIST_PLAIN
+	EN	New playlist
+	DE	Neue Playlist
+	FR	Nouvelle liste de lecture
+	PT	Nova playlist
+
+ECHOCLASSIC_UI_CREATE_AND_ADD_THIS_TRACK
+	EN	Create and add this track
+	DE	Erstellen und diesen Titel hinzufügen
+	FR	Créer et ajouter ce morceau
+	PT	Criar e adicionar esta faixa
+
+ECHOCLASSIC_UI_CREATING_PLAYLIST
+	EN	Creating playlist…
+	DE	Playlist wird erstellt…
+	FR	Création de la liste de lecture…
+	PT	Criando playlist…
+
+ECHOCLASSIC_UI_CREATE_AND_ADD
+	EN	Create & add
+	DE	Erstellen & hinzufügen
+	FR	Créer et ajouter
+	PT	Criar e adicionar
+
+ECHOCLASSIC_UI_ALL_PLAYLISTS
+	EN	All playlists
+	DE	Alle Playlists
+	FR	Toutes les listes de lecture
+	PT	Todas as playlists
+
+ECHOCLASSIC_UI_NO_MATCHING_PLAYLISTS
+	EN	No matching playlists.
+	DE	Keine passenden Playlists.
+	FR	Aucune liste de lecture correspondante.
+	PT	Nenhuma playlist correspondente.
+
+ECHOCLASSIC_UI_CHOOSE_ONE_PLAYLIST
+	EN	Choose one playlist
+	DE	Eine Playlist auswählen
+	FR	Choisissez une liste de lecture
+	PT	Escolha uma playlist
+
+ECHOCLASSIC_UI_ADDING
+	EN	Adding…
+	DE	Wird hinzugefügt…
+	FR	Ajout…
+	PT	Adicionando…
+
+ECHOCLASSIC_UI_ADD_TRACK
+	EN	Add track
+	DE	Titel hinzufügen
+	FR	Ajouter le morceau
+	PT	Adicionar faixa
+
+ECHOCLASSIC_UI_ADDED_TO
+	EN	Added to
+	DE	Hinzugefügt zu
+	FR	Ajouté à
+	PT	Adicionada a
+
+ECHOCLASSIC_UI_TRACK_REMAINS_SELECTED_IN_MUSIC_FOLDER
+	EN	The track remains selected in Music Folder.
+	DE	Der Titel bleibt im Musikordner ausgewählt.
+	FR	Le morceau reste sélectionné dans le dossier de musique.
+	PT	A faixa permanece selecionada na Pasta de músicas.
+
+ECHOCLASSIC_UI_COULD_NOT_LOAD_PLAYLISTS
+	EN	Could not load playlists.
+	DE	Playlists konnten nicht geladen werden.
+	FR	Impossible de charger les listes de lecture.
+	PT	Não foi possível carregar as playlists.
+
+ECHOCLASSIC_UI_COULD_NOT_CREATE_THE_PLAYLIST
+	EN	Could not create the playlist.
+	DE	Die Playlist konnte nicht erstellt werden.
+	FR	Impossible de créer la liste de lecture.
+	PT	Não foi possível criar a playlist.
+
+ECHOCLASSIC_UI_SERVER_DID_NOT_RETURN_A_PLAYLIST
+	EN	The server did not return a playlist.
+	DE	Der Server hat keine Playlist zurückgegeben.
+	FR	Le serveur n'a renvoyé aucune liste de lecture.
+	PT	O servidor não retornou uma playlist.
+
+ECHOCLASSIC_UI_PLAYLIST_BUILDER
+	EN	Playlist Builder
+	DE	Playlist-Builder
+	FR	Créateur de playlist
+	PT	Criador de playlist
+
+ECHOCLASSIC_UI_MUSIC_FOLDER_VIEW
+	EN	Music folder view
+	DE	Musikordneransicht
+	FR	Vue du dossier de musique
+	PT	Visualização da pasta de músicas
+
+ECHOCLASSIC_UI_BROWSE
+	EN	Browse
+	DE	Durchsuchen
+	FR	Parcourir
+	PT	Explorar
+
+ECHOCLASSIC_UI_CLOSE_PLAYLIST_BUILDER
+	EN	Close Playlist Builder
+	DE	Playlist-Builder schließen
+	FR	Fermer le créateur de playlist
+	PT	Fechar o criador de playlist
+
+ECHOCLASSIC_UI_DROP_TRACKS_HERE
+	EN	Drop tracks here
+	DE	Titel hier ablegen
+	FR	Déposez les morceaux ici
+	PT	Solte as faixas aqui
+
+ECHOCLASSIC_UI_DROPS_HERE_ARE_ADDED_TO_THE_END
+	EN	Drops here are added to the end.
+	DE	Hier abgelegte Titel werden am Ende hinzugefügt.
+	FR	Les morceaux déposés ici sont ajoutés à la fin.
+	PT	As faixas soltas aqui são adicionadas ao final.
+
+ECHOCLASSIC_UI_PLAYLIST_DRAFT
+	EN	Playlist draft
+	DE	Playlist-Entwurf
+	FR	Brouillon de playlist
+	PT	Rascunho da playlist
+
+ECHOCLASSIC_UI_REMOVE_TRACK
+	EN	Remove track
+	DE	Titel entfernen
+	FR	Retirer le morceau
+	PT	Remover faixa
+
+ECHOCLASSIC_UI_YOUR_PLAYLIST_IS_EMPTY
+	EN	Your playlist is empty
+	DE	Ihre Playlist ist leer
+	FR	Votre playlist est vide
+	PT	Sua playlist está vazia
+
+ECHOCLASSIC_UI_DRAG_TRACKS_FROM_THE_FOLDER_OR_USE_ADD
+	EN	Drag tracks from the folder or use Add.
+	DE	Ziehen Sie Titel aus dem Ordner oder verwenden Sie Hinzufügen.
+	FR	Faites glisser des morceaux du dossier ou utilisez Ajouter.
+	PT	Arraste faixas da pasta ou use Adicionar.
+
+ECHOCLASSIC_UI_CLEAR_THIS_DRAFT
+	EN	Clear this draft?
+	DE	Diesen Entwurf leeren?
+	FR	Effacer ce brouillon ?
+	PT	Limpar este rascunho?
+
+ECHOCLASSIC_UI_SAVE_AS_NEW
+	EN	Save as new
+	DE	Als neu speichern
+	FR	Enregistrer comme nouvelle
+	PT	Salvar como nova
+
+ECHOCLASSIC_UI_SAVE_PLAYLIST
+	EN	Save playlist
+	DE	Playlist speichern
+	FR	Enregistrer la playlist
+	PT	Salvar playlist
+
+ECHOCLASSIC_UI_TRACK_ADDED_TO_PLAYLIST_DRAFT
+	EN	Track added to playlist draft.
+	DE	Titel zum Playlist-Entwurf hinzugefügt.
+	FR	Morceau ajouté au brouillon de playlist.
+	PT	Faixa adicionada ao rascunho da playlist.
+
+ECHOCLASSIC_UI_PLAYLIST_ORDER_UPDATED
+	EN	Playlist order updated.
+	DE	Playlist-Reihenfolge aktualisiert.
+	FR	Ordre de la playlist mis à jour.
+	PT	Ordem da playlist atualizada.
+
+ECHOCLASSIC_UI_TRACK_REMOVED_FROM_PLAYLIST_DRAFT
+	EN	Track removed from playlist draft.
+	DE	Titel aus dem Playlist-Entwurf entfernt.
+	FR	Morceau retiré du brouillon de playlist.
+	PT	Faixa removida do rascunho da playlist.
+
+ECHOCLASSIC_UI_PLAYLIST_DRAFT_CLEARED
+	EN	Playlist draft cleared.
+	DE	Playlist-Entwurf geleert.
+	FR	Brouillon de playlist effacé.
+	PT	Rascunho da playlist limpo.
+
+ECHOCLASSIC_UI_SAVING_PLAYLIST
+	EN	Saving playlist…
+	DE	Playlist wird gespeichert…
+	FR	Enregistrement de la playlist…
+	PT	Salvando playlist…
+
+ECHOCLASSIC_UI_PLAYLIST_SAVED
+	EN	Playlist saved.
+	DE	Playlist gespeichert.
+	FR	Playlist enregistrée.
+	PT	Playlist salva.
+
+ECHOCLASSIC_UI_COULD_NOT_SAVE_PLAYLIST
+	EN	Could not save playlist.
+	DE	Playlist konnte nicht gespeichert werden.
+	FR	Impossible d'enregistrer la playlist.
+	PT	Não foi possível salvar a playlist.
+
+ECHOCLASSIC_UI_PLAYLIST_COULD_NOT_BE_CREATED
+	EN	The playlist could not be created.
+	DE	Die Playlist konnte nicht erstellt werden.
+	FR	La playlist n'a pas pu être créée.
+	PT	Não foi possível criar a playlist.
+
+ECHOCLASSIC_UI_LMS_DEFAULT
+	EN	LMS default
+	DE	LMS-Standard
+	FR	Par défaut LMS
+	PT	Padrão do LMS
+
+ECHOCLASSIC_UI_PLAYER_PICKER_APPLY_NOTE
+	EN	Choosing a player does not change playback until you apply the switch.
+	DE	Die Auswahl eines Players ändert die Wiedergabe erst, wenn der Wechsel angewendet wird.
+	FR	Choisir un lecteur ne modifie pas la lecture tant que le changement n'est pas appliqué.
+	PT	Escolher um player não altera a reprodução até que a troca seja aplicada.
+
+ECHOCLASSIC_UI_EXPERIMENTAL_PLAYERS
+	EN	Experimental players
+	DE	Experimentelle Player
+	FR	Lecteurs expérimentaux
+	PT	Players experimentais
+
+ECHOCLASSIC_UI_TEST_INTEGRATION
+	EN	Test integration
+	DE	Testintegration
+	FR	Intégration de test
+	PT	Integração de teste
+
+ECHOCLASSIC_UI_EXPERIMENTAL_DEFAULT_NOTE
+	EN	Experimental players never replace the LMS default or fallback automatically.
+	DE	Experimentelle Player ersetzen niemals automatisch den LMS-Standard oder die Rückfalloption.
+	FR	Les lecteurs expérimentaux ne remplacent jamais automatiquement le lecteur LMS par défaut ou de secours.
+	PT	Players experimentais nunca substituem automaticamente o padrão ou fallback do LMS.
+
+ECHOCLASSIC_UI_SWITCH_CONTROL_FROM
+	EN	Switch control from
+	DE	Steuerung wechseln von
+	FR	Changer le contrôle de
+	PT	Trocar o controle de
+
+ECHOCLASSIC_UI_MUSIC_STOPS_DURING_VALIDATION
+	EN	Music will stop during validation.
+	DE	Die Musik wird während der Überprüfung angehalten.
+	FR	La musique s'arrêtera pendant la vérification.
+	PT	A música será interrompida durante a validação.
+
+ECHOCLASSIC_UI_APPLY_SWITCH
+	EN	Apply switch
+	DE	Wechsel anwenden
+	FR	Appliquer le changement
+	PT	Aplicar troca
+
+ECHOCLASSIC_UI_PLAYER_SWITCHED
+	EN	Player switched
+	DE	Player gewechselt
+	FR	Lecteur changé
+	PT	Player alterado
+
+ECHOCLASSIC_UI_PLAYER_SWITCH_FAILED
+	EN	Player switch failed
+	DE	Player-Wechsel fehlgeschlagen
+	FR	Échec du changement de lecteur
+	PT	Falha ao trocar o player
+
+ECHOCLASSIC_UI_APPLYING_PLAYER_CONFIGURATION
+	EN	Applying player configuration
+	DE	Player-Konfiguration wird angewendet
+	FR	Application de la configuration du lecteur
+	PT	Aplicando configuração do player
+
+ECHOCLASSIC_UI_NEW_PLAYER_RESPONDING
+	EN	The new player is connected and responding.
+	DE	Der neue Player ist verbunden und antwortet.
+	FR	Le nouveau lecteur est connecté et répond.
+	PT	O novo player está conectado e respondendo.
+
+ECHOCLASSIC_UI_SQUEEZELITE_RESTORED
+	EN	Squeezelite was restored.
+	DE	Squeezelite wurde wiederhergestellt.
+	FR	Squeezelite a été restauré.
+	PT	O Squeezelite foi restaurado.
+
+ECHOCLASSIC_UI_WAITING_FOR_STOP
+	EN	Waiting for the current player to confirm Stop…
+	DE	Warten auf die Stop-Bestätigung des aktuellen Players…
+	FR	Attente de la confirmation d'arrêt du lecteur actuel…
+	PT	Aguardando o player atual confirmar Stop…
+
+ECHOCLASSIC_UI_CHANGING_CONTROLLED_PLAYER
+	EN	Changing the controlled player…
+	DE	Der gesteuerte Player wird gewechselt…
+	FR	Changement du lecteur contrôlé…
+	PT	Alterando o player controlado…
+
+ECHOCLASSIC_UI_CHECKING_PLAYER
+	EN	Checking connection, power and status…
+	DE	Verbindung, Stromversorgung und Status werden geprüft…
+	FR	Vérification de la connexion, de l'alimentation et de l'état…
+	PT	Verificando conexão, energia e estado…
+
+ECHOCLASSIC_UI_RESTORING_PLAYBACK_STATE
+	EN	Restoring playback state…
+	DE	Wiedergabestatus wird wiederhergestellt…
+	FR	Restauration de l'état de lecture…
+	PT	Restaurando o estado de reprodução…
+
+ECHOCLASSIC_UI_STOP_CURRENT_MUSIC
+	EN	Stop current music
+	DE	Aktuelle Musik anhalten
+	FR	Arrêter la musique actuelle
+	PT	Parar a música atual
+
+ECHOCLASSIC_UI_SWITCH_CONTROLLED_PLAYER
+	EN	Switch controlled player
+	DE	Gesteuerten Player wechseln
+	FR	Changer le lecteur contrôlé
+	PT	Trocar o player controlado
+
+ECHOCLASSIC_UI_VERIFY_PLAYER
+	EN	Verify connection and response
+	DE	Verbindung und Antwort prüfen
+	FR	Vérifier la connexion et la réponse
+	PT	Verificar conexão e resposta
+
+ECHOCLASSIC_UI_RESUME_IF_PLAYING
+	EN	Resume playback if it was playing
+	DE	Wiedergabe fortsetzen, falls sie aktiv war
+	FR	Reprendre la lecture si elle était en cours
+	PT	Retomar a reprodução se estava tocando
+
+ECHOCLASSIC_UI_KEEP_SQUEEZELITE
+	EN	Keep Squeezelite
+	DE	Squeezelite beibehalten
+	FR	Conserver Squeezelite
+	PT	Manter Squeezelite
+
+ECHOCLASSIC_UI_TO_LOWERCASE
+	EN	to
+	DE	zu
+	FR	vers
+	PT	para
+
+ECHOCLASSIC_UI_MUSIC_STOPS_DURING_VALIDATION_FRAGMENT
+	EN	. Music will stop during validation.
+	DE	. Die Musik wird während der Überprüfung angehalten.
+	FR	. La musique s'arrêtera pendant la vérification.
+	PT	. A música será interrompida durante a validação.
+
+ECHOCLASSIC_UI_TEST_INTEGRATION_FRAGMENT
+	EN	· Test integration
+	DE	· Testintegration
+	FR	· Intégration de test
+	PT	· Integração de teste

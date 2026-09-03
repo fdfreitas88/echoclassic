@@ -3,10 +3,14 @@
   "private": true,
   "scripts": {
     "test": "node --test --test-concurrency=1 tests/*.test.js",
+    "test:browser": "playwright test -c qa/playwright.config.js",
+    "test:browser:update": "playwright test -c qa/playwright.config.js --update-snapshots",
     "validate": "bash tools/validate.sh",
     "check-version": "node tools/check-version.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.62.1",
     "vue-template-compiler": "2.7.15"
   }
 }

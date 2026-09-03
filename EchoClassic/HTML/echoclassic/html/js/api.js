@@ -687,13 +687,24 @@
     }
   }
 
-  async function players(playerId) {
-    var r = await rpc(playerId, ['serverstatus', 0, 999]);
+  async function players() {
+    /* serverstatus is a server-wide command. Keeping the active player in the
+       JSON-RPC envelope can scope discovery to that client on compatible LMS
+       implementations, hiding alternate players such as standard Squeezelite. */
+    var r = await rpc('', ['serverstatus', 0, 999]);
     return loop(r, 'players_loop').map(function (p) {
-      return {
+      var player = {
         id: txt(p.playerid), name: txt(p.name),
         connected: !!num(p.connected), power: !!num(p.power)
       };
+      var model = txt(p.model || p.modelname);
+      var output = txt(p.output || p.output_device || p.device);
+      if (model) player.model = model;
+      /* Most LMS builds do not expose the local audio device here. Keep the
+         field optional so the UI can report it when a player/plugin does,
+         without inventing a device such as Mojo for every Squeezelite. */
+      if (output) player.output = output;
+      return player;
     });
   }
 

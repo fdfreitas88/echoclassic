@@ -30,6 +30,7 @@ dist/
 docs/
 tests/
 tools/
+qa/
 
 # backups gerados pelo INSTALL.sh e por copias manuais
 *.backup-*
