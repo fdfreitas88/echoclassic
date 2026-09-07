@@ -47,6 +47,7 @@ Vue.component('lms-settings', {
           :src="advancedFrameSrc"></iframe>
 </div>
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
+  <lms-album-display-settings v-if="ui.appearanceScreen === 'album-information'"></lms-album-display-settings>
   <template v-if="isSettingsScreen('frequent-settings')">
     <div class="settings-intro">Choose the settings you use most. Reorder selected items with the arrow buttons.</div>
     <div class="sgh">Shown in Settings <span class="settings-count">{{ ui.frequentSettings.length }} selected</span></div>
@@ -104,6 +105,7 @@ Vue.component('lms-settings', {
   </template>
   <template v-else-if="isSettingsScreen('queue-settings')">
     <div class="sgh">Queue artwork</div><div class="sgroup player-presentation-group" role="radiogroup" aria-label="Queue artwork"><button v-for="mode in queueArtModes" :key="'detail-queue-'+mode.key" type="button" class="srow player-presentation-row" role="radio" :aria-checked="String(ui.queueArtMode===mode.key)" @click="queueArtMode(mode.key)"><span class="player-presentation-copy"><span>{{ mode.label }}</span><small>{{ queueArtModeHint(mode.key) }}</small></span><span class="font-option-check" aria-hidden="true"></span></button><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('queueArtwork')">{{ frequentActionLabel('queueArtwork') }}</button></div>
+    <div class="sgh">Track ratings</div><div class="sgroup"><button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.appendRatingToTitle)" @click="preference('appendRatingToTitle')"><span class="setting-copy">Rating beside track title<small>Show Ratings Light stars in the queue and on Now Playing.</small></span><span class="switch" :class="{on:ui.appendRatingToTitle}"></span></button></div>
   </template>
   <template v-else-if="isSettingsScreen('interface-settings')">
     <div class="sgh">Shared use</div><div class="sgroup interface-mode-group"><button type="button" class="srow settings-command-row pointer interface-mode-row" role="switch" :aria-checked="String(ui.partyMode)" @click="preference('partyMode')"><span class="setting-copy">Party mode<small>Keep playback available while hiding delete and reorder actions.</small></span><span class="switch" :class="{on:ui.partyMode}"></span></button><button type="button" class="srow settings-command-row pointer interface-mode-row" role="switch" :aria-checked="String(ui.kioskMode)" @click="preference('kioskMode')"><span class="setting-copy">Kiosk mode<small>Show only the full player. Exit remains available from the lock control or Esc.</small></span><span class="switch" :class="{on:ui.kioskMode}"></span></button></div>
@@ -564,6 +566,11 @@ Vue.component('lms-settings', {
   </div>
   <div class="sgh">System</div>
   <div class="sgroup settings-destination-group">
+    <div class="srow sacd-settings-row"><span class="setting-copy"><strong>{{ tr('SACD cache') }}</strong><small v-if="sacdCache.available">{{ sacdUsageLabel }} · {{ sacdFreeLabel }}<b v-if="sacdCache.lowDisk"> · {{ tr('Low disk') }}</b></small><small v-else>{{ tr('SACD cache status requires the SACDPlayer plugin') }}</small></span><button v-if="!sacdCache.available" type="button" @click="openSacdPluginManager">{{ tr('Install plugin') }}</button></div>
+    <div v-if="sacdCache.available" class="sacd-cache-albums">
+      <div v-if="!sacdCache.binary" class="srow sacd-binary-warning">{{ tr('sacd_extract binary missing on the server') }}</div>
+      <div v-for="album in sacdCache.albums" :key="album.key+'-'+album.area" class="srow"><span class="setting-copy"><strong>{{ album.title }}</strong><small>{{ bytes(album.bytes) }} · {{ formatSacdDate(album.lastAccess) }}</small></span><button type="button" @click="removeSacdAlbum(album)">{{ tr('Remove') }}</button></div>
+    </div>
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('backup-settings')">Backup <span class="v">›</span></button>
     <button type="button" class="srow settings-command-row pointer" :aria-expanded="String(ui.advancedSettings)" @click="openAdvanced">Advanced LMS settings <span class="v">›</span></button>
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('about-settings')">About <span class="v">›</span></button>
@@ -744,6 +751,7 @@ Vue.component('lms-settings', {
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('players')">
       Player layout <span class="v">›</span>
     </button>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('album-information')">Album information <span class="v">›</span></button>
   </div>
 
   <div class="sgh">Queue</div>
@@ -766,6 +774,7 @@ Vue.component('lms-settings', {
       <span class="font-option-check" aria-hidden="true"></span>
     </button>
   </div>
+  <div class="sgroup"><button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.appendRatingToTitle)" @click="preference('appendRatingToTitle')"><span>Rating beside track title<small>Show Ratings Light stars in the queue and on Now Playing.</small></span><span class="switch" :class="{on:ui.appendRatingToTitle}"></span></button></div>
 
   <div class="sgh">General</div>
   <div class="sgroup">
@@ -779,11 +788,6 @@ Vue.component('lms-settings', {
       <button type="button" class="sw" :class="{on: ui.markHires}" role="switch"
               :aria-checked="String(ui.markHires)" aria-label="Highlight high resolution audio"
               @click="preference('markHires')"><span class="visually-hidden">Highlight high resolution audio</span></button></div>
-    <button type="button" class="srow settings-command-row pointer" role="switch"
-            :aria-checked="String(ui.appendRatingToTitle)" @click="preference('appendRatingToTitle')">
-      <span>Rating beside track title<small>Show the current rating in a prominent place on Now Playing.</small></span>
-      <span class="switch" :class="{on:ui.appendRatingToTitle}"></span>
-    </button>
   </div>
 
   <div class="sgh">Language</div>
@@ -882,6 +886,7 @@ Vue.component('lms-settings', {
       gaugeColors: LmsUi.GAUGE_COLORS,
       queueArtModes: LmsUi.QUEUE_ART_MODES,
       info: null, loading: true, error: '', showPlayers: false,
+      sacdCache: { available:false, usageBytes:0, capBytes:0, freeBytes:0, binary:true, lowDisk:false, albums:[] },
       appleSqueezer: { available: false, running: false, lifecycle: 'not-installed', apiVersion: 0, capabilities: {}, revision: null, mode: 'native', upsampleRate: 'auto', resampleFilter: 'linear', expert: {precision:28,passband:95,stopband:100,phase:50}, busy: false, modeTransition: null, diagnostics: {}, telemetry: {}, error:'', telemetryError:'', telemetryUpdatedAt:0 },
       appleSqueezerTelemetryTimer: null,
       appleSqueezerLoadToken: 0, appleSqueezerTelemetryToken: 0,
@@ -937,6 +942,8 @@ Vue.component('lms-settings', {
     };
   },
   computed: {
+	sacdUsageLabel: function () { return this.bytes(this.sacdCache.usageBytes)+' / '+this.bytes(this.sacdCache.capBytes); },
+	sacdFreeLabel: function () { return this.bytes(this.sacdCache.freeBytes)+' '+this.tr('free'); },
 	patreonSupportUrl: function () { return ECHOCLASSIC_PATREON_URL; },
 	coffeeSupportUrl: function () { return ECHOCLASSIC_COFFEE_URL; },
 	isEqualizerScreen: function () { return /^equalizer(?:-|$)/.test(String(this.ui.appearanceScreen || '')); },
@@ -1333,6 +1340,11 @@ Vue.component('lms-settings', {
     if (LmsUi.applyAdvancedSettings === this.applyAdvancedFrame) LmsUi.applyAdvancedSettings = null;
   },
   methods: {
+    bytes: function (value) { var n=Number(value||0),units=['B','KB','MB','GB','TB'],i=0;while(n>=1024&&i<units.length-1){n/=1024;i++;}return (i?n.toFixed(1):String(n))+' '+units[i]; },
+    formatSacdDate: function (value) { if(!value)return '—';try{return new Date(Number(value)*1000).toLocaleString();}catch(e){return '—';} },
+    loadSacdCache: async function () { try{this.sacdCache=await LmsApi.sacdCacheStats();}catch(e){this.sacdCache={available:false,albums:[]};} },
+    removeSacdAlbum: async function (album) { await LmsApi.sacdEvictAlbum(album.key+'/'+album.area);await this.loadSacdCache(); },
+    openSacdPluginManager: function () { try{sessionStorage.setItem('echoclassic.plugin-search.v1','SACDPlayer');}catch(e){}this.ui.advancedSettingsPage='/echoclassic/settings/server/plugins.html';this.openAdvanced(); },
     setNativeCrossfeed: function (key) {
       if (this.nativeDspDraft) this.nativeDspDraft.crossfeed = key;
     },
@@ -4024,7 +4036,7 @@ Vue.component('lms-settings', {
     load: async function () {
       this.loading = true;
       try {
-        var loaded = await Promise.all([LmsApi.serverInfo(), this.loadAppleSqueezer()]);
+        var loaded = await Promise.all([LmsApi.serverInfo(), this.loadAppleSqueezer(), this.loadSacdCache()]);
         this.info = loaded[0];
       } catch (e) {
         this.error = 'Could not read the server: ' + (e && e.message ? e.message : e);

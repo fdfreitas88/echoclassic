@@ -14,54 +14,66 @@ Vue.component('lms-album-block', {
     artist: { type: Object, default: null },
     enrich: { type: Boolean, default: true },
     showRelated: { type: Boolean, default: true },
-    continuation: { type: Boolean, default: false }
+    continuation: { type: Boolean, default: false },
+    genericTrackHeading: { type: Boolean, default: false },
+    disc: { type: Number, default: 0 },
+    suppliedTracks: { type: Array, default: null },
+    incompleteDisc: { type: Boolean, default: false }
   },
   template: `
 <div class="albumblock">
-  <div v-if="showRelated && relatedArtists.length" ref="relatedRow" class="album-extra album-related"
+  <div v-if="(showRelated && relatedArtists.length) || (!disc && creditGroups.length)" ref="relatedRow" class="album-extra album-related"
        :class="{expanded: relatedExpanded}">
     <svg class="related-icon" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M16 19.5v-1.3c0-2.1-1.8-3.7-4-3.7H7c-2.2 0-4 1.6-4 3.7v1.3M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM16 8h5M18.5 5.5v5"/>
     </svg>
-    <div class="related-links">
+    <div v-if="showRelated && relatedArtists.length" class="related-links">
       <strong>{{ tr('Local library') }}</strong>
       <template v-for="(a, index) in displayedRelatedArtists">
         <span v-if="index" :key="'separator-' + a.id" class="related-separator" aria-hidden="true">•</span>
         <button :key="a.id" @click="openRelatedArtist(a)">{{ a.name }}</button>
       </template>
     </div>
-    <button v-if="hasHiddenRelated" class="related-more"
+    <button v-if="showRelated && hasHiddenRelated" class="related-more"
             :aria-expanded="String(relatedExpanded)" @click="relatedExpanded = !relatedExpanded">
       <span>{{ tr(relatedExpanded ? 'Show less' : 'Show more') }}</span>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l5 5 5-5"/></svg>
     </button>
+    <button v-if="!disc && creditGroups.length" type="button" class="related-more"
+            :aria-expanded="String(metadataOpen)" @click="metadataOpen = !metadataOpen">{{ tr(metadataOpen ? 'Less' : 'More') }}</button>
   </div>
   <div v-else-if="relatedError" class="loading-more warning" role="status">{{ relatedError }}</div>
 
-  <div v-if="!continuation" class="albumhead">
-    <div class="albumart" :class="{placeholder: !artUrl || artFailed}">
+  <section v-if="metadataOpen && !disc" class="album-credits" :aria-label="tr('Credits')">
+    <div v-for="group in creditGroups" :key="group.roleId" class="album-credit-row">
+      <strong>{{ tr(group.role) }}</strong><div>
+        <template v-for="credit in group.items">
+          <button v-if="credit.ids.length" type="button" :key="credit.key" @click="openCredit(credit)">{{ credit.name }} ›</button>
+          <span v-else :key="credit.key">{{ credit.name }}</span>
+        </template>
+      </div>
+    </div>
+    <p v-if="tracksHasMore" class="loading-more">{{ tr('Credits from loaded tracks') }}</p>
+  </section>
+  <div v-if="!continuation" class="albumhead reviewed-albumhead" :class="{'album-cover-hidden':!displayFields.albumCover}">
+    <div v-if="displayFields.source && albumSource && !customDisplayOrder" class="album-origin-label">{{ originLine }}</div>
+    <div v-if="displayFields.albumCover" class="albumart" :class="{placeholder: !artUrl || artFailed}">
       <img v-if="artUrl && !artFailed" :src="artUrl" alt="" @error="artFailed = true">
       <span v-else class="art-placeholder" aria-hidden="true">♫</span>
     </div>
     <div class="albummeta">
       <div class="album-title-row" :class="{pending: !albumSource}">
-        <span class="album-source" :class="'source-' + (albumSource || 'pending')"
-              :title="sourceTitle" :aria-label="sourceTitle">
-          <svg v-if="albumSource === 'local'" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4zM7 15.5h.01M10 15.5h7"/></svg>
-          <span v-else-if="albumSource === 'qobuz'" class="provider-mark" aria-hidden="true">Q</span>
-          <span v-else-if="albumSource === 'youtube'" class="provider-mark" aria-hidden="true">Y</span>
-          <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18.5h10a4 4 0 0 0 .6-8A6 6 0 0 0 6.2 9.2 4.7 4.7 0 0 0 7 18.5z"/></svg>
-        </span>
-        <div class="atitle">{{ album.title }}</div>
+        <div class="atitle">{{ album.title }}<span v-if="disc"> · {{ tr('Disc') }} {{ disc }}</span></div>
       </div>
-      <button v-if="artist" class="aartist pointer" @click="openArtist">{{ artist.name }}</button>
-      <div v-else-if="album.artist" class="aartist">{{ album.artist }}</div>
-      <div class="ameta">{{ metaLine }}</div>
-      <div v-if="album.originalYear || album.year" class="edition-years">
+      <button v-if="displayFields.artist && artist" class="aartist pointer" :style="displayOrderStyle('artist')" @click="openArtist">{{ artist.name }}</button>
+      <div v-else-if="displayFields.artist && album.artist" class="aartist" :style="displayOrderStyle('artist')">{{ album.artist }}</div>
+      <div v-if="displayFields.counts" class="ameta" :style="displayOrderStyle('counts')">{{ metaLine }}</div>
+      <div v-if="displayFields.year && album.year" class="edition-years" :style="displayOrderStyle('year')">
         <span>Year of this edition: {{ album.year || 'not available' }}</span>
-        <span>Original year: {{ album.originalYear || 'not available' }}</span>
       </div>
-      <div v-if="tracks.length" class="album-facts" aria-label="Album technical details">
+      <div v-if="displayFields.genre && displayContext.genre" class="ameta" :style="displayOrderStyle('genre')">{{ displayContext.genre }}</div>
+      <div v-if="displayFields.source && albumSource && customDisplayOrder" class="ameta album-origin-inline" :style="displayOrderStyle('source')">{{ originLine }}</div>
+      <div v-if="displayFields.format && tracks.length" class="album-facts" :style="displayOrderStyle('format')" aria-label="Album technical details">
         <span class="album-fact" :title="tr('Format:') + ' ' + formatLine">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4"/></svg>
           <span>{{ formatLine }}</span>
@@ -70,41 +82,45 @@ Vue.component('lms-album-block', {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-6M8 18V6M12 14v-4M16 19V5M20 15V9"/></svg>
           <span>{{ bitRateLine }}</span>
         </span>
-        <span class="album-fact" :title="tr('Source:') + ' ' + originLine">
-          <svg v-if="originIsLocal" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4zM7 15.5h.01M10 15.5h7"/></svg>
-          <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18.5h10a4 4 0 0 0 .6-8A6 6 0 0 0 6.2 9.2 4.7 4.7 0 0 0 7 18.5z"/></svg>
-          <span>{{ originLine }}</span>
-        </span>
+      </div>
+      <div v-if="isSacdAlbum" class="sacd-cache-line" role="status">
+        <span class="sacd-cache-badge">{{ sacdCacheLabel }}</span>
+        <span v-if="sacdFirstError" class="sacd-cache-error">{{ sacdFirstError }}</span>
+        <button v-if="!sacdAvailable" type="button" @click="openSacdPluginManager">{{ tr('Install plugin') }}</button>
+        <button v-else-if="sacdBinaryMissing" type="button" disabled>{{ tr('sacd_extract binary missing on the server') }}</button>
+        <button v-else type="button" :disabled="sacdInProgress || sacdBusy" @click="changeSacdCache">{{ sacdActionLabel }}</button>
+      </div>
+      <div v-if="displayFields.albumInformation" class="album-summary-inline" :style="displayOrderStyle('albumInformation')">
+        <svg viewBox="0 0 24 24" role="img" :aria-label="tr('Album information')"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/></svg>
+        <span>{{ albumSummary }}</span><button type="button" :aria-expanded="String(albumInfoVisible)" @click="albumInfoVisible = !albumInfoVisible">{{ tr(albumInfoVisible ? 'Less' : 'More') }}</button>
       </div>
     </div>
   </div>
 
   <div v-if="!continuation" class="album-primary-actions" aria-label="Album playback">
-    <button type="button" class="album-play-command" @click="playAlbum">
+    <button type="button" class="album-play-command" @click="playAlbum" :disabled="store.discPlaybackBusy || incompleteDisc">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
       <span>{{ tr('Play') }}</span>
     </button>
-    <button type="button" class="album-shuffle-command" @click="shuffle">
+    <button type="button" class="album-shuffle-command" @click="shuffle" :disabled="store.discPlaybackBusy || incompleteDisc">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3l4 4-4 4M4 7h16M8 21l-4-4 4-4M20 17H4"/></svg>
       <span>{{ tr('Shuffle') }}</span>
     </button>
+    <button type="button" class="album-equalizer-command" @click="openAlbumEqualizer">{{ tr('Equalizer') }}</button>
   </div>
-  <div v-if="(!continuation && store.equalizer.status === 'ready') || albumInfoStatus" class="album-secondary-tools">
-    <button v-if="!continuation && store.equalizer.status === 'ready'" type="button" class="album-equalizer-disclosure"
-            @click="openAlbumEqualizer">
-      <svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M4 2.5v15M10 2.5v15M16 2.5v15"/><circle cx="4" cy="12" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="16" cy="10" r="2.2"/></g></svg>
-      <span>{{ tr('Equalizer') }}</span><span class="album-equalizer-value">{{ albumEqualizerRule ? tr('custom') : tr('Default') }} ›</span>
-    </button>
-    <button v-if="albumInfoStatus" type="button" class="album-info-disclosure"
-            :aria-expanded="albumInfoVisible ? 'true' : 'false'"
-            @click="albumInfoVisible = !albumInfoVisible">
-      <span>{{ tr('Album information') }}</span>
-      <span class="album-info-value">{{ tr(albumInfoVisible ? 'Hide' : 'Show') }} ›</span>
-    </button>
-  </div>
-  <section v-if="albumInfoStatus && albumInfoVisible" class="album-enrichment">
+  <p v-if="incompleteDisc" class="loading-more">{{ tr('Load all album tracks before playing a disc.') }}</p>
+  <section v-if="albumInfoVisible" class="album-enrichment">
+    <button type="button" class="album-config-cog" :aria-label="tr('Customize album information')" :title="tr('Customize album information')" @click="configureInformation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="3"/></svg></button>
     <span class="opml-new-label">{{ tr('New') }}</span>
     <h3>{{ tr('Album information') }}</h3>
+    <div class="album-information-metadata">
+      <div><span>{{ tr('Artist') }}</span><strong>{{ album.artist || (artist && artist.name) || tr('Unknown Artist') }}</strong></div>
+      <div><span>{{ tr('Album') }}</span><strong>{{ metaLine }}</strong></div>
+      <div><span>{{ tr('Edition year') }}</span><strong>{{ album.year || tr('not available') }}</strong></div>
+      <div v-if="displayContext.genre"><span>{{ tr('Genre') }}</span><strong>{{ displayContext.genre }}</strong></div>
+      <div><span>{{ tr('Format') }}</span><strong>{{ formatLine || tr('not available') }}</strong></div>
+      <div><span>{{ tr('Source') }}</span><strong>{{ sourceTitle }}</strong></div>
+    </div>
     <div v-if="albumInfoStatus === 'loading'" role="status">{{ tr('Finding album information…') }}</div>
     <div v-else-if="albumInfoStatus === 'unavailable'" role="status">
       <p>{{ tr('Album information requires MusicArtistInfo.') }}</p>
@@ -128,13 +144,18 @@ Vue.component('lms-album-block', {
       <p v-if="albumSourceVisible" class="artist-enrichment-source">{{ tr('Provided by MusicArtistInfo from Last.fm, Discogs and MusicBrainz.') }} {{ tr('Retrieved') }} {{ albumInfoRetrieved }}</p>
       <div class="artist-enrichment-actions"><button type="button" @click="loadAlbumInfo(true)">{{ tr('Refresh') }}</button></div>
     </template>
-    <div v-else role="status">{{ tr('Album information is temporarily unavailable.') }} <button type="button" class="retry-command" @click="loadAlbumInfo(true)">{{ tr('Try again') }}</button></div>
+    <div v-else-if="albumInfoStatus" role="status">{{ tr('Album information is temporarily unavailable.') }} <button type="button" class="retry-command" @click="loadAlbumInfo(true)">{{ tr('Try again') }}</button></div>
+    <p v-else>{{ metaLine }} · {{ formatLine }}</p>
   </section>
 
-  <header v-if="continuation" class="album-continuation-heading">
+  <header v-if="continuation && !genericTrackHeading" class="album-continuation-heading">
     <span class="album-continuation-label">{{ tr('Album') }}</span>
     <span class="album-continuation-copy"><strong>{{ album.title }}</strong><small>{{ continuationMeta }}</small></span>
   </header>
+  <header v-else-if="continuation" class="album-continuation-heading album-track-heading">
+    <span class="album-continuation-copy"><strong>{{ tr('Tracks') }}</strong><small>{{ continuationMeta }}</small></span>
+  </header>
+  <h3 v-else-if="!disc && !isMultiDisc" class="album-tracks-title">{{ tr('Album tracks') }}</h3>
 
   <div v-if="loading" class="empty"><div class="p">Loading tracks…</div></div>
   <div v-else-if="error" class="empty">
@@ -142,11 +163,23 @@ Vue.component('lms-album-block', {
     <button class="retry-command" @click="load">Try again</button>
   </div>
   <template v-else>
-	    <template v-for="(t, trackIndex) in tracks">
-      <div v-if="showDiscHeader(t, trackIndex)" :key="'disc-' + discNumber(t)" class="disc-section-heading">
-        <span>{{ tr('Disc') }} {{ discNumber(t) }}</span>
-        <span>{{ discTrackCount(discNumber(t)) }} {{ tr(discTrackCount(discNumber(t)) === 1 ? 'song' : 'songs') }}</span>
+    <section v-if="isMultiDisc" class="album-discs">
+      <div class="disc-toolbar">
+        <input v-model.trim="discQuery" type="search" :aria-label="tr('Find a disc or track')" :placeholder="tr('Find a disc or track')">
+        <select :aria-label="tr('Jump to disc')" @change="jumpDisc($event)"><option value="">{{ tr('Jump to disc') }}</option><option v-for="group in discGroups" :key="group.number" :value="group.number">{{ group.number }}</option></select>
+        <button type="button" @click="toggleAllDiscs">{{ tr(allDiscsOpen ? 'Collapse all' : 'Expand all') }}</button>
       </div>
+      <section v-for="group in filteredDiscs" :key="group.number" class="disc-section">
+        <button type="button" class="disc-section-heading" :data-disc="group.number" :aria-expanded="String(discOpen(group.number))" @click="toggleDisc(group.number)">
+          <span>{{ discOpen(group.number) ? '⌄' : '›' }} {{ tr('Disc') }} {{ group.number }}</span>
+          <span>{{ group.tracks.length }} {{ tr('songs') }}</span>
+        </button>
+        <lms-album-block v-if="discOpen(group.number)" :album="album" :artist="artist" :disc="group.number"
+          :supplied-tracks="group.tracks" :incomplete-disc="tracksHasMore" :enrich="false" :show-related="false"></lms-album-block>
+      </section>
+      <p v-if="!filteredDiscs.length" class="empty">{{ tr('No matching discs or tracks') }}</p>
+    </section>
+	    <template v-for="(t, trackIndex) in (isMultiDisc ? [] : tracks)">
       <div :key="t.id" class="trow"
 	         :class="{playing: isPlaying(t), chosen: selected(t)}"
 	         role="group" :aria-label="trackLabel(t)">
@@ -161,6 +194,7 @@ Vue.component('lms-album-block', {
 	          <span v-else>{{ t.trackNum || '' }}</span>
 	        </span>
 	        <span class="ell"><span class="t ell">{{ t.title }}</span></span>
+	        <span v-if="sacdTrackReady(t)" class="sacd-track-ready" :title="tr('Cached')" :aria-label="tr('Cached')">✓</span>
 	        <span v-if="hires(t)" class="spec">{{ shortRate(t) }}</span>
 	        <span class="dur">{{ dur(t.duration) }}</span>
 	      </button>
@@ -183,22 +217,51 @@ Vue.component('lms-album-block', {
       </template>
 	    <div v-if="!tracks.length" class="empty"><div class="p">This album returned no tracks.</div></div>
 	    <div v-if="tracksHasMore" class="loading-more warning" role="status">
-	      This album has more tracks than the screen loaded.
+      <button type="button" :disabled="tracksLoadingMore" @click="loadMoreTracks">{{ tr(tracksLoadingMore ? 'Loading…' : 'Load more tracks') }}</button>
 	    </div>
+    <p v-if="tracksPageError" class="loading-more warning" role="status">{{ tracksPageError }}</p>
 	  </template>
 	</div>`,
   data: function () {
     return { store: LmsStore.state, ui: LmsUi.state, tracks: [], artFailed: false,
 	             relatedArtists: [], relatedVisibleCount: 1, relatedExpanded: false, relatedError: '',
-	             tracksHasMore: false, albumInfoStatus: '', albumInfo: { review: '', covers: [] },
+	             tracksHasMore: false, tracksTotal: null, tracksOffset: 0, tracksLoadingMore: false, tracksPageError: '', trackLoadToken: 0,
+             metadataOpen: false, discExpanded: {}, discQuery: '', albumInfoStatus: '', albumInfo: { review: '', covers: [] },
 	             albumInfoVisible: false, albumReviewExpanded: false, albumSourceVisible: false,
-	             albumInfoRequestToken: 0,
+	             albumInfoRequestToken: 0, sacdAvailable: null, sacdStats: null, sacdStatus: null,
+	             sacdBusy: false, sacdPollTimer: null,
 	             relatedObserver: null, loading: true, error: '' };
   },
   computed: {
+    displayContext: function () { return { id: this.album.id, title: this.album.title, artist: this.album.artist || (this.artist && this.artist.name) || '', genre: this.album.genre || (this.tracks[0] && this.tracks[0].genre) || '', counts: this.metaLine, year: this.album.year || '', format: this.formatLine, source: this.sourceTitle }; },
+    displayFields: function () { return window.LmsLibraryDisplay ? LmsLibraryDisplay.resolve(this.displayContext) : { artist: true, counts: true, year: true, format: true, source: true, albumInformation: true, artistInformation: true }; },
+    displayOrder: function () { return window.LmsLibraryDisplay && LmsLibraryDisplay.resolveOrder ? LmsLibraryDisplay.resolveOrder(this.displayContext) : ['artist','counts','year','format','genre','source','albumInformation','artistInformation']; },
+    customDisplayOrder: function () { return this.displayOrder.join(',') !== 'artist,counts,year,format,genre,source,albumInformation,artistInformation'; },
+    albumSummary: function () { return this.albumInfo.review || this.album.title; },
+    isMultiDisc: function () { return !this.disc && this.tracks.some(function (t) { return Number(t.disc) > 1 || Number(t.discCount) > 1; }); },
+    discGroups: function () {
+      var groups = {};
+      this.tracks.forEach(function (t) { var n = this.discNumber(t); (groups[n] || (groups[n] = { number: n, tracks: [] })).tracks.push(t); }, this);
+      return Object.keys(groups).map(function (n) { return groups[n]; }).sort(function (a, b) { return a.number - b.number; });
+    },
+    filteredDiscs: function () {
+      var q = this.discQuery.toLowerCase();
+      return this.discGroups.filter(function (g) { return !q || String(g.number) === q || g.tracks.some(function (t) { return t.title.toLowerCase().indexOf(q) >= 0; }); });
+    },
+    allDiscsOpen: function () { return this.discGroups.every(function (g) { return this.discOpen(g.number); }, this); },
+    creditGroups: function () {
+      var groups = {}, seen = {};
+      this.tracks.forEach(function (t) { (t.credits || []).forEach(function (c) {
+        var key = c.roleId + ':' + (c.ids.length ? c.ids.join(',') : c.name);
+        if (seen[key]) return; seen[key] = true;
+        var group = groups[c.roleId] || (groups[c.roleId] = { roleId: c.roleId, role: c.role, items: [] });
+        group.items.push(Object.assign({ key: key }, c));
+      }); });
+      return [5, 6, 2, 3, 4].map(function (role) { return groups[role]; }).filter(Boolean);
+    },
     artUrl: function () { return (this.album.art || '').replace('_50x50', ''); },
     metaLine: function () {
-      var n = this.tracks.length;
+      var n = this.tracksTotal == null || this.disc ? this.tracks.length : this.tracksTotal;
       /* A frase e montada por concatenacao, entao o texto pronto nunca bate
          com uma chave do dicionario. Traduz-se a unidade antes de juntar. */
       var unit = (n === 1) ? 'song' : 'songs';
@@ -280,9 +343,59 @@ Vue.component('lms-album-block', {
       return (this.store.equalizer.rules || []).filter(function (rule) {
         return rule.playerId === playerId && rule.type === 'album' && rule.key === albumId;
       })[0] || null;
-    }
+    },
+    isSacdAlbum: function () { return this.tracks.some(function (track) { return /\.iso#(2ch|mch)-\d{2,3}$/i.test(String(track.url || '')); }); },
+    sacdCounts: function () { var states=this.sacdTrackStates(),ready=0,working=0,failed=0;states.forEach(function(s){if(s.state==='ready')ready++;else if(s.state==='pending'||s.state==='extracting')working++;else if(s.state==='failed')failed++;});return {total:states.length,ready:ready,working:working,failed:failed}; },
+    sacdInProgress: function () { return this.sacdCounts.working > 0; },
+    sacdBinaryMissing: function () { return this.sacdStats && !this.sacdStats.binary; },
+    sacdFirstError: function () { var found=this.sacdTrackStates().filter(function(s){return s.state==='failed'&&s.error;})[0];return found ? found.error : ''; },
+    sacdCacheLabel: function () { var c=this.sacdCounts;if(this.sacdAvailable===false)return this.tr('SACD cache status requires the SACDPlayer plugin');if(c.failed)return this.tr('Extraction failed');if(c.total&&c.ready===c.total)return this.tr('Cached');if(c.working)return this.tr('Preparing…')+' ('+c.ready+' '+this.tr('of')+' '+c.total+')';if(c.ready)return this.tr('Partially cached')+' ('+c.ready+' '+this.tr('of')+' '+c.total+')';return this.tr('Not cached'); },
+    sacdActionLabel: function () { if(this.sacdInProgress)return this.tr('Preparing…');return this.sacdCounts.total&&this.sacdCounts.ready===this.sacdCounts.total?this.tr('Remove from cache'):this.tr('Prepare album'); }
   },
   methods: {
+    sacdTarget: function () { var track=this.tracks.filter(function(t){return /\.iso#(2ch|mch)-\d{2,3}$/i.test(String(t.url||''));})[0];return track ? track.url : ''; },
+    sacdTrackStates: function () { var status=this.sacdStatus&&this.sacdStatus.tracks||[],byNumber={};status.forEach(function(row){byNumber[Number(row.number)]=row;});return this.tracks.filter(function(t){return /\.iso#(2ch|mch)-\d{2,3}$/i.test(String(t.url||''));}).map(function(t,index){var match=String(t.url||'').match(/-(\d{2,3})$/);return byNumber[Number(match?match[1]:index+1)]||{number:index+1,state:'absent',error:''};}); },
+    sacdTrackReady: function (track) { var match=String(track.url||'').match(/\.iso#(?:2ch|mch)-(\d{2,3})$/i),number=match?Number(match[1]):0;return !!this.sacdTrackStates().filter(function(row){return row.number===number&&row.state==='ready';})[0]; },
+    loadSacdCache: async function () { if(!this.isSacdAlbum)return;this.sacdAvailable=await LmsApi.sacdPlayerAvailable(false);if(!this.sacdAvailable)return;var result=await Promise.all([LmsApi.sacdCacheStats(),LmsApi.sacdAlbumStatus(this.sacdTarget())]);this.sacdStats=result[0];this.sacdStatus=result[1];this.scheduleSacdPoll(); },
+    scheduleSacdPoll: function () { if(this.sacdPollTimer){clearTimeout(this.sacdPollTimer);this.sacdPollTimer=null;}if(!this.sacdInProgress)return;var self=this;this.sacdPollTimer=setTimeout(function(){self.loadSacdCache();},5000); },
+    changeSacdCache: async function () { if(this.sacdBusy||!this.sacdTarget())return;this.sacdBusy=true;try{if(this.sacdCounts.total&&this.sacdCounts.ready===this.sacdCounts.total)await LmsApi.sacdEvictAlbum(this.sacdTarget());else await LmsApi.sacdPrepareAlbum(this.sacdTarget());await this.loadSacdCache();}catch(e){LmsUi.notify(LmsStore.friendlyError(e,'SACD cache action failed.'),'error',5000);}this.sacdBusy=false; },
+    openSacdPluginManager: function () { try{sessionStorage.setItem('echoclassic.plugin-search.v1','SACDPlayer');}catch(e){}this.ui.advancedSettingsPage='/echoclassic/settings/server/plugins.html';LmsUi.setTab('settings');LmsNav.push('settings',{label:'Advanced LMS settings',advanced:true});this.ui.advancedSettings=true; },
+    displayOrderStyle: function (key) { var index=this.displayOrder.indexOf(key); return { order: index < 0 ? 99 : index }; },
+    configureInformation: function () { LmsLibraryDisplay.open(this.displayContext); },
+    discOpen: function (n) {
+      if (this.discQuery) return true;
+      if (Object.prototype.hasOwnProperty.call(this.discExpanded, n)) return this.discExpanded[n];
+      var reported = Math.max.apply(Math, this.tracks.map(function (t) { return Number(t.discCount) || Number(t.disc) || 1; }));
+      return reported <= 4;
+    },
+    toggleDisc: function (n) { this.$set(this.discExpanded, n, !this.discOpen(n)); },
+    toggleAllDiscs: function () { var open = !this.allDiscsOpen; this.discQuery = ''; this.discGroups.forEach(function (g) { this.$set(this.discExpanded, g.number, open); }, this); },
+    jumpDisc: function (event) {
+      var n = Number(event.target.value); if (!n) return;
+      this.discQuery = ''; this.$set(this.discExpanded, n, true);
+      this.$nextTick(function () { var button = this.$el.querySelector('[data-disc="' + n + '"]'); if (button) { button.scrollIntoView({ block: 'start' }); button.focus(); } });
+      event.target.value = '';
+    },
+    openCredit: function (credit) {
+      if (!credit.ids.length) return;
+      LmsNav.push('music', { kind: 'artist', id: credit.ids[0], ids: credit.ids, roleId: credit.roleId, label: credit.name, art: null });
+    },
+    loadMoreTracks: async function () {
+      if (this.tracksLoadingMore || !this.tracksHasMore || this.suppliedTracks) return;
+      var token = this.trackLoadToken, pid = this.store.playerId || '', albumId = this.album.id;
+      this.tracksLoadingMore = true; this.tracksPageError = '';
+      try {
+        var page = await LmsApi.tracks(pid, albumId, this.tracksOffset, 500);
+        if (token !== this.trackLoadToken || albumId !== this.album.id || pid !== (this.store.playerId || '')) return;
+        var count = page.sourceCount == null ? page.length : page.sourceCount;
+        if (!count && page.total != null && this.tracksOffset < page.total) throw new Error(this.tr('Could not load more tracks'));
+        var seen = {}; this.tracks.forEach(function (t) { seen[t.id] = true; });
+        this.tracks = this.tracks.concat(page.filter(function (t) { return !seen[t.id]; }));
+        this.tracksOffset += count; this.tracksTotal = page.total == null ? null : page.total;
+        this.tracksHasMore = page.total == null ? count === 500 : this.tracksOffset < page.total;
+      } catch (e) { if (token === this.trackLoadToken) this.tracksPageError = this.tr('Could not load more tracks'); }
+      finally { if (token === this.trackLoadToken) this.tracksLoadingMore = false; }
+    },
     discNumber: function (track) { return Math.max(1, Number(track && track.disc) || 1); },
     showDiscHeader: function (track, index) {
       if (!this.tracks.some(function (item) { return Number(item.disc) > 1; })) return false;
@@ -339,10 +452,14 @@ Vue.component('lms-album-block', {
       });
     },
     play: function (t) {
+      if (this.incompleteDisc) return;
       var i = this.tracks.findIndex(function (x) { return x.id === t.id; });
+      if (this.disc) return LmsStore.playTrackList(this.tracks, i > 0 ? i : 0, false);
       LmsStore.playContainer('album_id', this.album.id, i > 0 ? i : 0);
     },
     playAlbum: function () {
+      if (this.incompleteDisc) return;
+      if (this.disc) return LmsStore.playTrackList(this.tracks, 0, false);
       return LmsStore.playContainer('album_id', this.album.id, 0);
     },
     rowItem: function (t) {
@@ -367,6 +484,8 @@ Vue.component('lms-album-block', {
       LmsUi.openActions(this.rowItem(t), event && event.currentTarget);
     },
     shuffle: function () {
+      if (this.incompleteDisc) return;
+      if (this.disc) return LmsStore.playTrackList(this.tracks, 0, true);
       var id = this.album.id;
       LmsStore.playContainer('album_id', id, 0).then(function () {
         return LmsStore.cycleShuffle();
@@ -468,6 +587,8 @@ Vue.component('lms-album-block', {
       this.ui.appearanceScreen = 'equalizer';
     },
     load: async function () {
+      var token = ++this.trackLoadToken;
+      if (this.suppliedTracks) { this.tracks = this.suppliedTracks; this.loading = false; this.loadSacdCache(); return; }
 	      this.loading = true;
 	      this.error = '';
 	      this.relatedArtists = [];
@@ -484,8 +605,11 @@ Vue.component('lms-album-block', {
             return [];
           })
         ]);
-	        this.tracks = result[0];
-	        this.tracksHasMore = (result[0].sourceCount == null ? result[0].length : result[0].sourceCount) === 500;
+        if (token !== this.trackLoadToken || pid !== (this.store.playerId || '')) return;
+        this.tracks = result[0];
+        this.tracksOffset = result[0].sourceCount == null ? result[0].length : result[0].sourceCount;
+        this.tracksTotal = result[0].total == null ? null : result[0].total;
+        this.tracksHasMore = this.tracksTotal == null ? this.tracksOffset === 500 : this.tracksOffset < this.tracksTotal;
         var main = String(this.album.artist || (this.artist && this.artist.name) || '');
         this.relatedArtists = result[1].filter(function (artist) {
           return self.normalizeName(artist.name) !== self.normalizeName(main);
@@ -499,10 +623,12 @@ Vue.component('lms-album-block', {
           relatedArtists: this.relatedArtists.slice()
         });
         this.$nextTick(this.measureRelatedWidth);
+        this.loadSacdCache();
       } catch (e) {
+        if (token !== this.trackLoadToken) return;
         this.error = e && e.message ? e.message : String(e);
       }
-      this.loading = false;
+      if (token === this.trackLoadToken) this.loading = false;
     },
     normalizeName: function (value) {
       var name = String(value || '').toLowerCase();
@@ -554,7 +680,10 @@ Vue.component('lms-album-block', {
       window.addEventListener('resize', this.measureRelatedWidth);
     }
   },
+  watch: { suppliedTracks: function (value) { if (value) this.tracks = value; }, 'album.id': function () { this.discExpanded = {}; this.metadataOpen = false; this.load(); }, 'store.playerId': function () { if (!this.suppliedTracks) this.load(); } },
   beforeDestroy: function () {
+    this.trackLoadToken++;
+    if (this.sacdPollTimer) clearTimeout(this.sacdPollTimer);
     if (this.relatedObserver) this.relatedObserver.disconnect();
     else window.removeEventListener('resize', this.measureRelatedWidth);
   }

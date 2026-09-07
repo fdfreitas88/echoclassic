@@ -212,7 +212,7 @@ Vue.component('lms-playlists', {
       var name = (this.newName || '').trim();
       if (!name) return;
       var self = this;
-      await this.runOperation('Criando playlist…', async function () {
+      await this.runOperation('Creating playlist…', async function () {
         var r = await LmsApi.createPlaylist(name);
         self.notice = r.existed
           ? 'A playlist with that name already existed; it was reused.'

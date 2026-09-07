@@ -1,3 +1,213 @@
+ECHOCLASSIC_REVIEW_NEW_0
+	EN	Collection
+	DE	Sammlung
+	FR	Collection
+	PT	Coleção
+
+ECHOCLASSIC_REVIEW_NEW_1
+	EN	Apply to
+	DE	Anwenden auf
+	FR	Appliquer à
+	PT	Aplicar a
+
+ECHOCLASSIC_REVIEW_NEW_2
+	EN	Global
+	DE	Global
+	FR	Global
+	PT	Global
+
+ECHOCLASSIC_REVIEW_NEW_3
+	EN	Edition year
+	DE	Ausgabejahr
+	FR	Année de l’édition
+	PT	Ano da edição
+
+ECHOCLASSIC_REVIEW_NEW_4
+	EN	Track and disc count
+	DE	Titel- und Disc-Anzahl
+	FR	Nombre de pistes et de disques
+	PT	Número de faixas e discos
+
+ECHOCLASSIC_REVIEW_NEW_5
+	EN	File format and resolution
+	DE	Dateiformat und Auflösung
+	FR	Format et résolution
+	PT	Formato e resolução
+
+ECHOCLASSIC_REVIEW_NEW_6
+	EN	Music source
+	DE	Musikquelle
+	FR	Source musicale
+	PT	Fonte da música
+
+ECHOCLASSIC_REVIEW_NEW_7
+	EN	Customize album information
+	DE	Albuminformationen anpassen
+	FR	Personnaliser les informations de l’album
+	PT	Personalizar informações do álbum
+
+ECHOCLASSIC_REVIEW_NEW_8
+	EN	Choose what appears beside the album cover.
+	DE	Wählen Sie die Angaben neben dem Albumcover.
+	FR	Choisissez les informations affichées à côté de la pochette.
+	PT	Escolha o que aparece ao lado da capa do álbum.
+
+ECHOCLASSIC_REVIEW_NEW_9
+	EN	Album overrides artist, artist overrides genre, genre overrides global.
+	DE	Album hat Vorrang vor Künstler, Künstler vor Genre und Genre vor globalen Einstellungen.
+	FR	L’album prime sur l’artiste, l’artiste sur le genre, le genre sur les réglages globaux.
+	PT	Álbum tem prioridade sobre artista, artista sobre gênero e gênero sobre global.
+
+ECHOCLASSIC_REVIEW_NEW_10
+	EN	Open these settings from an album to customize its artist, genre or album.
+	DE	Öffnen Sie diese Einstellungen über ein Album, um Künstler, Genre oder Album anzupassen.
+	FR	Ouvrez ces réglages depuis un album pour personnaliser son artiste, son genre ou l’album.
+	PT	Abra estas configurações a partir de um álbum para personalizar artista, gênero ou álbum.
+
+ECHOCLASSIC_REVIEW_NEW_11
+	EN	Use inherited settings
+	DE	Übergeordnete Einstellungen verwenden
+	FR	Utiliser les réglages hérités
+	PT	Usar configurações herdadas
+
+ECHOCLASSIC_REVIEW_NEW_12
+	EN	Small EQ
+	DE	Kompakter EQ
+	FR	Égaliseur compact
+	PT	EQ compacto
+
+ECHOCLASSIC_REVIEW_NEW_13
+	EN	Signal & track information
+	DE	Signal- und Titelinformationen
+	FR	Informations du signal et de la piste
+	PT	Informações do sinal e da faixa
+
+ECHOCLASSIC_REVIEW_NEW_14
+	EN	Customize this panel
+	DE	Dieses Panel anpassen
+	FR	Personnaliser ce panneau
+	PT	Personalizar este painel
+
+ECHOCLASSIC_REVIEW_NEW_15
+	EN	Mini player only
+	DE	Nur Mini-Player
+	FR	Mini-lecteur uniquement
+	PT	Somente miniplayer
+
+ECHOCLASSIC_REVIEW_NEW_16
+	EN	Known file sizes
+	DE	Bekannte Dateigrößen
+	FR	Tailles de fichiers connues
+	PT	Tamanhos de arquivo conhecidos
+
+ECHOCLASSIC_REVIEW_NEW_17
+	EN	By genre
+	DE	Nach Genre
+	FR	Par genre
+	PT	Por gênero
+
+ECHOCLASSIC_REVIEW_NEW_18
+	EN	File types
+	DE	Dateitypen
+	FR	Types de fichiers
+	PT	Tipos de arquivo
+
+ECHOCLASSIC_REVIEW_NEW_19
+	EN	Storage by file type
+	DE	Speicher nach Dateityp
+	FR	Stockage par type de fichier
+	PT	Espaço por tipo de arquivo
+
+ECHOCLASSIC_REVIEW_NEW_20
+	EN	Album file size
+	DE	Album-Dateigröße
+	FR	Taille des albums
+	PT	Tamanho dos álbuns
+
+ECHOCLASSIC_REVIEW_NEW_21
+	EN	Streaming entries are excluded from storage. Missing file sizes are not estimated.
+	DE	Streaming-Einträge sind vom Speicher ausgeschlossen. Fehlende Dateigrößen werden nicht geschätzt.
+	FR	Les entrées de streaming sont exclues du stockage. Les tailles absentes ne sont pas estimées.
+	PT	Itens de streaming são excluídos do armazenamento. Tamanhos ausentes não são estimados.
+
+ECHOCLASSIC_REVIEW_NEW_22
+	EN	Unknown
+	DE	Unbekannt
+	FR	Inconnu
+	PT	Desconhecido
+
+ECHOCLASSIC_REVIEW_NEW_23
+	EN	Complete
+	DE	Vollständig
+	FR	Terminé
+	PT	Concluído
+
+ECHOCLASSIC_REVIEW_NEW_24
+	EN	Partial results
+	DE	Teilergebnisse
+	FR	Résultats partiels
+	PT	Resultados parciais
+
+ECHOCLASSIC_REVIEW_NEW_25
+	EN	Collection could not be loaded. Retry or refresh if the library changed.
+	DE	Sammlung konnte nicht geladen werden. Erneut versuchen oder bei geänderter Mediathek aktualisieren.
+	FR	Impossible de charger la collection. Réessayez ou actualisez si la bibliothèque a changé.
+	PT	Não foi possível carregar a coleção. Tente novamente ou atualize se a biblioteca mudou.
+
+ECHOCLASSIC_REVIEW_NEW_26
+	EN	Load more
+	DE	Mehr laden
+	FR	Charger davantage
+	PT	Carregar mais
+
+ECHOCLASSIC_REVIEW_NEW_27
+	EN	Loading performance
+	DE	Ladeleistung
+	FR	Performances de chargement
+	PT	Desempenho de carregamento
+
+ECHOCLASSIC_REVIEW_NEW_28
+	EN	First usable results
+	DE	Erste nutzbare Ergebnisse
+	FR	Premiers résultats utilisables
+	PT	Primeiros resultados utilizáveis
+
+ECHOCLASSIC_REVIEW_NEW_29
+	EN	Not measured
+	DE	Nicht gemessen
+	FR	Non mesuré
+	PT	Não medido
+
+ECHOCLASSIC_REVIEW_NEW_30
+	EN	Complete collection
+	DE	Vollständige Sammlung
+	FR	Collection complète
+	PT	Coleção completa
+
+ECHOCLASSIC_REVIEW_NEW_31
+	EN	Load all album tracks before playing a disc.
+	DE	Laden Sie alle Albumtitel, bevor Sie eine Disc abspielen.
+	FR	Chargez toutes les pistes de l’album avant de lire un disque.
+	PT	Carregue todas as faixas do álbum antes de reproduzir um disco.
+
+ECHOCLASSIC_REVIEW_NEW_32
+	EN	Disc
+	DE	Disc
+	FR	Disque
+	PT	Disco
+
+ECHOCLASSIC_REVIEW_NEW_33
+	EN	Ensemble
+	DE	Ensemble
+	FR	Ensemble
+	PT	Conjunto
+
+ECHOCLASSIC_REVIEW_NEW_34
+	EN	Transcoded
+	DE	Transkodiert
+	FR	Transcodé
+	PT	Transcodificado
+
 ECHOCLASSIC_SKIN
 	EN	Echo Classic
 	DE	Echo Classic
@@ -3939,6 +4149,54 @@ ECHOCLASSIC_UI_ARTIST_INFORMATION
 	FR	Informations sur l'artiste
 	PT	Informações do artista
 
+ECHOCLASSIC_UI_ALBUM_INFORMATION_SIDE
+	EN	Album information side
+	DE	Seite der Albuminformationen
+	FR	Côté des informations sur l'album
+	PT	Lado das informações do álbum
+
+ECHOCLASSIC_UI_ARTIST_INFORMATION_USES_THE_OPPOSITE_SIDE
+	EN	Artist information uses the opposite side.
+	DE	Die Interpreteninformationen verwenden die gegenüberliegende Seite.
+	FR	Les informations sur l'artiste utilisent le côté opposé.
+	PT	As informações do artista usam o lado oposto.
+
+ECHOCLASSIC_UI_SHOWN_ALBUM_FIELDS
+	EN	Shown
+	DE	Angezeigt
+	FR	Affichés
+	PT	Exibidos
+
+ECHOCLASSIC_UI_HIDDEN_ALBUM_FIELDS
+	EN	Hidden
+	DE	Ausgeblendet
+	FR	Masqués
+	PT	Ocultos
+
+ECHOCLASSIC_UI_DRAG_TO_REARRANGE
+	EN	Drag to rearrange
+	DE	Zum Sortieren ziehen
+	FR	Faites glisser pour réorganiser
+	PT	Arraste para reorganizar
+
+ECHOCLASSIC_UI_DRAG_HERE_TO_REMOVE
+	EN	Drag here to remove
+	DE	Zum Ausblenden hierher ziehen
+	FR	Faites glisser ici pour masquer
+	PT	Arraste aqui para ocultar
+
+ECHOCLASSIC_UI_SHOW
+	EN	Show
+	DE	Anzeigen
+	FR	Afficher
+	PT	Exibir
+
+ECHOCLASSIC_UI_HIDE
+	EN	Hide
+	DE	Ausblenden
+	FR	Masquer
+	PT	Ocultar
+
 ECHOCLASSIC_UI_FINDING_ARTIST_INFORMATION
 	EN	Finding artist information…
 	DE	Interpreteninformationen werden gesucht…
@@ -4833,6 +5091,18 @@ ECHOCLASSIC_UI_PROMINENT_RATING_EXPLANATION
 	FR	Affiche la note actuelle bien en évidence dans « Lecture en cours ».
 	PT	Mostra a avaliação atual em destaque na tela Reproduzindo agora.
 
+ECHOCLASSIC_UI_TRACK_RATINGS
+	EN	Track ratings
+	DE	Titelbewertungen
+	FR	Notes des morceaux
+	PT	Avaliações das faixas
+
+ECHOCLASSIC_UI_RATING_QUEUE_NOW_PLAYING_EXPLANATION
+	EN	Show Ratings Light stars in the queue and on Now Playing.
+	DE	Ratings-Light-Sterne in der Warteschlange und in „Aktuelle Wiedergabe“ anzeigen.
+	FR	Afficher les étoiles Ratings Light dans la file d’attente et dans « Lecture en cours ».
+	PT	Mostrar as estrelas do Ratings Light na fila e em Reproduzindo agora.
+
 ECHOCLASSIC_UI_MUSIC_FOLDERS
 	EN	Music folders
 	DE	Musikordner
@@ -5342,3 +5612,226 @@ ECHOCLASSIC_UI_TEST_INTEGRATION_FRAGMENT
 	DE	· Testintegration
 	FR	· Intégration de test
 	PT	· Integração de teste
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_0
+	EN	Less
+	DE	Weniger
+	FR	Moins
+	PT	Menos
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_1
+	EN	Performer
+	DE	Interpret
+	FR	Interprète
+	PT	Intérprete
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_2
+	EN	Credits from loaded tracks
+	DE	Mitwirkende der geladenen Titel
+	FR	Crédits des pistes chargées
+	PT	Créditos das faixas carregadas
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_3
+	EN	Find a disc or track
+	DE	CD oder Titel suchen
+	FR	Rechercher un disque ou une piste
+	PT	Encontrar disco ou faixa
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_4
+	EN	Jump to disc
+	DE	Zu CD springen
+	FR	Aller au disque
+	PT	Ir para o disco
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_5
+	EN	No matching discs or tracks
+	DE	Keine passenden CDs oder Titel
+	FR	Aucun disque ni piste correspondant
+	PT	Nenhum disco ou faixa correspondente
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_6
+	EN	Load more tracks
+	DE	Weitere Titel laden
+	FR	Charger plus de pistes
+	PT	Carregar mais faixas
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_7
+	EN	Could not load more tracks
+	DE	Weitere Titel konnten nicht geladen werden
+	FR	Impossible de charger plus de pistes
+	PT	Não foi possível carregar mais faixas
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_8
+	EN	Could not load more albums
+	DE	Weitere Alben konnten nicht geladen werden
+	FR	Impossible de charger plus d’albums
+	PT	Não foi possível carregar mais álbuns
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_9
+	EN	Load next 500
+	DE	Nächste 500 laden
+	FR	Charger les 500 suivants
+	PT	Carregar próximos 500
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_10
+	EN	Next 500
+	DE	Nächste 500
+	FR	500 suivants
+	PT	Próximos 500
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_11
+	EN	Go to position
+	DE	Zu Position springen
+	FR	Aller à la position
+	PT	Ir para a posição
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_12
+	EN	Go
+	DE	Los
+	FR	Aller
+	PT	Ir
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_13
+	EN	The queue changed. The list was refreshed.
+	DE	Die Warteschlange wurde geändert. Die Liste wurde aktualisiert.
+	FR	La file a changé. La liste a été actualisée.
+	PT	A fila mudou. A lista foi atualizada.
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_14
+	EN	Disc playback
+	DE	CD-Wiedergabe
+	FR	Lecture du disque
+	PT	Reprodução do disco
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_15
+	EN	LIVE PREVIEW
+	DE	LIVE-VORSCHAU
+	FR	APERÇU EN DIRECT
+	PT	PRÉ-VISUALIZAÇÃO AO VIVO
+
+ECHOCLASSIC_LIBRARY_PROPOSAL_16
+	EN	Rescan
+	DE	Erneut scannen
+	FR	Analyser à nouveau
+	PT	Verificar novamente
+
+ECHOCLASSIC_LIBRARY_LAYOUT_1
+	EN	Album cover
+	DE	Albumcover
+	FR	Pochette de l’album
+	PT	Capa do álbum
+
+ECHOCLASSIC_LIBRARY_LAYOUT_2
+	EN	Artist cover
+	DE	Künstlerbild
+	FR	Image de l’artiste
+	PT	Imagem do artista
+
+ECHOCLASSIC_LIBRARY_LAYOUT_3
+	EN	Left side
+	DE	Linke Seite
+	FR	Côté gauche
+	PT	Lado esquerdo
+
+ECHOCLASSIC_LIBRARY_LAYOUT_4
+	EN	Right side
+	DE	Rechte Seite
+	FR	Côté droit
+	PT	Lado direito
+ECHOCLASSIC_COLLECTION_LIBRARY_VIEW
+	EN	Library view
+	DE	Bibliotheksansicht
+	FR	Vue de la bibliothèque
+	PT	Visualização da biblioteca
+
+ECHOCLASSIC_COLLECTION_SELECT_ALL
+	EN	Select all
+	DE	Alle auswählen
+	FR	Tout sélectionner
+	PT	Selecionar tudo
+
+ECHOCLASSIC_COLLECTION_SELECTED
+	EN	Selected
+	DE	Ausgewählt
+	FR	Sélectionné
+	PT	Selecionado
+
+ECHOCLASSIC_COLLECTION_CREATE_PLAYLIST
+	EN	Create playlist
+	DE	Playlist erstellen
+	FR	Créer une playlist
+	PT	Criar playlist
+
+ECHOCLASSIC_COLLECTION_PLAYING_SELECTION
+	EN	Playing selection.
+	DE	Auswahl wird wiedergegeben.
+	FR	Lecture de la sélection.
+	PT	Reproduzindo seleção.
+
+ECHOCLASSIC_COLLECTION_PLAYBACK_FAILED
+	EN	Could not start playback.
+	DE	Wiedergabe konnte nicht gestartet werden.
+	FR	Impossible de démarrer la lecture.
+	PT	Não foi possível iniciar a reprodução.
+
+ECHOCLASSIC_COLLECTION_OPEN
+	EN	Open
+	DE	Öffnen
+	FR	Ouvrir
+	PT	Abrir
+
+ECHOCLASSIC_SACD_CACHED
+	EN	Cached
+	PT	Em cache
+
+ECHOCLASSIC_SACD_NOT_CACHED
+	EN	Not cached
+	PT	Fora do cache
+
+ECHOCLASSIC_SACD_PREPARING
+	EN	Preparing…
+	PT	Preparando…
+
+ECHOCLASSIC_SACD_PARTIAL
+	EN	Partially cached
+	PT	Parcialmente em cache
+
+ECHOCLASSIC_SACD_FAILED
+	EN	Extraction failed
+	PT	Falha na extração
+
+ECHOCLASSIC_SACD_PREPARE_ALBUM
+	EN	Prepare album
+	PT	Preparar álbum
+
+ECHOCLASSIC_SACD_REMOVE_CACHE
+	EN	Remove from cache
+	PT	Remover do cache
+
+ECHOCLASSIC_SACD_CACHE
+	EN	SACD cache
+	PT	Cache SACD
+
+ECHOCLASSIC_SACD_LOW_DISK
+	EN	Low disk
+	PT	Pouco espaço em disco
+
+ECHOCLASSIC_SACD_REQUIRES_PLUGIN
+	EN	SACD cache status requires the SACDPlayer plugin
+	PT	O estado do cache SACD requer o plugin SACDPlayer
+
+ECHOCLASSIC_SACD_BINARY_MISSING
+	EN	sacd_extract binary missing on the server
+	PT	Binário sacd_extract ausente no servidor
+
+ECHOCLASSIC_SACD_OF
+	EN	of
+	PT	de
+
+ECHOCLASSIC_SACD_FREE
+	EN	free
+	PT	livres
+
+ECHOCLASSIC_SACD_ACTION_FAILED
+	EN	SACD cache action failed.
+	PT	Falha na ação do cache SACD.

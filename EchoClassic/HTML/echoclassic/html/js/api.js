@@ -139,7 +139,10 @@
     }
     return value.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   }
-  function pageMeta(items, sourceCount) {
+  function pageMeta(items, sourceCount, total) {
+    if (total != null && Number.isSafeInteger(Number(total)) && Number(total) >= 0) {
+      Object.defineProperty(items, "total", { value: Number(total), enumerable: false, configurable: true });
+    }
     var parsed = Number(sourceCount);
     var safeCount = Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : items.length;
     Object.defineProperty(items, 'sourceCount', {
@@ -360,7 +363,7 @@
   async function albums(playerId, start, count, filter) {
     if (filter && Array.isArray(filter.artistIds) && filter.artistIds.length) {
       var batches = await Promise.all(filter.artistIds.map(function (id) {
-        return albums(playerId, 0, count, { artistId: id });
+        return albums(playerId, 0, count, Object.assign({}, filter, { artistIds: null, artistId: id }));
       }));
       var found = Object.create(null);
       var merged = [];
@@ -376,6 +379,7 @@
     var sort = filter && filter.sort ? filter.sort : 'album';
     var cmd = ['albums', start | 0, count | 0, 'tags:jaSlytW2', 'sort:' + sort];
     if (filter && filter.artistId != null) cmd.push('artist_id:' + filter.artistId);
+    if (filter && filter.roleId != null) cmd.push('role_id:' + filter.roleId);
     if (filter && filter.albumId != null) cmd.push('album_id:' + filter.albumId);
     if (filter && filter.genreId != null) cmd.push('genre_id:' + filter.genreId);
     if (filter && filter.year != null) cmd.push('year:' + filter.year);
@@ -391,7 +395,7 @@
         artist: canonicalArtist(a.artist), artistId: a.artist_id != null ? a.artist_id : null,
         artworkTrackId: a.artwork_track_id || null
       };
-    }), source.length);
+    }), source.length, r.count);
   }
 
   /* Resolve o artista de um album. Necessario porque um album aberto pela raiz
@@ -412,7 +416,24 @@
     return canonicalizeArtistSubset(raw);
   }
 
-	  async function tracks(playerId, albumId, start, count) {
+	  function trackCredits(t) {
+    var fields = [['albumartist', 5, 'Album artist'], ['trackartist', 6, 'Performer'],
+      ['composer', 2, 'Composer'], ['conductor', 3, 'Conductor'], ['band', 4, 'Ensemble']];
+    return fields.reduce(function (out, spec) {
+      var name = txt(t[spec[0]]).trim();
+      if (!name) return out;
+      var ids = txt(t[spec[0] + '_ids']).split(',').map(function (id) { return id.trim(); }).filter(Boolean);
+      var names = ids.length > 1 ? name.split(',').map(function (n) { return n.trim(); }) : [name];
+      if (names.length !== ids.length && ids.length > 1) {
+        out.push({ name: name, ids: ids, roleId: spec[1], role: spec[2] });
+      } else names.forEach(function (n, i) {
+        out.push({ name: n, ids: ids[i] ? [ids[i]] : [], roleId: spec[1], role: spec[2] });
+      });
+      return out;
+    }, []);
+  }
+
+  async function tracks(playerId, albumId, start, count) {
 	    var r = await rpc(playerId, scoped(['titles', start | 0, count | 0,
 	                                 'album_id:' + albumId, 'sort:tracknum',
 	                                 'tags:aAcCdefgiIjJkKlLmMnopPDUqrROSstTuvwxXyY']));
@@ -420,8 +441,8 @@
 	    return pageMeta(source.map(function (t) {
 	      return {
 	        id: t.id, title: txt(t.title), trackNum: num(t.tracknum),
-        disc: num(t.disc), discCount: num(t.disccount),
-        artist: canonicalArtist(t.artist), album: txt(t.album),
+        disc: num(t.disc), discCount: num(t.disccount), credits: trackCredits(t),
+        artist: canonicalArtist(t.artist), album: txt(t.album), genre: txt(t.genre),
         duration: num(t.duration), sampleRate: num(t.samplerate),
         sampleSize: num(t.samplesize), format: txt(t.type).toUpperCase(),
         bitrate: kbps(t.bitrate), url: txt(t.url), remote: num(t.remote) === 1,
@@ -429,7 +450,7 @@
         year: LmsFmt.year(t.year), originalYear: LmsFmt.year(t.originalyear || t.original_year),
 	        addedTime: num(t.addedTime), lastPlayed: num(t.lastplayed)
 	      };
-	    }), source.length);
+	    }), source.length, r.count);
 	  }
 
   /* Metadata-only library scan used by the album facets. It is deliberately
@@ -447,7 +468,16 @@
         sampleRate: num(t.samplerate), sampleSize: num(t.samplesize),
         url: txt(t.url), remote: num(t.remote) === 1
       };
-    }).filter(function (t) { return t.albumId != null; }), source.length);
+    }).filter(function (t) { return t.albumId != null; }), source.length, r.count);
+  }
+
+  async function collectionTracks(start, count) {
+    var r = await rpc('', ['titles', start | 0, count | 0, 'sort:albumtrack', 'tags:algeforTIux']);
+    return { total: r.count == null || !isFinite(Number(r.count)) ? null : Number(r.count), rows: loop(r, 'titles_loop').map(function (t) {
+      return { id: t.id, title: txt(t.title), url: txt(t.url), duration: num(t.duration), albumId: t.album_id != null ? t.album_id : t.albumid, album: txt(t.album), artist: txt(t.artist),
+        genre: txt(t.genre), format: LmsFmt.format(txt(t.type)), remote: num(t.remote) === 1 || /^(https?|qobuz|spotify|wimp|tidal):/i.test(txt(t.url)),
+        fileSize: t.filesize != null && isFinite(Number(t.filesize)) && Number(t.filesize) >= 0 ? Number(t.filesize) : null };
+    }) };
   }
 
   /* A resposta de search usa nomes diferentes das listagens normais
@@ -812,6 +842,7 @@
     var r = await rpc(playerId, ['status', start | 0, count | 0, 'tags:aldeKNcgltTIo']);
     return {
       total: num(r.playlist_tracks),
+      revision: r.playlist_timestamp == null ? null : String(r.playlist_timestamp),
       index: num(r.playlist_cur_index),
       shuffle: num(r['playlist shuffle']),
       repeat: num(r['playlist repeat']),
@@ -1026,6 +1057,52 @@
     var out = {};
     names.forEach(function (name, i) { out[name] = results[i]; });
     return out;
+  }
+
+  var sacdPlayerCapability = null;
+  async function sacdPlayerAvailable(force) {
+    if (!force && sacdPlayerCapability !== null) return sacdPlayerCapability;
+    sacdPlayerCapability = await canCommand(['sacdplayer', 'cachestats']).catch(function () { return false; });
+    return sacdPlayerCapability;
+  }
+
+  async function sacdCacheStats() {
+    if (!await sacdPlayerAvailable(false)) return { available: false, albums: [] };
+    var r = await rpc('', ['sacdplayer', 'cachestats']);
+    return {
+      available: true, usageBytes: num(r.usage_bytes), capBytes: num(r.cap_bytes),
+      freeBytes: num(r.free_bytes), binary: num(r.binary) === 1, busy: num(r.busy) === 1,
+      queued: num(r.queued), lowDisk: num(r.low_disk) === 1,
+      albums: loop(r, 'albums_loop').map(function (album) {
+        return { key: txt(album.key), area: txt(album.area), bytes: num(album.bytes),
+          lastAccess: num(album.last_access), iso: txt(album.iso), title: txt(album.title) };
+      })
+    };
+  }
+
+  async function sacdAlbumStatus(target) {
+    if (!await sacdPlayerAvailable(false)) return { available: false, tracks: [] };
+    var r = await rpc('', ['sacdplayer', 'status', target]);
+    if (num(r.success) !== 1) {
+      if (/no index for target/i.test(txt(r.error))) return { available: true, tracks: [] };
+      throw new LmsError(['sacdplayer', 'status', target], 'lms', txt(r.error));
+    }
+    return { available: true, key: txt(r.key), area: txt(r.area), title: txt(r.title),
+      tracks: loop(r, 'tracks_loop').map(function (track) {
+        return { number: num(track.number), state: txt(track.state) || 'absent', bytes: num(track.bytes), error: txt(track.error) };
+      }) };
+  }
+
+  async function sacdPrepareAlbum(target) {
+    var r = await rpc('', ['sacdplayer', 'prepare', target]);
+    if (num(r.success) !== 1) throw new LmsError(['sacdplayer', 'prepare', target], 'lms', txt(r.error));
+    return r;
+  }
+
+  async function sacdEvictAlbum(target) {
+    var r = await rpc('', ['sacdplayer', 'evict', target]);
+    if (num(r.success) !== 1) throw new LmsError(['sacdplayer', 'evict', target], 'lms', txt(r.error));
+    return r;
   }
 
   /* MusicArtistInfo is optional and owns these read-only commands. Keep its
@@ -1331,7 +1408,7 @@
     var source = loop(r, 'playlists_loop');
     return pageMeta(source.map(function (p) {
 	      return { id: p.id, name: txt(p.playlist), url: txt(p.url), source: sourceFromUrl(p.url, false) };
-	    }), source.length);
+	    }), source.length, r.count);
 	  }
 
   /* `playlists new name:X` devolve o id da nova, ou overwritten_playlist_id
@@ -1376,7 +1453,7 @@
         rating: num(t.rating), playCount: num(t.playcount),
         year: LmsFmt.year(t.year), originalYear: LmsFmt.year(t.originalyear || t.original_year)
       };
-    }), source.length);
+    }), source.length, r.count);
   }
 
   /* Loading a whole container in one call is what the transport buttons need:
@@ -1540,7 +1617,7 @@
     works: works, libraries: libraries, musicFolders: musicFolders,
     libraryRoots: libraryRoots, setRoot: setRoot, setLibrary: setLibrary,
     searchRoots: searchRoots,
-    libraryTracks: libraryTracks, search: search,
+    libraryTracks: libraryTracks, collectionTracks: collectionTracks, search: search,
     __kbps: kbps,
     artistOfAlbum: artistOfAlbum, artistsOfAlbum: artistsOfAlbum,
     genres: genres, years: years,
@@ -1560,6 +1637,8 @@
     setPlayerPref: setPlayerPref, sleep: sleep, sleepRemaining: sleepRemaining,
     syncPlayer: syncPlayer, syncGroups: syncGroups, playerVolume: playerVolume,
     canCommand: canCommand, canCommands: canCommands,
+    sacdPlayerAvailable: sacdPlayerAvailable, sacdCacheStats: sacdCacheStats,
+    sacdAlbumStatus: sacdAlbumStatus, sacdPrepareAlbum: sacdPrepareAlbum, sacdEvictAlbum: sacdEvictAlbum,
     squeezeDspRead: squeezeDspRead, squeezeDspCatalog: squeezeDspCatalog,
     squeezeDspSave: squeezeDspSave, squeezeDspLoadPreset: squeezeDspLoadPreset,
     squeezeDspSavePreset: squeezeDspSavePreset, squeezeDspDeletePreset: squeezeDspDeletePreset,
