@@ -40,7 +40,7 @@ Vue.component('lms-browse', {
       <span v-if="!loading && !error" class="library-context-count">{{ resultCountLabel }}</span>
     </div>
     <label v-if="libraries.length > 1" class="library-root-control">
-      <span>All music</span>
+      <span>{{ tr('Library') }}</span>
       <select :value="ui.rootKey" aria-label="Library root" @change="chooseLibrary($event.target.value)">
         <option v-for="library in libraries" :key="library.key" :value="library.key">{{ library.name }}</option>
       </select>
