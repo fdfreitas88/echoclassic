@@ -803,7 +803,12 @@
   async function songInfo(playerId, trackId) {
     var cached = songCacheGet(trackId);
     if (cached) return cached;
-    var r = await rpc(playerId, ['songinfo', 0, 200, 'track_id:' + trackId]);
+    // Ratings are stored in LMS's canonical track metadata even when a rating
+    // plugin owns the write. Supplying tags replaces songinfo's default set, so
+    // request the complete alphanumeric tag namespace rather than R alone; the
+    // latter would silently remove credits, file facts and lyrics.
+    var r = await rpc(playerId, ['songinfo', 0, 200, 'track_id:' + trackId,
+      'tags:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789']);
     var flat = {};
     loop(r, 'songinfo_loop').forEach(function (o) { Object.assign(flat, o); });
     var info = {
@@ -925,7 +930,7 @@
   async function queue(playerId, start, count) {
     // tag 'e' adiciona album_id: sem ele a fila nao tem como agrupar por album
     // sem depender do nome (que colide) ou do coverid (que e por faixa).
-    var r = await rpc(playerId, ['status', start | 0, count | 0, 'tags:AldeKNcgltTIo']);
+    var r = await rpc(playerId, ['status', start | 0, count | 0, 'tags:AldeKNcgltTIoR']);
     var rows = await fillArtists(playerId, loop(r, 'playlist_loop').map(function (t) {
       return {
         index: num(t['playlist index']), id: t.id,
@@ -1270,7 +1275,12 @@
 
   function getRating(playerId, trackId, backend) {
     if (backend === 'ratingslight') {
-      return rpc('', ['ratingslight', 'getrating', trackId]).then(ratingValue);
+      return rpc('', ['ratingslight', 'getrating', trackId]).then(function (result) {
+        if (result && isFinite(Number(result.ratingpercentage))) {
+          return Math.max(0, Math.min(100, Number(result.ratingpercentage)));
+        }
+        return Math.max(0, Math.min(100, Number(result && result.rating) * 20 || 0));
+      });
     }
     return songInfo(playerId, trackId).then(function (info) {
       return ratingValue({ rating: info.rating });

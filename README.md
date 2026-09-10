@@ -18,12 +18,21 @@ touch-friendly music system for tablets, phones and desktop browsers. It brings
 library discovery, queue and playlist editing, synchronized-player control,
 live signal-path information and optional server-side DSP into one interface.
 
-Version **3.5.7** uses Vue 2 without a compilation or bundling step: the files in
+Version **3.5.8** uses Vue 2 without a compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
 ![Echo Classic 3.5.7 Collection dashboard](images/release-3.5.7-collection.png)
 
-## What is new in 3.5.7
+## What is new in 3.5.8
+
+Version 3.5.8 retains the Collection dashboard, shared Playlist Builder and
+optional SACDPlayer cache controls introduced in 3.5.7, with corrected rating
+display and synchronization across the queue, Now Playing and track information.
+
+When Ratings Light is installed, Echo Classic uses its published read and write
+commands. Without it, the same rating controls fall back to LMS ratings. Queue
+updates stay batched, so enabling rating display does not add one request per
+track.
 
 ### Collection becomes an interactive dashboard
 
@@ -279,12 +288,12 @@ an older cached stylesheet.
 
 ## Project status
 
-Prepared stable release: **3.5.7**.
+Prepared stable release: **3.5.8**.
 
-- 730 automated tests passing.
+- 732 automated tests passing.
 - Six validation stages passing.
 - 25 Vue templates compiling.
-- 1,130 runtime string blocks with complete English and Portuguese coverage;
+- 1,134 runtime string blocks with complete English and Portuguese coverage;
   German and French each currently fall back to English for 14 entries.
 - 155/155 tested contrast pairs passing.
 

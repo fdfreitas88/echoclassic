@@ -111,7 +111,7 @@ sub initPlugin {
 
 sub getDisplayName { return 'ECHOCLASSIC_SKIN' }
 
-sub getSkinVersion { return '3.5.7' }
+sub getSkinVersion { return '3.5.8' }
 
 # Published packages deliberately expose the plain semantic version. Local and
 # pre-release deployments can set ECHOCLASSIC_BUILD_ID (for example

@@ -78,9 +78,8 @@
      it touches the server. */
   var equalizerApplyQueue = Object.create(null);
   var equalizerApplySequence = Object.create(null);
-  /* Ratings Light keeps ratings outside the core song metadata.  Keep a
-     short-lived client cache so the queue can show them without asking the
-     plugin again on every queue refresh. */
+  /* Rating plugins write the canonical LMS value. Keep a short-lived cache
+     for focused reads, while queue/status obtain the same value via tag R. */
   var ratingCache = Object.create(null);
   var RATING_CACHE_MS = 60000;
 
@@ -93,27 +92,6 @@
     value = Math.max(0, Math.min(100, Number(value) || 0));
     ratingCache[key] = { value: value, at: Date.now() };
     return value;
-  }
-
-  async function hydrateQueueRatings(tracks, playerId, token) {
-    if (state.ratingBackend !== 'ratingslight' || !tracks || !tracks.length) return;
-    var cursor = 0;
-    async function worker() {
-      while (cursor < tracks.length) {
-        var source = tracks[cursor++];
-        var value;
-        try { value = await ratingForTrack(source.id, false); }
-        catch (e) { if (state.playerId === playerId) backgroundError('trackInfo', e); continue; }
-        if (state.playerId !== playerId || token !== queueReadToken) return;
-        var index = state.queue.findIndex(function (item) {
-          return item.index === source.index && String(item.id) === String(source.id);
-        });
-        if (index >= 0 && state.queue[index].rating !== value) {
-          state.queue.splice(index, 1, Object.assign({}, state.queue[index], { rating: value }));
-        }
-      }
-    }
-    await Promise.all([worker(), worker(), worker(), worker(), worker(), worker()]);
   }
 
   function backgroundError(area, error) {
@@ -595,7 +573,7 @@
     }
     // ausencia de player-tie: sempre expoe como false quando a sonda falha,
     // nunca deixa o controle visivel e desabilitado
-    state.ratingBackend = state.capabilities.ratingsLightGet && state.capabilities.ratingsLightSet
+    state.ratingBackend = state.capabilities.ratingsLightSet
       ? 'ratingslight' : (state.capabilities.rating ? 'core' : null);
     state.canRate = !!state.ratingBackend;
   }
@@ -760,10 +738,6 @@
       rememberTrack();
       if (state.np.id != null) {
         api.songInfo(playerId, state.np.id).then(async function (info) {
-          if (state.ratingBackend === 'ratingslight') {
-            try { info.rating = await ratingForTrack(info.id, true); }
-            catch (e) { backgroundError('trackInfo', e); }
-          }
           if (state.playerId === playerId && String(state.np.id) === String(info.id)) {
             state.trackInfo = info;
             if (info.albumId != null) {
@@ -1026,7 +1000,6 @@
       state.shuffle = q.shuffle;
       state.repeat = q.repeat;
       state.auxiliaryErrors.queue = '';
-      hydrateQueueRatings(q.tracks, playerId, token);
     } catch (e) {
       backgroundError('queue', e);
       throw e;
@@ -1052,7 +1025,6 @@
         throw new Error('Could not load more tracks');
       }
       state.queue = revision == null ? q.tracks : state.queue.concat(q.tracks);
-      hydrateQueueRatings(q.tracks, playerId, token);
       state.auxiliaryErrors.queue = '';
       return true;
     } catch (e) { if (playerId === state.playerId && token === queueReadToken) backgroundError('queue', e); return false; }
@@ -1487,33 +1459,30 @@
     return setSleep(Math.max(1, Math.ceil(queueRemaining())));
   }
 
+  var ratingWriteSequence = 0;
   async function setRating(stars) {
+    var sequence = ++ratingWriteSequence;
     var playerId = state.playerId;
     var trackId = state.np.id;
     if (!state.canRate || !playerId || trackId == null) return false;
     var value = Math.max(0, Math.min(5, Number(stars) || 0)) * 20;
+    var current = state.trackInfo || { id: trackId };
+    ratingCache[String(trackId)] = { value: value, at: Date.now() };
+    state.trackInfo = Object.assign({}, current, { rating: value });
+    state.queue = state.queue.map(function (item) {
+      return String(item.id) === String(trackId) ? Object.assign({}, item, { rating: value }) : item;
+    });
     await api.setRating(playerId, trackId, stars, state.ratingBackend);
-    if (state.playerId !== playerId || state.np.id !== trackId) return false;
-    if (state.ratingBackend === 'ratingslight') {
-      var current = state.trackInfo || { id: trackId };
-      ratingCache[String(trackId)] = { value: value, at: Date.now() };
-      state.trackInfo = Object.assign({}, current, { rating: value });
-      state.queue = state.queue.map(function (item) {
-        return String(item.id) === String(trackId) ? Object.assign({}, item, { rating: value }) : item;
-      });
-      try { value = await ratingForTrack(trackId, true); }
-      catch (e) { backgroundError('trackInfo', e); }
-      if (state.playerId !== playerId || state.np.id !== trackId) return false;
-      state.trackInfo = Object.assign({}, state.trackInfo || current, { rating: value });
-      state.queue = state.queue.map(function (item) {
-        return String(item.id) === String(trackId) ? Object.assign({}, item, { rating: value }) : item;
-      });
-      return true;
-    }
+    if (sequence !== ratingWriteSequence || state.playerId !== playerId || String(state.np.id) !== String(trackId)) return false;
     api.forgetSongInfo();
     var info = await api.songInfo(playerId, trackId);
-    if (state.playerId !== playerId || state.np.id !== trackId) return false;
+    info.rating = await api.getRating(playerId, trackId, state.ratingBackend);
+    if (sequence !== ratingWriteSequence || state.playerId !== playerId || String(state.np.id) !== String(trackId)) return false;
+    ratingCache[String(trackId)] = { value: info.rating, at: Date.now() };
     state.trackInfo = info;
+    state.queue = state.queue.map(function (item) {
+      return String(item.id) === String(trackId) ? Object.assign({}, item, { rating: info.rating }) : item;
+    });
     return true;
   }
 

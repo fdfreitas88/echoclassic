@@ -15,6 +15,16 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.8] — 2026-09-10
+
+### Fixed
+- Ratings set through Ratings Light now remain visible in the playback queue, Now Playing and Credits and Information. Echo Classic uses Ratings Light's published read/write dispatches when available, keeps queue reads batched through LMS status, and falls back to the built-in LMS rating command when the plugin is absent. [live/measured] Ratings Light 3.1.4 on LMS 9.1.1; tests/api.test.js, tests/store.test.js, tests/track-information-ui.test.js
+- Rating writes are applied optimistically and reconciled with the active backend without allowing an older response to overwrite a newer selection. Queue refresh no longer issues one Ratings Light request per track. [measured] tests/store.test.js
+- The Queue settings description now identifies the rating display without implying that Ratings Light is required. [live/measured] musicplayer.local; tests/nowplaying-controls.test.js
+
+### Compatibility
+- The 3.5.7 feature set is unchanged. Ratings Light, SACDPlayer, SqueezeDSP, Apple Squeezer and MusicArtistInfo remain optional; ordinary playback and navigation continue without them. [live/measured]
+
 ## [3.5.7] — 2026-09-10
 
 ### Added

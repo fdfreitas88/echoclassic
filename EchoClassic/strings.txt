@@ -4905,6 +4905,12 @@ ECHOCLASSIC_UI_ARTWORK_AND_ALBUM_GROUPING
 	FR	Pochettes et regroupement par album
 	PT	Capas e agrupamento por álbum
 
+ECHOCLASSIC_UI_ARTWORK_ALBUM_GROUPING_AND_RATING_DISPLAY
+	EN	Artwork, album grouping and rating display
+	DE	Cover, Albumgruppierung und Bewertungsanzeige
+	FR	Pochettes, regroupement par album et affichage des notes
+	PT	Capas, agrupamento por álbum e exibição de avaliações
+
 ECHOCLASSIC_UI_INTERFACE_AMP_ACCESS
 	EN	Interface &amp; access
 	DE	Oberfläche &amp; Zugriff
@@ -5200,10 +5206,10 @@ ECHOCLASSIC_UI_TRACK_RATINGS
 	PT	Avaliações das faixas
 
 ECHOCLASSIC_UI_RATING_QUEUE_NOW_PLAYING_EXPLANATION
-	EN	Show Ratings Light stars in the queue and on Now Playing.
-	DE	Ratings-Light-Sterne in der Warteschlange und in „Aktuelle Wiedergabe“ anzeigen.
-	FR	Afficher les étoiles Ratings Light dans la file d’attente et dans « Lecture en cours ».
-	PT	Mostrar as estrelas do Ratings Light na fila e em Reproduzindo agora.
+	EN	Show rating stars in the queue and on Now Playing.
+	DE	Bewertungssterne in der Warteschlange und in „Aktuelle Wiedergabe“ anzeigen.
+	FR	Afficher les étoiles de notation dans la file d’attente et dans « Lecture en cours ».
+	PT	Mostrar as estrelas de avaliação na fila e em Reproduzindo agora.
 
 ECHOCLASSIC_UI_MUSIC_FOLDERS
 	EN	Music folders

@@ -826,9 +826,7 @@
         this.view = 'info';
         try {
           var found = await LmsApi.songInfo(LmsStore.state.playerId || '', item.id);
-          if (LmsStore.state.ratingBackend === 'ratingslight' && LmsStore.ratingForTrack) {
-            found = Object.assign({}, found, { rating: await LmsStore.ratingForTrack(item.id, true) });
-          }
+          found.rating = await LmsStore.ratingForTrack(item.id, true);
           if (token !== this.requestToken) return;
           this.info = found;
         } catch (e) {

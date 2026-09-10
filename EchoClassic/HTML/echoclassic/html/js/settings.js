@@ -124,7 +124,7 @@ Vue.component('lms-settings', {
   </template>
   <template v-else-if="isSettingsScreen('queue-settings')">
     <div class="sgh">Queue artwork</div><div class="sgroup player-presentation-group" role="radiogroup" aria-label="Queue artwork"><button v-for="mode in queueArtModes" :key="'detail-queue-'+mode.key" type="button" class="srow player-presentation-row" role="radio" :aria-checked="String(ui.queueArtMode===mode.key)" @click="queueArtMode(mode.key)"><span class="player-presentation-copy"><span>{{ mode.label }}</span><small>{{ queueArtModeHint(mode.key) }}</small></span><span class="font-option-check" aria-hidden="true"></span></button><button type="button" class="srow settings-command-row frequent-menu-action" @click="toggleFrequent('queueArtwork')">{{ frequentActionLabel('queueArtwork') }}</button></div>
-    <div class="sgh">Track ratings</div><div class="sgroup"><button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.appendRatingToTitle)" @click="preference('appendRatingToTitle')"><span class="setting-copy">Rating beside track title<small>Show Ratings Light stars in the queue and on Now Playing.</small></span><span class="switch" :class="{on:ui.appendRatingToTitle}"></span></button></div>
+    <div class="sgh">Track ratings</div><div class="sgroup"><button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.appendRatingToTitle)" @click="preference('appendRatingToTitle')"><span class="setting-copy">Rating beside track title<small>Show rating stars in the queue and on Now Playing.</small></span><span class="switch" :class="{on:ui.appendRatingToTitle}"></span></button></div>
   </template>
   <template v-else-if="isSettingsScreen('interface-settings')">
     <div class="sgh">Shared use</div><div class="sgroup interface-mode-group"><button type="button" class="srow settings-command-row pointer interface-mode-row" role="switch" :aria-checked="String(ui.partyMode)" @click="preference('partyMode')"><span class="setting-copy">Party mode<small>Keep playback available while hiding delete and reorder actions.</small></span><span class="switch" :class="{on:ui.partyMode}"></span></button><button type="button" class="srow settings-command-row pointer interface-mode-row" role="switch" :aria-checked="String(ui.kioskMode)" @click="preference('kioskMode')"><span class="setting-copy">Kiosk mode<small>Show only the full player. Exit remains available from the lock control or Esc.</small></span><span class="switch" :class="{on:ui.kioskMode}"></span></button></div>
@@ -599,7 +599,7 @@ Vue.component('lms-settings', {
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('playback-settings')"><span class="setting-copy">Playback settings<small>Crossfade, Replay Gain and sleep timer</small></span><span class="v">›</span></button>
     <button type="button" class="srow settings-command-row pointer" @click="openEqualizer"><span class="setting-copy">Equalizer settings<small>{{ equalizerEngineAvailable ? 'Engine, presets, bands, rules and headroom' : 'Optional plugin required; playback remains available' }}</small></span><span class="v">{{ equalizerEngineAvailable ? equalizerEngineLabel+' ›' : 'Install ›' }}</span></button>
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('appearance-settings')"><span class="setting-copy">Appearance<small>Theme, colour, font and player layout</small></span><span class="v">›</span></button>
-    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('queue-settings')"><span class="setting-copy">Queue<small>Artwork and album grouping</small></span><span class="v">›</span></button>
+    <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('queue-settings')"><span class="setting-copy">Queue<small>Artwork, album grouping and rating display</small></span><span class="v">›</span></button>
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('interface-settings')"><span class="setting-copy">Interface &amp; access<small>Party mode, kiosk mode, technical badges and language</small></span><span class="v">›</span></button>
   </div>
   <div class="sgh">System</div>
@@ -809,7 +809,7 @@ Vue.component('lms-settings', {
       <span class="font-option-check" aria-hidden="true"></span>
     </button>
   </div>
-  <div class="sgroup"><button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.appendRatingToTitle)" @click="preference('appendRatingToTitle')"><span>Rating beside track title<small>Show Ratings Light stars in the queue and on Now Playing.</small></span><span class="switch" :class="{on:ui.appendRatingToTitle}"></span></button></div>
+  <div class="sgroup"><button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.appendRatingToTitle)" @click="preference('appendRatingToTitle')"><span>Rating beside track title<small>Show rating stars in the queue and on Now Playing.</small></span><span class="switch" :class="{on:ui.appendRatingToTitle}"></span></button></div>
 
   <div class="sgh">General</div>
   <div class="sgroup">

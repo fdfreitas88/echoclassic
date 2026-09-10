@@ -285,9 +285,9 @@ test('setRating satura em 0 e 5 estrelas antes de converter', async function () 
   assert.deepEqual(ctx.calls[1], ['rating', 1, 0]);
 });
 
-test('Ratings Light usa os dispatches server-scoped publicados para ler e gravar', async function () {
+test('Ratings Light grava e le pelos dispatches do plugin', async function () {
   const ctx = apiContext(function (cmd) {
-    if (cmd[1] === 'getrating') return { _rating: 70 };
+    if (cmd[0] === 'ratingslight' && cmd[1] === 'getrating') return { rating: 3.5, ratingpercentage: 70 };
     return {};
   });
   await ctx.api.setRating('p1', 42, 3.5, 'ratingslight');
@@ -297,9 +297,22 @@ test('Ratings Light usa os dispatches server-scoped publicados para ler e gravar
   assert.equal(rating, 70);
 });
 
-test('getRating tolera as chaves de resposta conhecidas e limita a escala LMS', async function () {
-  const ctx = apiContext(function () { return { rating: 130 }; });
-  assert.equal(await ctx.api.getRating('p1', 7, 'ratingslight'), 100);
+test('getRating limita a classificacao core do LMS a escala publicada', async function () {
+  const ctx = apiContext(function () { return { songinfo_loop: [{ rating: 130 }] }; });
+  assert.equal(await ctx.api.getRating('p1', 7, 'core'), 100);
+});
+
+test('queue pede a tag R e preserva a classificacao devolvida pelo LMS', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'status') return {
+      playlist_tracks: 1,
+      playlist_loop: [{ 'playlist index': 0, id: 42, title: 'Rated', rating: 80 }]
+    };
+    return {};
+  });
+  const queue = await ctx.api.queue('p1', 0, 500);
+  assert.match(ctx.calls[0][3], /R/);
+  assert.equal(queue.tracks[0].rating, 80);
 });
 
 /* 2c: a sonda `can` nao tem envelope de lote no jsonrpc.js, entao "em lote"

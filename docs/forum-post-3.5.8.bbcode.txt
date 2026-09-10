@@ -1,0 +1,51 @@
+[b]Echo Classic 3.5.8[/b]
+
+Echo Classic 3.5.8 keeps the interactive Collection dashboard, shared Playlist Builder and optional SACDPlayer cache controls, with corrected rating display and synchronization throughout the interface.
+
+[b]What's New[/b]
+
+Collection summarizes albums, tracks, storage, genres, missing tags, lossless formats, decades and album sizes. Select a figure or chart to inspect its albums, then send checked albums to the Playlist Builder or reveal their locations in Music Folders.
+
+[img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/images/release-3.5.7-collection.png[/img]
+
+The shared Playlist Builder accepts selections from Collection and Music Folders, preserves its draft between those views, supports reordering and saves either permanent or numbered temporary playlists.
+
+[img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/images/release-3.5.7-playlist-builder.png[/img]
+
+When SACDPlayer is installed, Echo Classic can prepare or remove SACD albums from the extraction cache, show per-track readiness and manage prepared albums and disk usage from Settings.
+
+[img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/images/release-3.5.7-sacd-cache.png[/img]
+
+[b]Improvements[/b]
+
+Collection publishes a safe partial dashboard after its first page, then completes the scan in larger ordered pages with bounded retries. On the 15,212-track validation library, useful figures appeared in about two seconds. A completed snapshot is cached locally, and a failed or cancelled refresh never replaces the previous complete collection.
+
+Navigation, album rows, search, queue, player volume, OPML and Settings include the responsive and interaction refinements from the 3.5.7 feature set.
+
+[b]Fixes[/b]
+
+Ratings set through Ratings Light now remain visible in the playback queue, Now Playing and Credits and Information. Echo Classic uses Ratings Light's published commands when available and falls back to LMS ratings when the plugin is absent.
+
+Queue rating data is loaded with the normal batched LMS status response instead of one plugin request per track. Rapid rating changes are reconciled safely so an older response cannot replace the latest selection.
+
+[b]Compatibility[/b]
+
+Echo Classic 3.5.8 supports Lyrion Music Server 8.0 and later. Ratings Light, SACDPlayer, Apple Squeezer, SqueezeDSP and MusicArtistInfo remain optional; ordinary playback and navigation continue without them.
+
+[b]Installation / Upgrade[/b]
+
+Add the Echo Classic repository URL under Server Settings > Plugins > Additional repositories, then install or update Echo Classic and restart LMS when requested:
+
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/repo.xml
+
+[b]Notes[/b]
+
+Collection analytics are generated in the browser and cached by LMS library revision. The initial full scan remains dependent on library size and LMS hardware, but the dashboard becomes usable before completion and subsequent unchanged visits use the cached snapshot.
+
+[b]Links[/b]
+
+Project: https://github.com/fdfreitas88/echoclassic
+Release: https://github.com/fdfreitas88/echoclassic/releases/tag/v3.5.8
+Changelog: https://github.com/fdfreitas88/echoclassic/blob/main/CHANGELOG.md
+
+By Felipe Freitas
