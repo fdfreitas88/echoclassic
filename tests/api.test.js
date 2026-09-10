@@ -352,6 +352,25 @@ test('SACDPlayer API keeps probe, status, stats, prepare and evict wire shapes i
   ]);
 });
 
+test('SACDPlayer API parses the installed plugin arrays without LMS loop suffixes', async function () {
+  const ctx = apiContext(cmd => {
+    if (cmd[0] === 'can') return { _can: 1 };
+    if (cmd[1] === 'cachestats') return {
+      usage_bytes: 10, cap_bytes: 20, free_bytes: 30, binary: 1,
+      albums: [{ key: 'album-key', area: '2ch', bytes: 9, title: 'Album' }]
+    };
+    if (cmd[1] === 'status') return {
+      success: 1, tracks: [{ number: 2, state: 'ready', bytes: 9, error: '' }]
+    };
+    return { success: 1 };
+  });
+  const stats = await ctx.api.sacdCacheStats();
+  const status = await ctx.api.sacdAlbumStatus('file:///A.iso#2ch-02');
+  assert.equal(stats.albums[0].key, 'album-key');
+  assert.equal(status.tracks[0].number, 2);
+  assert.equal(status.tracks[0].state, 'ready');
+});
+
 test('ARTMETA-01: MusicArtistInfo is capability-gated and uses the canonical artist id', async function () {
   const ctx = apiContext(function (cmd) {
     if (cmd[0] === 'can') return { _can: 1 };
@@ -608,4 +627,61 @@ test('role-scoped album queries retain role and library constraints for multiple
   await ctx.api.albums('',0,500,{artistIds:['7','8'],roleId:2});
   assert.equal(ctx.calls.length,2);
   for (const cmd of ctx.calls) { assert.ok(cmd.includes('role_id:2')); assert.ok(cmd.includes('library_id:root')); }
+});
+
+test('collectionTracks asks for the year tag and maps it', async function () {
+  let timeoutMs = 0;
+  const ctx = apiContext(function (cmd) {
+    return cmd[0] === 'titles' ? { count: 1, titles_loop: [{ id: 1, title: 'T', url: 'file:///music/lossless/Yes/1972%20-%20Close/01.flac', album_id: 7, album: 'Close', genre: 'Rock', type: 'flc', year: '1972', filesize: '10' }] } : {};
+  }, { LmsFmt: { year: function (v) { return v; }, coverUrl: function () { return ''; }, format: function (t) { return t; } }, setTimeout: function (_, delay) { timeoutMs = delay; return 1; }, clearTimeout: function () {} });
+  const page = await ctx.api.collectionTracks(0, 500);
+  assert.equal(ctx.calls[0][4], 'tags:AlgeforTIuxyd');
+  assert.equal(timeoutMs, 30000);
+  assert.equal(page.rows[0].year, 1972);
+});
+
+test('collectionTracks maps a missing year to null', async function () {
+  const ctx = apiContext(function (cmd) {
+    return cmd[0] === 'titles' ? { count: 1, titles_loop: [{ id: 1, title: 'T', url: 'file:///x.flac', album_id: 7, type: 'flc' }] } : {};
+  }, { LmsFmt: { year: function (v) { return v; }, coverUrl: function () { return ''; }, format: function (t) { return t; } } });
+  const page = await ctx.api.collectionTracks(0, 500);
+  assert.equal(page.rows[0].year, null);
+});
+
+function folderTree(cmd) {
+  if (cmd[0] !== 'musicfolder') return {};
+  const parent = (cmd.find(function (p) { return /^folder_id:/.test(p); }) || '').slice(10);
+  if (!parent) return { folder_loop: [{ id: 1, filename: 'lossless', path: '/music/lossless', type: 'folder' }, { id: 9, filename: 'recent', path: '/music/recent', type: 'folder' }] };
+  if (parent === '1') return { folder_loop: [{ id: 2, filename: 'Yes', path: '/music/lossless/Yes', type: 'folder' }, { id: 5, filename: 'Rush', path: '/music/lossless/Rush', type: 'folder' }] };
+  if (parent === '2') return { folder_loop: [{ id: 3, filename: '1972 - Close', path: '/music/lossless/Yes/1972 - Close', type: 'folder' }] };
+  return { folder_loop: [] };
+}
+
+test('folderForUrl walks the folder tree to the album directory', async function () {
+  const ctx = apiContext(folderTree);
+  const f = await ctx.api.folderForUrl('', 'file:///music/lossless/Yes/1972%20-%20Close/01.flac');
+  assert.deepEqual(plain(f), { id: 3, path: '/music/lossless/Yes/1972 - Close', name: '1972 - Close' });
+  assert.equal(ctx.calls.filter(function (c) { return c[0] === 'musicfolder'; }).length, 3);
+});
+
+test('folderForUrl caches by directory and returns null when a segment is missing', async function () {
+  const ctx = apiContext(folderTree);
+  await ctx.api.folderForUrl('', 'file:///music/lossless/Yes/1972%20-%20Close/01.flac');
+  await ctx.api.folderForUrl('', 'file:///music/lossless/Yes/1972%20-%20Close/02.flac');
+  assert.equal(ctx.calls.filter(function (c) { return c[0] === 'musicfolder'; }).length, 3);
+  assert.equal(await ctx.api.folderForUrl('', 'file:///music/Genesis/x.flac'), null);
+  assert.equal(await ctx.api.folderForUrl('', 'http://stream/x'), null);
+});
+
+test('commonDirectory returns the deepest shared directory', function () {
+  const ctx = apiContext();
+  assert.equal(ctx.api.commonDirectory(['file:///music/Yes/A/1.flac', 'file:///music/Yes/B/2.flac']), '/music/Yes');
+  assert.equal(ctx.api.commonDirectory(['file:///music/Yes/A/1.flac']), '/music/Yes/A');
+  assert.equal(ctx.api.commonDirectory([]), '');
+});
+
+test('folderForPath lands on the root listing when the directory is above every root', async () => {
+  const ctx = apiContext(folderTree);
+  assert.deepEqual(plain(await ctx.api.folderForPath('', 'file:///music')), { id: null, path: '/music', name: '' });
+  assert.equal(await ctx.api.folderForPath('', '/elsewhere'), null);
 });

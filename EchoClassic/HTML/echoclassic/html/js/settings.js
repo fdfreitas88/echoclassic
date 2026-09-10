@@ -48,6 +48,25 @@ Vue.component('lms-settings', {
 </div>
 <div v-else-if="ui.appearanceScreen" class="settings appearance-detail">
   <lms-album-display-settings v-if="ui.appearanceScreen === 'album-information'"></lms-album-display-settings>
+  <template v-if="isSettingsScreen('sacd-cache-settings')">
+    <section class="sacd-cache-manager" aria-labelledby="sacd-cache-manager-heading">
+      <div id="sacd-cache-manager-heading" class="sgh">{{ tr('SACD cache') }}</div>
+      <div class="sgroup sacd-cache-summary" :aria-label="tr('SACD cache summary')">
+        <div><strong>{{ sacdAlbumCount }}</strong><span>{{ tr('Albums') }}</span></div>
+        <div><strong>{{ bytes(sacdCache.usageBytes) }}</strong><span>{{ tr('Used') }}</span></div>
+        <div><strong>{{ bytes(sacdCache.freeBytes) }}</strong><span>{{ tr('Free') }}</span></div>
+      </div>
+      <div v-if="!sacdCache.binary" class="sgroup sacd-cache-warning" role="status">{{ tr('sacd_extract binary missing on the server') }}</div>
+      <div class="sgh">{{ tr('Cached albums') }}</div>
+      <div class="sgroup sacd-cache-manager-list">
+        <div v-if="!sacdCache.albums.length" class="sacd-cache-empty">{{ tr('No prepared albums') }}</div>
+        <div v-for="album in sacdCache.albums" :key="album.key+'-'+album.area" class="srow sacd-cache-manager-row">
+          <span class="setting-copy"><strong>{{ album.title }}</strong><small>{{ bytes(album.bytes) }} · {{ formatSacdDate(album.lastAccess) }}</small></span>
+          <button type="button" class="sacd-cache-remove" @click="removeSacdAlbum(album)">{{ tr('Remove') }}</button>
+        </div>
+      </div>
+    </section>
+  </template>
   <template v-if="isSettingsScreen('frequent-settings')">
     <div class="settings-intro">Choose the settings you use most. Reorder selected items with the arrow buttons.</div>
     <div class="sgh">Shown in Settings <span class="settings-count">{{ ui.frequentSettings.length }} selected</span></div>
@@ -124,7 +143,12 @@ Vue.component('lms-settings', {
   <template v-else-if="isEqualizerScreen">
     <div class="equalizer-screen">
     <template v-if="isSettingsScreen('equalizer')">
-      <div class="equalizer-dashboard">
+      <div v-if="!equalizerEngineAvailable" class="equalizer-unavailable-copy" role="status">
+        <strong>Equalizer plugins are not installed</strong>
+        <small>Playback and the rest of Echo Classic remain available. Install Apple Squeezer or SqueezeDSP to add equalizer controls.</small>
+        <div class="inline-commands"><button type="button" @click="openAppleSqueezerPluginManager">Install Apple Squeezer</button><button type="button" @click="openSqueezeDspPluginManager">Install SqueezeDSP</button></div>
+      </div>
+      <template v-else><div class="equalizer-dashboard">
         <section class="equalizer-dashboard-path" aria-label="Equalizer engine and playback mode">
           <div class="equalizer-dashboard-control"><span>Engine</span><div class="equalizer-dashboard-segment" role="radiogroup" aria-label="Processing engine"><button v-for="owner in dspOwnerOptions" :key="owner.key" type="button" role="radio" :aria-checked="String(dspOwner===owner.key)" :class="{on:dspOwner===owner.key}" :disabled="owner.key==='apple-squeezer'&&!appleSqueezerCompatible" @click="selectDspOwner(owner.key)">{{ owner.label }}</button><button type="button" class="more" :aria-expanded="String(equalizerMoreEnginesOpen)" @click="toggleEqualizerDashboard('engines')">{{ equalizerMoreEnginesOpen ? '−' : '+' }}</button></div></div>
           <div class="equalizer-dashboard-control"><span>Mode</span><div class="equalizer-dashboard-segment" role="radiogroup" aria-label="Playback mode"><button v-for="mode in appleSqueezerModes.slice(0,2)" :key="mode.key" type="button" role="radio" :aria-checked="String(appleSqueezer.mode===mode.key)" :class="{on:appleSqueezer.mode===mode.key}" :disabled="appleSqueezer.busy||dspOwner!=='apple-squeezer'" @click="changeAppleSqueezerMode(mode.key)">{{ mode.label }}</button><button type="button" class="more" :aria-expanded="String(equalizerMoreModesOpen)" :disabled="dspOwner!=='apple-squeezer'" @click="toggleEqualizerDashboard('modes')">{{ equalizerMoreModesOpen ? '−' : '+' }}</button></div></div>
@@ -163,7 +187,7 @@ Vue.component('lms-settings', {
           <div v-if="equalizerAdvancedOpen.filters" class="equalizer-dashboard-advanced-detail"><template v-if="dspOwner==='apple-squeezer'&&nativeDspDraft"><div><span>Parametric stage</span><button type="button" class="sw" :class="{on:!nativeDspDraft.parametric_bypass}" @click="nativeDspDraft.parametric_bypass=!nativeDspDraft.parametric_bypass"></button></div><div><span>{{ nativeDspDraft.parametric_filters.length }} configured filters</span><button type="button" class="eq-action-button" @click="addNativeFilter">Add filter</button></div><div v-for="(filter,index) in nativeDspDraft.parametric_filters" :key="'dashboard-native-filter-'+index" class="equalizer-dashboard-filter"><button type="button" @click="cycleNativeFilterType(filter)">{{ nativeFilterTypeLabel(filter.type) }}</button><label>Hz<input v-model.number="filter.frequency" type="number" min="20" max="20000"></label><label>Q<input v-model.number="filter.q" type="number" min="0.1" max="20" step="0.1"></label><label v-if="['notch','lowpass','highpass'].indexOf(filter.type)<0">dB<input v-model.number="filter.gain" type="number" min="-24" max="24" step="0.1"></label><button type="button" class="eq-remove-button" @click="removeNativeFilter(index)">Remove</button></div></template><template v-else-if="equalizerDraft"><div><span>{{ equalizerDraft.Client.Filters.length }} configured filters</span><button type="button" class="eq-action-button" @click="addEqualizerFilter('peak')">Add filter</button></div><div v-for="(filter,index) in equalizerDraft.Client.Filters" :key="'dashboard-filter-'+index" class="equalizer-dashboard-filter"><span>{{ equalizerFilterLabel(filter.FilterType) }}</span><label>Hz<input v-model.number="filter.Frequency" type="number" min="20" max="20000"></label><label>Q<input v-model.number="filter.Slope" type="number" min="0.1" max="20" step="0.1"></label><label v-if="filter.FilterType!=='lowpass'&&filter.FilterType!=='highpass'">dB<input v-model.number="filter.Gain" type="number" min="-30" max="30" step="0.1"></label><button type="button" class="eq-remove-button" @click="removeEqualizerFilter(index)">Remove</button></div></template></div>
           <div v-if="equalizerAdvancedOpen.spatial" class="equalizer-dashboard-advanced-detail"><template v-if="dspOwner==='apple-squeezer'&&nativeDspDraft"><label>Stereo width<input v-model.number="nativeDspDraft.stereo_width" class="setting-range" type="range" min="0" max="2" step="0.01"><span>{{ Number(nativeDspDraft.stereo_width).toFixed(2) }}×</span></label><label>Balance<input v-model.number="nativeDspDraft.balance" class="setting-range" type="range" min="-1" max="1" step="0.01"><span>{{ Number(nativeDspDraft.balance).toFixed(2) }}</span></label><label>Left delay<input v-model.number="nativeDspDraft.delay_left_ms" class="setting-range" type="range" min="0" max="100" step="0.01"><span>{{ Number(nativeDspDraft.delay_left_ms).toFixed(2) }} ms</span></label><label>Right delay<input v-model.number="nativeDspDraft.delay_right_ms" class="setting-range" type="range" min="0" max="100" step="0.01"><span>{{ Number(nativeDspDraft.delay_right_ms).toFixed(2) }} ms</span></label><div><span>Crossfeed</span><button v-for="option in crossfeedOptions" :key="option.key" type="button" :class="{on:nativeDspDraft.crossfeed===option.key}" @click="setNativeCrossfeed(option.key)">{{ option.label }}</button></div><label>Room correction file<input v-model.trim="nativeDspDraft.fir_file" type="text" placeholder="/path/to/room.wav"></label></template><template v-else-if="equalizerDraft"><label>Stereo width<input v-model.number="equalizerDraft.Client.Width" class="setting-range" type="range" min="-12" max="12" step="0.1"><span>{{ formatSigned(equalizerDraft.Client.Width,' dB') }}</span></label><label>Balance<input v-model.number="equalizerDraft.Client.Balance" class="setting-range" type="range" min="-12" max="12" step="0.1"><span>{{ formatSigned(equalizerDraft.Client.Balance,' dB') }}</span></label><label>Delay<input v-model.number="equalizerDraft.Client.Delay.delay" class="setting-range" type="range" min="0" max="1000" step="0.01"><span>{{ Number(equalizerDraft.Client.Delay.delay).toFixed(2) }} ms</span></label><div><span>Crossfeed</span><button v-for="mode in equalizerCrossfeedModes" :key="mode" type="button" :class="{on:equalizerDraft.Client.Crossfeed===mode}" @click="equalizerDraft.Client.Crossfeed=mode">{{ mode }}</button></div><label>Room correction<input v-model.trim="equalizerDraft.Client.FIRWavFile" type="text" placeholder="/path/to/room.wav"></label></template></div>
         </section>
-      </div>
+      </div></template>
     </template>
     <div v-else class="equalizer-subworkspace">
       <aside class="equalizer-workspace-rail equalizer-subworkspace-rail" aria-label="Equalizer sections">
@@ -504,6 +528,9 @@ Vue.component('lms-settings', {
         </div>
       </template>
       <template v-else>
+        <div class="sgroup">
+          <div class="player-help">{{ tr('Applies to the mini-player and navigation tabs.') }}</div>
+        </div>
         <div class="sgh">Progress bar</div>
         <div class="sgroup">
           <div class="srow segmented-row">
@@ -534,14 +561,25 @@ Vue.component('lms-settings', {
     </template>
   </template>
 </div>
-<div v-else class="settings">
-  <div class="settings-player-card">
-    <span class="settings-player-art" aria-hidden="true"></span>
-    <span class="setting-copy"><strong>{{ playerName }}</strong><small>Active player</small></span>
-    <button type="button" :aria-expanded="String(showPlayers)" @click="showPlayers=!showPlayers">Change</button>
-  </div>
-  <div v-if="showPlayers" class="sgroup settings-player-chooser">
-    <div v-for="p in store.players" :key="'home-player-'+p.id" class="player-choice"><div class="player-name"><strong>{{ p.name }}</strong><span>{{ p.connected?'connected':'unavailable' }}</span></div><span v-if="p.id===store.playerId" class="player-current">In use</span><button v-else-if="p.connected" type="button" @click="control(p)">Control</button></div>
+  <div v-else class="settings">
+  <div class="settings-player-switcher" :class="{open:showPlayers}">
+    <div class="settings-player-card">
+      <img class="settings-player-art" :src="settingsPlayerArtwork" :alt="settingsPlayerArtworkAlt" @error="onSettingsPlayerArtError">
+      <span class="setting-copy"><strong>{{ playerName }}</strong><small>Active player</small></span>
+      <button ref="playerChooserButton" type="button" aria-haspopup="dialog" :aria-expanded="String(showPlayers)" aria-controls="settings-player-menu" @click="togglePlayerChooser">Change</button>
+    </div>
+    <button v-if="showPlayers" type="button" class="settings-player-menu-backdrop" :aria-label="tr('Close player menu')" @click="closePlayerChooser(false)"></button>
+    <div v-if="showPlayers" id="settings-player-menu" ref="playerChooser" class="settings-player-chooser" role="dialog" aria-modal="false" :aria-label="tr('Choose active player')" @keydown.esc.stop="closePlayerChooser(true)">
+      <span class="settings-player-menu-grabber" aria-hidden="true"></span>
+      <div class="settings-player-menu-heading"><strong>{{ tr('Choose player') }}</strong><button type="button" :aria-label="tr('Close player menu')" @click="closePlayerChooser(true)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="settings-player-options" role="radiogroup" :aria-label="tr('Choose active player')" @keydown="playerChooserKey">
+        <button v-for="p in store.players" :key="'home-player-'+p.id" type="button" class="settings-player-option" role="radio" :aria-checked="String(p.id===store.playerId)" :disabled="!p.connected && p.id!==store.playerId" @click="selectSettingsPlayer(p)">
+          <img class="settings-player-option-art" :src="settingsPlayerArtworkFor(p)" :alt="settingsPlayerArtworkAltFor(p)" @error="onSettingsPlayerArtError">
+          <span class="player-name"><strong>{{ p.name }}</strong><span>{{ p.connected?'connected':'unavailable' }}</span></span>
+          <svg v-if="p.id===store.playerId" class="settings-player-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="sgh frequent-heading"><span>Frequent settings</span><span>{{ ui.frequentSettings.length }} shown</span></div>
@@ -559,18 +597,15 @@ Vue.component('lms-settings', {
   <div class="sgroup settings-destination-group">
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('player-settings')"><span class="setting-copy">Player settings<small>Default player, volume step and stop at end</small></span><span class="v">›</span></button>
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('playback-settings')"><span class="setting-copy">Playback settings<small>Crossfade, Replay Gain and sleep timer</small></span><span class="v">›</span></button>
-    <button type="button" class="srow settings-command-row pointer" @click="openEqualizer"><span class="setting-copy">Equalizer settings<small>Engine, presets, bands, rules and headroom</small></span><span class="v">›</span></button>
+    <button type="button" class="srow settings-command-row pointer" @click="openEqualizer"><span class="setting-copy">Equalizer settings<small>{{ equalizerEngineAvailable ? 'Engine, presets, bands, rules and headroom' : 'Optional plugin required; playback remains available' }}</small></span><span class="v">{{ equalizerEngineAvailable ? equalizerEngineLabel+' ›' : 'Install ›' }}</span></button>
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('appearance-settings')"><span class="setting-copy">Appearance<small>Theme, colour, font and player layout</small></span><span class="v">›</span></button>
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('queue-settings')"><span class="setting-copy">Queue<small>Artwork and album grouping</small></span><span class="v">›</span></button>
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('interface-settings')"><span class="setting-copy">Interface &amp; access<small>Party mode, kiosk mode, technical badges and language</small></span><span class="v">›</span></button>
   </div>
   <div class="sgh">System</div>
   <div class="sgroup settings-destination-group">
-    <div class="srow sacd-settings-row"><span class="setting-copy"><strong>{{ tr('SACD cache') }}</strong><small v-if="sacdCache.available">{{ sacdUsageLabel }} · {{ sacdFreeLabel }}<b v-if="sacdCache.lowDisk"> · {{ tr('Low disk') }}</b></small><small v-else>{{ tr('SACD cache status requires the SACDPlayer plugin') }}</small></span><button v-if="!sacdCache.available" type="button" @click="openSacdPluginManager">{{ tr('Install plugin') }}</button></div>
-    <div v-if="sacdCache.available" class="sacd-cache-albums">
-      <div v-if="!sacdCache.binary" class="srow sacd-binary-warning">{{ tr('sacd_extract binary missing on the server') }}</div>
-      <div v-for="album in sacdCache.albums" :key="album.key+'-'+album.area" class="srow"><span class="setting-copy"><strong>{{ album.title }}</strong><small>{{ bytes(album.bytes) }} · {{ formatSacdDate(album.lastAccess) }}</small></span><button type="button" @click="removeSacdAlbum(album)">{{ tr('Remove') }}</button></div>
-    </div>
+    <button v-if="sacdCache.available" type="button" class="srow settings-command-row pointer sacd-settings-row" @click="openAppearanceScreen('sacd-cache-settings')"><span class="setting-copy"><strong>{{ tr('SACD cache') }}</strong><small>{{ sacdAlbumCountLabel }} · {{ bytes(sacdCache.usageBytes) }}<b v-if="sacdCache.lowDisk"> · {{ tr('Low disk') }}</b></small></span><span class="v">{{ sacdFreeLabel }} ›</span></button>
+    <div v-else class="srow sacd-settings-row"><span class="setting-copy"><strong>{{ tr('SACD cache') }}</strong><small>{{ tr('SACD cache status requires the SACDPlayer plugin') }}</small></span><button type="button" @click="openSacdPluginManager">{{ tr('Install plugin') }}</button></div>
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('backup-settings')">Backup <span class="v">›</span></button>
     <button type="button" class="srow settings-command-row pointer" :aria-expanded="String(ui.advancedSettings)" @click="openAdvanced">Advanced LMS settings <span class="v">›</span></button>
     <button type="button" class="srow settings-command-row pointer" @click="openAppearanceScreen('about-settings')">About <span class="v">›</span></button>
@@ -944,6 +979,8 @@ Vue.component('lms-settings', {
   computed: {
 	sacdUsageLabel: function () { return this.bytes(this.sacdCache.usageBytes)+' / '+this.bytes(this.sacdCache.capBytes); },
 	sacdFreeLabel: function () { return this.bytes(this.sacdCache.freeBytes)+' '+this.tr('free'); },
+	sacdAlbumCount: function () { return (this.sacdCache.albums || []).length; },
+	sacdAlbumCountLabel: function () { return this.sacdAlbumCount+' '+this.tr(this.sacdAlbumCount===1?'Album':'Albums'); },
 	patreonSupportUrl: function () { return ECHOCLASSIC_PATREON_URL; },
 	coffeeSupportUrl: function () { return ECHOCLASSIC_COFFEE_URL; },
 	isEqualizerScreen: function () { return /^equalizer(?:-|$)/.test(String(this.ui.appearanceScreen || '')); },
@@ -957,6 +994,9 @@ Vue.component('lms-settings', {
 		return !!(this.equalizerDraft && this.equalizerDraft.Client && !this.equalizerDraft.Client.Bypass);
 	},
 	appleSqueezerCompatible: function () { return this.appleSqueezer.available && (this.appleSqueezer.apiVersion >= 2 || this.appleCapability('dsp')); },
+	squeezeDspAvailable: function () { return this.store.equalizer.status === 'ready'; },
+	equalizerEngineAvailable: function () { return this.appleSqueezerCompatible || this.squeezeDspAvailable; },
+	equalizerEngineLabel: function () { if(this.appleSqueezerCompatible&&this.dspOwner==='apple-squeezer')return 'Apple Squeezer';if(this.squeezeDspAvailable)return 'SqueezeDSP';return ''; },
 	appleSqueezerCanLifecycle: function () { return this.appleCapability('lifecycle'); },
 	appleSqueezerPath: function () {
 		if (this.appleSqueezer.mode === 'dac-priority' || this.appleSqueezer.mode === 'audiophile') return this.tr('Source rate · DSP bypassed · fixed unity volume · exclusive CoreAudio');
@@ -984,9 +1024,23 @@ Vue.component('lms-settings', {
         ? requested : '/echoclassic/settings/server/basic.html';
     },
     playerName: function () {
+      return this.selectedSettingsPlayer ? this.selectedSettingsPlayer.name : 'none';
+    },
+    selectedSettingsPlayer: function () {
       var id = this.store.playerId;
-      var found = (this.store.players || []).filter(function (p) { return p.id === id; })[0];
-      return found ? found.name : 'none';
+      return (this.store.players || []).filter(function (p) { return p.id === id; })[0] || null;
+    },
+    settingsPlayerIsAppleSqueezer: function () {
+      var player = this.selectedSettingsPlayer || {};
+      return /apple\s*squeezer/i.test(String(player.name || '') + ' ' + String(player.model || ''));
+    },
+    settingsPlayerArtwork: function () {
+      return this.settingsPlayerIsAppleSqueezer
+        ? '/plugins/AppleSqueezerIntel/html/images/logo.png'
+        : 'html/images/squeezelite-player.svg';
+    },
+    settingsPlayerArtworkAlt: function () {
+      return this.settingsPlayerIsAppleSqueezer ? 'Apple Squeezer' : 'Squeezelite';
     },
     /* AUDIT-1b: preferencia gravada em ui.js, resolvida em LmsStore ao
        descobrir o player -- esta linha so mostra o que esta configurado.
@@ -1340,11 +1394,67 @@ Vue.component('lms-settings', {
     if (LmsUi.applyAdvancedSettings === this.applyAdvancedFrame) LmsUi.applyAdvancedSettings = null;
   },
   methods: {
+    onSettingsPlayerArtError: function (event) {
+      var image = event && event.currentTarget;
+      if (!image || /squeezelite-player\.svg(?:[?#]|$)/.test(String(image.src || ''))) return;
+      image.src = 'html/images/squeezelite-player.svg';
+      image.alt = 'Squeezelite';
+    },
+    settingsPlayerIsAppleSqueezerPlayer: function (player) {
+      player = player || {};
+      return /apple\s*squeezer/i.test(String(player.name || '') + ' ' + String(player.model || ''));
+    },
+    settingsPlayerArtworkFor: function (player) {
+      return this.settingsPlayerIsAppleSqueezerPlayer(player)
+        ? '/plugins/AppleSqueezerIntel/html/images/logo.png'
+        : 'html/images/squeezelite-player.svg';
+    },
+    settingsPlayerArtworkAltFor: function (player) {
+      return this.settingsPlayerIsAppleSqueezerPlayer(player) ? 'Apple Squeezer' : 'Squeezelite';
+    },
+    togglePlayerChooser: function () {
+      var self = this;
+      this.showPlayers = !this.showPlayers;
+      if (!this.showPlayers) return;
+      this.$nextTick(function () {
+        var menu = self.$refs.playerChooser;
+        var selected = menu && menu.querySelector('[aria-checked="true"]');
+        var first = menu && menu.querySelector('button:not([disabled])');
+        if (selected && selected.focus) selected.focus();
+        else if (first && first.focus) first.focus();
+      });
+    },
+    closePlayerChooser: function (restoreFocus) {
+      var self = this;
+      this.showPlayers = false;
+      if (!restoreFocus) return;
+      this.$nextTick(function () {
+        if (self.$refs.playerChooserButton && self.$refs.playerChooserButton.focus) self.$refs.playerChooserButton.focus();
+      });
+    },
+    playerChooserKey: function (event) {
+      var forward = event.key === 'ArrowDown' || event.key === 'ArrowRight';
+      var backward = event.key === 'ArrowUp' || event.key === 'ArrowLeft';
+      if (!forward && !backward) return;
+      var group = event.currentTarget;
+      var choices = group && group.querySelectorAll ? Array.prototype.slice.call(group.querySelectorAll('.settings-player-option:not([disabled])')) : [];
+      if (!choices.length) return;
+      event.preventDefault();
+      var index = choices.indexOf(event.target.closest ? event.target.closest('.settings-player-option') : event.target);
+      if (index < 0) index = 0;
+      choices[(index + (forward ? 1 : -1) + choices.length) % choices.length].focus();
+    },
+    selectSettingsPlayer: function (player) {
+      if (!player || (!player.connected && player.id !== this.store.playerId)) return;
+      if (player.id !== this.store.playerId) this.control(player);
+      this.closePlayerChooser(true);
+    },
     bytes: function (value) { var n=Number(value||0),units=['B','KB','MB','GB','TB'],i=0;while(n>=1024&&i<units.length-1){n/=1024;i++;}return (i?n.toFixed(1):String(n))+' '+units[i]; },
-    formatSacdDate: function (value) { if(!value)return '—';try{return new Date(Number(value)*1000).toLocaleString();}catch(e){return '—';} },
+    formatSacdDate: function (value) { if(!value)return '—';try{return new Date(Number(value)*1000).toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return '—';} },
     loadSacdCache: async function () { try{this.sacdCache=await LmsApi.sacdCacheStats();}catch(e){this.sacdCache={available:false,albums:[]};} },
     removeSacdAlbum: async function (album) { await LmsApi.sacdEvictAlbum(album.key+'/'+album.area);await this.loadSacdCache(); },
     openSacdPluginManager: function () { try{sessionStorage.setItem('echoclassic.plugin-search.v1','SACDPlayer');}catch(e){}this.ui.advancedSettingsPage='/echoclassic/settings/server/plugins.html';this.openAdvanced(); },
+    openAppleSqueezerPluginManager: function () { try{sessionStorage.setItem('echoclassic.plugin-search.v1','Apple Squeezer');}catch(e){}this.ui.advancedSettingsPage='/echoclassic/settings/server/plugins.html';this.openAdvanced(); },
     setNativeCrossfeed: function (key) {
       if (this.nativeDspDraft) this.nativeDspDraft.crossfeed = key;
     },
@@ -3011,6 +3121,7 @@ Vue.component('lms-settings', {
         'appearance-settings': 'Appearance',
         'queue-settings': 'Queue',
         'interface-settings': 'Interface & access',
+        'sacd-cache-settings': 'SACD cache',
         'backup-settings': 'Backup',
         'about-settings': 'About',
         'equalizer-player': 'Player DSP settings',

@@ -1,5 +1,9 @@
 # Echo Classic
 
+<p align="center">
+  <img src="images/echo-classic.png" width="240" alt="Echo Classic">
+</p>
+
 **A responsive Lyrion Music Server interface inspired by the clarity and
 directness of the classic iPad Music app.**
 
@@ -14,64 +18,49 @@ touch-friendly music system for tablets, phones and desktop browsers. It brings
 library discovery, queue and playlist editing, synchronized-player control,
 live signal-path information and optional server-side DSP into one interface.
 
-Version **3.5.6** uses Vue 2 without a compilation or bundling step: the files in
+Version **3.5.7** uses Vue 2 without a compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
-![Echo Classic 3.5.6 library and album detail](images/release-3.5.6-library.png)
+![Echo Classic 3.5.7 Collection dashboard](images/release-3.5.7-collection.png)
 
-## What is new in 3.5.6
+## What is new in 3.5.7
 
-### Music Folder becomes a complete workspace
+### Collection becomes an interactive dashboard
 
-Music Folder now has persistent locations, breadcrumbs and a lazy outline tree
-instead of behaving like another flat library list. Folders can be expanded in
-place, filtered and sorted, while track actions remain available throughout the
-hierarchy. Keyboard navigation follows the standard tree pattern.
+Collection now summarizes albums, tracks, storage, genres, missing tags,
+lossless formats, decades and album sizes in a configurable card layout. Every
+figure or chart can open the albums behind it, with safe preparation before
+playback, playlist or folder actions become available.
 
-The adjacent Playlist Builder accepts tracks from any visible folder, supports
-drag-and-drop and exact-position insertion, and saves the displayed order without
-changing the playback queue.
+The first 500 tracks produce a clearly marked partial dashboard while the full
+scan continues in larger ordered pages. On the 15,212-track validation library,
+first usable results appeared in about two seconds. Complete snapshots are
+validated and cached; failed or cancelled refreshes keep the previous complete
+collection intact.
 
-![Echo Classic 3.5.6 Music Folder](images/release-3.5.6-music-folder.png)
+### Playlist Builder across Collection and Folders
 
-### Complete album detail everywhere
+Checked albums and folder selections can be sent to the shared Playlist Builder,
+reordered and saved permanently or kept as numbered temporary playlists. The
+builder preserves its draft while moving between Collection and Music Folders.
 
-Albums opened from Recent or any My Music root now use the same complete
-presentation. Edition and original years, format, source details, artist
-information, related local artists and stable Play, Shuffle and Equalizer actions
-remain visible instead of falling back to a reduced detail page.
+![Echo Classic 3.5.7 Playlist Builder](images/release-3.5.7-playlist-builder.png)
 
-### Explicit, recoverable player switching
+### SACDPlayer cache integration
 
-Player discovery now uses the complete server-wide LMS list. Selecting a player
-does not immediately affect playback: Echo Classic waits for **Apply switch**,
-shows the stop, connection, validation and resume stages, and restores the safe
-player if the transition fails. Server-reported output information is shown when
-available and never guessed.
+When SACDPlayer is installed, album detail can prepare or remove an SACD album
+from the extraction cache and show per-track readiness. Settings reports used and
+free space and manages prepared albums. When SACDPlayer is absent, Echo Classic
+shows an installation route without breaking ordinary album playback.
 
-### Better playlist and rating workflows
+![Echo Classic 3.5.7 SACD cache manager](images/release-3.5.7-sacd-cache.png)
 
-Track actions now offer a searchable playlist picker, recent destinations and
-in-place playlist creation before adding the track. Ratings Light can own reads
-and writes through its published dispatches while the LMS core rating command
-remains the fallback. Now Playing can optionally append the current rating beside
-the title.
+### Cleaner optional-plugin behavior
 
-All 890 runtime strings are complete in English, German, French and Portuguese.
-The validation suite rejects missing translations, malformed blocks and duplicate
-keys before a release can be packaged.
-
-### Explicit failure and recovery states
-
-Server and network failures no longer masquerade as empty lists or successful
-actions. Queue, favourites, playlists, related artists, player settings,
-playback intelligence, track information and Apple Squeezer diagnostics expose
-their failure state or an actionable retry.
-
-Settings import now requires a successful backup and rolls back every affected
-key if a write fails. Malformed JSON-RPC envelopes, invalid paging values,
-missing album identities and out-of-range queue positions fail safely. Responses
-that arrive after the active player changes are discarded.
+Optional SqueezeDSP commands are now capability-gated before the Equalizer loads.
+Systems using Apple Squeezer—or no DSP plugin—show the correct unavailable or
+alternate state instead of issuing failed JSON-RPC calls. Ratings Light and
+MusicArtistInfo retain their existing capability-gated fallbacks.
 
 ## Core features
 
@@ -290,12 +279,13 @@ an older cached stylesheet.
 
 ## Project status
 
-Current stable release: **3.5.6**.
+Prepared stable release: **3.5.7**.
 
-- 581 automated tests passing.
+- 730 automated tests passing.
 - Six validation stages passing.
-- 21 Vue templates compiling.
-- 890 runtime strings complete in four languages with no duplicate keys.
+- 25 Vue templates compiling.
+- 1,130 runtime string blocks with complete English and Portuguese coverage;
+  German and French each currently fall back to English for 14 entries.
 - 155/155 tested contrast pairs passing.
 
 The [changelog](CHANGELOG.md) distinguishes behavior verified in a running

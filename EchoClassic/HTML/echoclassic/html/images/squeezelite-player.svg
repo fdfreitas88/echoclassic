@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>Squeezelite player</title>
+  <rect width="64" height="64" rx="12" fill="#e5e5ea"/>
+  <rect x="13" y="14" width="31" height="36" rx="6" fill="#f7f7f9" stroke="#8e8e93" stroke-width="2"/>
+  <circle cx="28.5" cy="26" r="5" fill="#8e8e93"/>
+  <circle cx="28.5" cy="40" r="8" fill="#636366"/>
+  <circle cx="28.5" cy="40" r="3" fill="#d1d1d6"/>
+  <path d="M48 25c4 3 4 11 0 14M52 20c8 7 8 17 0 24" fill="none" stroke="#007aff" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

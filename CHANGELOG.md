@@ -15,6 +15,33 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.7] — 2026-09-10
+
+### Added
+- Collection tab is a dashboard: iOS 9 navigation bar and summary strip (Albums, Tracks, Known file sizes, Genres, Albums to tag, Lossless tracks), card sections on a 12-column grid, Edit mode with reorder, resize, hide and Add section, layout remembered per browser in the library-display record. [measured] tests/collection-dashboard.test.js, tests/library-review.test.js
+- Every figure, bar and legend entry opens an inspector with the albums behind it; Play, Add to Playlist (existing, new, or current queue) and Show in Folders act on the checked albums or on all of them. [measured] tests/collection-dashboard.test.js
+- Per-album ⋯ opens the standard action sheet, which gains Show in Music Folders for items that carry a folder. [measured] tests/action-sheet-ui.test.js, tests/show-in-folders.test.js
+- Decades card, from the year tag now requested by the collection scan. [measured] tests/api.test.js
+- Optional SACDPlayer integration exposes album preparation and cache removal from album details, plus cache inventory, disk-space status and prepared-album management in Settings. Echo Classic degrades cleanly when SACDPlayer is absent or incomplete. [measured] tests/api.test.js, tests/album-detail-ui.test.js, tests/settings-sacd-cache.test.js
+- Collection selections can be sent to the persistent Playlist Builder, reordered, saved permanently or kept as numbered temporary playlists. [measured] tests/playlist-builder.test.js, tests/collection-dashboard.test.js
+
+### Changed
+- Initial and refreshed Collection scans now publish a safe partial dashboard after a small first page, then use larger sequential LMS pages with bounded retries. This reduces request round trips without overloading LMS; statistics are aggregated incrementally and genre sorting is deferred until completion. Timings separately report first usable data, request time, aggregation, cache write and render readiness. [live/measured] musicplayer.local with 15,212 tracks; tests/library-review.test.js
+- Collection keeps the last complete IndexedDB snapshot authoritative during refresh; partial results are never persisted and playback, playlist, folder and drill actions remain disabled until the complete scan is validated. [measured] tests/library-review.test.js
+- Navigation, album rows, search, queue, player volume, OPML and Settings/SACD states received responsive and interaction corrections from the Chrome interface audit. [measured] npm test, npm run validate
+- The plugin uses a raster icon for LMS surfaces that do not render the previous SVG reliably. [code] EchoClassic/install.xml, repo.xml
+
+### Fixed
+- Collection pages are kept in offset order and rejected on changed library totals, incomplete pages, duplicate track IDs, cancellation or a changed LMS scan timestamp, preventing mixed or stale dashboards. [measured] tests/library-review.test.js
+- Missing SqueezeDSP commands are capability-gated before the Equalizer loads, so installations using Apple Squeezer or no optional DSP plugin no longer emit failed JSON-RPC requests. [live/measured] musicplayer.local without SqueezeDSP; tests/store.test.js
+- When Apple Squeezer and SqueezeDSP are both absent, Settings now identifies Equalizer as an optional feature and offers installation routes instead of opening dead controls. SACDPlayer absence likewise keeps ordinary playback and navigation available. [live/measured] Google Chrome against musicplayer.local with all three plugin capabilities suppressed; tests/settings-sacd-cache.test.js
+
+### Verified on musicplayer.local, 2026-09-08
+- Reorder, resize and hide survive a reload; hidden card returns from Add section. [live]
+- Genre drill lists albums with folder paths; Add to Playlist created a playlist with the 16 tracks of two checked albums; Play Next inserted an album's 6 tracks into the queue. [live]
+- Show in Folders lands on the album's folder (musicfolder returns file:// URLs, decoded before matching); a selection spanning two top-level folders opens the root listing instead of failing. [live]
+- Tracks tile duration and Albums to tag were zero on first deploy: the scan now requests the duration tag and treats LMS's "No Genre" as untagged. Confirmed after the follow-up deploy. [live]
+
 ## [3.5.6] — 2026-09-03
 
 ### Added

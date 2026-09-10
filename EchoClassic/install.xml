@@ -3,13 +3,13 @@
 	<id>cfac2d7e-09a2-43e0-b234-52b2078a3721</id>
 	<name>ECHOCLASSIC_SKIN</name>
 	<module>Plugins::EchoClassic::Plugin</module>
-	<version>3.5.6</version>
+	<version>3.5.7</version>
 	<description>PLUGIN_ECHOCLASSIC_SKIN</description>
 	<creator>Felipe Freitas</creator>
 	<category>skin</category>
 	<!-- Caminho servido pelo LMS: a pasta HTML/echoclassic do plugin vira
 	     /echoclassic/ na raiz do servidor. -->
-	<icon>echoclassic/html/images/icon.svg</icon>
+	<icon>echoclassic/html/images/icon.png</icon>
 	<optionsURL>plugins/EchoClassic/settings/basic.html</optionsURL>
 	<homepageURL>https://github.com/fdfreitas88/echoclassic</homepageURL>
 	<defaultState>enabled</defaultState>

@@ -22,48 +22,18 @@ Vue.component('lms-detail', {
   </div>
 
   <template v-else-if="frame.kind === 'album'">
-    <div v-for="a in visibleBlocks" :key="'album-detail-' + a.id" class="artist-track-album album-detail-unified">
-      <section class="artist-detail-compact artist-track-album-summary"
-               :class="['artist-layout-'+ui.artistDetailLayout,'artist-controls-'+ui.artistDetailControls]">
-        <div class="artist-primary-panel">
-          <div class="artist-primary-album">
-            <span class="artist-primary-art" :class="{placeholder:!hasArt(a)}"><img v-if="hasArt(a)" :src="largeArt(a.art)" alt="" @error="markArtFailed(a)"><span v-else aria-hidden="true">♫</span></span>
-            <span class="artist-primary-copy">
-              <strong>{{ a.title }}</strong><span>{{ albumArtistLabel(a) }}</span>
-              <small v-if="albumSummary(a).songCount">{{ albumSummary(a).songCount }} {{ tr(albumSummary(a).songCount === 1 ? 'song' : 'songs') }}</small>
-              <small>{{ tr('Year of this edition:') }} {{ a.year || tr('not available') }}</small>
-              <small>{{ tr('Original year:') }} {{ a.originalYear || tr('not available') }}</small>
-              <small v-if="albumSummary(a).formatLine || albumSummary(a).bitRateLine" class="artist-primary-technical">
-                <span v-if="albumSummary(a).formatLine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4"/></svg>{{ albumSummary(a).formatLine }}</span>
-                <span v-if="albumSummary(a).bitRateLine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-6M8 18V6M12 14v-4M16 19V5M20 15V9"/></svg>{{ albumSummary(a).bitRateLine }}</span>
-                <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4zM7 15.5h.01M10 15.5h7"/></svg>{{ albumSummary(a).originLine || a.source || tr('Local library') }}</span>
-              </small>
-              <small v-else>{{ a.source || tr('Local library') }}</small>
-            </span>
-          </div>
-          <div class="artist-compact-controls" aria-label="Album playback">
-            <button type="button" class="primary" aria-label="Play" title="Play" @click="playPrimaryAlbum(a)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="solid" d="M7 4.5 19 12 7 19.5z"/></svg><b>{{ tr('Play') }}</b></button>
-            <button type="button" aria-label="Shuffle" title="Shuffle" @click="shufflePrimaryAlbum(a)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3.2c4.5 0 5.1 10 9.6 10H20M17 14l3 3-3 3M4 17h3.2c1.8 0 3-1.6 4.1-3.5M15.5 7.8c.4-.5.8-.8 1.3-.8H20M17 4l3 3-3 3"/></svg><b>{{ tr('Shuffle') }}</b></button>
-            <button v-if="store.equalizer.status==='ready'" type="button" aria-label="Equalizer" title="Equalizer" @click="openPrimaryEqualizer(a)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M12 4v16M19 4v16"/><circle cx="5" cy="9" r="2"/><circle cx="12" cy="15" r="2"/><circle cx="19" cy="8" r="2"/></svg><b>{{ tr('Equalizer') }}</b></button>
-          </div>
+    <div v-for="a in visibleBlocks" :key="'album-detail-' + a.id" class="album-detail-approved" :class="albumLayoutClasses(a)">
+      <lms-album-block :album="a" :artist="artist" @summary="captureAlbumSummary"></lms-album-block>
+      <aside v-if="albumInformationFields(a).artistInformation" class="album-artist-sidecar" :aria-labelledby="artistEnrichmentTitleId(a)">
+        <div class="artist-compact-identity"><span v-if="albumInformationFields(a).artistCover" class="artist-compact-photo" :class="{placeholder:!enrichment.photoUrl||photoFailed}"><img v-if="enrichment.photoUrl&&!photoFailed" :src="largeArt(enrichment.photoUrl)" alt="" @error="photoFailed=true"><span v-else aria-hidden="true">{{ albumArtistInitial(a) }}</span></span><span><strong>{{ albumArtistLabel(a) }}</strong><small :id="artistEnrichmentTitleId(a)">{{ tr('Artist information') }}</small></span></div>
+        <div v-if="enrichmentLoading" class="artist-enrichment-status" role="status">{{ tr('Finding artist information…') }}</div>
+        <div v-else-if="enrichmentStatus === 'ready'">
+          <p v-if="enrichment.biography" class="artist-biography" :class="{expanded:enrichmentExpanded}">{{ enrichment.biography }}</p>
+          <p v-else class="artist-enrichment-status">{{ tr('No artist biography was found.') }}</p>
+          <div class="artist-enrichment-links"><button v-if="enrichment.biography" type="button" :aria-expanded="enrichmentExpanded?'true':'false'" @click="enrichmentExpanded=!enrichmentExpanded">{{ tr(enrichmentExpanded?'Show less':'Read biography') }}</button><button type="button" @click="retryEnrichment">{{ tr('Refresh') }}</button><button type="button" @click="removeEnrichment">{{ tr('Hide for now') }}</button></div>
         </div>
-        <div class="artist-compact-sidecar" :aria-labelledby="artistEnrichmentTitleId(a)">
-          <div class="artist-compact-identity"><span class="artist-compact-photo" :class="{placeholder:!enrichment.photoUrl||photoFailed}"><img v-if="enrichment.photoUrl&&!photoFailed" :src="largeArt(enrichment.photoUrl)" alt="" @error="photoFailed=true"><span v-else aria-hidden="true">{{ albumArtistInitial(a) }}</span></span><span><strong>{{ albumArtistLabel(a) }}</strong><small :id="artistEnrichmentTitleId(a)">{{ tr('Artist information') }}</small></span></div>
-          <div v-if="enrichmentLoading" class="artist-enrichment-status" role="status">{{ tr('Finding artist information…') }}</div>
-          <div v-else-if="enrichmentStatus === 'ready'">
-            <p v-if="enrichment.biography" class="artist-biography" :class="{expanded:enrichmentExpanded}">{{ enrichment.biography }}</p>
-            <p v-else class="artist-enrichment-status">{{ tr('No artist biography was found.') }}</p>
-            <div class="artist-enrichment-links"><button v-if="enrichment.biography" type="button" :aria-expanded="enrichmentExpanded?'true':'false'" @click="enrichmentExpanded=!enrichmentExpanded">{{ tr(enrichmentExpanded?'Show less':'Read biography') }}</button><button type="button" @click="retryEnrichment">{{ tr('Refresh') }}</button><button type="button" @click="removeEnrichment">{{ tr('Hide for now') }}</button></div>
-          </div>
-          <div v-else class="artist-enrichment-status"><p>{{ artistEnrichmentMessage }}</p><button v-if="enrichmentStatus==='unavailable'" type="button" class="retry-command" @click="openPluginManager">{{ tr('Install plugin') }}</button><button v-else type="button" class="retry-command" @click="retryEnrichment">{{ tr('Try again') }}</button></div>
-          <div v-if="albumSummary(a).relatedArtists && albumSummary(a).relatedArtists.length" class="album-extra album-related artist-related">
-            <svg class="related-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 19.5v-1.3c0-2.1-1.8-3.7-4-3.7H7c-2.2 0-4 1.6-4 3.7v1.3M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM16 8h5M18.5 5.5v5"/></svg>
-            <div class="related-links"><strong>{{ tr('Local library') }}</strong><template v-for="(related,index) in albumSummary(a).relatedArtists"><span v-if="index" :key="'album-related-separator-'+a.id+'-'+related.id" class="related-separator" aria-hidden="true">•</span><button :key="'album-related-'+a.id+'-'+related.id" type="button" @click="openRelatedArtist(related)">{{ related.name }}</button></template></div>
-          </div>
-        </div>
-      </section>
-      <lms-album-block :album="a" :artist="artist" :enrich="false" :show-related="false"
-                       :continuation="true" @summary="captureAlbumSummary"></lms-album-block>
+        <div v-else class="artist-enrichment-status"><p>{{ artistEnrichmentMessage }}</p><button v-if="enrichmentStatus==='unavailable'" type="button" class="retry-command" @click="openPluginManager">{{ tr('Install plugin') }}</button><button v-else type="button" class="retry-command" @click="retryEnrichment">{{ tr('Try again') }}</button></div>
+      </aside>
     </div>
     <div v-if="discographyTruncated" class="loading-more warning" role="status">
       This artist's discography has more than 200 albums and this screen shows the first 200.
@@ -86,12 +56,12 @@ Vue.component('lms-detail', {
       </aside>
       <section class="music-folder-browser-pane">
         <div class="music-folder-mobile-mode" role="tablist" :aria-label="tr('Music folder view')">
-          <button type="button" role="tab" :aria-selected="playlistBuilderMobileView==='browse'" @click="playlistBuilderMobileView='browse'">{{ tr('Browse') }}</button>
+          <button type="button" role="tab" :aria-selected="playlistBuilderMobileView==='browse'" @click="browsePlaylistBuilder">{{ tr('Browse') }}</button>
           <button type="button" role="tab" :aria-selected="playlistBuilderMobileView==='builder'" @click="openPlaylistBuilder">{{ tr('Playlist Builder') }}<span v-if="playlistDraftTracks.length">{{ playlistDraftTracks.length }}</span></button>
         </div>
         <label class="music-folder-mobile-source">
           <span class="visually-hidden">{{ tr('Music folder source') }}</span>
-          <select :value="String(folderRootId)" :aria-label="tr('Music folder source')" @change="chooseFolderSource($event.target.value)">
+          <select :value="folderRootId == null ? '' : String(folderRootId)" :aria-label="tr('Music folder source')" @change="chooseFolderSource($event.target.value)">
             <option value="">{{ tr('All Music') }}</option>
             <option v-for="root in folderRoots" :key="'folder-mobile-'+root.id" :value="String(root.id)">{{ root.name }}</option>
           </select>
@@ -115,11 +85,12 @@ Vue.component('lms-detail', {
         <div class="music-folder-columns" aria-hidden="true"><span>{{ tr('Name') }}</span><span>{{ tr('Type') }}</span><span>{{ tr('Contents') }}</span></div>
         <div v-if="folderTreeRows.length" class="music-folder-tree" role="tree" :aria-label="frame.label">
           <div v-for="row in folderTreeRows" :key="row.key" ref="folderRows" class="music-folder-tree-row"
-               :class="[row.item.type,{expanded:row.expanded}]" role="treeitem"
+               :class="[row.item.type,{expanded:row.expanded,revealed:isRevealedFolderItem(row.item)}]" role="treeitem"
                :tabindex="folderRowTabindex(row)" :aria-level="row.depth+1"
                :aria-expanded="row.item.type==='folder' ? String(row.expanded) : null"
+               :aria-current="isRevealedFolderItem(row.item) ? 'true' : null"
                :aria-busy="row.loading ? 'true' : null" :style="{'--folder-depth':row.depth}"
-               :draggable="row.item.type==='track'" @dragstart="folderTrackDragStart(row.item,$event)"
+               draggable="true" @dragstart="folderItemDragStart(row.item,$event)"
                @focus="folderFocusedKey=row.key" @keydown="folderTreeKeydown(row,$event)">
             <button v-if="row.item.type==='folder'" type="button" class="music-folder-twisty" :aria-label="folderDisclosureLabel(row)" @click.stop="toggleFolderTree(row)">{{ row.loading ? '…' : (row.expanded ? '▾' : '▸') }}</button><span v-else class="music-folder-twisty" aria-hidden="true"></span>
             <button type="button" class="music-folder-tree-name" @click="openFolderItem(row.item,$event)">
@@ -127,7 +98,7 @@ Vue.component('lms-detail', {
               <span>{{ row.item.name }}</span>
             </button>
             <span class="music-folder-tree-meta">{{ tr(row.item.type === 'folder' ? 'Folder' : 'Track') }}</span>
-            <span class="music-folder-tree-meta music-folder-tree-last"><span>{{ folderTreeCount(row) }}</span><button v-if="row.item.type==='track'" type="button" :aria-label="tr('Add track') + ': ' + row.item.name" @click.stop="appendTrackToDraft(row.item)">+</button></span>
+            <span class="music-folder-tree-meta music-folder-tree-last"><span>{{ folderTreeCount(row) }}</span><button type="button" :aria-label="tr(row.item.type==='folder'?'Add folder':'Add track') + ': ' + row.item.name" @click.stop="appendFolderItemToDraft(row.item)">+</button></span>
           </div>
         </div>
         <div v-else-if="folderFilter" class="empty music-folder-empty"><div class="h">{{ tr('No matching items') }}</div><div class="p">{{ tr('Clear the folder filter to see every item here.') }}</div><button type="button" class="retry-command" @click="folderFilter=''">{{ tr('Clear filter') }}</button></div>
@@ -135,41 +106,6 @@ Vue.component('lms-detail', {
           <div class="h">{{ tr('This folder is empty') }}</div><div class="p">{{ tr('Return to Music to choose another folder.') }}</div>
           <button type="button" class="retry-command" @click="backToMusic">‹ {{ tr('Back to Music') }}</button>
         </div>
-      </section>
-      <section v-if="playlistBuilderOpen" class="playlist-builder" :aria-label="tr('Playlist Builder')">
-        <div class="music-folder-mobile-mode" role="tablist" :aria-label="tr('Music folder view')">
-          <button type="button" role="tab" :aria-selected="playlistBuilderMobileView==='browse'" @click="playlistBuilderMobileView='browse'">{{ tr('Browse') }}</button>
-          <button type="button" role="tab" :aria-selected="playlistBuilderMobileView==='builder'" @click="playlistBuilderMobileView='builder'">{{ tr('Playlist Builder') }}<span v-if="playlistDraftTracks.length">{{ playlistDraftTracks.length }}</span></button>
-        </div>
-        <header class="playlist-builder-header">
-          <span><strong>{{ tr('Playlist Builder') }}</strong><small>{{ playlistBuilderCountLabel }}</small></span>
-          <button type="button" class="playlist-builder-close" :aria-label="tr('Close Playlist Builder')" @click="closePlaylistBuilder">×</button>
-        </header>
-        <label class="playlist-builder-name"><span>{{ tr('Playlist name') }}</span><input v-model="playlistDraftName" type="text" :placeholder="tr('New playlist')"></label>
-        <div class="playlist-builder-append" :class="{'drop-active':playlistDropIndex===playlistDraftTracks.length}" @dragover.prevent="setPlaylistDropIndex(playlistDraftTracks.length)" @dragleave="clearPlaylistDrop" @drop.prevent="dropTrackAt(playlistDraftTracks.length,$event)">
-          <span aria-hidden="true">＋</span><strong>{{ tr('Drop tracks here') }}</strong><small>{{ tr('Drops here are added to the end.') }}</small>
-        </div>
-        <ol v-if="playlistDraftTracks.length" class="playlist-builder-list" :aria-label="tr('Playlist draft')">
-          <li v-for="(track,index) in playlistDraftTracks" :key="track.draftKey" class="playlist-builder-row" :class="{'drop-before':playlistDropIndex===index,'dragging':playlistDragIndex===index}"
-              draggable="true" @dragstart="playlistTrackDragStart(index,$event)" @dragover.prevent="playlistRowDragOver(index,$event)" @dragleave="playlistRowDragLeave(index,$event)" @drop.prevent="dropTrackAt(playlistDropIndex,$event)" @dragend="clearPlaylistDrag">
-            <span class="playlist-builder-grip" aria-hidden="true">⠿</span><span class="playlist-builder-index">{{ index+1 }}</span>
-            <span class="playlist-builder-copy"><strong>{{ track.title }}</strong><small>{{ track.artist || track.path || tr('Music Folder') }}</small></span>
-            <span class="playlist-builder-moves">
-              <button type="button" :disabled="index===0" :aria-label="tr('Move up') + ': ' + track.title" @click="moveDraftTrack(index,-1)">↑</button>
-              <button type="button" :disabled="index===playlistDraftTracks.length-1" :aria-label="tr('Move down') + ': ' + track.title" @click="moveDraftTrack(index,1)">↓</button>
-              <button type="button" :aria-label="tr('Remove track') + ': ' + track.title" @click="removeDraftTrack(index)">×</button>
-            </span>
-          </li>
-          <li class="playlist-builder-end-target" :class="{'drop-before':playlistDropIndex===playlistDraftTracks.length}" @dragover.prevent="setPlaylistDropIndex(playlistDraftTracks.length)" @drop.prevent="dropTrackAt(playlistDraftTracks.length,$event)"></li>
-        </ol>
-        <div v-else class="playlist-builder-empty"><span aria-hidden="true">♫</span><strong>{{ tr('Your playlist is empty') }}</strong><small>{{ tr('Drag tracks from the folder or use Add.') }}</small></div>
-        <div class="playlist-builder-status" role="status" aria-live="polite">{{ playlistBuilderNotice }}</div>
-        <footer class="playlist-builder-footer">
-          <button v-if="!playlistClearPending" type="button" :disabled="!playlistDraftTracks.length" @click="playlistClearPending=true">{{ tr('Clear') }}</button>
-          <span v-else class="playlist-builder-clear-confirm"><span>{{ tr('Clear this draft?') }}</span><button type="button" @click="clearPlaylistDraft">{{ tr('Clear') }}</button><button type="button" @click="playlistClearPending=false">{{ tr('Cancel') }}</button></span>
-          <button type="button" :disabled="!canSavePlaylistBuilder" @click="savePlaylistDraft(true)">{{ tr('Save as new') }}</button>
-          <button type="button" class="primary" :disabled="!canSavePlaylistBuilder" @click="savePlaylistDraft(false)">{{ playlistBuilderSaving ? tr('Saving…') : tr('Save playlist') }}</button>
-        </footer>
       </section>
     </div>
   </template>
@@ -193,7 +129,6 @@ Vue.component('lms-detail', {
           <strong>{{ primaryAlbum.title }}</strong><span>{{ primaryAlbum.artist || frame.label }}</span>
           <small v-if="primaryAlbumDetails.songCount">{{ primaryAlbumDetails.songCount }} {{ tr(primaryAlbumDetails.songCount === 1 ? 'song' : 'songs') }}</small>
           <small>{{ tr('Year of this edition:') }} {{ primaryAlbum.year || tr('not available') }}</small>
-          <small>{{ tr('Original year:') }} {{ primaryAlbum.originalYear || tr('not available') }}</small>
           <small v-if="primaryAlbumDetails.formatLine || primaryAlbumDetails.bitRateLine" class="artist-primary-technical">
             <span v-if="primaryAlbumDetails.formatLine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4"/></svg>{{ primaryAlbumDetails.formatLine }}</span>
             <span v-if="primaryAlbumDetails.bitRateLine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-6M8 18V6M12 14v-4M16 19V5M20 15V9"/></svg>{{ primaryAlbumDetails.bitRateLine }}</span>
@@ -205,7 +140,7 @@ Vue.component('lms-detail', {
       <div class="artist-compact-controls" aria-label="Album playback">
         <button type="button" class="primary" aria-label="Play" title="Play" @click="playPrimaryAlbum"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="solid" d="M7 4.5 19 12 7 19.5z"/></svg><b>{{ tr('Play') }}</b></button>
         <button type="button" aria-label="Shuffle" title="Shuffle" @click="shufflePrimaryAlbum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3.2c4.5 0 5.1 10 9.6 10H20M17 14l3 3-3 3M4 17h3.2c1.8 0 3-1.6 4.1-3.5M15.5 7.8c.4-.5.8-.8 1.3-.8H20M17 4l3 3-3 3"/></svg><b>{{ tr('Shuffle') }}</b></button>
-        <button v-if="store.equalizer.status==='ready'" type="button" aria-label="Equalizer" title="Equalizer" @click="openPrimaryEqualizer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M12 4v16M19 4v16"/><circle cx="5" cy="9" r="2"/><circle cx="12" cy="15" r="2"/><circle cx="19" cy="8" r="2"/></svg><b>{{ tr('Equalizer') }}</b></button>
+        <button type="button" aria-label="Equalizer" title="Equalizer" @click="openPrimaryEqualizer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M12 4v16M19 4v16"/><circle cx="5" cy="9" r="2"/><circle cx="12" cy="15" r="2"/><circle cx="19" cy="8" r="2"/></svg><b>{{ tr('Equalizer') }}</b></button>
       </div>
       </div>
       <div class="artist-compact-sidecar" aria-labelledby="artist-enrichment-title">
@@ -279,7 +214,6 @@ Vue.component('lms-detail', {
                 <strong>{{ a.title }}</strong><span>{{ a.artist || frame.label }}</span>
                 <small v-if="albumSummary(a).songCount">{{ albumSummary(a).songCount }} {{ tr(albumSummary(a).songCount === 1 ? 'song' : 'songs') }}</small>
                 <small>{{ tr('Year of this edition:') }} {{ a.year || tr('not available') }}</small>
-                <small>{{ tr('Original year:') }} {{ a.originalYear || tr('not available') }}</small>
                 <small v-if="albumSummary(a).formatLine || albumSummary(a).bitRateLine" class="artist-primary-technical">
                   <span v-if="albumSummary(a).formatLine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4"/></svg>{{ albumSummary(a).formatLine }}</span>
                   <span v-if="albumSummary(a).bitRateLine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-6M8 18V6M12 14v-4M16 19V5M20 15V9"/></svg>{{ albumSummary(a).bitRateLine }}</span>
@@ -291,7 +225,7 @@ Vue.component('lms-detail', {
             <div class="artist-compact-controls" aria-label="Album playback">
               <button type="button" class="primary" aria-label="Play" title="Play" @click="playPrimaryAlbum(a)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="solid" d="M7 4.5 19 12 7 19.5z"/></svg><b>{{ tr('Play') }}</b></button>
               <button type="button" aria-label="Shuffle" title="Shuffle" @click="shufflePrimaryAlbum(a)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3.2c4.5 0 5.1 10 9.6 10H20M17 14l3 3-3 3M4 17h3.2c1.8 0 3-1.6 4.1-3.5M15.5 7.8c.4-.5.8-.8 1.3-.8H20M17 4l3 3-3 3"/></svg><b>{{ tr('Shuffle') }}</b></button>
-              <button v-if="store.equalizer.status==='ready'" type="button" aria-label="Equalizer" title="Equalizer" @click="openPrimaryEqualizer(a)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M12 4v16M19 4v16"/><circle cx="5" cy="9" r="2"/><circle cx="12" cy="15" r="2"/><circle cx="19" cy="8" r="2"/></svg><b>{{ tr('Equalizer') }}</b></button>
+              <button type="button" aria-label="Equalizer" title="Equalizer" @click="openPrimaryEqualizer(a)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M12 4v16M19 4v16"/><circle cx="5" cy="9" r="2"/><circle cx="12" cy="15" r="2"/><circle cx="19" cy="8" r="2"/></svg><b>{{ tr('Equalizer') }}</b></button>
             </div>
           </div>
           <div class="artist-compact-sidecar" :aria-labelledby="artistEnrichmentTitleId(a)">
@@ -349,16 +283,23 @@ Vue.component('lms-detail', {
     return { store: LmsStore.state, ui: LmsUi.state, albums: [], blocks: [], classicalWorks: [], folderItems: [], folderRoots: [],
              folderChildren: {}, folderExpanded: {}, folderLoading: {},
              folderFilter: '', folderSort: 'name', folderFocusedKey: '',
-             playlistBuilderOpen: false, playlistBuilderMobileView: 'browse', playlistDraftName: '', playlistDraftTracks: [],
-             playlistDraftSequence: 0, playlistDragIndex: null, playlistDraggedTrack: null, playlistDropIndex: null,
-             playlistBuilderSaving: false, playlistBuilderNotice: '', playlistClearPending: false,
-             artist: null, failedArt: {}, photoFailed: false, primaryAlbumDetails: {}, albumSummaries: {},
+             builder: (window.LmsPlaylistBuilder&&LmsPlaylistBuilder.state)||{open:false,mobileView:'browse',tracks:[],name:'',notice:'',saving:false,clearPending:false,dragIndex:null,dropIndex:null},
+             artist: null, failedArt: {}, photoFailed: false, primaryAlbumDetails: {}, albumSummaries: {}, albumInformationOpen: {}, libraryDisplay: LmsLibraryDisplay.state,
              loading: true, error: '', requestToken: 0,
              enrichmentLoading: false, enrichmentStatus: '', enrichment: {}, enrichmentExpanded: false,
              nameMatchAccepted: false,
              discographyTruncated: false, listTruncated: false };
   },
   computed: {
+    playlistBuilderOpen: function () { return this.builder.open; },
+    playlistBuilderMobileView: function () { return this.builder.mobileView; },
+    playlistDraftTracks: function () { return this.builder.tracks; },
+    playlistDraftName: { get:function(){return this.builder.name;},set:function(value){this.builder.name=value;LmsPlaylistBuilder.persist();} },
+    playlistBuilderNotice: function () { return this.builder.notice; },
+    playlistBuilderSaving: function () { return this.builder.saving; },
+    playlistClearPending: { get:function(){return this.builder.clearPending;},set:function(value){this.builder.clearPending=value;} },
+    playlistDragIndex: function () { return this.builder.dragIndex; },
+    playlistDropIndex: function () { return this.builder.dropIndex; },
     initial: function () {
       return ((this.frame.label || '?').trim().charAt(0) || '?').toUpperCase();
     },
@@ -443,6 +384,12 @@ Vue.component('lms-detail', {
       if (this.primaryAlbum && String(summary.id) === String(this.primaryAlbum.id)) this.primaryAlbumDetails = summary;
     },
     albumSummary: function (album) { return this.albumSummaries[String(album && album.id)] || {}; },
+    albumInformationFields: function (album) { return window.LmsLibraryDisplay ? LmsLibraryDisplay.resolve({ id:album&&album.id, title:album&&album.title, artist:this.albumArtistLabel(album), genre:album&&album.genre }) : { albumCover:true, artistCover:true, albumInformation:true, artistInformation:true }; },
+    albumInformationPositions: function (album) { return window.LmsLibraryDisplay && LmsLibraryDisplay.resolvePositions ? LmsLibraryDisplay.resolvePositions({ id:album&&album.id, title:album&&album.title, artist:this.albumArtistLabel(album), genre:album&&album.genre }) : { albumInformation:'left', artistInformation:'right', albumCover:'left', artistCover:'right' }; },
+    albumLayoutClasses: function (album) { var fields=this.albumInformationFields(album),positions=this.albumInformationPositions(album);return {'artist-information-hidden':!fields.artistInformation,'album-information-right':positions.albumInformation==='right','artist-information-left':positions.artistInformation==='left','album-cover-right':positions.albumCover==='right','artist-cover-left':positions.artistCover==='left'}; },
+    albumInformationIsOpen: function (album) { return !!this.albumInformationOpen[String(album && album.id)]; },
+    toggleAlbumInformation: function (album) { var key=String(album&&album.id); this.$set(this.albumInformationOpen,key,!this.albumInformationOpen[key]); },
+    configureAlbumInformation: function (album) { var summary=this.albumSummary(album),tab=window.LmsUi&&LmsUi.state&&LmsUi.state.tab||'music',settingsDepth=window.LmsNav&&LmsNav.depth?LmsNav.depth('settings'):0; LmsLibraryDisplay.open({ id:album.id,title:album.title,artist:this.albumArtistLabel(album),genre:album.genre||'',counts:summary.songCount ? summary.songCount+' '+this.tr(summary.songCount===1?'song':'songs') : '',year:album.year||'',format:[summary.formatLine,summary.bitRateLine].filter(Boolean).join(' · '),source:summary.originLine||album.source||this.tr('Local library') },{tab:tab,settingsDepth:settingsDepth}); },
     artistEnrichmentTitleId: function (album) { return 'artist-enrichment-title-' + String(album && album.id); },
     albumArtistLabel: function (album) {
       return (this.artist && this.artist.name) || (album && album.artist) ||
@@ -507,39 +454,33 @@ Vue.component('lms-detail', {
       }
     },
     openPlaylistBuilder: function () {
-      this.playlistBuilderOpen = true;
-      this.playlistBuilderMobileView = 'builder';
+      LmsPlaylistBuilder.open('folders');
+      LmsPlaylistBuilder.setMobileView('builder');
     },
+    browsePlaylistBuilder: function () { LmsPlaylistBuilder.setMobileView('browse'); },
     closePlaylistBuilder: function () {
-      this.playlistBuilderOpen = false;
-      this.playlistBuilderMobileView = 'browse';
-      this.clearPlaylistDrag();
+      LmsPlaylistBuilder.close();
     },
     togglePlaylistBuilder: function () {
+      if (window.innerWidth <= 820) return this.openPlaylistBuilder();
       if (this.playlistBuilderOpen) return this.closePlaylistBuilder();
       this.openPlaylistBuilder();
     },
     playlistTrackFromFolder: function (item) {
-      return {
-        draftKey: 'folder-track-' + (++this.playlistDraftSequence),
-        id: item.id, title: item.title || item.name || this.tr('Unknown track'),
-        artist: item.artist || '', path: item.path || '', url: item.url || '', duration: Number(item.duration || 0)
-      };
+      return item;
     },
     appendTrackToDraft: function (item) {
-      this.playlistDraftTracks.push(this.playlistTrackFromFolder(item));
-      this.playlistBuilderOpen = true;
-      this.playlistBuilderNotice = this.tr('Track added to playlist draft.');
+      return LmsPlaylistBuilder.appendTracks([item], 'folder-track');
     },
-    folderTrackDragStart: function (item, event) {
-      this.playlistDraggedTrack = this.playlistTrackFromFolder(item);
-      this.playlistDragIndex = null;
-      this.playlistBuilderOpen = true;
+    appendFolderItemToDraft: function (item) { return LmsPlaylistBuilder.addFolderItem(item); },
+    folderItemDragStart: function (item, event) {
+      LmsPlaylistBuilder.startExternalDrag(item);
       if (event && event.dataTransfer) {
         event.dataTransfer.effectAllowed = 'copy';
-        event.dataTransfer.setData('text/plain', item.title || item.name || 'track');
+        event.dataTransfer.setData('text/plain', item.title || item.name || item.type);
       }
     },
+    folderTrackDragStart: function (item, event) { return this.folderItemDragStart(item,event); },
     playlistTrackDragStart: function (index, event) {
       this.playlistDragIndex = index;
       this.playlistDraggedTrack = this.playlistDraftTracks[index];
@@ -588,9 +529,7 @@ Vue.component('lms-detail', {
       this.playlistBuilderNotice = this.tr('Track removed from playlist draft.');
     },
     clearPlaylistDraft: function () {
-      this.playlistDraftTracks = [];
-      this.playlistClearPending = false;
-      this.playlistBuilderNotice = this.tr('Playlist draft cleared.');
+      LmsPlaylistBuilder.clearDraft();
     },
     uniquePlaylistName: async function (name) {
       var lists = await LmsApi.playlists(0, 500), normalized = name.toLowerCase(), suffix = 2;
@@ -605,23 +544,44 @@ Vue.component('lms-detail', {
       for (var i = 0; i < tracks.length; i++) await LmsApi.editPlaylist(playlistId, 'add', { title:tracks[i].title, url:tracks[i].url });
     },
     savePlaylistDraft: async function (saveAsNew) {
-      if (!this.canSavePlaylistBuilder) return;
-      this.playlistBuilderSaving = true;
-      this.playlistBuilderNotice = this.tr('Saving playlist…');
-      try {
-        var name = this.playlistDraftName.trim();
-        if (saveAsNew) name = await this.uniquePlaylistName(name);
-        var result = await LmsApi.createPlaylist(name);
-        if (result.id == null) throw new Error(this.tr('The playlist could not be created.'));
-        await this.replacePlaylistContents(result.id, this.playlistDraftTracks.slice());
-        this.playlistDraftName = name;
-        this.playlistBuilderNotice = this.tr('Playlist saved.') + ' ' + name;
-      } catch (e) {
-        console.warn('[Echo Classic] playlist builder save:', e);
-        this.playlistBuilderNotice = this.tr('Could not save playlist.') + ' ' +
-          this.tr(LmsStore.friendlyError(e, 'Check the connection and try again.'));
+      return LmsPlaylistBuilder.savePersistent(!!saveAsNew);
+    },
+    revealFolderPath: function (value) {
+      var text=String(value||'').replace(/^file:\/\/(localhost)?/i,'');
+      try{text=decodeURIComponent(text);}catch(ignored){}
+      return text.replace(/#.*$/,'').replace(/\/+$/,'');
+    },
+    revealTargetPaths: function () {
+      return (this.ui.folderReveal&&this.ui.folderReveal.targets||[]).map(function(target){return String(target.path||'');}).filter(Boolean);
+    },
+    isRevealedFolderItem: function (item) {
+      if(!item||item.type!=='track')return false;
+      var path=this.revealFolderPath(item.url||item.path),name=String(item.name||item.title||'').replace(/^.*\//,'');
+      return (this.ui.folderReveal&&this.ui.folderReveal.targets||[]).some(function(target){var wanted=String(target.path||'');return wanted===path||(!path&&name&&wanted.replace(/^.*\//,'')===name);});
+    },
+    folderContainsReveal: function (item) {
+      var folder=this.revealFolderPath(item&&item.path||item&&item.url);if(!folder)return false;
+      return this.revealTargetPaths().some(function(target){return target===folder||target.indexOf(folder+'/')===0;});
+    },
+    expandFolderReveal: async function () {
+      var reveal=this.ui.folderReveal;if(!reveal||!reveal.targets||!reveal.targets.length)return;
+      var self=this;
+      async function expand(items){
+        for(var i=0;i<(items||[]).length;i++){
+          var item=items[i];if(item.type!=='folder'||!self.folderContainsReveal(item))continue;
+          var key=String(item.key||item.id);self.$set(self.folderExpanded,key,true);
+          var children=self.folderChildren[key];
+          if(!children){self.$set(self.folderLoading,key,true);try{children=await LmsApi.musicFolders(self.store.playerId||'',item.id);self.$set(self.folderChildren,key,children);}catch(ignored){children=[];}self.$set(self.folderLoading,key,false);}
+          await expand(children);
+        }
       }
-      this.playlistBuilderSaving = false;
+      await expand(this.folderItems);
+      await this.$nextTick();
+      var selected=this.folderTreeRows.filter(function(row){return self.isRevealedFolderItem(row.item);}).length;
+      reveal.selectedCount=selected;reveal.missingCount=Math.max(0,reveal.requestedCount-selected);
+      await this.$nextTick();
+      var rows=this.$refs.folderRows||[];if(!Array.isArray(rows))rows=[rows];
+      for(var i=0;i<this.folderTreeRows.length;i++)if(this.isRevealedFolderItem(this.folderTreeRows[i].item)){if(rows[i]&&rows[i].scrollIntoView)rows[i].scrollIntoView({block:'center'});break;}
     },
     openFolderRoot: function (root) {
       LmsNav.reset('music');
@@ -938,6 +898,7 @@ Vue.component('lms-detail', {
           this.folderItems = folderResult[0];
           this.folderRoots = folderResult[1].filter(function (item) { return item.type === 'folder'; });
           this.loading = false;
+          await this.expandFolderReveal();
           return;
         } else if (f.kind === 'album') {
           /* O album escolhido vem primeiro e o resto da discografia abaixo, cada
@@ -981,6 +942,7 @@ Vue.component('lms-detail', {
             this.loadEnrichment(token, false);
             if (f.ids && f.ids.length > 1) filter.artistIds = f.ids;
             else filter.artistId = f.id;
+            if (f.roleId != null) filter.roleId = f.roleId;
             if (f.kind !== 'artist') {
               var roleId = f.kind === 'composer' ? 2 : f.kind === 'conductor' ? 3 : 4;
               this.classicalWorks = await LmsApi.works(pid, 0, 1000, { composerId: f.id, roleId: roleId });
@@ -990,7 +952,7 @@ Vue.component('lms-detail', {
           else if (f.kind === 'genre') filter.genreId = f.id;
           else if (f.kind === 'year') filter.year = f.id;
           else if (f.kind === 'work') filter.workId = f.id;
-          else if (f.kind === 'releasetype') filter.releaseType = f.label;
+          else if (f.kind === 'releasetype') filter.releaseType = f.value || f.label;
           var al = await LmsApi.albums(pid, 0, 1000, filter);
           if (token !== this.requestToken) return;
           this.listTruncated = al.length >= 1000;

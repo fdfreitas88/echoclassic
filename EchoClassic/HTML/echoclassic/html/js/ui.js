@@ -10,6 +10,7 @@
     Object.freeze({ key: 'radio', label: 'Radio' }),
     Object.freeze({ key: 'apps', label: 'Apps' }),
     Object.freeze({ key: 'playlists', label: 'Playlists' }),
+    Object.freeze({ key: 'collection', label: 'Collection' }),
     Object.freeze({ key: 'music', label: 'My Music' }),
     Object.freeze({ key: 'more', label: 'More' }),
     Object.freeze({ key: 'settings', label: 'Settings' })
@@ -29,6 +30,16 @@
     Object.freeze({ key: 'years', label: 'Years' })
     ,Object.freeze({ key: 'musicfolders', label: 'Music Folder', alphabeticIndex: true })
     ,Object.freeze({ key: 'releasetypes', label: 'Release Types', alphabeticIndex: true })
+  ]);
+
+  /* The picker chooses a destination while musicView keeps the existing leaf
+     key. That separation groups the menu without changing any LMS query. */
+  var MUSIC_DESTINATIONS = Object.freeze([
+    Object.freeze({ key: 'recent', label: 'Recent', description: 'Recently added albums', views: Object.freeze(['recent']) }),
+    Object.freeze({ key: 'artists', label: 'Artists', description: 'Artists, album artists, composers, conductors and ensembles', views: Object.freeze(['artists', 'albumartists', 'composers', 'conductors', 'ensembles']) }),
+    Object.freeze({ key: 'albums', label: 'Albums', description: 'All albums or release types', views: Object.freeze(['albums', 'releasetypes']) }),
+    Object.freeze({ key: 'works', label: 'Works', description: 'Classical works', views: Object.freeze(['works']) }),
+    Object.freeze({ key: 'browse', label: 'Browse', description: 'Browse', views: Object.freeze(['genres', 'years']) })
   ]);
 
   var COLOR_SCHEMES = Object.freeze([
@@ -184,6 +195,19 @@
 
   function isMusicView(key) {
     return MUSIC_VIEWS.some(function (view) { return view.key === key; });
+  }
+
+  function musicView(key) {
+    for (var i = 0; i < MUSIC_VIEWS.length; i++) if (MUSIC_VIEWS[i].key === key) return MUSIC_VIEWS[i];
+    return null;
+  }
+
+  function destinationForView(key) {
+    if (key === 'musicfolders') return {key:'collection', label:'Collection', views:['musicfolders']};
+    for (var i = 0; i < MUSIC_DESTINATIONS.length; i++) {
+      if (MUSIC_DESTINATIONS[i].views.indexOf(key) >= 0) return MUSIC_DESTINATIONS[i];
+    }
+    return MUSIC_DESTINATIONS[0];
   }
 
   /* Ler o localStorage e ler dados de terceiros: um arquivo de preferencias
@@ -412,6 +436,13 @@
   /* persist() ja gravava musicView; so o estado inicial ignorava, e a raiz
      escolhida se perdia a cada recarga. */
   var initialMusicView = isMusicView(saved.musicView) ? saved.musicView : 'recent';
+  var lastMusicViews = plainObject(saved.lastMusicViews) || {};
+  MUSIC_DESTINATIONS.forEach(function (destination) {
+    if (destination.views.indexOf(lastMusicViews[destination.key]) < 0) {
+      lastMusicViews[destination.key] = destination.views[0];
+    }
+  });
+  lastMusicViews[destinationForView(initialMusicView).key] = initialMusicView;
 
   /* Uma vista salva e um conjunto completo -- filtros, ordem, agrupamento,
      secoes e preferencia -- amarrado a raiz em que faz sentido. Guardar a raiz
@@ -518,6 +549,7 @@
     filter: '',
     selectionMode: false,
     selected: {},
+    folderReveal: null,
     pins: savedPins,
     partyMode: saved.partyMode === true,
     volumeStep: [1, 2, 5, 10].indexOf(savedVolumeStep) >= 0 ? savedVolumeStep : 2,
@@ -578,7 +610,8 @@
   function persist() {
     try {
       localStorage.setItem('echoclassic.ui.v2', JSON.stringify({
-        tab: state.tab, musicView: state.musicView, rootKey: state.rootKey, libraryId: state.libraryId,
+        tab: state.tab, musicView: state.musicView, lastMusicViews: lastMusicViews,
+        rootKey: state.rootKey, libraryId: state.libraryId,
         theme: state.theme, dark: state.theme === 'dark',
         byView: byView, rootContexts: rootContexts,
         albumMode: state.albumMode, queueArtMode: state.queueArtMode,
@@ -627,6 +660,7 @@
 
   function setTab(name) {
     if (!isTab(name)) return;
+    if (name !== 'music') state.folderReveal = null;
     state.tab = name;
     state.selectionMode = false;
     state.selected = {};
@@ -637,6 +671,7 @@
 
   function restoreTab(name) {
     if (!isTab(name)) return;
+    if (name !== 'music') state.folderReveal = null;
     state.tab = name;
     state.selectionMode = false;
     state.selected = {};
@@ -645,7 +680,10 @@
   }
 
   function toggleTheme() {
-    var next = state.theme === 'light' ? 'dark' : (state.theme === 'dark' ? 'legacy' : 'light');
+    /* Two-state switch: light <-> dark. Legacy is a whole-skin choice and is
+       only reachable from Settings > Appearance; from legacy the button goes
+       back to light, which is what the sun icon promises. */
+    var next = state.theme === 'light' ? 'dark' : 'light';
     setTheme(next);
   }
 
@@ -823,10 +861,27 @@
   }
 
   function viewLabel() {
-    for (var i = 0; i < MUSIC_VIEWS.length; i++) {
-      if (MUSIC_VIEWS[i].key === state.musicView) return MUSIC_VIEWS[i].label;
-    }
-    return '';
+    var view = musicView(state.musicView);
+    return view ? view.label : '';
+  }
+
+  function currentDestination() {
+    return destinationForView(state.musicView);
+  }
+
+  function destinationLabel() {
+    return currentDestination().label;
+  }
+
+  function destinationViews(key) {
+    var destination = MUSIC_DESTINATIONS.filter(function (item) { return item.key === key; })[0] || currentDestination();
+    return destination.views.map(musicView).filter(Boolean);
+  }
+
+  function lastViewForDestination(key) {
+    var destination = MUSIC_DESTINATIONS.filter(function (item) { return item.key === key; })[0] || MUSIC_DESTINATIONS[0];
+    var remembered = lastMusicViews[destination.key];
+    return destination.views.indexOf(remembered) >= 0 ? remembered : destination.views[0];
   }
 
   /* Grava o que esta na tela de volta na view que sai, e traz o da view que
@@ -852,6 +907,7 @@
       if (MUSIC_VIEWS[i].key === key) {
         stash();
         state.musicView = key;
+        lastMusicViews[destinationForView(key).key] = key;
         adopt(key);
         state.picker = false; persist(); return;
       }
@@ -873,6 +929,7 @@
       Object.keys(DEFAULT_SORT_BY_VIEW).forEach(function (view) { byView[view] = defaultsFor(view); });
     }
     state.musicView = restored && isMusicView(restored.musicView) ? restored.musicView : 'recent';
+    lastMusicViews[destinationForView(state.musicView).key] = state.musicView;
     adopt(state.musicView);
     state.rootKey = key;
     state.libraryId = key.indexOf('library:') === 0 ? key.slice(8) : '';
@@ -1295,6 +1352,59 @@
     state.actionAnchor = null;
   }
 
+  /* A track knows its URL, Music folders knows folder ids. Resolve through
+     LmsApi, then land on the folder the way a tap in Browse would. */
+  async function showInMusicFolders(pathOrUrl) {
+    var pid = (global.LmsStore && LmsStore.state.playerId) || '';
+    var folder = await global.LmsApi.folderForPath(pid, pathOrUrl);
+    if (!folder) return false;
+    setTab('music');
+    setMusicView('musicfolders');
+    if (global.LmsNav && LmsNav.reset) LmsNav.reset('music');
+    if (folder.id != null && global.LmsNav && LmsNav.push) LmsNav.push('music', { kind: 'musicfolder', id: folder.id, label: folder.name, path: folder.path });
+    closeActions();
+    return true;
+  }
+
+  function revealPath(value) {
+    var text = String(value || '');
+    if (!text) return '';
+    text = text.replace(/^file:\/\/(localhost)?/i, '');
+    try { text = decodeURIComponent(text); } catch (ignored) {}
+    /* LMS appends virtual-track fragments to container media such as
+       album.iso#2ch-001 and image.flac#1. Music folders exposes the physical
+       container file, so compare against the URL before that fragment. */
+    return text.replace(/#.*$/, '').replace(/\/+$/, '');
+  }
+
+  /* A selection may span unrelated directory branches. The normal rooted
+     Folders outline consumes these physical targets, expands each ancestor and
+     highlights the exact file in place. No detached result screen is created. */
+  async function showInMusicFoldersMany(items) {
+    var targets = (items || []).filter(function (item) { return item && item.url; }).map(function (item) {
+      return { url:item.url,label:item.label||'',albumId:item.albumId,trackId:item.trackId,path:revealPath(item.url) };
+    });
+    if (!targets.length) return { opened:0, selected:0, missing:0 };
+    state.folderReveal = { targets:targets, selectedCount:0, requestedCount:targets.length, missingCount:0, sourceTab:state.tab };
+    setTab('music');
+    setMusicView('musicfolders');
+    if (global.LmsNav && LmsNav.reset) LmsNav.reset('music');
+    closeActions();
+    return { opened:1, selected:0, missing:0 };
+  }
+
+  function closeFolderReveal() {
+    if (!state.folderReveal) return false;
+    var sourceTab=state.folderReveal.sourceTab;
+    state.folderReveal = null;
+    if (global.LmsNav && LmsNav.reset) LmsNav.reset('music');
+    if(sourceTab==='collection'){
+      restoreTab('collection');
+      if (global.history && history.replaceState) history.replaceState({ echoClassic:true,tab:'collection',depth:0,frames:[] }, '');
+    }
+    return true;
+  }
+
   function selectionKey(item) {
     return item ? String(item.kind || item.type || 'item') + ':' + String(item.id) : '';
   }
@@ -1473,7 +1583,7 @@
   }
 
   global.LmsUi = {
-    state: state, TABS: TABS, MUSIC_VIEWS: MUSIC_VIEWS,
+    state: state, TABS: TABS, MUSIC_VIEWS: MUSIC_VIEWS, MUSIC_DESTINATIONS: MUSIC_DESTINATIONS,
     THEME_OPTIONS: THEME_OPTIONS, setTheme: setTheme,
     COLOR_SCHEMES: COLOR_SCHEMES, setColorScheme: setColorScheme,
     FONT_OPTIONS: FONT_OPTIONS, setFontFamily: setFontFamily,
@@ -1504,7 +1614,10 @@
     DEFAULT_FREQUENT_SETTINGS: DEFAULT_FREQUENT_SETTINGS,
     setFrequentSettings: setFrequentSettings,
     setVolumeExcluded: setVolumeExcluded, volumeExcluded: volumeExcluded,
-    viewLabel: viewLabel, setMusicView: setMusicView,
+    viewLabel: viewLabel, destinationLabel: destinationLabel,
+    currentDestination: currentDestination, destinationForView: destinationForView,
+    destinationViews: destinationViews, lastViewForDestination: lastViewForDestination,
+    setMusicView: setMusicView,
     setLibraryRoot: setLibraryRoot, setLibrary: setLibrary,
     allowsMediaFilter: allowsMediaFilter,
     validFilter: validFilter, validSortKey: validSortKey, validGroup: validGroup,
@@ -1529,7 +1642,8 @@
     hasSuspendedSearch: hasSuspendedSearch,
     takeSearchSnapshot: takeSearchSnapshot,
     clearSuspendedSearch: clearSuspendedSearch,
-    setSort: setSort, openActions: openActions, closeActions: closeActions,
+    setSort: setSort, openActions: openActions, closeActions: closeActions, showInMusicFolders: showInMusicFolders,
+    showInMusicFoldersMany: showInMusicFoldersMany, closeFolderReveal: closeFolderReveal,
     toggleSelection: toggleSelection, clearSelection: clearSelection,
     queueSelection: queueSelection,
     selectionKey: selectionKey, isPinned: isPinned, togglePin: togglePin, movePin: movePin,

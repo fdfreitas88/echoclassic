@@ -7,15 +7,16 @@
    de transporte da tela cheia. Fica acima de tudo, inclusive da tela cheia — a
    ordem inversa ja quebrou duas vezes. */
 Vue.component('lms-queue', {
-  props: { inline: { type: Boolean, default: false } },
+  props: { inline: { type: Boolean, default: false }, fromPlayer: { type: Boolean, default: false } },
   template: `
 <div :class="{'queue-wrap-inline': inline}">
   <div v-if="!inline" class="queueback" @click="close"></div>
   <div ref="queue" class="queue" :class="{overfull: ui.full && !inline, inline: inline}"
        role="dialog" :aria-modal="String(!inline)" aria-label="Playback queue"
        :tabindex="inline ? null : -1" @keydown.esc="onEsc" @keydown.tab="trapFocus">
+    <span v-if="!inline" class="queue-sheet-handle" aria-hidden="true"></span>
     <div class="qhead">
-      <button v-if="!inline" type="button" class="queue-back pointer" @click="close">‹ Player</button>
+      <button v-if="!inline && fromPlayer" type="button" class="queue-back pointer" @click="close">‹ Player</button>
 	      <span class="ttl">Queue</span>
 	      <span class="n" v-if="confirmClear">Clear the whole queue?</span>
 	      <span class="n" v-else-if="tracks.length">{{ countLabel }} · {{ remaining }}</span>
@@ -75,7 +76,14 @@ Vue.component('lms-queue', {
 	    <div v-if="playbackModeLabel" class="queue-start" role="status">{{ playbackModeLabel }}</div>
 	    <div v-if="playStartsLabel" class="queue-start" role="status">{{ playStartsLabel }}</div>
 
-	    <div class="queue-section-title" v-if="tracks.length">Up next · {{ countLabel }}, {{ remaining }}</div>
+	    <div class="queue-section-title" v-if="tracks.length">{{ tr('Up next') }}</div>
+    <div v-if="store.queueTotal > 500" class="queue-paging">
+      <span>{{ pageRange }}</span>
+      <button type="button" :disabled="currentPage === 0 || pageBusy" @click="page = currentPage - 1">{{ tr('Previous') }}</button>
+      <button type="button" :disabled="(currentPage + 1) * 500 >= store.queueTotal || pageBusy" @click="goToPage(currentPage + 1)">{{ tr('Next 500') }}</button>
+      <form @submit.prevent="goToPosition"><label>{{ tr('Go to position') }} <input type="number" min="1" :max="store.queueTotal" v-model.number="jumpPosition"></label><button :disabled="pageBusy">{{ tr('Go') }}</button></form>
+      <span v-if="pageBusy" role="status">{{ tr('Loading…') }}</span>
+    </div>
 	    <div class="qbody" v-if="tracks.length">
 	      <template v-for="(t, i) in tracks">
 	      <div v-if="showCaption(t, i)" :key="'cap-' + t.index" class="qcaption"><span class="ell">{{ t.album }}</span></div>
@@ -92,7 +100,7 @@ Vue.component('lms-queue', {
 	          <span class="cover" :class="{collapse: !showCover(t, i)}"
 	                :style="showCover(t, i) ? coverStyle(t) : {}"></span>
 	          <span class="ell">
-	            <span class="t ell">{{ t.title }}</span>
+	            <span class="t ell">{{ t.title }}<span v-if="ui.appendRatingToTitle && t.rating" class="title-rating queue-title-rating" :aria-label="ratingLabel(t.rating)">{{ ratingStars(t.rating) }}</span></span>
 	            <span class="s ell">{{ sub(t) }}</span>
 	          </span>
 	          <span class="dur">{{ dur(t.duration) }}</span>
@@ -125,13 +133,15 @@ Vue.component('lms-queue', {
   </div>
 </div>`,
   data: function () {
-    return { ui: LmsUi.state, store: LmsStore.state, previousFocus: null,
+    return { page: 0, jumpPosition: 1, pageBusy: false, ui: LmsUi.state, store: LmsStore.state, previousFocus: null,
              confirmClear: false, randomOpen: false, dontStopOpen: false,
              pendingMix: '', dragIndex: null, settingsOpen: false, menuIndex: null,
              longPressIndex: null, longPressTimer: null, liveStatus: '' };
   },
   computed: {
-	    tracks: function () { return this.store.queue; },
+	    tracks: function () { return this.store.queue.slice(this.currentPage * 500, (this.currentPage + 1) * 500); },
+    currentPage: function () { return Math.min(this.page, Math.max(0, Math.ceil(this.store.queue.length / 500) - 1)); },
+    pageRange: function () { return (this.currentPage * 500 + 1) + '–' + Math.min((this.currentPage + 1) * 500, this.store.queue.length) + ' / ' + this.store.queueTotal; },
 	    queueTitle: function () { return 'Playback queue'; },
     /* queueIndex cai em zero quando o servidor nao manda indice; sem faixa
        corrente de fato isso marcaria a primeira linha por engano. */
@@ -146,16 +156,16 @@ Vue.component('lms-queue', {
 	      var total = this.store.queueTotal || this.tracks.length;
 	      var trackUnit = total === 1 ? LmsStr.t('track') : LmsStr.t('tracks');
 	      var label = total + ' ' + trackUnit;
-	      if (total > this.tracks.length) {
+	      if (total > this.store.queue.length) {
 	        var msg = LmsStr.t('{{loaded}} of {{total}} loaded');
-	        return msg.replace('{{loaded}}', this.tracks.length).replace('{{total}}', label);
+	        return msg.replace('{{loaded}}', this.store.queue.length).replace('{{total}}', label);
 	      }
 	      return label;
 	    },
 	    playStartsLabel: function () {
 	      if (!this.tracks.length || this.store.mode !== 'stop') return '';
-	      var index = Math.max(0, Math.min(this.tracks.length - 1, this.store.queueIndex || 0));
-	      var track = this.tracks.filter(function (t) { return t.index === index; })[0] || this.tracks[index];
+	      var index = Math.max(0, this.store.queueIndex || 0);
+	      var track = this.store.queue.filter(function (t) { return t.index === index; })[0];
 	      /* O rotulo e montado aqui, entao a frase pronta nunca bate com uma
 	         chave do dicionario. Traduz-se o prefixo antes de concatenar. */
 	      var prefix = (window.LmsStr ? LmsStr.t('Play will start:') : 'Play will start:');
@@ -198,6 +208,24 @@ Vue.component('lms-queue', {
     artMode: function () { return this.ui.queueArtMode; }
   },
   methods: {
+    tr: function (text) { return window.LmsStr ? LmsStr.t(text) : text; },
+    goToPosition: async function () {
+      var n = Number(this.jumpPosition);
+      if (!Number.isInteger(n) || n < 1 || n > this.store.queueTotal) return;
+      await this.goToPage(Math.floor((n - 1) / 500));
+      this.$nextTick(function () { var row = this.$refs.queue.querySelector('[data-queue-index="' + (n - 1) + '"]'); if (row) { row.scrollIntoView({ block: 'center' }); row.focus(); } });
+    },
+    goToPage: async function (page) {
+      if (this.pageBusy) return;
+      var player = this.store.playerId;
+      this.pageBusy = true;
+      try {
+        while (this.store.queue.length <= page * 500 && this.store.queue.length < this.store.queueTotal) {
+          if (!await LmsStore.loadMoreQueue() || player !== this.store.playerId) return;
+        }
+        if (player === this.store.playerId) this.page = page;
+      } finally { this.pageBusy = false; }
+    },
     dur: function (s) { return s ? LmsFmt.duration(s) : '—'; },
     isNow: function (t) {
       return this.hasCurrent && t.index === this.store.queueIndex;
@@ -226,6 +254,13 @@ Vue.component('lms-queue', {
 	      if (t.artist) parts.push(t.artist);
 	      if (t.album) parts.push(t.album);
 	      return parts.join(' — ');
+	    },
+	    ratingStars: function (value) {
+	      return '★★★★★'.slice(0, Math.max(0, Math.min(5, Math.round((Number(value) || 0) / 20))));
+	    },
+	    ratingLabel: function (value) {
+	      var count = Math.max(0, Math.min(5, Math.round((Number(value) || 0) / 20)));
+	      return count + ' ' + this.tr(count === 1 ? 'star' : 'stars');
 	    },
 	    trackLabel: function (t) {
 	      return [t.title, this.sub(t), this.dur(t.duration)].filter(Boolean).join(', ');

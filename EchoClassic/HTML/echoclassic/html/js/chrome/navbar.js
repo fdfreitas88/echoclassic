@@ -33,20 +33,16 @@ Vue.component('lms-navbar', {
     </button>
     <button v-else class="theme pointer" :title="themeTitle" :aria-label="themeTitle" @click="toggle">
       <svg class="ic" viewBox="0 0 24 24">
-        <template v-if="ui.theme === 'dark'">
+        <template v-if="ui.theme !== 'light'">
           <circle cx="12" cy="12" r="4.2"/>
           <path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8"/>
-        </template>
-        <template v-else-if="ui.theme === 'legacy'">
-          <rect x="4.5" y="5" width="15" height="14" rx="3"/>
-          <path d="M8 9h8M8 12h8M8 15h5"/>
         </template>
         <path v-else d="M20.5 14.6A8.6 8.6 0 019.4 3.5a8.6 8.6 0 1011.1 11.1z"/>
       </svg>
     </button>
 
     <div class="center">
-	      <button v-if="pickable" id="picker-trigger" class="pickttl pointer"
+	      <button v-if="pickable && !segments.length" id="picker-trigger" class="pickttl pointer"
 	              aria-haspopup="listbox" :aria-expanded="String(ui.picker)"
 	              :aria-label="'Choose a My Music root. Current: ' + title"
 	              @click="$emit('picker', $event.currentTarget)">
@@ -76,9 +72,7 @@ Vue.component('lms-navbar', {
   },
   computed: {
     themeTitle: function () {
-      if (this.ui.theme === 'light') return 'Dark theme';
-      if (this.ui.theme === 'dark') return 'Legacy theme';
-      return 'Light theme';
+      return this.ui.theme === 'light' ? 'Dark theme' : 'Light theme';
     }
   },
   methods: {

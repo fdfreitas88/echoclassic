@@ -53,6 +53,7 @@
     </div>
     <div v-if="item.kind !== 'player-picker'" class="action-sheet-group">
     <button v-if="item.url" type="button" @click="openPlaylists"><span class="action-glyph" aria-hidden="true">≡＋</span><span>Add to playlist</span><span class="action-chevron" aria-hidden="true">›</span></button>
+    <button v-if="item.folderUrl" type="button" @click="showInFolders"><span class="action-glyph" aria-hidden="true">▤</span><span>Show in Music Folders</span></button>
     <button v-if="item.url" type="button" @click="favorite"><span class="action-glyph" aria-hidden="true">♡</span><span>
       {{ favoriteExists ? 'Remove from Favourites' : 'Add to Favourites' }}
     </span></button>
@@ -282,6 +283,12 @@
         else this.close();
       },
       openPlaylists: function () { this.view = 'playlists'; this.selectedPlaylist = null; },
+      showInFolders: async function () {
+        var url = this.item && this.item.folderUrl;
+        if (!url) return;
+        var dir = LmsApi.commonDirectory([url]);
+        if (!(await LmsUi.showInMusicFolders(dir))) LmsUi.notify(LmsStr.t('Folder not found in Music folders'), 'error');
+      },
       backToActions: function () { this.view = 'actions'; this.playlistQuery = ''; this.selectedPlaylist = null; this.newPlaylistOpen = false; this.newPlaylistName = ''; },
       selectPlaylist: function (playlist) { if (!this.busy) this.selectedPlaylist = playlist; },
       playlistSelected: function (playlist) { return !!(this.selectedPlaylist && String(this.selectedPlaylist.id) === String(playlist.id)); },
@@ -819,6 +826,9 @@
         this.view = 'info';
         try {
           var found = await LmsApi.songInfo(LmsStore.state.playerId || '', item.id);
+          if (LmsStore.state.ratingBackend === 'ratingslight' && LmsStore.ratingForTrack) {
+            found = Object.assign({}, found, { rating: await LmsStore.ratingForTrack(item.id, true) });
+          }
           if (token !== this.requestToken) return;
           this.info = found;
         } catch (e) {

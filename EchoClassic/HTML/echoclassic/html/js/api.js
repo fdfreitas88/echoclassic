@@ -436,13 +436,13 @@
   async function tracks(playerId, albumId, start, count) {
 	    var r = await rpc(playerId, scoped(['titles', start | 0, count | 0,
 	                                 'album_id:' + albumId, 'sort:tracknum',
-	                                 'tags:aAcCdefgiIjJkKlLmMnopPDUqrROSstTuvwxXyY']));
+	                                 'tags:AcCdefgiIjJkKlLmMnopPDUqrROStTuvwxXyY']));
 	    var source = loop(r, 'titles_loop');
-	    return pageMeta(source.map(function (t) {
+	    return pageMeta(await fillArtists(playerId, source.map(function (t) {
 	      return {
 	        id: t.id, title: txt(t.title), trackNum: num(t.tracknum),
         disc: num(t.disc), discCount: num(t.disccount), credits: trackCredits(t),
-        artist: canonicalArtist(t.artist), album: txt(t.album), genre: txt(t.genre),
+        artist: rowArtist(t), album: txt(t.album), genre: txt(t.genre),
         duration: num(t.duration), sampleRate: num(t.samplerate),
         sampleSize: num(t.samplesize), format: txt(t.type).toUpperCase(),
         bitrate: kbps(t.bitrate), url: txt(t.url), remote: num(t.remote) === 1,
@@ -450,7 +450,7 @@
         year: LmsFmt.year(t.year), originalYear: LmsFmt.year(t.originalyear || t.original_year),
 	        addedTime: num(t.addedTime), lastPlayed: num(t.lastplayed)
 	      };
-	    }), source.length, r.count);
+	    })), source.length, r.count);
 	  }
 
   /* Metadata-only library scan used by the album facets. It is deliberately
@@ -472,10 +472,15 @@
   }
 
   async function collectionTracks(start, count) {
-    var r = await rpc('', ['titles', start | 0, count | 0, 'sort:albumtrack', 'tags:algeforTIux']);
+    /* Large release-scan pages can legitimately take more than the default
+       10 seconds on LMS once the offset reaches the middle of a large library.
+       This remains bounded, but avoids aborting a healthy response and then
+       retrying the same expensive query. */
+    var r = await rpc('', ['titles', start | 0, count | 0, 'sort:albumtrack', 'tags:AlgeforTIuxyd'], { timeout: 30000 });
     return { total: r.count == null || !isFinite(Number(r.count)) ? null : Number(r.count), rows: loop(r, 'titles_loop').map(function (t) {
-      return { id: t.id, title: txt(t.title), url: txt(t.url), duration: num(t.duration), albumId: t.album_id != null ? t.album_id : t.albumid, album: txt(t.album), artist: txt(t.artist),
-        genre: txt(t.genre), format: LmsFmt.format(txt(t.type)), remote: num(t.remote) === 1 || /^(https?|qobuz|spotify|wimp|tidal):/i.test(txt(t.url)),
+      return { id: t.id, title: txt(t.title), url: txt(t.url), duration: num(t.duration), albumId: t.album_id != null ? t.album_id : t.albumid, album: txt(t.album), artist: rowArtist(t),
+        genre: txt(t.genre), format: LmsFmt.format(txt(t.type)), year: t.year != null && num(t.year) > 0 ? num(t.year) : null,
+        remote: num(t.remote) === 1 || /^(https?|qobuz|spotify|wimp|tidal):/i.test(txt(t.url)),
         fileSize: t.filesize != null && isFinite(Number(t.filesize)) && Number(t.filesize) >= 0 ? Number(t.filesize) : null };
     }) };
   }
@@ -670,6 +675,63 @@
     }).filter(function (item) { return item.id != null && item.name; });
   }
 
+  /* Music folders are addressed by folder_id, but a track only knows its URL.
+     Walk the tree from the roots, one level per path segment, and remember the
+     answer per directory so a whole album costs one walk. [unverified] whether
+     LMS returns `path` as a filesystem path on every platform; decodePath
+     normalises file:// URLs and plain paths alike. */
+  var folderCache = Object.create(null);
+  function decodePath(value) {
+    var s = txt(value);
+    if (!s) return '';
+    if (/^[a-z]+:/i.test(s) && !/^file:/i.test(s)) return '';
+    s = s.replace(/^file:\/\/(localhost)?/i, '');
+    try { s = decodeURIComponent(s); } catch (e) {}
+    return s.replace(/\/+$/, '');
+  }
+  function directoryOf(value) {
+    var p = decodePath(value);
+    return p ? p.replace(/\/[^\/]*$/, '') : '';
+  }
+  function within(dir, candidate) {
+    var c = decodePath(candidate);
+    return !!c && (dir === c || dir.indexOf(c + '/') === 0);
+  }
+  async function folderForPath(playerId, dir) {
+    dir = decodePath(dir);
+    if (!dir) return null;
+    if (folderCache[dir]) return folderCache[dir];
+    var roots = await musicFolders(playerId, null), current = null;
+    roots.forEach(function (r) { if (r.type === 'folder' && within(dir, r.path) && (!current || r.path.length > current.path.length)) current = r; });
+    if (!current) {
+      /* The directory sits above every root (a selection spanning two top-level
+         folders): the best landing is the root listing itself. [live] seen on
+         musicplayer.local with albums under Lossless and Recent Downloads. */
+      var above = roots.some(function (r) { return r.type === 'folder' && within(decodePath(r.path), dir); });
+      return above ? { id: null, path: dir, name: '' } : null;
+    }
+    while (decodePath(current.path) !== dir) {
+      var children = await musicFolders(playerId, current.id), next = null;
+      children.forEach(function (c) { if (!next && c.type === 'folder' && within(dir, c.path)) next = c; });
+      if (!next) return null;
+      current = next;
+    }
+    return (folderCache[dir] = { id: current.id, path: decodePath(current.path), name: current.name });
+  }
+  function folderForUrl(playerId, url) {
+    var dir = directoryOf(url);
+    return dir ? folderForPath(playerId, dir) : Promise.resolve(null);
+  }
+  function commonDirectory(urls) {
+    var dirs = (urls || []).map(directoryOf).filter(Boolean);
+    if (!dirs.length) return '';
+    var parts = dirs[0].split('/');
+    for (var i = 1; i < dirs.length; i++) {
+      while (parts.length && !within(dirs[i], parts.join('/'))) parts.pop();
+    }
+    return parts.join('/');
+  }
+
   function albumArtists(playerId, start, count) {
     return contributors(playerId, start, count, 5);
   }
@@ -768,12 +830,32 @@
 
   function forgetSongInfo() { songCache.clear(); }
 
+  /* Tag `a` makes LMS inner-join the contributor table, and a track without
+     any contributor row -- every SACD track SACDPlayer has touched [live] --
+     silently disappears from the loop, shifting the indexes behind it. `A`
+     returns the per-role names without the join, so the row survives; a row
+     with no name at all is filled from songinfo, which reads the file tags. */
+  function rowArtist(t) {
+    return canonicalArtist(t.artist || t.trackartist || t.albumartist || t.band);
+  }
+  async function fillArtist(playerId, row) {
+    if (row.artist || row.id == null) return row;
+    var info = await songInfo(playerId, row.id).catch(function () { return null; });
+    if (info && info.artist) row.artist = info.artist;
+    return row;
+  }
+  async function fillArtists(playerId, rows) {
+    var pending = rows.filter(function (t) { return !t.artist && t.id != null; }).slice(0, 12);
+    await Promise.all(pending.map(function (t) { return fillArtist(playerId, t); }));
+    return rows;
+  }
+
   async function status(playerId) {
     /* b/o/T/I ask LMS 9.2 for the active stream's bitrate, format, sample
        rate and sample size.  These values live at the top level of `status`
        and describe the stream after transcoding; the similarly named fields
        in playlist_loop describe the source track. */
-    var r = await rpc(playerId, ['status', '-', 1, 'tags:alueKNcdtboTI']);
+    var r = await rpc(playerId, ['status', '-', 1, 'tags:AlueKNcdtboTI']);
     var cur = loop(r, 'playlist_loop')[0] || {};
     var duration = num(cur.duration) || num(r.duration);
     var activeHasRate = owns(r, 'samplerate');
@@ -800,7 +882,7 @@
       index: num(r.playlist_cur_index),
       track: {
         id: cur.id != null ? cur.id : null,
-        title: txt(cur.title), artist: canonicalArtist(cur.artist),
+        title: txt(cur.title), artist: rowArtist(cur),
         album: txt(cur.album), albumId: cur.album_id != null ? cur.album_id : cur.albumid,
         trackNum: num(cur.tracknum),
         coverId: cur.coverid || null,
@@ -824,12 +906,16 @@
     };
     // Older servers do not reliably carry these fields; fill only the gaps so
     // a partial active-stream response can never be overwritten by metadata.
-    if (st.track.id != null && ((!activeHasRate && !st.sampleRate) ||
+    if (st.track.id != null && (!st.track.artist || (!activeHasRate && !st.sampleRate) ||
         (!activeHasSize && !st.sampleSize) || (!activeHasType && !st.format))) {
-      var info = await songInfo(playerId, st.track.id);
-      if (!activeHasRate && !st.sampleRate) st.sampleRate = st.activeStream.sampleRate = info.sampleRate;
-      if (!activeHasSize && !st.sampleSize) st.sampleSize = st.activeStream.sampleSize = info.sampleSize;
-      if (!activeHasType && !st.format) st.format = st.activeStream.format = info.format;
+      // A metadata miss must never take the whole status poll down with it.
+      var info = await songInfo(playerId, st.track.id).catch(function () { return null; });
+      if (info) {
+        if (!st.track.artist) st.track.artist = info.artist;
+        if (!activeHasRate && !st.sampleRate) st.sampleRate = st.activeStream.sampleRate = info.sampleRate;
+        if (!activeHasSize && !st.sampleSize) st.sampleSize = st.activeStream.sampleSize = info.sampleSize;
+        if (!activeHasType && !st.format) st.format = st.activeStream.format = info.format;
+      }
     }
     return st;
   }
@@ -839,22 +925,23 @@
   async function queue(playerId, start, count) {
     // tag 'e' adiciona album_id: sem ele a fila nao tem como agrupar por album
     // sem depender do nome (que colide) ou do coverid (que e por faixa).
-    var r = await rpc(playerId, ['status', start | 0, count | 0, 'tags:aldeKNcgltTIo']);
+    var r = await rpc(playerId, ['status', start | 0, count | 0, 'tags:AldeKNcgltTIo']);
+    var rows = await fillArtists(playerId, loop(r, 'playlist_loop').map(function (t) {
+      return {
+        index: num(t['playlist index']), id: t.id,
+        title: txt(t.title), artist: rowArtist(t), album: txt(t.album),
+        albumId: t.album_id != null ? t.album_id : null,
+        duration: num(t.duration), coverId: t.coverid || null,
+        url: txt(t.url), rating: num(t.rating), playCount: num(t.playcount)
+      };
+    }));
     return {
       total: num(r.playlist_tracks),
       revision: r.playlist_timestamp == null ? null : String(r.playlist_timestamp),
       index: num(r.playlist_cur_index),
       shuffle: num(r['playlist shuffle']),
       repeat: num(r['playlist repeat']),
-      tracks: loop(r, 'playlist_loop').map(function (t) {
-        return {
-          index: num(t['playlist index']), id: t.id,
-          title: txt(t.title), artist: canonicalArtist(t.artist), album: txt(t.album),
-          albumId: t.album_id != null ? t.album_id : null,
-          duration: num(t.duration), coverId: t.coverid || null,
-          url: txt(t.url), rating: num(t.rating), playCount: num(t.playcount)
-        };
-      })
+      tracks: rows
     };
   }
 
@@ -1069,11 +1156,12 @@
   async function sacdCacheStats() {
     if (!await sacdPlayerAvailable(false)) return { available: false, albums: [] };
     var r = await rpc('', ['sacdplayer', 'cachestats']);
+    var albums = Array.isArray(r.albums) ? r.albums : loop(r, 'albums_loop');
     return {
       available: true, usageBytes: num(r.usage_bytes), capBytes: num(r.cap_bytes),
       freeBytes: num(r.free_bytes), binary: num(r.binary) === 1, busy: num(r.busy) === 1,
       queued: num(r.queued), lowDisk: num(r.low_disk) === 1,
-      albums: loop(r, 'albums_loop').map(function (album) {
+      albums: albums.map(function (album) {
         return { key: txt(album.key), area: txt(album.area), bytes: num(album.bytes),
           lastAccess: num(album.last_access), iso: txt(album.iso), title: txt(album.title) };
       })
@@ -1087,8 +1175,9 @@
       if (/no index for target/i.test(txt(r.error))) return { available: true, tracks: [] };
       throw new LmsError(['sacdplayer', 'status', target], 'lms', txt(r.error));
     }
+    var tracks = Array.isArray(r.tracks) ? r.tracks : loop(r, 'tracks_loop');
     return { available: true, key: txt(r.key), area: txt(r.area), title: txt(r.title),
-      tracks: loop(r, 'tracks_loop').map(function (track) {
+      tracks: tracks.map(function (track) {
         return { number: num(track.number), state: txt(track.state) || 'absent', bytes: num(track.bytes), error: txt(track.error) };
       }) };
   }
@@ -1441,11 +1530,11 @@
   async function playlistTracks(playlistId, start, count) {
     var r = await rpc('', ['playlists', 'tracks', start | 0, count | 0,
                            'playlist_id:' + playlistId,
-                           'tags:aAcCdefgiIjJkKlLmMnopPDUqrROSstTuvwxXyY']);
+                           'tags:AcCdefgiIjJkKlLmMnopPDUqrROStTuvwxXyY']);
     var source = loop(r, 'playlisttracks_loop').concat(loop(r, 'titles_loop'));
-    return pageMeta(source.map(function (t, index) {
+    return pageMeta(await fillArtists('', source.map(function (t, index) {
       return {
-        id: t.id, title: txt(t.title), artist: canonicalArtist(t.artist), album: txt(t.album),
+        id: t.id, title: txt(t.title), artist: rowArtist(t), album: txt(t.album),
         index: t['playlist index'] != null ? num(t['playlist index']) : (start | 0) + index,
         duration: num(t.duration), coverId: t.coverid || null,
         sampleRate: num(t.samplerate), sampleSize: num(t.samplesize),
@@ -1453,7 +1542,7 @@
         rating: num(t.rating), playCount: num(t.playcount),
         year: LmsFmt.year(t.year), originalYear: LmsFmt.year(t.originalyear || t.original_year)
       };
-    }), source.length, r.count);
+    })), source.length, r.count);
   }
 
   /* Loading a whole container in one call is what the transport buttons need:
@@ -1615,6 +1704,7 @@
     artists: artists, albums: albums, tracks: tracks,
     contributors: contributors, albumArtists: albumArtists, releaseTypes: releaseTypes,
     works: works, libraries: libraries, musicFolders: musicFolders,
+    folderForPath: folderForPath, folderForUrl: folderForUrl, commonDirectory: commonDirectory,
     libraryRoots: libraryRoots, setRoot: setRoot, setLibrary: setLibrary,
     searchRoots: searchRoots,
     libraryTracks: libraryTracks, collectionTracks: collectionTracks, search: search,

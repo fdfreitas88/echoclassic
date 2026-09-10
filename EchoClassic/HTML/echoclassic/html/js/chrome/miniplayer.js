@@ -5,7 +5,7 @@
    skin exists is to show what actually reaches the DAC. */
 Vue.component('lms-miniplayer', {
   template: `
-<div class="mini" :class="{empty: !hasTrack, inactive: ui.full}" v-bind="surfaceAttrs">
+<div class="mini" :class="{empty: !hasTrack, inactive: ui.full}">
   <!-- STATE-01: com o player perdido a faixa continua na tela como ultima
        conhecida, mas o transporte nao tem para onde mandar comando. Quem sabe
        disso e o store (state.commandable); aqui so se le. -->
@@ -53,6 +53,8 @@ Vue.component('lms-miniplayer', {
     </span>
   </button>
   <div v-if="!ui.full" class="r">
+    <button v-if="hasTrack" type="button" class="mini-action pointer" title="Change player" aria-label="Change player" @click="playerPicker"><svg class="ic" viewBox="0 0 24 24"><path d="M4 9v6h3l5 4V5L7 9zM16 8a6 6 0 010 8"/></svg></button>
+    <button v-if="hasTrack" type="button" class="mini-action pointer" title="Open player" aria-label="Open player" @click="open"><svg class="ic" viewBox="0 0 24 24"><path d="M3 4h18v16H3zM15 4v16"/></svg></button>
     <button v-if="hasTrack && store.equalizer.status === 'ready'" type="button"
             class="mini-action mini-equalizer-command pointer"
             :class="{on: store.equalizer.settings && !store.equalizer.settings.Client.Bypass}"
@@ -70,8 +72,6 @@ Vue.component('lms-miniplayer', {
     return { store: LmsStore.state, ui: LmsUi.state, coverFailed: false };
   },
   computed: {
-    /* Mini is always the 'mini' surface -- there is only one on screen. */
-    surfaceAttrs: function () { return LmsUi.surfaceAttrs('mini'); },
     np: function () { return this.store.np; },
     hasTrack: function () {
       return this.np.id != null || !!this.np.title || !!this.np.url;
@@ -128,6 +128,7 @@ Vue.component('lms-miniplayer', {
     'np.id': function () { this.coverFailed = false; }
   },
   methods: {
+    playerPicker: function (event) { LmsUi.openActions({ kind: 'player-picker', title: 'Player' }, event.currentTarget); },
     open: function () { if (this.hasTrack) this.$emit('full'); },
     play: function () { LmsStore.play(); },
     pause: function () { LmsStore.pause(); },

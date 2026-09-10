@@ -60,7 +60,11 @@
 
   function depth(sampleSize) {
     var ss = finite(sampleSize);
-    return ss ? ss + ' bits' : '';   // em pt-BR a unidade vai no plural
+    if (!ss) return '';
+    // DSD is a 1-bit stream: the unit is singular there and plural elsewhere.
+    var unit = ss === 1 ? 'bit' : 'bits';
+    if (global.LmsStr && typeof global.LmsStr.t === 'function') unit = global.LmsStr.t(unit) || unit;
+    return ss + ' ' + unit;
   }
 
   function format(value) {

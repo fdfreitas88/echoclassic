@@ -28,7 +28,7 @@
     initialized: false, reconnecting: false, lastError: '', lastSuccess: 0,
     auxiliaryErrors: { queue:'', playerSettings:'', sync:'', trackInfo:'', playbackIntelligence:'' },
     mode: 'stop', time: 0, duration: 0, volume: 0,
-    queue: [], queueIndex: 0, queueTotal: 0, shuffle: 0, repeat: 0,
+    queue: [], queueIndex: 0, queueTotal: 0, queueRevision: null, queueLoadingMore: false, discPlaybackBusy: false, shuffle: 0, repeat: 0,
     /* queueUndo continua sendo array (a interface le .length); o dono fica numa
        propriedade separada para o desfazer nunca vazar de um player a outro. */
     queueUndo: [], queueUndoPlayerId: null,
@@ -78,6 +78,43 @@
      it touches the server. */
   var equalizerApplyQueue = Object.create(null);
   var equalizerApplySequence = Object.create(null);
+  /* Ratings Light keeps ratings outside the core song metadata.  Keep a
+     short-lived client cache so the queue can show them without asking the
+     plugin again on every queue refresh. */
+  var ratingCache = Object.create(null);
+  var RATING_CACHE_MS = 60000;
+
+  async function ratingForTrack(trackId, force) {
+    if (trackId == null || !state.ratingBackend) return 0;
+    var key = String(trackId);
+    var cached = ratingCache[key];
+    if (!force && cached && Date.now() - cached.at < RATING_CACHE_MS) return cached.value;
+    var value = await api.getRating(state.playerId || '', trackId, state.ratingBackend);
+    value = Math.max(0, Math.min(100, Number(value) || 0));
+    ratingCache[key] = { value: value, at: Date.now() };
+    return value;
+  }
+
+  async function hydrateQueueRatings(tracks, playerId, token) {
+    if (state.ratingBackend !== 'ratingslight' || !tracks || !tracks.length) return;
+    var cursor = 0;
+    async function worker() {
+      while (cursor < tracks.length) {
+        var source = tracks[cursor++];
+        var value;
+        try { value = await ratingForTrack(source.id, false); }
+        catch (e) { if (state.playerId === playerId) backgroundError('trackInfo', e); continue; }
+        if (state.playerId !== playerId || token !== queueReadToken) return;
+        var index = state.queue.findIndex(function (item) {
+          return item.index === source.index && String(item.id) === String(source.id);
+        });
+        if (index >= 0 && state.queue[index].rating !== value) {
+          state.queue.splice(index, 1, Object.assign({}, state.queue[index], { rating: value }));
+        }
+      }
+    }
+    await Promise.all([worker(), worker(), worker(), worker(), worker(), worker()]);
+  }
 
   function backgroundError(area, error) {
     var message = friendlyError(error, area + ' could not be refreshed.');
@@ -479,6 +516,10 @@
       setEqualizer(playerId, { status: 'idle', settings: null, error: '' });
       return;
     }
+    if (!state.capabilities.squeezeDspRead || !state.capabilities.squeezeDspCatalog) {
+      setEqualizer(playerId, { status: 'unavailable', settings: null, error: '' });
+      return;
+    }
     if (!force && equalizerCache[playerId]) {
       setEqualizer(playerId, equalizerCache[playerId]);
       return;
@@ -527,6 +568,8 @@
     rating: ['rating'],
     ratingsLightGet: ['ratingslight', 'getrating'],
     ratingsLightSet: ['ratingslight', 'setratingpercentnoclient'],
+    squeezeDspRead: ['squeezedsp.readclientSettings'],
+    squeezeDspCatalog: ['squeezedsp.filters'],
     randomplay: ['randomplay'],
     dontstopthemusicsetting: ['dontstopthemusicsetting']
   };
@@ -644,8 +687,8 @@
       state.initialized = true;
       return;
     }
-    await loadPlayerSettings();
     await loadCapabilities();
+    await loadPlayerSettings();
     await refreshPlaybackIntelligence(true);
     state.initialized = true;
     installMediaSession();
@@ -659,12 +702,12 @@
           state.initialized = true;
           return;
         }
-        await loadPlayerSettings();
         // cobre a sessao que comecou sem player: init() nunca chegou a pedir
         // as capacidades, e capabilitiesPromise torna a chamada de novo aqui
         // gratis quando ja tiver sido resolvida (e tenta de novo se a
         // primeira tentativa tiver falhado)
         await loadCapabilities();
+        await loadPlayerSettings();
       } catch (e) {
         state.connected = false;
         state.commandable = false;
@@ -718,7 +761,7 @@
       if (state.np.id != null) {
         api.songInfo(playerId, state.np.id).then(async function (info) {
           if (state.ratingBackend === 'ratingslight') {
-            try { info.rating = await api.getRating(playerId, info.id, state.ratingBackend); }
+            try { info.rating = await ratingForTrack(info.id, true); }
             catch (e) { backgroundError('trackInfo', e); }
           }
           if (state.playerId === playerId && String(state.np.id) === String(info.id)) {
@@ -967,22 +1010,79 @@
     state.queueUndoPlayerId = null;
   }
 
+  var queueReadToken = 0;
   async function loadQueue() {
+    var token = ++queueReadToken;
+    state.queueLoadingMore = false;
     var playerId = state.playerId;
     if (!playerId) return;
     try {
       var q = await api.queue(playerId, 0, 500);
-      if (state.playerId !== playerId) return;  // resposta do player anterior
+      if (token !== queueReadToken || state.playerId !== playerId) return;  // resposta do player anterior
+      state.queueRevision = q.revision == null ? null : q.revision;
       state.queue = q.tracks;
       state.queueIndex = q.index;
       state.queueTotal = q.total;
       state.shuffle = q.shuffle;
       state.repeat = q.repeat;
       state.auxiliaryErrors.queue = '';
+      hydrateQueueRatings(q.tracks, playerId, token);
     } catch (e) {
       backgroundError('queue', e);
       throw e;
     }
+  }
+
+  async function loadMoreQueue() {
+    if (state.queueLoadingMore || state.queue.length >= state.queueTotal || !state.playerId) return false;
+    var playerId = state.playerId, token = queueReadToken, offset = state.queue.length;
+    var revision = state.queueRevision, total = state.queueTotal;
+    state.queueLoadingMore = true;
+    try {
+      // Old servers without revision metadata must return one coherent snapshot.
+      var q = await api.queue(playerId, revision == null ? 0 : offset, revision == null ? offset + 500 : 500);
+      if (playerId !== state.playerId || token !== queueReadToken) return false;
+      if (q.total !== total || (revision != null && q.revision !== revision)) {
+        await loadQueue();
+        if (global.LmsUi) global.LmsUi.notify('The queue changed. The list was refreshed.', 'info');
+        return false;
+      }
+      var expected = revision == null ? 0 : offset;
+      if (!q.tracks.length || q.tracks.some(function (t, i) { return t.index !== expected + i; })) {
+        throw new Error('Could not load more tracks');
+      }
+      state.queue = revision == null ? q.tracks : state.queue.concat(q.tracks);
+      hydrateQueueRatings(q.tracks, playerId, token);
+      state.auxiliaryErrors.queue = '';
+      return true;
+    } catch (e) { if (playerId === state.playerId && token === queueReadToken) backgroundError('queue', e); return false; }
+    finally { if (token === queueReadToken) state.queueLoadingMore = false; }
+  }
+
+  async function playTrackList(tracks, index, shuffled) {
+    if (state.discPlaybackBusy || !tracks || !tracks.length || tracks.some(function (t) { return t.id == null; })) return false;
+    if (!state.playerId) { if (!await discoverPlayer()) throw new Error('No player is available.'); }
+    var playerId = state.playerId;
+    var ordered = tracks.slice();
+    if (shuffled) {
+      for (var i = ordered.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = ordered[i]; ordered[i] = ordered[j]; ordered[j] = t; }
+      index = 0;
+    }
+    // Keep disc order explicit; never let an album query include other discs.
+    state.discPlaybackBusy = true;
+    try {
+      await api.setShuffle(playerId, 0);
+      if (playerId !== state.playerId) return false;
+      await api.loadContainer(playerId, 'track_id', ordered[0].id);
+      clearQueueUndo();
+      for (var n = 1; n < ordered.length; n++) {
+        if (playerId !== state.playerId) return false;
+        await api.queueControl(playerId, 'add', 'track_id', ordered[n].id);
+      }
+      if (playerId !== state.playerId) return false;
+      if (index > 0) await api.queueJump(playerId, Math.min(index, ordered.length - 1));
+      return true;
+    } finally { state.discPlaybackBusy = false; if (playerId === state.playerId) { await refresh(); await loadQueue(); } }
   }
 
   async function playContainer(key, id, index) {
@@ -1396,11 +1496,18 @@
     if (state.playerId !== playerId || state.np.id !== trackId) return false;
     if (state.ratingBackend === 'ratingslight') {
       var current = state.trackInfo || { id: trackId };
+      ratingCache[String(trackId)] = { value: value, at: Date.now() };
       state.trackInfo = Object.assign({}, current, { rating: value });
-      try { value = await api.getRating(playerId, trackId, state.ratingBackend); }
+      state.queue = state.queue.map(function (item) {
+        return String(item.id) === String(trackId) ? Object.assign({}, item, { rating: value }) : item;
+      });
+      try { value = await ratingForTrack(trackId, true); }
       catch (e) { backgroundError('trackInfo', e); }
       if (state.playerId !== playerId || state.np.id !== trackId) return false;
       state.trackInfo = Object.assign({}, state.trackInfo || current, { rating: value });
+      state.queue = state.queue.map(function (item) {
+        return String(item.id) === String(trackId) ? Object.assign({}, item, { rating: value }) : item;
+      });
       return true;
     }
     api.forgetSongInfo();
@@ -1575,6 +1682,8 @@
     pollDelay: pollDelay, isPolling: isPolling,
     POLL_PLAYING: POLL_PLAYING, POLL_IDLE: POLL_IDLE,
     loadQueue: loadQueue,
+    loadMoreQueue: loadMoreQueue,
+    playTrackList: guarded('Disc playback', playTrackList, false),
     playContainer: guarded('Playback', playContainer, true),
     jumpTo: guarded('Changing track', jumpTo, false),
     removeFromQueue: guarded('Removing from the queue', removeFromQueue, false),
@@ -1609,6 +1718,7 @@
     sleepAfterTrack: guarded('The sleep timer setting', sleepAfterTrack, false),
     sleepAfterQueue: guarded('The sleep timer setting', sleepAfterQueue, false),
     setRating: guarded('The rating', setRating, false),
+    ratingForTrack: ratingForTrack,
     play: guarded('Playback', play, false),
     pause: guarded('Pausing', pause, false),
     stop: guarded('Stopping', stop, false),

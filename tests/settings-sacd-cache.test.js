@@ -8,9 +8,18 @@ const settings = fs.readFileSync(path.join(__dirname, '..', 'EchoClassic/HTML/ec
 test('SACD cache settings row covers present, absent, low disk and missing binary states', function () {
   assert.match(settings, /tr\('SACD cache'\)/);
   assert.match(settings, /v-if="sacdCache\.available"/);
-  assert.match(settings, /v-if="!sacdCache\.available"/);
+  assert.match(settings, /<div v-else class="srow sacd-settings-row">/);
   assert.match(settings, /sacdCache\.lowDisk/);
   assert.match(settings, /v-if="!sacdCache\.binary"/);
   assert.match(settings, /sacdCache\.albums/);
   assert.match(settings, /sacdEvictAlbum\(album\.key\+'\/'\+album\.area\)/);
+});
+
+test('all media enhancement plugins are optional and expose useful unavailable states', function () {
+  assert.match(settings, /v-if="!equalizerEngineAvailable"[^>]*role="status"/);
+  assert.match(settings, /Playback and the rest of Echo Classic remain available/);
+  assert.match(settings, /openAppleSqueezerPluginManager/);
+  assert.match(settings, /openSqueezeDspPluginManager/);
+  assert.match(settings, /equalizerEngineAvailable: function \(\) \{ return this\.appleSqueezerCompatible \|\| this\.squeezeDspAvailable; \}/);
+  assert.match(settings, /SACD cache status requires the SACDPlayer plugin/);
 });

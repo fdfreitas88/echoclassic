@@ -11,9 +11,16 @@
   <header class="app-header">
   <lms-statusbar></lms-statusbar>
   <lms-navbar :title="title" :back="back" :pickable="pickable"
-              :segments="segments" :segment="ui.albumMode"
               @back="goBack" @picker="openPicker"
-              @segment="LmsUi.setAlbumMode($event)"></lms-navbar>
+              ></lms-navbar>
+    <div v-if="!ui.searching && upperViews.length" class="upper-context" :class="{'has-action': ui.tab === 'collection'}">
+      <nav class="upper-segments" role="tablist" :aria-label="tr('Library view')">
+        <button v-for="item in upperViews" :key="item.key" type="button" role="tab"
+                :aria-selected="String(item.key === upperSelection)" :tabindex="item.key === upperSelection ? 0 : -1"
+                :class="{on: item.key === upperSelection}" @click="chooseUpperView(item.key)"
+                @keydown.left.prevent="stepUpperView(-1, $event)" @keydown.right.prevent="stepUpperView(1, $event)">{{ tr(item.label) }}</button>
+      </nav>
+    </div>
   </header>
 
   <!-- Linha real da coluna .app, e nao sobreposicao: fixed no topo, o alerta
@@ -39,7 +46,8 @@
 	    <h1 class="visually-hidden">{{ pageHeading }}</h1>
 	    <lms-nowplaying v-if="ui.full" :fullscreen="ui.playerFullscreen"></lms-nowplaying>
 
-    <div class="body" :class="{split: isSplit, drilled: drilled}">
+    <div class="body" :class="{split: isSplit, drilled: drilled, 'shared-playlist-workspace':sharedBuilderVisible, 'shared-builder-mobile-view':sharedBuilderVisible&&builder.mobileView==='builder'}">
+    <div class="body-view">
     <!-- Browse owns its inline strip so it can sit directly below the library
          toolbar. Other screens keep the same in-flow feedback here. -->
     <section v-if="!isSplit && (ui.busyMessage || ui.notice)" class="feedback-region"
@@ -59,6 +67,7 @@
     </section>
       <lms-search    v-if="ui.searching"></lms-search>
       <lms-browse    v-else-if="ui.tab === 'music'"></lms-browse>
+      <lms-collection v-else-if="ui.tab === 'collection'" ref="collection"></lms-collection>
       <lms-playlists v-else-if="ui.tab === 'playlists'" :key="plKey"></lms-playlists>
       <lms-settings  v-else-if="ui.tab === 'settings'"></lms-settings>
       <lms-more      v-else-if="ui.tab === 'more'"></lms-more>
@@ -66,15 +75,17 @@
       <lms-opml      v-else-if="ui.tab === 'apps'"      root="apps"      tab="apps"      :key="appsKey"></lms-opml>
       <lms-favorites v-else-if="ui.tab === 'favourites'" :key="favKey"></lms-favorites>
     </div>
+    <lms-playlist-builder v-if="sharedBuilderVisible" :context="ui.tab==='collection'?'collection':'folders'"></lms-playlist-builder>
+    </div>
   </main>
 
   <!-- Fica aqui, e nao junto das folhas la embaixo: a barra de selecao e uma
        linha da coluna .app (flex:0 0 44px), nao uma sobreposicao. A ordem de
-       origem e o que a coloca entre a lista e o mini player, porque
-       .app-header/.app-footer sao display:contents. Ver EC-003. -->
+       origem e o que a coloca entre a lista e o rodape persistente. O footer
+       agrupa mini player e abas numa unica superficie. Ver EC-003. -->
   <lms-selection-bar></lms-selection-bar>
 
-  <footer class="app-footer">
+  <footer class="app-footer" v-bind="bottomChromeAttrs">
     <lms-miniplayer @full="LmsUi.openPlayer" @queue="ui.queueOpen = true"></lms-miniplayer>
     <lms-tabbar></lms-tabbar>
   </footer>
@@ -114,17 +125,22 @@
          @keydown.up.prevent="stepPicker(-1)"
          @keydown.home.prevent="jumpPicker(0)"
          @keydown.end.prevent="jumpPicker(-1)">
-      <button v-for="v in views" :key="v.key" type="button" role="option" class="p pointer"
-           :aria-selected="String(ui.musicView === v.key)"
-           :class="{on: ui.musicView === v.key}" @click="pickView(v.key)">{{ v.label }}</button>
+      <button v-for="v in destinations" :key="v.key" type="button" role="option" class="p pointer destination-option"
+           :aria-selected="String(currentDestination.key === v.key)"
+           :class="{on: currentDestination.key === v.key}" @click="pickDestination(v)">
+        <span class="destination-option-copy"><strong>{{ tr(v.label) }}</strong><small>{{ v.key === 'browse' ? tr('Genres') + ' · ' + tr('Years') : tr(v.description) }}</small></span>
+        <span v-if="v.views.length > 1" class="destination-option-chevron" aria-hidden="true">›</span>
+      </button>
     </div>
   </template>
 </div>`,
     data: function () {
-      return { ui: LmsUi.state, store: LmsStore.state, views: LmsUi.MUSIC_VIEWS,
-               nav: LmsNav.stacks, LmsUi: LmsUi, pickerTriggerEl: null };
+      return { ui: LmsUi.state, store: LmsStore.state, destinations: LmsUi.MUSIC_DESTINATIONS,
+               nav: LmsNav.stacks, LmsUi: LmsUi, builder: (window.LmsPlaylistBuilder&&LmsPlaylistBuilder.state)||{open:false,mobileView:'browse'},
+               pickerTriggerEl: null, collectionEditing: false };
     },
     watch: {
+      'ui.tab': function () { this.collectionEditing = false; },
       /* Abrir e um evento de teclado tanto quanto de ponteiro: o foco vai para
          a opcao em uso, e nao para o topo da lista, para quem navega por
          teclado comecar de onde ja esta. */
@@ -134,8 +150,8 @@
         this.$nextTick(function () {
           var nodes = self.pickerOptions();
           var at = 0;
-          for (var i = 0; i < self.views.length; i++) {
-            if (self.views[i].key === self.ui.musicView) { at = i; break; }
+          for (var i = 0; i < self.destinations.length; i++) {
+            if (self.destinations[i].key === LmsUi.currentDestination().key) { at = i; break; }
           }
           if (nodes[at]) nodes[at].focus();
           else if (self.$refs.picker && self.$refs.picker.focus) self.$refs.picker.focus();
@@ -162,6 +178,8 @@
 	        return this.title || this.tabLabel || 'Echo Classic';
 	      },
       depth: function () { return (this.nav[this.ui.tab] || []).length; },
+      bottomChromeAttrs: function () { return LmsUi.surfaceAttrs('mini'); },
+      currentDestination: function () { return LmsUi.currentDestination(); },
       drilled: function () { return this.depth > 0; },
       adaptivePlayerOpen: function () {
         return this.ui.full && !this.ui.playerFullscreen;
@@ -175,11 +193,16 @@
       /* Minha Musica keeps its root title while drilling, because the list stays
          on screen beside the detail; the other tabs replace the whole view. */
       title: function () {
-        if (this.ui.tab === 'music') return LmsUi.viewLabel();
+        if (this.ui.tab === 'music') {
+          if (this.ui.folderReveal) return this.tr('Selected folders');
+          var frame = LmsNav.top('music');
+          return frame ? frame.label : this.folderShell ? 'Collection' : LmsUi.destinationLabel();
+        }
         var top = LmsNav.top(this.ui.tab);
         return top ? top.label : this.tabLabel;
       },
       back: function () {
+        if (this.ui.folderReveal) return this.ui.folderReveal.sourceTab === 'collection' ? this.tr('Collection') : null;
         if (!this.depth) return null;
         var root = this.ui.tab === 'music' ? LmsUi.viewLabel() : this.tabLabel;
         var current = LmsNav.top(this.ui.tab);
@@ -196,11 +219,24 @@
       /* O picker fica sempre a vista em Minha Musica: sumindo ao entrar num
          artista, perdia-se a referencia de qual raiz se esta vendo. O toggle de
          apresentacao aparece ao lado dele, como continuacao. */
-      pickable: function () { return this.ui.tab === 'music'; },
+      pickable: function () { return this.ui.tab === 'music' && !this.depth && !this.folderShell; },
       /* Dentro de um artista o centro deixa de ser o picker e vira o toggle: a
          escolha de raiz nao faz sentido ali, e a de apresentacao faz. */
       segments: function () {
         return (this.ui.tab === 'music' && this.depth && this.ui.musicView !== 'musicfolders') ? LmsUi.ALBUM_MODES : [];
+      },
+      folderShell: function () { return this.ui.tab === 'music' && this.ui.musicView === 'musicfolders'; },
+      sharedBuilderVisible: function () { return !!this.builder.open && (this.ui.tab === 'collection' || this.folderShell); },
+      upperViews: function () {
+        if (this.ui.tab === 'collection' || this.folderShell) return [{key:'collection',label:'Collection'},{key:'musicfolders',label:'Folders'}];
+        if (this.ui.tab !== 'music') return [];
+        if (this.depth) return LmsUi.ALBUM_MODES;
+        var views = LmsUi.destinationViews(this.currentDestination.key).filter(function (item) { return item.key !== 'musicfolders'; });
+        return views.length > 1 ? views : [];
+      },
+      upperSelection: function () {
+        if (this.ui.tab === 'collection') return 'collection';
+        return this.depth && !this.folderShell ? this.ui.albumMode : this.ui.musicView;
       },
       plKey: function () { return 'pl-' + (this.nav.playlists || []).length; },
       radioKey: function () { return 'radio-' + (this.nav.radio || []).length; },
@@ -222,10 +258,25 @@
       }
     },
     methods: {
+      toggleCollectionEdit: function () { if (this.$refs.collection) this.$refs.collection.toggleEdit(); },
+      chooseUpperView: function (key) {
+        if (key === this.upperSelection) return;
+        if (key === 'collection') { if (LmsUi.closeFolderReveal) LmsUi.closeFolderReveal(); LmsUi.setTab('collection'); return; }
+        if (key === 'musicfolders') { LmsUi.setMusicView(key); LmsUi.setTab('music'); return; }
+        if (this.depth) { LmsUi.setAlbumMode(key); return; }
+        LmsUi.setMusicView(key);
+        LmsNav.reset('music');
+      },
+      stepUpperView: function (delta, event) {
+        var buttons = Array.prototype.slice.call(event.currentTarget.parentNode.querySelectorAll('[role="tab"]'));
+        var next = buttons[(buttons.indexOf(event.currentTarget) + delta + buttons.length) % buttons.length];
+        if (next) { next.click(); next.focus(); next.scrollIntoView({block:'nearest',inline:'nearest'}); }
+      },
       tr: function (text) {
         return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
       },
       goBack: function () {
+        if (LmsUi.closeFolderReveal && LmsUi.closeFolderReveal()) return;
         if (this.ui.tab === 'settings' && this.ui.advancedSettings) {
           if (LmsUi.canLeaveAdvancedSettings && !LmsUi.canLeaveAdvancedSettings()) return;
           if (LmsNav.top('settings') && LmsNav.top('settings').advanced) LmsNav.pop('settings');
@@ -299,6 +350,9 @@
         LmsUi.setMusicView(key);
         LmsNav.reset('music');
         this.restorePickerFocus();
+      },
+      pickDestination: function (destination) {
+        this.pickView(LmsUi.lastViewForDestination(destination.key));
       }
     }
   });

@@ -16,7 +16,7 @@ Vue.component('lms-search', {
     <div class="advanced-search-bar">
       <button type="button" class="text-command" :class="{on: advancedOpen || advancedFilterCount}"
               :aria-expanded="String(advancedOpen)" @click="advancedOpen = !advancedOpen">Filter · {{ filterSummary }} ›</button>
-      <span class="advanced-search-summary">{{ total }} {{ total === 1 ? 'result' : 'results' }} in {{ rootSummary }}</span>
+      <span class="advanced-search-summary">{{ loading ? tr('Searching…') : (total + ' ' + (total === 1 ? 'result' : 'results') + ' in ' + rootSummary) }}</span>
       <button v-if="advancedFilterCount" type="button" class="text-command" @click="clearAdvancedFilters">Clear</button>
     </div>
   </header>
@@ -87,7 +87,7 @@ Vue.component('lms-search', {
 	        <span class="ell">
 	          <span class="t ell">{{ a.title }}</span>
 	          <span v-if="albumSubtitle(a)" class="s ell">{{ albumSubtitle(a) }}</span>
-	          <span v-if="a.rootName" class="s ell">{{ a.rootName }}</span>
+	          <span v-if="a.rootName && hasMultipleRoots" class="s ell">{{ a.rootName }}</span>
 	        </span>
 	        <svg class="ic chev" viewBox="0 0 9 15"><path d="M1 1l6.5 6.5L1 14"/></svg>
 	      </button>
@@ -174,6 +174,13 @@ Vue.component('lms-search', {
     rootSummary: function () {
       var selected = this.roots.filter(function (root) { return this.selectedRoots.indexOf(root.key) >= 0; }, this);
       return selected.length === 1 ? selected[0].name : selected.length + ' libraries';
+    },
+    hasMultipleRoots: function () { return this.roots.length > 1; },
+    mixedSources: function () {
+      var tracks = this.results.tracks || [];
+      var hasLocal = tracks.some(function (t) { return t.source === 'Local library'; });
+      var hasStream = tracks.some(function (t) { return t.source && t.source !== 'Local library'; });
+      return hasLocal && hasStream;
     },
     bestMatch: function () {
       var candidates = [];
@@ -331,7 +338,8 @@ Vue.component('lms-search', {
 	      return url ? { backgroundImage: 'url(' + url + ')', backgroundSize: 'cover' } : {};
 	    },
 	    trackSubtitle: function (t) {
-	      return [t.artist, t.album, this.tr(t.source), t.rootName].filter(Boolean).join(' • ');
+	      return [t.artist, t.album, this.hasMultipleRoots ? t.rootName : null,
+	        this.mixedSources ? this.tr(t.source) : null].filter(Boolean).join(' • ');
 	    },
 	    albumSubtitle: function (a) {
 	      return [a.artist, a.year || null].filter(Boolean).join(' • ');

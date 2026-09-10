@@ -1197,6 +1197,90 @@ ECHOCLASSIC_UI_NOTHING_PLAYING
 	FR	Aucune lecture en cours
 	PT	Nada tocando
 
+ECHOCLASSIC_UI_RELEASE_TYPE_BEST_OF
+	EN	Best of
+	DE	Best of
+	FR	Best of
+	PT	Melhores
+
+ECHOCLASSIC_UI_RELEASE_TYPE_BOX_SET
+	EN	Box set
+	DE	Box-Set
+	FR	Coffret
+	PT	Box
+
+ECHOCLASSIC_UI_RELEASE_TYPE_COMPILATION
+	EN	Compilation
+	DE	Kompilation
+	FR	Compilation
+	PT	Coletânea
+
+ECHOCLASSIC_UI_RELEASE_TYPE_EP
+	EN	EP
+	DE	EP
+	FR	EP
+	PT	EP
+
+ECHOCLASSIC_UI_RELEASE_TYPE_SINGLE
+	EN	Single
+	DE	Single
+	FR	Single
+	PT	Single
+
+ECHOCLASSIC_UI_RELEASE_TYPE_LIVE
+	EN	Live
+	DE	Live
+	FR	Live
+	PT	Ao vivo
+
+ECHOCLASSIC_UI_RELEASE_TYPE_REMIX
+	EN	Remix
+	DE	Remix
+	FR	Remix
+	PT	Remix
+
+ECHOCLASSIC_UI_RELEASE_TYPE_SOUNDTRACK
+	EN	Soundtrack
+	DE	Soundtrack
+	FR	Bande originale
+	PT	Trilha sonora
+
+ECHOCLASSIC_UI_RELEASE_TYPE_DEMO
+	EN	Demo
+	DE	Demo
+	FR	Démo
+	PT	Demo
+
+ECHOCLASSIC_UI_RELEASE_TYPE_AUDIOBOOK
+	EN	Audiobook
+	DE	Hörbuch
+	FR	Livre audio
+	PT	Audiolivro
+
+ECHOCLASSIC_UI_RELEASE_TYPE_BROADCAST
+	EN	Broadcast
+	DE	Sendung
+	FR	Émission
+	PT	Transmissão
+
+ECHOCLASSIC_UI_RELEASE_TYPE_MIXTAPE
+	EN	Mixtape
+	DE	Mixtape
+	FR	Mixtape
+	PT	Mixtape
+
+ECHOCLASSIC_UI_BIT
+	EN	bit
+	DE	Bit
+	FR	bit
+	PT	bit
+
+ECHOCLASSIC_UI_BITS
+	EN	bits
+	DE	Bit
+	FR	bits
+	PT	bits
+
 ECHOCLASSIC_UI_NOT_AVAILABLE
 	EN	not available
 	DE	nicht verfügbar
@@ -1623,11 +1707,23 @@ ECHOCLASSIC_UI_SETTINGS_PAGES
 	FR	Pages de réglages
 	PT	Páginas de ajustes
 
+ECHOCLASSIC_UI_FOLDER_NOT_FOUND_IN_MUSIC_FOLDERS
+	EN	Folder not found in Music folders
+	DE	Ordner in den Musikordnern nicht gefunden
+	FR	Dossier introuvable dans les dossiers musicaux
+	PT	Pasta não encontrada em Pastas de música
+
 ECHOCLASSIC_UI_SHOW_FULL_SCREEN
 	EN	Show full screen
 	DE	Vollbild anzeigen
 	FR	Afficher en plein écran
 	PT	Mostrar em tela cheia
+
+ECHOCLASSIC_UI_SHOW_IN_MUSIC_FOLDERS
+	EN	Show in Music Folders
+	DE	In Musikordnern anzeigen
+	FR	Afficher dans les dossiers musicaux
+	PT	Mostrar em Pastas de música
 
 ECHOCLASSIC_UI_SHOW_QUEUE
 	EN	Show queue
@@ -2978,6 +3074,12 @@ ECHOCLASSIC_UI_BOTTOM_BAR
 	DE	Untere Leiste
 	FR	Barre inférieure
 	PT	Barra inferior
+
+ECHOCLASSIC_UI_BOTTOM_BAR_SCOPE
+	EN	Applies to the mini-player and navigation tabs.
+	DE	Gilt für den Mini-Player und die Navigationsleiste.
+	FR	S'applique au mini-lecteur et aux onglets de navigation.
+	PT	Vale para o mini player e as abas de navegação.
 
 ECHOCLASSIC_UI_PLAYER_SURFACE
 	EN	Player surface
@@ -5463,6 +5565,216 @@ ECHOCLASSIC_UI_PLAYLIST_COULD_NOT_BE_CREATED
 	FR	La playlist n'a pas pu être créée.
 	PT	Não foi possível criar a playlist.
 
+ECHOCLASSIC_UI_TRACKS_ADDED_TO_PLAYLIST_DRAFT
+	EN	Tracks added to playlist draft.
+	DE	Titel zum Playlist-Entwurf hinzugefügt.
+	FR	Morceaux ajoutés au brouillon de playlist.
+	PT	Faixas adicionadas ao rascunho da playlist.
+
+ECHOCLASSIC_UI_ADDING_FOLDER
+	EN	Adding folder…
+	DE	Ordner wird hinzugefügt…
+	FR	Ajout du dossier…
+	PT	Adicionando pasta…
+
+ECHOCLASSIC_UI_TRACK_ADDED_FROM_FOLDER
+	EN	track added from folder.
+	DE	Titel aus dem Ordner hinzugefügt.
+	FR	morceau ajouté depuis le dossier.
+	PT	faixa adicionada da pasta.
+
+ECHOCLASSIC_UI_TRACKS_ADDED_FROM_FOLDER
+	EN	tracks added from folder.
+	DE	Titel aus dem Ordner hinzugefügt.
+	FR	morceaux ajoutés depuis le dossier.
+	PT	faixas adicionadas da pasta.
+
+ECHOCLASSIC_UI_COULD_NOT_ADD_THIS_FOLDER
+	EN	Could not add this folder.
+	DE	Dieser Ordner konnte nicht hinzugefügt werden.
+	FR	Impossible d'ajouter ce dossier.
+	PT	Não foi possível adicionar esta pasta.
+
+ECHOCLASSIC_UI_ADD_FOLDER
+	EN	Add folder
+	DE	Ordner hinzufügen
+	FR	Ajouter le dossier
+	PT	Adicionar pasta
+
+ECHOCLASSIC_UI_CLEAR_SELECTION
+	EN	Clear selection
+	DE	Auswahl aufheben
+	FR	Effacer la sélection
+	PT	Limpar seleção
+
+ECHOCLASSIC_UI_SELECTED_FILES_WERE_NOT_FOUND_IN_MUSIC_FOLDERS
+	EN	Selected files were not found in Music folders.
+	DE	Die ausgewählten Dateien wurden in den Musikordnern nicht gefunden.
+	FR	Les fichiers sélectionnés sont introuvables dans les dossiers de musique.
+	PT	Os arquivos selecionados não foram encontrados nas pastas de música.
+
+ECHOCLASSIC_UI_SELECTED_TRACKS_ARE_SHOWN_IN_FOLDERS
+	EN	Selected tracks are shown in Folders.
+	DE	Die ausgewählten Titel werden in Ordner angezeigt.
+	FR	Les morceaux sélectionnés sont affichés dans Dossiers.
+	PT	As faixas selecionadas são exibidas em Pastas.
+
+ECHOCLASSIC_UI_PREPARING_TEMPORARY_PLAYLIST
+	EN	Preparing temporary playlist…
+	DE	Temporäre Playlist wird vorbereitet…
+	FR	Préparation de la playlist temporaire…
+	PT	Preparando playlist temporária…
+
+ECHOCLASSIC_UI_PLAYING_IN_BACKGROUND
+	EN	Playing in background.
+	DE	Wiedergabe im Hintergrund.
+	FR	Lecture en arrière-plan.
+	PT	Reproduzindo em segundo plano.
+
+ECHOCLASSIC_UI_COULD_NOT_START_TEMPORARY_PLAYBACK
+	EN	Could not start temporary playback.
+	DE	Die temporäre Wiedergabe konnte nicht gestartet werden.
+	FR	Impossible de démarrer la lecture temporaire.
+	PT	Não foi possível iniciar a reprodução temporária.
+
+ECHOCLASSIC_UI_SAVED_PLAYLIST
+	EN	Saved playlist
+	DE	Gespeicherte Playlist
+	FR	Playlist enregistrée
+	PT	Playlist salva
+
+ECHOCLASSIC_UI_TEMPORARY_PLAYLIST_SAVED
+	EN	Temporary playlist saved.
+	DE	Temporäre Playlist gespeichert.
+	FR	Playlist temporaire enregistrée.
+	PT	Playlist temporária salva.
+
+ECHOCLASSIC_UI_TEMPORARY_PLAYLIST_ERASED
+	EN	Temporary playlist erased.
+	DE	Temporäre Playlist gelöscht.
+	FR	Playlist temporaire effacée.
+	PT	Playlist temporária apagada.
+
+ECHOCLASSIC_UI_COULD_NOT_ERASE_TEMPORARY_PLAYLIST
+	EN	Could not erase temporary playlist.
+	DE	Die temporäre Playlist konnte nicht gelöscht werden.
+	FR	Impossible d'effacer la playlist temporaire.
+	PT	Não foi possível apagar a playlist temporária.
+
+ECHOCLASSIC_UI_COULD_NOT_UPDATE_TEMPORARY_PLAYLISTS
+	EN	Could not update temporary playlists.
+	DE	Die temporären Playlists konnten nicht aktualisiert werden.
+	FR	Impossible de mettre à jour les playlists temporaires.
+	PT	Não foi possível atualizar as playlists temporárias.
+
+ECHOCLASSIC_UI_PLAYLIST_WORKSPACE_VIEW
+	EN	Playlist workspace view
+	DE	Playlist-Arbeitsbereich
+	FR	Vue de l'espace de playlist
+	PT	Visualização da área da playlist
+
+ECHOCLASSIC_UI_TEMPORARY
+	EN	temporary
+	DE	temporär
+	FR	temporaire
+	PT	temporária
+
+ECHOCLASSIC_UI_DRAFT_NAME
+	EN	Draft name
+	DE	Entwurfsname
+	FR	Nom du brouillon
+	PT	Nome do rascunho
+
+ECHOCLASSIC_UI_DROP_TRACKS_OR_FOLDERS_HERE
+	EN	Drop tracks or folders here
+	DE	Titel oder Ordner hier ablegen
+	FR	Déposez les morceaux ou dossiers ici
+	PT	Solte faixas ou pastas aqui
+
+ECHOCLASSIC_UI_FOLDERS_ADD_EVERY_PLAYABLE_FILE_THEY_CONTAIN
+	EN	Folders add every playable file they contain.
+	DE	Ordner fügen alle darin enthaltenen abspielbaren Dateien hinzu.
+	FR	Les dossiers ajoutent tous les fichiers lisibles qu'ils contiennent.
+	PT	As pastas adicionam todos os arquivos reproduzíveis que contêm.
+
+ECHOCLASSIC_UI_BUILD_IT_FROM_COLLECTION_OR_DRAG_TRACKS_AND_FOLDERS_HERE
+	EN	Build it from Collection or drag tracks and folders here.
+	DE	Erstellen Sie sie in Sammlung oder ziehen Sie Titel und Ordner hierher.
+	FR	Créez-la depuis Collection ou déposez des morceaux et dossiers ici.
+	PT	Crie a partir de Coleção ou arraste faixas e pastas para cá.
+
+ECHOCLASSIC_UI_SHOW_SELECTED_IN_FOLDERS
+	EN	Show selected in Folders
+	DE	Auswahl in Ordner anzeigen
+	FR	Afficher la sélection dans Dossiers
+	PT	Mostrar selecionados em Pastas
+
+ECHOCLASSIC_UI_PLAY_IN_BACKGROUND
+	EN	Play in background
+	DE	Im Hintergrund abspielen
+	FR	Lire en arrière-plan
+	PT	Reproduzir em segundo plano
+
+ECHOCLASSIC_UI_A_PLAYLIST_IS_ALREADY_BEING_BUILT_WHAT_SHOULD_HAPPEN_TO_THIS_SELECTION
+	EN	A playlist is already being built. What should happen to this selection?
+	DE	Eine Playlist wird bereits erstellt. Was soll mit dieser Auswahl geschehen?
+	FR	Une playlist est déjà en cours de création. Que faire de cette sélection ?
+	PT	Uma playlist já está sendo criada. O que deve acontecer com esta seleção?
+
+ECHOCLASSIC_UI_ADD_TO_THIS_PLAYLIST
+	EN	Add to this playlist
+	DE	Zu dieser Playlist hinzufügen
+	FR	Ajouter à cette playlist
+	PT	Adicionar a esta playlist
+
+ECHOCLASSIC_UI_START_A_NEW_PLAYLIST
+	EN	Start a new playlist
+	DE	Neue Playlist beginnen
+	FR	Créer une nouvelle playlist
+	PT	Iniciar uma nova playlist
+
+ECHOCLASSIC_UI_KEEP_THIS_DRAFT_BEFORE_STARTING_A_NEW_ONE
+	EN	Keep this draft before starting a new one
+	DE	Diesen Entwurf vor einem neuen behalten
+	FR	Conserver ce brouillon avant d'en créer un nouveau
+	PT	Manter este rascunho antes de iniciar outro
+
+ECHOCLASSIC_UI_SAVE_IT_PERMANENTLY_OR_KEEP_IT_PLAYING_AS_A_NUMBERED_TEMPORARY_PLAYLIST
+	EN	Save it permanently or keep it playing as a numbered temporary playlist.
+	DE	Dauerhaft speichern oder als nummerierte temporäre Playlist weiterspielen.
+	FR	Enregistrez-la définitivement ou poursuivez la lecture comme playlist temporaire numérotée.
+	PT	Salve permanentemente ou mantenha reproduzindo como uma playlist temporária numerada.
+
+ECHOCLASSIC_UI_100_TEMPORARY_PLAYLISTS_REACHED
+	EN	100 temporary playlists reached
+	DE	100 temporäre Playlists erreicht
+	FR	100 playlists temporaires atteintes
+	PT	Limite de 100 playlists temporárias atingida
+
+ECHOCLASSIC_UI_THE_OLDEST_TEMPORARY_PLAYLIST_MUST_BE_SAVED_OR_ERASED_BEFORE_ANOTHER_CAN_BE_CREATED
+	EN	The oldest temporary playlist must be saved or erased before another can be created.
+	DE	Die älteste temporäre Playlist muss gespeichert oder gelöscht werden, bevor eine weitere erstellt werden kann.
+	FR	La plus ancienne playlist temporaire doit être enregistrée ou effacée avant d'en créer une autre.
+	PT	A playlist temporária mais antiga deve ser salva ou apagada antes de criar outra.
+
+ECHOCLASSIC_UI_SAVE_OLDEST_PLAYLIST
+	EN	Save oldest playlist
+	DE	Älteste Playlist speichern
+	FR	Enregistrer la plus ancienne playlist
+	PT	Salvar playlist mais antiga
+
+ECHOCLASSIC_UI_ERASE_OLDEST_PLAYLIST
+	EN	Erase oldest playlist
+	DE	Älteste Playlist löschen
+	FR	Effacer la plus ancienne playlist
+	PT	Apagar playlist mais antiga
+
+ECHOCLASSIC_UI_SELECTION_SENT_TO_PLAYLIST_BUILDER
+	EN	Selection sent to Playlist Builder.
+	DE	Auswahl an den Playlist-Builder gesendet.
+	FR	Sélection envoyée au créateur de playlist.
+	PT	Seleção enviada ao Criador de playlist.
+
 ECHOCLASSIC_UI_LMS_DEFAULT
 	EN	LMS default
 	DE	LMS-Standard
@@ -5715,6 +6027,30 @@ ECHOCLASSIC_LIBRARY_PROPOSAL_16
 	FR	Analyser à nouveau
 	PT	Verificar novamente
 
+ECHOCLASSIC_COLLECTION_REFRESH
+	EN	Refresh collection
+	DE	Sammlung aktualisieren
+	FR	Actualiser la collection
+	PT	Atualizar coleção
+
+ECHOCLASSIC_COLLECTION_SCAN_NOW
+	EN	Scan collection now
+	DE	Sammlung jetzt scannen
+	FR	Analyser la collection maintenant
+	PT	Escanear coleção agora
+
+ECHOCLASSIC_COLLECTION_SCANNING
+	EN	Scanning collection…
+	DE	Sammlung wird gescannt…
+	FR	Analyse de la collection…
+	PT	Escaneando coleção…
+
+ECHOCLASSIC_COLLECTION_SCAN_PROGRESS
+	EN	Collection scan progress
+	DE	Fortschritt des Sammlungsscans
+	FR	Progression de l’analyse de la collection
+	PT	Progresso do escaneamento da coleção
+
 ECHOCLASSIC_LIBRARY_LAYOUT_1
 	EN	Album cover
 	DE	Albumcover
@@ -5835,3 +6171,603 @@ ECHOCLASSIC_SACD_FREE
 ECHOCLASSIC_SACD_ACTION_FAILED
 	EN	SACD cache action failed.
 	PT	Falha na ação do cache SACD.
+
+ECHOCLASSIC_SACD_CACHE_SUMMARY
+	EN	SACD cache summary
+	DE	SACD-Cache-Zusammenfassung
+	FR	Résumé du cache SACD
+	PT	Resumo do cache SACD
+
+ECHOCLASSIC_SACD_USED
+	EN	Used
+	DE	Belegt
+	FR	Utilisé
+	PT	Usado
+
+ECHOCLASSIC_SACD_FREE_TITLE
+	EN	Free
+	DE	Frei
+	FR	Libre
+	PT	Livre
+
+ECHOCLASSIC_SACD_CACHED_ALBUMS
+	EN	Cached albums
+	DE	Zwischengespeicherte Alben
+	FR	Albums en cache
+	PT	Álbuns em cache
+
+ECHOCLASSIC_SACD_NO_PREPARED_ALBUMS
+	EN	No prepared albums
+	DE	Keine vorbereiteten Alben
+	FR	Aucun album préparé
+	PT	Nenhum álbum preparado
+
+ECHOCLASSIC_SETTINGS_CHOOSE_PLAYER
+	EN	Choose player
+	DE	Player auswählen
+	FR	Choisir un lecteur
+	PT	Escolher player
+
+ECHOCLASSIC_SETTINGS_CHOOSE_ACTIVE_PLAYER
+	EN	Choose active player
+	DE	Aktiven Player auswählen
+	FR	Choisir le lecteur actif
+	PT	Escolher player ativo
+
+ECHOCLASSIC_SETTINGS_CLOSE_PLAYER_MENU
+	EN	Close player menu
+	DE	Player-Menü schließen
+	FR	Fermer le menu des lecteurs
+	PT	Fechar menu de players
+
+ECHOCLASSIC_UI_RECENTLY_ADDED_ALBUMS
+	EN	Recently added albums
+	DE	Kürzlich hinzugefügte Alben
+	FR	Albums ajoutés récemment
+	PT	Álbuns adicionados recentemente
+
+ECHOCLASSIC_UI_ARTISTS_ALBUM_ARTISTS_COMPOSERS_CONDUCTORS_AND_ENSEMBLES
+	EN	Artists, album artists, composers, conductors and ensembles
+	DE	Interpreten, Albuminterpreten, Komponisten, Dirigenten und Ensembles
+	FR	Artistes, artistes d’album, compositeurs, chefs et ensembles
+	PT	Artistas, artistas do álbum, compositores, regentes e conjuntos
+
+ECHOCLASSIC_UI_ALL_ALBUMS_OR_RELEASE_TYPES
+	EN	All albums or release types
+	DE	Alle Alben oder Veröffentlichungstypen
+	FR	Tous les albums ou types de parution
+	PT	Todos os álbuns ou tipos de lançamento
+
+ECHOCLASSIC_UI_GENRES_YEARS_OR_MUSIC_FOLDERS
+	EN	Genres, years or music folders
+	DE	Genres, Jahre oder Musikordner
+	FR	Genres, années ou dossiers musicaux
+	PT	Gêneros, anos ou pastas de música
+
+ECHOCLASSIC_UI_ALL_ALBUMS
+	EN	All albums
+	DE	Alle Alben
+	FR	Tous les albums
+	PT	Todos os álbuns
+
+ECHOCLASSIC_UI_FOLDERS
+	EN	Folders
+	DE	Ordner
+	FR	Dossiers
+	PT	Pastas
+
+ECHOCLASSIC_UI_ARTISTS_VIEWS
+	EN	Artists views
+	DE	Interpretenansichten
+	FR	Vues des artistes
+	PT	Visualizações de artistas
+
+ECHOCLASSIC_UI_ALBUMS_VIEWS
+	EN	Albums views
+	DE	Albumansichten
+	FR	Vues des albums
+	PT	Visualizações de álbuns
+
+ECHOCLASSIC_UI_BROWSE_VIEWS
+	EN	Browse views
+	DE	Navigationsansichten
+	FR	Vues de navigation
+	PT	Visualizações de navegação
+
+ECHOCLASSIC_SACD_LOGO_ALT
+	EN	Super Audio CD
+	DE	Super Audio CD
+	FR	Super Audio CD
+	PT	Super Audio CD
+
+ECHOCLASSIC_SACD_INSTALL_PLAYER
+	EN	Install SACDPlayer
+	DE	SACDPlayer installieren
+	FR	Installer SACDPlayer
+	PT	Instalar SACDPlayer
+
+ECHOCLASSIC_SACD_CHECKING
+	EN	Checking…
+	DE	Wird geprüft…
+	FR	Vérification…
+	PT	Verificando…
+
+ECHOCLASSIC_SACD_PREPARED
+	EN	Prepared
+	DE	Vorbereitet
+	FR	Préparé
+	PT	Preparado
+
+ECHOCLASSIC_SACD_NOT_PREPARED
+	EN	Not prepared
+	DE	Nicht vorbereitet
+	FR	Non préparé
+	PT	Não preparado
+
+ECHOCLASSIC_SACD_PARTIALLY_PREPARED
+	EN	Partially prepared
+	DE	Teilweise vorbereitet
+	FR	Partiellement préparé
+	PT	Parcialmente preparado
+
+ECHOCLASSIC_SACD_PREPARATION_FAILED
+	EN	Preparation failed
+	DE	Vorbereitung fehlgeschlagen
+	FR	Échec de la préparation
+	PT	Falha na preparação
+
+ECHOCLASSIC_SACD_ALBUM_PREPARATION
+	EN	Album preparation
+	DE	Albumvorbereitung
+	FR	Préparation de l’album
+	PT	Preparação do álbum
+
+ECHOCLASSIC_SACD_ALBUM_PREPARED
+	EN	Album is prepared
+	DE	Album ist vorbereitet
+	FR	L’album est préparé
+	PT	O álbum está preparado
+
+ECHOCLASSIC_SACD_ALBUM_PREPARING
+	EN	Preparing album
+	DE	Album wird vorbereitet
+	FR	Préparation de l’album
+	PT	Preparando o álbum
+
+ECHOCLASSIC_SACD_ALBUM_PARTIAL
+	EN	Album is partially prepared
+	DE	Album ist teilweise vorbereitet
+	FR	L’album est partiellement préparé
+	PT	O álbum está parcialmente preparado
+
+ECHOCLASSIC_SACD_ALBUM_NOT_PREPARED
+	EN	Album is not prepared
+	DE	Album ist nicht vorbereitet
+	FR	L’album n’est pas préparé
+	PT	O álbum não está preparado
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_0
+	EN	Folders
+	DE	Ordner
+	FR	Dossiers
+	PT	Pastas
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_1
+	EN	Summary
+	DE	Übersicht
+	FR	Résumé
+	PT	Resumo
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_2
+	EN	since last scan
+	DE	seit letztem Scan
+	FR	depuis le dernier scan
+	PT	desde a última varredura
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_3
+	EN	albums untagged
+	DE	Alben ohne Tags
+	FR	albums sans genre
+	PT	álbuns sem tag
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_4
+	EN	Albums to tag
+	DE	Alben zu taggen
+	FR	Albums à étiqueter
+	PT	Álbuns para marcar
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_5
+	EN	No genre
+	DE	Kein Genre
+	FR	Aucun genre
+	PT	Sem gênero
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_6
+	EN	Lossless tracks
+	DE	Verlustfreie Titel
+	FR	Pistes sans perte
+	PT	Faixas sem perdas
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_7
+	EN	of all tracks
+	DE	aller Titel
+	FR	de toutes les pistes
+	PT	de todas as faixas
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_8
+	EN	File types · track share
+	DE	Dateitypen · Titelanteil
+	FR	Types de fichiers · part des pistes
+	PT	Tipos de arquivo · parte das faixas
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_9
+	EN	Decades
+	DE	Jahrzehnte
+	FR	Décennies
+	PT	Décadas
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_10
+	EN	Move
+	DE	Verschieben
+	FR	Déplacer
+	PT	Mover
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_11
+	EN	Hide
+	DE	Ausblenden
+	FR	Masquer
+	PT	Ocultar
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_12
+	EN	Resize
+	DE	Größe ändern
+	FR	Redimensionner
+	PT	Redimensionar
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_13
+	EN	Add section…
+	DE	Bereich hinzufügen…
+	FR	Ajouter une section…
+	PT	Adicionar seção…
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_14
+	EN	Hidden
+	DE	Ausgeblendet
+	FR	Masqués
+	PT	Ocultos
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_15
+	EN	Hidden: none
+	DE	Ausgeblendet: keine
+	FR	Masqué : aucun
+	PT	Ocultado: nenhum
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_16
+	EN	Drag by ≡ to reorder, pull the corner to resize, ⊖ to hide. Layout is remembered on this device.
+	DE	Mit ≡ ziehen zum Umordnen, an der Ecke ziehen zum Skalieren, ⊖ zum Ausblenden. Das Layout wird auf diesem Gerät gespeichert.
+	FR	Faites glisser ≡ pour réordonner, tirez le coin pour redimensionner, ⊖ pour masquer. La disposition est mémorisée sur cet appareil.
+	PT	Arraste ≡ para reordenar, puxe o canto para redimensionar, ⊖ para ocultar. O layout é lembrado neste dispositivo.
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_17
+	EN	albums
+	DE	Alben
+	FR	albums
+	PT	álbuns
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_18
+	EN	None selected · actions apply to all
+	DE	Keine Auswahl · Aktionen gelten für alle
+	FR	Aucune sélection · les actions s'appliquent à tous
+	PT	Nenhum selecionado · as ações se aplicam a todos
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_19
+	EN	Clear
+	DE	Leeren
+	FR	Effacer
+	PT	Limpar
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_20
+	EN	Add to Playlist
+	DE	Zur Playlist hinzufügen
+	FR	Ajouter à la playlist
+	PT	Adicionar à playlist
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_21
+	EN	Show in Folders
+	DE	In Ordnern anzeigen
+	FR	Afficher dans les dossiers
+	PT	Mostrar nas pastas
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_22
+	EN	Playing next.
+	DE	Wird als Nächstes gespielt.
+	FR	Lecture suivante.
+	PT	Tocando a seguir.
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_23
+	EN	Could not queue the album.
+	DE	Das Album konnte nicht in die Warteschlange gestellt werden.
+	FR	Impossible d'ajouter l'album à la file d'attente.
+	PT	Não foi possível colocar o álbum na fila.
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_24
+	EN	No playlists yet
+	DE	Noch keine Playlists
+	FR	Aucune playlist pour l'instant
+	PT	Ainda não há playlists
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_25
+	EN	Or
+	DE	Oder
+	FR	Ou
+	PT	Ou
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_26
+	EN	Add to Current Queue
+	DE	Zur aktuellen Warteschlange hinzufügen
+	FR	Ajouter à la file d'attente actuelle
+	PT	Adicionar à fila atual
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_27
+	EN	Added to playlist.
+	DE	Zur Playlist hinzugefügt.
+	FR	Ajouté à la playlist.
+	PT	Adicionado à playlist.
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_28
+	EN	Could not add to playlist.
+	DE	Konnte nicht zur Playlist hinzugefügt werden.
+	FR	Impossible d'ajouter à la playlist.
+	PT	Não foi possível adicionar à playlist.
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_29
+	EN	Album actions
+	DE	Albumaktionen
+	FR	Actions sur l'album
+	PT	Ações do álbum
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_30
+	EN	h
+	DE	Std.
+	FR	h
+	PT	h
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_31
+	EN	min
+	DE	Min.
+	FR	min
+	PT	min
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_32
+	EN	Select at least one album
+	DE	Mindestens ein Album auswählen
+	FR	Sélectionnez au moins un album
+	PT	Selecione pelo menos um álbum
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_33
+	EN	Choose one or more albums before using the actions below.
+	DE	Wählen Sie ein oder mehrere Alben aus, bevor Sie die folgenden Aktionen verwenden.
+	FR	Sélectionnez un ou plusieurs albums avant d’utiliser les actions ci-dessous.
+	PT	Selecione um ou mais álbuns antes de usar as ações abaixo.
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_34
+	EN	Only the selected albums will be used.
+	DE	Nur die ausgewählten Alben werden verwendet.
+	FR	Seuls les albums sélectionnés seront utilisés.
+	PT	Somente os álbuns selecionados serão usados.
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_35
+	EN	selected file
+	DE	ausgewählte Datei
+	FR	fichier sélectionné
+	PT	arquivo selecionado
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_36
+	EN	selected files
+	DE	ausgewählte Dateien
+	FR	fichiers sélectionnés
+	PT	arquivos selecionados
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_37
+	EN	folder opened
+	DE	Ordner geöffnet
+	FR	dossier ouvert
+	PT	pasta aberta
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_38
+	EN	folders opened
+	DE	Ordner geöffnet
+	FR	dossiers ouverts
+	PT	pastas abertas
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_39
+	EN	file not found
+	DE	Datei nicht gefunden
+	FR	fichier introuvable
+	PT	arquivo não encontrado
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_40
+	EN	files not found
+	DE	Dateien nicht gefunden
+	FR	fichiers introuvables
+	PT	arquivos não encontrados
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_41
+	EN	Selected folders
+	DE	Ausgewählte Ordner
+	FR	Dossiers sélectionnés
+	PT	Pastas selecionadas
+
+ECHOCLASSIC_COLLECTION_DASHBOARD_42
+	EN	No items found in this folder.
+	DE	Keine Elemente in diesem Ordner gefunden.
+	FR	Aucun élément trouvé dans ce dossier.
+	PT	Nenhum item encontrado nesta pasta.
+
+ECHOCLASSIC_COLLECTION_CACHE_1
+	EN	Collection is not prepared yet
+	DE	Die Sammlung ist noch nicht vorbereitet
+	FR	La collection n’est pas encore préparée
+	PT	A coleção ainda não está preparada
+
+ECHOCLASSIC_COLLECTION_CACHE_2
+	EN	Scan your music folders to build collection statistics.
+	DE	Scannen Sie Ihre Musikordner, um Sammlungsstatistiken zu erstellen.
+	FR	Analysez vos dossiers musicaux pour créer les statistiques de la collection.
+	PT	Escaneie suas pastas de música para criar as estatísticas da coleção.
+
+ECHOCLASSIC_COLLECTION_CACHE_3
+	EN	Scan folders
+	DE	Ordner scannen
+	FR	Analyser les dossiers
+	PT	Escanear pastas
+
+ECHOCLASSIC_COLLECTION_CACHE_4
+	EN	Starting collection scan…
+	DE	Sammlungsscan wird gestartet…
+	FR	Démarrage de l’analyse de la collection…
+	PT	Iniciando o escaneamento da coleção…
+
+ECHOCLASSIC_COLLECTION_CACHE_5
+	EN	Updating collection
+	DE	Sammlung wird aktualisiert
+	FR	Mise à jour de la collection
+	PT	Atualizando a coleção
+
+ECHOCLASSIC_COLLECTION_CACHE_6
+	EN	Library changed · Update available
+	DE	Bibliothek geändert · Aktualisierung verfügbar
+	FR	Bibliothèque modifiée · Mise à jour disponible
+	PT	Biblioteca alterada · Atualização disponível
+
+ECHOCLASSIC_COLLECTION_CACHE_7
+	EN	Update collection
+	DE	Sammlung aktualisieren
+	FR	Mettre à jour la collection
+	PT	Atualizar coleção
+
+ECHOCLASSIC_COLLECTION_CACHE_8
+	EN	Collection could not be loaded. Your previous collection is still available.
+	DE	Die Sammlung konnte nicht geladen werden. Ihre vorherige Sammlung ist weiterhin verfügbar.
+	FR	Impossible de charger la collection. Votre collection précédente reste disponible.
+	PT	Não foi possível carregar a coleção. Sua coleção anterior continua disponível.
+
+ECHOCLASSIC_COLLECTION_CACHE_9
+	EN	Collection could not be loaded. Retry when LMS is available.
+	DE	Die Sammlung konnte nicht geladen werden. Versuchen Sie es erneut, wenn LMS verfügbar ist.
+	FR	Impossible de charger la collection. Réessayez lorsque LMS est disponible.
+	PT	Não foi possível carregar a coleção. Tente novamente quando o LMS estiver disponível.
+
+ECHOCLASSIC_COLLECTION_PREPARE_1
+	EN	Prepare and open
+	DE	Vorbereiten und öffnen
+	FR	Préparer et ouvrir
+	PT	Preparar e abrir
+
+ECHOCLASSIC_COLLECTION_PREPARE_2
+	EN	This prepares the album list on this device. Playback and playlists are not changed.
+	DE	Dadurch wird die Albumliste auf diesem Gerät vorbereitet. Wiedergabe und Playlists werden nicht geändert.
+	FR	Cela prépare la liste des albums sur cet appareil. La lecture et les playlists ne sont pas modifiées.
+	PT	Isso prepara a lista de álbuns neste dispositivo. A reprodução e as playlists não são alteradas.
+
+ECHOCLASSIC_COLLECTION_PREPARE_3
+	EN	Genre preparation progress
+	DE	Fortschritt der Genrevorbereitung
+	FR	Progression de la préparation du genre
+	PT	Progresso da preparação do gênero
+
+ECHOCLASSIC_COLLECTION_PREPARE_4
+	EN	This genre could not be prepared.
+	DE	Dieses Genre konnte nicht vorbereitet werden.
+	FR	Ce genre n’a pas pu être préparé.
+	PT	Não foi possível preparar este gênero.
+
+ECHOCLASSIC_COLLECTION_PREPARE_5
+	EN	Back to Collection
+	DE	Zurück zur Sammlung
+	FR	Retour à la collection
+	PT	Voltar para Coleção
+
+ECHOCLASSIC_COLLECTION_PREPARE_6
+	EN	Preparing
+	DE	Vorbereitung
+	FR	Préparation de
+	PT	Preparando
+
+ECHOCLASSIC_COLLECTION_PREPARE_7
+	EN	from
+	DE	aus
+	FR	à partir de
+	PT	de
+
+ECHOCLASSIC_COLLECTION_PREPARE_8
+	EN	is ready
+	DE	ist bereit
+	FR	est prêt
+	PT	está pronto
+
+ECHOCLASSIC_COLLECTION_V3_1
+	EN	Collection graphics
+	DE	Sammlungsgrafiken
+	FR	Graphiques de la collection
+	PT	Gráficos da coleção
+
+ECHOCLASSIC_COLLECTION_V3_2
+	EN	Album file type
+	DE	Album-Dateityp
+	FR	Type de fichier de l’album
+	PT	Tipo de arquivo do álbum
+
+ECHOCLASSIC_COLLECTION_V3_3
+	EN	No category selected
+	DE	Keine Kategorie ausgewählt
+	FR	Aucune catégorie sélectionnée
+	PT	Nenhuma categoria selecionada
+
+ECHOCLASSIC_COLLECTION_V3_4
+	EN	Choose a genre or decade to see matching albums.
+	DE	Wählen Sie ein Genre oder Jahrzehnt, um passende Alben anzuzeigen.
+	FR	Choisissez un genre ou une décennie pour voir les albums correspondants.
+	PT	Escolha um gênero ou uma década para ver os álbuns correspondentes.
+
+ECHOCLASSIC_COLLECTION_PERFORMANCE_NETWORK
+	EN	Network requests
+	DE	Netzwerkanfragen
+	FR	Requêtes réseau
+	PT	Solicitações de rede
+
+ECHOCLASSIC_COLLECTION_PERFORMANCE_AGGREGATION
+	EN	Aggregation
+	DE	Aggregation
+	FR	Agrégation
+	PT	Agregação
+
+ECHOCLASSIC_COLLECTION_PERFORMANCE_CACHE
+	EN	Cache write
+	DE	Cache-Schreibvorgang
+	FR	Écriture du cache
+	PT	Gravação do cache
+
+ECHOCLASSIC_COLLECTION_PERFORMANCE_RENDER
+	EN	Render ready
+	DE	Darstellung bereit
+	FR	Rendu prêt
+	PT	Renderização pronta
+
+ECHOCLASSIC_OPTIONAL_EQ_1
+	EN	Equalizer plugins are not installed
+	DE	Equalizer-Plugins sind nicht installiert
+	FR	Les plugins d’égaliseur ne sont pas installés
+	PT	Os plugins de equalizador não estão instalados
+
+ECHOCLASSIC_OPTIONAL_EQ_2
+	EN	Playback and the rest of Echo Classic remain available. Install Apple Squeezer or SqueezeDSP to add equalizer controls.
+	DE	Die Wiedergabe und der Rest von Echo Classic bleiben verfügbar. Installieren Sie Apple Squeezer oder SqueezeDSP, um Equalizer-Steuerelemente hinzuzufügen.
+	FR	La lecture et le reste d’Echo Classic restent disponibles. Installez Apple Squeezer ou SqueezeDSP pour ajouter les commandes de l’égaliseur.
+	PT	A reprodução e o restante do Echo Classic continuam disponíveis. Instale o Apple Squeezer ou o SqueezeDSP para adicionar controles de equalização.
+
+ECHOCLASSIC_OPTIONAL_EQ_3
+	EN	Install Apple Squeezer
+	DE	Apple Squeezer installieren
+	FR	Installer Apple Squeezer
+	PT	Instalar Apple Squeezer

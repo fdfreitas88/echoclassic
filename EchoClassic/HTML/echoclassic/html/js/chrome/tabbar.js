@@ -16,7 +16,7 @@ Vue.component('lms-tabbar', {
   computed: {
     visibleTabs: function () {
       if (!this.compact) return this.tabs.filter(function (tab) { return tab.key !== 'more'; });
-      var order = ['favourites', 'radio', 'playlists', 'music', 'more'];
+      var order = ['favourites', 'radio', 'playlists', 'collection', 'music', 'more'];
       return order.map(function (key) {
         return this.tabs.filter(function (tab) { return tab.key === key; })[0];
       }, this).filter(Boolean);
@@ -47,9 +47,15 @@ Vue.component('lms-tabbar', {
       if (this.compact && key === 'more') {
         return this.ui.tab === 'more' || this.ui.tab === 'apps' || this.ui.tab === 'settings';
       }
+      if (this.ui.tab === 'music' && this.ui.musicView === 'musicfolders') return key === 'collection';
       return this.ui.tab === key;
     },
     pick: function (key) {
+      if (key === 'music' && this.ui.musicView === 'musicfolders') {
+        LmsUi.setMusicView(LmsUi.lastViewForDestination('recent'));
+        LmsUi.setTab('music');
+        return;
+      }
       if (key === 'settings' && this.ui.tab === 'settings') {
         if (this.ui.advancedSettings) {
           if (LmsUi.canLeaveAdvancedSettings && !LmsUi.canLeaveAdvancedSettings()) return;
@@ -79,6 +85,7 @@ Vue.component('lms-tabbar', {
     },
     icon: function (key) {
       var d = {
+        collection: '<path d="M4 20V10h4v10M10 20V4h4v16M16 20V7h4v13"/>',
         favourites: '<path d="M12 20s-7-4.6-7-9.3A3.8 3.8 0 0112 8a3.8 3.8 0 017 2.7c0 4.7-7 9.3-7 9.3z"/>',
         radio: '<circle cx="12" cy="13" r="2.4"/><path d="M7.5 8.5a6 6 0 000 9M16.5 8.5a6 6 0 010 9M4.5 5.5a10 10 0 000 15M19.5 5.5a10 10 0 010 15"/>',
         playlists: '<path d="M4 7h11M4 12h11M4 17h7"/><path d="M18 16V6l3-1"/><circle cx="17" cy="17" r="1.6"/>',
@@ -98,16 +105,16 @@ Vue.component('lms-more', {
   <div id="more-heading" class="sgh">More</div>
   <div class="sgroup more-destinations">
     <button type="button" class="srow settings-command-row pointer" @click="open('apps')">
-      <span class="more-glyph" aria-hidden="true">▦</span><span class="setting-copy">Apps<small>Music services and plugins</small></span><span class="v">›</span>
+      <span class="more-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" v-html="icon('apps')"></svg></span><span class="setting-copy">Apps<small>Music services and plugins</small></span><span class="v">›</span>
     </button>
     <button type="button" class="srow settings-command-row pointer" @click="open('settings')">
-      <span class="more-glyph" aria-hidden="true">⚙</span><span class="setting-copy">Settings<small>Player, appearance and server</small></span><span class="v">›</span>
+      <span class="more-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" v-html="icon('settings')"></svg></span><span class="setting-copy">Settings<small>Player, appearance and server</small></span><span class="v">›</span>
     </button>
   </div>
   <div class="sgh">About</div>
   <div class="sgroup more-destinations">
     <button type="button" class="srow settings-command-row pointer" @click="serverInfo">
-      <span class="more-glyph more-info" aria-hidden="true">i</span><span class="setting-copy">Server information<small>LMS {{ version }}</small></span><span class="v">›</span>
+      <span class="more-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" v-html="icon('info')"></svg></span><span class="setting-copy">Server information<small>LMS {{ version }}</small></span><span class="v">›</span>
     </button>
   </div>
 </section>`,
@@ -115,6 +122,13 @@ Vue.component('lms-more', {
     version: function () { return typeof LMS_VERSION === 'string' && LMS_VERSION ? LMS_VERSION : '—'; }
   },
   methods: {
+    icon: function (key) {
+      return {
+        apps: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
+        settings: '<circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2.6M12 17.9v2.6M3.5 12h2.6M17.9 12h2.6M6 6l1.9 1.9M16.1 16.1L18 18M18 6l-1.9 1.9M7.9 16.1L6 18"/>',
+        info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 10.5v6M12 7.3h.01"/>'
+      }[key] || '';
+    },
     open: function (tab) { LmsUi.setTab(tab); },
     serverInfo: function () {
       LmsUi.setTab('settings');

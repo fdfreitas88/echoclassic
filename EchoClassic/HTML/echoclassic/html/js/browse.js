@@ -6,6 +6,14 @@
    The list is windowed rather than fully rendered: this library has 1591
    artists and 1459 albums, and the server includes composers and one
    blank-named contributor that api.js drops. */
+/* release_type tokens LMS 9 emits (Slim::Schema::Album RELEASE_TYPES plus the
+   ones users add by hand). Values are strings.txt keys. */
+window.LmsReleaseTypeLabels = Object.freeze({
+  ALBUM: 'Album', BESTOF: 'Best of', BOXSET: 'Box set', COMPILATION: 'Compilation',
+  EP: 'EP', SINGLE: 'Single', LIVE: 'Live', REMIX: 'Remix', SOUNDTRACK: 'Soundtrack',
+  DEMO: 'Demo', AUDIOBOOK: 'Audiobook', BROADCAST: 'Broadcast', MIXTAPE: 'Mixtape'
+});
+
 var LmsSplitPane = {
   defaultWidth: 360,
   minLeft: 300,
@@ -27,11 +35,14 @@ var LmsSplitPane = {
 /* Fora do componente de proposito: `methods` so aceita funcao, e o Vue embrulha
    qualquer outro valor -- uma string ali vira uma funcao vazia, e a chave de
    storage vira o texto do corpo dessa funcao. */
-var LMS_MEDIA_CACHE_KEY = 'echoclassic.media.v1';
+/* v3 invalidates media indexes written before the SACD bit was populated. */
+var LMS_MEDIA_CACHE_KEY = 'echoclassic.media.v3';
 var LMS_ALBUM_ROWS_CACHE_KEY = 'echoclassic.albumrows.v1';
 
 Vue.component('lms-browse', {
   template: `
+<div class="library-shell">
+
 <div ref="split" class="split-body" :class="{'split-locked': splitLocked, 'music-folder-standalone': view === 'musicfolders'}"
      :style="{'--pane-current': paneWidth + 'px'}">
   <div class="pane-left" :class="{'no-rail':!hasRail}">
@@ -189,18 +200,23 @@ Vue.component('lms-browse', {
 	          </div>
 	          <div v-else :key="it.key" class="row"
 	             :class="{sel: isSelected(it.row), chosen: selected(it.row), artistrow: it.row.kind === 'artist',
-	                      noart: !it.row.art, albumrow: showsAlbums}"
+	                      albumrow: showsAlbums}"
 	             role="group" :aria-label="rowLabel(it.row)">
 	          <button type="button" class="row-main pointer" :aria-label="rowLabel(it.row)"
 	                  :aria-pressed="ui.selectionMode ? String(selected(it.row)) : null"
 	                  @click="rowClick(it.row)">
 	            <span v-if="ui.selectionMode" class="select-mark" :class="{on: selected(it.row)}"></span>
-	            <span v-if="it.row.art" class="art" :style="artStyle(it.row)"></span>
+	            <span class="art" :class="{placeholder: !it.row.art}" :style="artStyle(it.row)">
+	              <span v-if="!it.row.art" class="art-placeholder" aria-hidden="true">♫</span>
+	            </span>
 	            <span class="ell">
 	              <span class="t ell">{{ it.row.label }}</span>
 	              <span v-if="it.row.sub" class="s ell">{{ it.row.sub }}</span>
 	            </span>
 	          </button>
+	          <img v-if="it.row.kind === 'album' && isSacdRow(it.row)"
+	               class="sacd-media-logo sacd-media-logo-row"
+	               src="html/images/SACDlogo.svg" :alt="tr('Super Audio CD')">
 	          <button v-if="!ui.selectionMode" class="more-command" title="More actions"
 	                  :aria-label="'More actions for ' + it.row.label" @click.stop="actions(it.row, $event)">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -215,6 +231,8 @@ Vue.component('lms-browse', {
 	        <div :style="{height: botPad + 'px'}"></div>
 	        <div v-if="loadingMore" class="loading-more" role="status">Loading more items…</div>
 	        <div v-if="limitWarning" class="loading-more warning" role="status">{{ limitWarning }}</div>
+        <div v-if="rootPaging && !loadingMore" class="loading-more"><button type="button" :disabled="rootPageBusy" @click="loadMoreRoot">{{ tr(rootPageBusy ? 'Loading…' : 'Load next 500') }}</button></div>
+        <div v-if="rootPageError" class="loading-more warning" role="status">{{ rootPageError }}</div>
 	      </template>
     </div>
     <div v-if="hasRail" class="rail" role="slider" tabindex="0"
@@ -250,13 +268,14 @@ Vue.component('lms-browse', {
 
   <lms-sort-menu v-if="ui.sortMenu" :options="sortOptions" :value="sortKey" :desc="sortDesc"
                  @choose="chooseSort" @direction="LmsUi.toggleSortDir()"></lms-sort-menu>
+</div>
 </div>`,
   data: function () {
     var split = LmsSplitPane.load();
     return {
       ui: LmsUi.state, store: LmsStore.state, LmsUi: LmsUi,
       rows: [], refreshRows: null, libraries: [], loading: true, error: '', loadProgress: null, loadTotal: 0,
-      reloadQueued: false, reloadPreserveNavigation: true,
+      reloadQueued: false, reloadPreserveNavigation: true, rootPaging: null, rootPageError: '', rootPageBusy: false,
 	      loadingMore: false, limitWarning: '', requestToken: 0, unknownCount: 0,
 	      artistIndexTruncated: false,
       rootSelection: null,
@@ -283,6 +302,9 @@ Vue.component('lms-browse', {
   computed: {
     view: function () { return LmsUi.state.musicView; },
     viewLabel: function () { return LmsUi.viewLabel(); },
+    folderReveal: function () { return this.ui.folderReveal; },
+    currentDestination: function () { return LmsUi.currentDestination(); },
+    contextViews: function () { return LmsUi.destinationViews(this.currentDestination.key); },
     primaryOptionLabel: function () {
       return {
         artists: 'Artist', albums: 'Album', recent: 'Album',
@@ -329,7 +351,7 @@ Vue.component('lms-browse', {
        agrupamento, o rotulo tinha de mudar por view para nao mentir sobre o que
        aquele controle fazia ali; agora ele ordena, em qualquer raiz. */
     sortSelectLabel: function () { return this.tr('Sort by'); },
-    frame: function () { return LmsNav.top('music') || this.rootSelection; },
+    frame: function () { return LmsNav.top('music') || (this.view === 'musicfolders' ? {kind:'musicfolder', id:null, label:'Music Folder'} : this.rootSelection); },
     sortKey: function () { return (this.ui.sort[0] || {}).key || 'name'; },
     sortDesc: function () { return !!(this.ui.sort[0] || {}).desc; },
     groupsAlbumsByArtist: function () {
@@ -490,13 +512,12 @@ Vue.component('lms-browse', {
       return !!(view && view.alphabeticIndex);
     },
     hasRail: function () {
-      /* O indice alfabetico so faz sentido sobre uma lista alfabetica; em
-         'recent' as letras nao sobem e saltar levaria a lugar none. Com
-         secoes a lista tambem deixa de ser monotonica: a letra M aparece uma
-         vez por secao, e o salto escolheria uma delas sem criterio. */
-      return !this.loading && this.rows.length > 0 && this.sortKey !== 'recent' &&
-             !this.sectionKey && !LmsUi.sortNeedsMedia(this.sortKey) &&
-             this.viewUsesAlphabeticIndex;
+      /* A trilha pertence ao menu esquerdo, nao ao estado momentaneo da lista.
+         Ela permanece no lugar durante carregamento, filtros, secoes e qualquer
+         ordenacao; letras sem destino ficam esmaecidas e as demais saltam para
+         a primeira ocorrencia visivel. Assim o menu nao muda de largura nem
+         perde sua navegacao quando o usuario troca a forma de ver a colecao. */
+      return this.viewUsesAlphabeticIndex;
     },
     rowH: function () { return this.showsAlbums ? 88 : 72; },
     headerH: function () { return 34; },
@@ -609,6 +630,24 @@ Vue.component('lms-browse', {
     }
   },
   methods: {
+    contextViewLabel: function (item) {
+      if (item.key === 'albums') return 'All albums';
+      if (item.key === 'musicfolders') return 'Folders';
+      return item.label;
+    },
+    chooseContextView: function (key) {
+      if (key === this.view) return;
+      LmsUi.setMusicView(key);
+      LmsNav.reset('music');
+    },
+    stepContextView: function (delta, event) {
+      var buttons = Array.prototype.slice.call(event.currentTarget.parentNode.querySelectorAll('[role="tab"]'));
+      var at = buttons.indexOf(event.currentTarget);
+      if (at < 0 || !buttons.length) return;
+      var next = buttons[(at + delta + buttons.length) % buttons.length];
+      next.focus();
+      next.click();
+    },
     /* A single view change also adopts that view's filters and grouping. Vue
        notifies all three watchers in the same turn; firing reload from each one
        sent overlapping LMS requests before requestToken could discard their
@@ -801,6 +840,7 @@ Vue.component('lms-browse', {
         year: r.year, originalYear: r.originalYear
       });
     },
+    openCollection: function () { LmsNav.reset('music'); LmsUi.setTab('collection'); },
     selectWithoutDrill: function (r) {
       if (!r) return;
       this.rootSelection = {
@@ -811,6 +851,7 @@ Vue.component('lms-browse', {
     },
     ensureRootSelection: function () {
       if (window.innerWidth <= 700) return;
+      if (this.view === 'musicfolders') return;
       /* A guarda precisa ser sobre a lista que o usuario ve: com um filtro que
          nao casa com nada, rows tem itens e displayRows nao, e redimensionar a
          janela lia displayRows[0] indefinido. */
@@ -836,6 +877,16 @@ Vue.component('lms-browse', {
     tr: function (text) {
       return window.LmsStr && LmsStr.t ? LmsStr.t(text) : text;
     },
+    /* LMS stores release_type as an upper-case token (ALBUM, BESTOF, BOXSET).
+       Known tokens get a real label through strings.txt; an unknown one is
+       shown in sentence case. The raw token stays in row.value for the filter. */
+    releaseTypeLabel: function (raw) {
+      var key = String(raw || '').trim().toUpperCase().replace(/[\s_-]+/g, '');
+      var known = LmsReleaseTypeLabels[key];
+      if (known) return window.LmsStr && LmsStr.t ? LmsStr.t(known) : known;
+      var text = String(raw || '').trim();
+      return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+    },
     /* O <select> agora e so ordenacao. Filtrar e agrupar tem controle proprio --
        o icone de funil --, e com isso desaparece o roteamento que mandava tres
        conceitos pelo mesmo campo. Sem guarda aqui de proposito: LmsUi.setSort ja
@@ -858,6 +909,14 @@ Vue.component('lms-browse', {
     },
     metaFor: function (id) {
       return (this.mediaIndex && this.mediaIndex[String(id)]) || null;
+    },
+    isSacdRow: function (row) {
+      var meta = row && this.metaFor(row.id);
+      if (meta) return !!meta.sacd;
+      /* SACDPlayer names its generated ISO album views with their area suffix.
+         Use that inexpensive hint while the authoritative URL index is still
+         scanning; once metadata arrives it always wins. */
+      return !!(row && /\((?:2ch|mch)\)\s*$/i.test(String(row.label || '')));
     },
     /* Ano e um intervalo, e intervalo nao cabe no indice de midia: ele mora na
        propria linha do album. Filtrado aqui, junto do resto, para que a lista
@@ -1157,7 +1216,8 @@ Vue.component('lms-browse', {
         out[id] = [
           Object.keys(m.formats).join(','),
           Object.keys(m.providers).join(','),
-          (m.hires ? 1 : 0) | (m.standard ? 2 : 0) | (m.local ? 4 : 0) | (m.remote ? 8 : 0)
+          (m.hires ? 1 : 0) | (m.standard ? 2 : 0) | (m.local ? 4 : 0) |
+            (m.remote ? 8 : 0) | (m.sacd ? 16 : 0)
         ];
       });
       return out;
@@ -1169,7 +1229,7 @@ Vue.component('lms-browse', {
         if (!Array.isArray(row)) return;
         var meta = { formats: Object.create(null), providers: Object.create(null),
                      hires: !!(row[2] & 1), standard: !!(row[2] & 2),
-                     local: !!(row[2] & 4), remote: !!(row[2] & 8) };
+                     local: !!(row[2] & 4), remote: !!(row[2] & 8), sacd: !!(row[2] & 16) };
         String(row[0] || '').split(',').forEach(function (f) { if (f) meta.formats[f] = true; });
         String(row[1] || '').split(',').forEach(function (p) { if (p) meta.providers[p] = true; });
         index[id] = meta;
@@ -1216,7 +1276,7 @@ Vue.component('lms-browse', {
       return this.view === 'albums' && !this.hasMediaFilter &&
         !this.groupsAlbumsByArtist && !this.groupsAlbumsByRelatedArtist;
     },
-    loadMediaIndex: async function (pid, token) {
+    loadMediaIndex: async function (pid, token, silent) {
       if (this.mediaIndex) return this.mediaIndex;
       /* O lastscan muda quando a biblioteca muda; enquanto ele for o mesmo, o
          indice guardado continua valendo e a espera de ~10s desaparece. */
@@ -1229,7 +1289,7 @@ Vue.component('lms-browse', {
       var start = 0;
       var pageSize = 2000;
       var keepGoing = true;
-      this.loadingMore = true;
+      if (!silent) this.loadingMore = true;
       while (keepGoing && start < 100000) {
         var page = await LmsApi.libraryTracks(pid, start, pageSize);
         if (token !== this.requestToken) return null;
@@ -1239,7 +1299,7 @@ Vue.component('lms-browse', {
           if (!meta) {
             meta = index[key] = {
               formats: Object.create(null), providers: Object.create(null),
-              hires: false, standard: false, local: false, remote: false
+              hires: false, standard: false, local: false, remote: false, sacd: false
             };
           }
           var format = this.canonicalFormat(track.format);
@@ -1251,6 +1311,7 @@ Vue.component('lms-browse', {
           var remote = track.remote || (!!provider && provider !== 'file');
           meta.remote = meta.remote || remote;
           meta.local = meta.local || !remote;
+          meta.sacd = meta.sacd || /\.iso(?:#|%23)(?:2ch|mch)-\d{2,3}$/i.test(String(track.url || ''));
           if (remote && provider) meta.providers[provider] = true;
         }, this);
         var sourceCount = page.sourceCount == null ? page.length : page.sourceCount;
@@ -1389,7 +1450,17 @@ Vue.component('lms-browse', {
       if (!this.hasMediaFilter) return '';
       return this.activeFilters.map(function (f) { return f.label; }).join(' · ');
     },
-    loadPagedRoot: async function (pid, token) {
+    loadMoreRoot: async function () {
+      if (!this.rootPaging || this.rootPageBusy) return;
+      var token = this.requestToken;
+      this.rootPageBusy = true; this.rootPageError = '';
+      try { await this.loadPagedRoot(this.store.playerId || '', token, true); }
+      catch (e) { if (token === this.requestToken) this.rootPageError = this.tr('Could not load more albums'); }
+      finally { if (token === this.requestToken) { this.rootPageBusy = false; this.loadingMore = false; } }
+    },
+    loadPagedRoot: async function (pid, token, continuing) {
+      var cursor = continuing ? this.rootPaging : null;
+      var budget = continuing ? 500 : 10000;
       var pageSize = 500;
       var keepGoing = true;
       var mainArtistIndex = this.groupsMainArtists
@@ -1409,11 +1480,12 @@ Vue.component('lms-browse', {
          uma vez so. */
       var genreIds = this.filterValues('genre');
       var passes = genreIds.length ? genreIds : [null];
-      for (var p = 0; p < passes.length; p++) {
+      for (var p = cursor ? cursor.pass : 0; p < passes.length; p++) {
       var genreId = passes[p];
-      var start = 0;
+      var start = cursor && p === cursor.pass ? cursor.start : 0;
       keepGoing = true;
-      while (keepGoing && start < 10000) {
+      while (keepGoing && budget > 0) {
+        this.rootPaging = { pass: p, start: start };
         var page;
         if (this.groupsAlbumsByRelatedArtist) {
           page = await LmsApi.artists(pid, start, pageSize);
@@ -1482,15 +1554,22 @@ Vue.component('lms-browse', {
            remaining pages append behind it, as the pre-3.5.2 browser did. */
         if ((this.refreshRows || this.rows).length) this.loading = false;
         start += sourceCount;
+        budget -= sourceCount;
+        this.rootPaging = { pass: p, start: start };
         if (this.loadTotal > 0 && passes.length === 1) {
           this.loadProgress = Math.min(99, Math.round(start / this.loadTotal * 100));
         }
-        keepGoing = sourceCount === pageSize;
+        keepGoing = page.total == null ? sourceCount === pageSize : start < page.total;
+        if (!sourceCount && keepGoing) throw new Error(this.tr('Could not load more albums'));
         this.loadingMore = keepGoing;
 	        if (keepGoing) await new Promise(function (resolve) { setTimeout(resolve, 0); });
-	      }
-	      }
-	      if (keepGoing) {
+        }
+        if (keepGoing) { this.loadingMore = false; return; }
+        this.rootPaging = p + 1 < passes.length ? { pass: p + 1, start: 0 } : null;
+        if (budget <= 0 && this.rootPaging) { this.loadingMore = false; return; }
+        }
+        this.rootPaging = null;
+        if (keepGoing) {
 	        this.limitWarning = 'The library has more items than this screen loaded. Use the filter to narrow the list.';
 	      } else if (this.artistIndexTruncated) {
 	        this.limitWarning = 'The artist index stopped at 10,000 names. Albums by artists beyond that point appear as albums in this list.';
@@ -1507,6 +1586,7 @@ Vue.component('lms-browse', {
     },
     reload: async function (preserveNavigation) {
       var token = ++this.requestToken;
+      this.rootPaging = null; this.rootPageError = ''; this.rootPageBusy = false;
       this.loading = true;
 	      this.loadProgress = null;
 	      this.loadTotal = 0;
@@ -1573,7 +1653,7 @@ Vue.component('lms-browse', {
               this.rows = this.refreshRows;
               this.refreshRows = null;
             }
-            if (this.cacheableAlbumRoot()) {
+            if (this.cacheableAlbumRoot() && !this.rootPaging) {
               /* Persist the complete basic list before optional duplicate-source
                  enrichment. Those per-album lookups can be slow; making cache
                  availability depend on them caused repeated F5 presses to miss
@@ -1601,8 +1681,10 @@ Vue.component('lms-browse', {
         } else if (this.view === 'releasetypes') {
           var releaseTypes = await LmsApi.releaseTypes(pid);
           if (token !== this.requestToken) return;
+          var labelOf = this.releaseTypeLabel;
           this.rows = releaseTypes.map(function (x) {
-            return { key: 'rt' + x.id, kind: 'releasetype', id: x.id, label: x.name, art: null };
+            return { key: 'rt' + x.id, kind: 'releasetype', id: x.id, value: x.name,
+              label: labelOf(x.name), art: null };
           });
         } else if (this.view === 'composers' || this.view === 'conductors' || this.view === 'ensembles') {
           var role = this.view === 'composers' ? 2 : this.view === 'conductors' ? 3 : 4;
@@ -1690,6 +1772,11 @@ Vue.component('lms-browse', {
       if (this.loadProgress !== null) this.loadProgress = 100;
       this.loading = false;
       this.loadingMore = false;
+      /* The SACD mark is decorative metadata, so its library-wide lookup runs
+         after the rows are usable and never delays normal album navigation. */
+      if (this.showsAlbums && !this.mediaIndex) {
+        this.loadMediaIndex(pid, token, true).catch(function () {});
+      }
       if (this.rows.length) this.activeRail = this.railLetter(this.rows[0]);
       var self = this;
       this.$nextTick(function () {

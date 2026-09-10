@@ -1,6 +1,7 @@
 
 var ECHOCLASSIC_ALBUM_INFO_CACHE_KEY = 'echoclassic.album-info.v1';
 var ECHOCLASSIC_ALBUM_INFO_CACHE_LIMIT = 60;
+var echoclassicSacdStatusCache = {};
 
 /* Um album completo: cabecalho, linha de aleatorio e faixas. Existe como
    componente proprio porque a tela de album empilha um bloco destes por album do
@@ -62,11 +63,40 @@ Vue.component('lms-album-block', {
       <span v-else class="art-placeholder" aria-hidden="true">♫</span>
     </div>
     <div class="albummeta">
+      <div v-if="displayFields.albumInformation && !continuation" class="album-display-tool">
+        <button type="button" class="album-config-cog" :aria-label="tr('Customize album information')" :title="tr('Customize album information')" @click="configureInformation">
+          <svg class="display-sliders-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="11" cy="18" r="2"/></svg>
+        </button>
+      </div>
       <div class="album-title-row" :class="{pending: !albumSource}">
         <div class="atitle">{{ album.title }}<span v-if="disc"> · {{ tr('Disc') }} {{ disc }}</span></div>
       </div>
       <button v-if="displayFields.artist && artist" class="aartist pointer" :style="displayOrderStyle('artist')" @click="openArtist">{{ artist.name }}</button>
       <div v-else-if="displayFields.artist && album.artist" class="aartist" :style="displayOrderStyle('artist')">{{ album.artist }}</div>
+      <div v-if="isSacdAlbum" ref="sacdControl" class="sacd-album-unit" :style="displayOrderStyle('artist')">
+        <img class="sacd-media-logo sacd-media-logo-detail" src="html/images/SACDlogo.svg" :alt="tr('Super Audio CD')">
+        <button v-if="sacdAvailable === false" type="button" class="sacd-install-command" @click="openSacdPluginManager">{{ tr('Install SACDPlayer') }}</button>
+        <div v-else class="sacd-control">
+          <button ref="sacdMenuTrigger" type="button" class="sacd-menu-trigger" aria-haspopup="menu"
+                  :aria-controls="sacdMenuId" :aria-expanded="String(sacdMenuOpen)"
+                  :disabled="sacdAvailable === null" @click="toggleSacdMenu">
+            <span class="sacd-state-dot" :class="sacdStateClass" aria-hidden="true"></span>
+            <span>{{ sacdCompactLabel }}</span>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>
+          </button>
+          <div v-if="sacdMenuOpen" :id="sacdMenuId" class="sacd-control-menu" role="menu" @keydown="onSacdMenuKeydown">
+            <strong>{{ tr('SACDPlayer') }}</strong>
+            <span class="sacd-menu-status">{{ sacdMenuStatusLabel }}</span>
+            <div class="sacd-progress" role="progressbar" :aria-label="tr('Album preparation')" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="sacdProgressPercent">
+              <i :style="{width:sacdProgressPercent+'%'}"></i>
+            </div>
+            <span v-if="sacdCounts.total" class="sacd-progress-copy">{{ sacdCounts.ready }} {{ tr('of') }} {{ sacdCounts.total }} {{ tr('tracks') }} · {{ sacdProgressPercent }}%</span>
+            <span v-if="sacdFirstError" class="sacd-cache-error">{{ sacdFirstError }}</span>
+            <button v-if="sacdBinaryMissing" type="button" role="menuitem" disabled>{{ tr('sacd_extract binary missing on the server') }}</button>
+            <button v-else type="button" role="menuitem" :disabled="sacdInProgress || sacdBusy" @click="changeSacdCache">{{ sacdMenuActionLabel }}</button>
+          </div>
+        </div>
+      </div>
       <div v-if="displayFields.counts" class="ameta" :style="displayOrderStyle('counts')">{{ metaLine }}</div>
       <div v-if="displayFields.year && album.year" class="edition-years" :style="displayOrderStyle('year')">
         <span>Year of this edition: {{ album.year || 'not available' }}</span>
@@ -83,16 +113,9 @@ Vue.component('lms-album-block', {
           <span>{{ bitRateLine }}</span>
         </span>
       </div>
-      <div v-if="isSacdAlbum" class="sacd-cache-line" role="status">
-        <span class="sacd-cache-badge">{{ sacdCacheLabel }}</span>
-        <span v-if="sacdFirstError" class="sacd-cache-error">{{ sacdFirstError }}</span>
-        <button v-if="!sacdAvailable" type="button" @click="openSacdPluginManager">{{ tr('Install plugin') }}</button>
-        <button v-else-if="sacdBinaryMissing" type="button" disabled>{{ tr('sacd_extract binary missing on the server') }}</button>
-        <button v-else type="button" :disabled="sacdInProgress || sacdBusy" @click="changeSacdCache">{{ sacdActionLabel }}</button>
-      </div>
       <div v-if="displayFields.albumInformation" class="album-summary-inline" :style="displayOrderStyle('albumInformation')">
         <svg viewBox="0 0 24 24" role="img" :aria-label="tr('Album information')"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/></svg>
-        <span>{{ albumSummary }}</span><button type="button" :aria-expanded="String(albumInfoVisible)" @click="albumInfoVisible = !albumInfoVisible">{{ tr(albumInfoVisible ? 'Less' : 'More') }}</button>
+        <span>{{ albumSummary }}</span><button v-if="albumSummary" type="button" class="album-summary-more" :aria-expanded="String(albumInfoVisible)" @click="albumInfoVisible = !albumInfoVisible">{{ tr(albumInfoVisible ? 'Less' : 'More') }}</button>
       </div>
     </div>
   </div>
@@ -110,7 +133,6 @@ Vue.component('lms-album-block', {
   </div>
   <p v-if="incompleteDisc" class="loading-more">{{ tr('Load all album tracks before playing a disc.') }}</p>
   <section v-if="albumInfoVisible" class="album-enrichment">
-    <button type="button" class="album-config-cog" :aria-label="tr('Customize album information')" :title="tr('Customize album information')" @click="configureInformation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="3"/></svg></button>
     <span class="opml-new-label">{{ tr('New') }}</span>
     <h3>{{ tr('Album information') }}</h3>
     <div class="album-information-metadata">
@@ -229,7 +251,7 @@ Vue.component('lms-album-block', {
              metadataOpen: false, discExpanded: {}, discQuery: '', albumInfoStatus: '', albumInfo: { review: '', covers: [] },
 	             albumInfoVisible: false, albumReviewExpanded: false, albumSourceVisible: false,
 	             albumInfoRequestToken: 0, sacdAvailable: null, sacdStats: null, sacdStatus: null,
-	             sacdBusy: false, sacdPollTimer: null,
+	             sacdBusy: false, sacdPollTimer: null, sacdMenuOpen: false, sacdLoadToken: 0,
 	             relatedObserver: null, loading: true, error: '' };
   },
   computed: {
@@ -350,18 +372,42 @@ Vue.component('lms-album-block', {
     sacdBinaryMissing: function () { return this.sacdStats && !this.sacdStats.binary; },
     sacdFirstError: function () { var found=this.sacdTrackStates().filter(function(s){return s.state==='failed'&&s.error;})[0];return found ? found.error : ''; },
     sacdCacheLabel: function () { var c=this.sacdCounts;if(this.sacdAvailable===false)return this.tr('SACD cache status requires the SACDPlayer plugin');if(c.failed)return this.tr('Extraction failed');if(c.total&&c.ready===c.total)return this.tr('Cached');if(c.working)return this.tr('Preparing…')+' ('+c.ready+' '+this.tr('of')+' '+c.total+')';if(c.ready)return this.tr('Partially cached')+' ('+c.ready+' '+this.tr('of')+' '+c.total+')';return this.tr('Not cached'); },
-    sacdActionLabel: function () { if(this.sacdInProgress)return this.tr('Preparing…');return this.sacdCounts.total&&this.sacdCounts.ready===this.sacdCounts.total?this.tr('Remove from cache'):this.tr('Prepare album'); }
+    sacdActionLabel: function () { if(this.sacdInProgress)return this.tr('Preparing…');return this.sacdCounts.total&&this.sacdCounts.ready===this.sacdCounts.total?this.tr('Remove from cache'):this.tr('Prepare album'); },
+    sacdProgressPercent: function () { var c=this.sacdCounts;return c.total ? Math.round(c.ready*100/c.total) : 0; },
+    sacdStateClass: function () { var c=this.sacdCounts;if(c.failed)return 'failed';if(c.working)return 'working';if(c.total&&c.ready===c.total)return 'ready';return 'idle'; },
+    sacdCompactLabel: function () { var c=this.sacdCounts;if(this.sacdAvailable===null)return this.tr('Checking…');if(c.failed)return this.tr('Preparation failed');if(c.total&&c.ready===c.total)return this.tr('Prepared');if(c.working)return this.tr('Preparing…')+' · '+this.sacdProgressPercent+'%';if(c.ready)return this.tr('Partially prepared')+' · '+this.sacdProgressPercent+'%';return this.tr('Not prepared'); },
+    sacdMenuStatusLabel: function () { var c=this.sacdCounts;if(c.failed)return this.tr('Preparation failed');if(c.total&&c.ready===c.total)return this.tr('Album is prepared');if(c.working)return this.tr('Preparing album');if(c.ready)return this.tr('Album is partially prepared');return this.tr('Album is not prepared'); },
+    sacdMenuActionLabel: function () { if(this.sacdBusy)return this.tr('Please wait…');if(this.sacdInProgress)return this.tr('Preparing…');if(this.sacdCounts.total&&this.sacdCounts.ready===this.sacdCounts.total)return this.tr('Remove from cache');if(this.sacdCounts.failed)return this.tr('Try again');return this.tr('Prepare album'); },
+    sacdMenuId: function () { return 'sacd-control-'+String(this.album.id||'album').replace(/[^a-z0-9_-]/gi,'-')+(this.disc?'-'+this.disc:''); }
   },
   methods: {
     sacdTarget: function () { var track=this.tracks.filter(function(t){return /\.iso#(2ch|mch)-\d{2,3}$/i.test(String(t.url||''));})[0];return track ? track.url : ''; },
     sacdTrackStates: function () { var status=this.sacdStatus&&this.sacdStatus.tracks||[],byNumber={};status.forEach(function(row){byNumber[Number(row.number)]=row;});return this.tracks.filter(function(t){return /\.iso#(2ch|mch)-\d{2,3}$/i.test(String(t.url||''));}).map(function(t,index){var match=String(t.url||'').match(/-(\d{2,3})$/);return byNumber[Number(match?match[1]:index+1)]||{number:index+1,state:'absent',error:''};}); },
     sacdTrackReady: function (track) { var match=String(track.url||'').match(/\.iso#(?:2ch|mch)-(\d{2,3})$/i),number=match?Number(match[1]):0;return !!this.sacdTrackStates().filter(function(row){return row.number===number&&row.state==='ready';})[0]; },
-    loadSacdCache: async function () { if(!this.isSacdAlbum)return;this.sacdAvailable=await LmsApi.sacdPlayerAvailable(false);if(!this.sacdAvailable)return;var result=await Promise.all([LmsApi.sacdCacheStats(),LmsApi.sacdAlbumStatus(this.sacdTarget())]);this.sacdStats=result[0];this.sacdStatus=result[1];this.scheduleSacdPoll(); },
+    loadSacdCache: async function () {
+      if (!this.isSacdAlbum) return;
+      var target = this.sacdTarget(), cached = target && echoclassicSacdStatusCache[target];
+      if (cached) { this.sacdAvailable = true; this.sacdStats = cached.stats; this.sacdStatus = cached.status; }
+      var token = ++this.sacdLoadToken;
+      var available = await LmsApi.sacdPlayerAvailable(false);
+      if (token !== this.sacdLoadToken) return;
+      this.sacdAvailable = available;
+      if (!available) return;
+      var result = await Promise.all([LmsApi.sacdCacheStats(), LmsApi.sacdAlbumStatus(target)]);
+      if (token !== this.sacdLoadToken) return;
+      this.sacdStats = result[0]; this.sacdStatus = result[1];
+      if (target) echoclassicSacdStatusCache[target] = { stats: result[0], status: result[1] };
+      this.scheduleSacdPoll();
+    },
     scheduleSacdPoll: function () { if(this.sacdPollTimer){clearTimeout(this.sacdPollTimer);this.sacdPollTimer=null;}if(!this.sacdInProgress)return;var self=this;this.sacdPollTimer=setTimeout(function(){self.loadSacdCache();},5000); },
     changeSacdCache: async function () { if(this.sacdBusy||!this.sacdTarget())return;this.sacdBusy=true;try{if(this.sacdCounts.total&&this.sacdCounts.ready===this.sacdCounts.total)await LmsApi.sacdEvictAlbum(this.sacdTarget());else await LmsApi.sacdPrepareAlbum(this.sacdTarget());await this.loadSacdCache();}catch(e){LmsUi.notify(LmsStore.friendlyError(e,'SACD cache action failed.'),'error',5000);}this.sacdBusy=false; },
     openSacdPluginManager: function () { try{sessionStorage.setItem('echoclassic.plugin-search.v1','SACDPlayer');}catch(e){}this.ui.advancedSettingsPage='/echoclassic/settings/server/plugins.html';LmsUi.setTab('settings');LmsNav.push('settings',{label:'Advanced LMS settings',advanced:true});this.ui.advancedSettings=true; },
+    toggleSacdMenu: function () { this.sacdMenuOpen=!this.sacdMenuOpen;if(this.sacdMenuOpen)this.$nextTick(function(){var button=this.$el.querySelector('.sacd-control-menu button:not(:disabled)');if(button)button.focus();}); },
+    closeSacdMenu: function (restoreFocus) { if(!this.sacdMenuOpen)return;this.sacdMenuOpen=false;if(restoreFocus)this.$nextTick(function(){if(this.$refs.sacdMenuTrigger)this.$refs.sacdMenuTrigger.focus();}); },
+    onSacdMenuKeydown: function (event) { if(event.key==='Escape'){event.preventDefault();this.closeSacdMenu(true);} },
+    onSacdOutsidePointer: function (event) { if(this.sacdMenuOpen&&this.$refs.sacdControl&&!this.$refs.sacdControl.contains(event.target))this.closeSacdMenu(false); },
     displayOrderStyle: function (key) { var index=this.displayOrder.indexOf(key); return { order: index < 0 ? 99 : index }; },
-    configureInformation: function () { LmsLibraryDisplay.open(this.displayContext); },
+    configureInformation: function () { var tab = window.LmsUi && LmsUi.state && LmsUi.state.tab || 'music'; var settingsDepth = window.LmsNav && LmsNav.depth ? LmsNav.depth('settings') : 0; LmsLibraryDisplay.open(this.displayContext, { tab: tab, settingsDepth: settingsDepth }); },
     discOpen: function (n) {
       if (this.discQuery) return true;
       if (Object.prototype.hasOwnProperty.call(this.discExpanded, n)) return this.discExpanded[n];
@@ -671,6 +717,7 @@ Vue.component('lms-album-block', {
   },
   created: function () { this.load(); if (this.enrich) this.loadAlbumInfo(); },
   mounted: function () {
+    document.addEventListener('pointerdown', this.onSacdOutsidePointer);
     this.measureRelatedWidth();
     if (window.ResizeObserver) {
       var self = this;
@@ -682,7 +729,9 @@ Vue.component('lms-album-block', {
   },
   watch: { suppliedTracks: function (value) { if (value) this.tracks = value; }, 'album.id': function () { this.discExpanded = {}; this.metadataOpen = false; this.load(); }, 'store.playerId': function () { if (!this.suppliedTracks) this.load(); } },
   beforeDestroy: function () {
+    document.removeEventListener('pointerdown', this.onSacdOutsidePointer);
     this.trackLoadToken++;
+    this.sacdLoadToken++;
     if (this.sacdPollTimer) clearTimeout(this.sacdPollTimer);
     if (this.relatedObserver) this.relatedObserver.disconnect();
     else window.removeEventListener('resize', this.measureRelatedWidth);

@@ -32,14 +32,13 @@ Vue.component('lms-opml', {
       <div v-if="it.kind === 'text'" :key="'t' + i" class="optext">{{ it.title }}</div>
 
       <div v-else-if="it.kind === 'search'" :key="'s' + i" class="opsearch">
-        <svg class="ic" style="width:17px;height:17px" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="M16 16l5.5 5.5"/></svg>
-        <input v-model="terms[i]" :placeholder="searchPlaceholder(it)"
-               :aria-label="searchPlaceholder(it)" :title="searchTitle(it)"
-               :aria-invalid="fieldErrorIndex === i ? 'true' : null"
-               @input="clearFieldError(i)" @keyup.enter="search(it, i)">
-        <button class="opsearch-action pointer" type="button" @click="search(it, i)">
-          {{ searchAction(it) }}
-        </button>
+        <div class="opsearch-field">
+          <svg class="ic" style="width:17px;height:17px" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="M16 16l5.5 5.5"/></svg>
+          <input v-model="terms[i]" :placeholder="searchPlaceholder(it)"
+                 :aria-label="searchPlaceholder(it)" :title="searchTitle(it)"
+                 :aria-invalid="fieldErrorIndex === i ? 'true' : null"
+                 @input="clearFieldError(i)" @keyup.enter="search(it, i)">
+        </div>
       </div>
 
       <div v-else :key="'i' + i" class="row favourite-item-row"
@@ -99,7 +98,7 @@ Vue.component('lms-opml', {
       {{ loadingMore ? tr('Loading next 100…') : tr(pageError ? 'Try again' : 'Load next 100') }}
     </button>
   </div>
-  <div v-else-if="endReached && items.length" class="opml-page-end" role="status">
+  <div v-else-if="endReached && items.length && paged" class="opml-page-end" role="status">
     {{ endMessage }}
   </div>
 </div>`,
@@ -108,7 +107,7 @@ Vue.component('lms-opml', {
              fieldError: '', fieldErrorIndex: null, hasMore: false,
              loadingMore: false, pageError: '', pageStatus: '',
              showPageStatus: false, endReached: false, noProgress: false,
-             nextStart: 0, requestToken: 0, activeKey: '' };
+             nextStart: 0, requestToken: 0, activeKey: '', paged: false };
   },
   computed: {
     frame: function () { return LmsNav.top(this.tab); },
@@ -209,7 +208,7 @@ Vue.component('lms-opml', {
       opmlSnapshots[this.activeKey] = {
         items: this.items.slice(), terms: Object.assign({}, this.terms),
         hasMore: this.hasMore, endReached: this.endReached,
-        noProgress: this.noProgress, nextStart: this.nextStart,
+        noProgress: this.noProgress, nextStart: this.nextStart, paged: this.paged,
         scroll: this.$refs.scroller ? this.$refs.scroller.scrollTop : 0
       };
     },
@@ -222,6 +221,7 @@ Vue.component('lms-opml', {
       this.endReached = saved.endReached;
       this.noProgress = saved.noProgress;
       this.nextStart = saved.nextStart;
+      this.paged = !!saved.paged;
       this.loading = false;
       var self = this;
       this.$nextTick(function () {
@@ -344,6 +344,7 @@ Vue.component('lms-opml', {
       this.showPageStatus = false;
       this.endReached = false;
       this.noProgress = false;
+      this.paged = false;
       if (this.restoreSnapshot(key)) return;
       if (f && f.preloaded) {
         this.items = f.preloaded;
@@ -390,6 +391,7 @@ Vue.component('lms-opml', {
         if (token !== this.requestToken || key !== this.activeKey ||
             playerId !== (LmsStore.state.playerId || '')) return;
         this.nextStart += page.length;
+        this.paged = true;
         var seen = {};
         this.items.forEach(function (it) { if (it.identity) seen[it.identity] = true; });
         var added = [];

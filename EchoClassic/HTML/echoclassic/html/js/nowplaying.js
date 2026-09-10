@@ -12,11 +12,11 @@ Vue.component('lms-nowplaying', {
   template: `
 <div class="npstage" :class="fullscreen ? 'mode-fullscreen' : 'mode-adaptive'" v-bind="surfaceAttrs">
   <div class="npback" @click="close"></div>
-  <section ref="dialog" class="npfull" :class="{'with-queue': ui.queueInline}"
+  <section ref="dialog" class="npfull reviewed-player" :class="{'with-queue': ui.queueInline}"
            role="dialog" :aria-modal="String(isModal)" aria-label="Now playing"
            tabindex="-1" @keydown.tab="trapFocus" @keydown.esc.stop.prevent="close"
            @keydown="onPlayerKey">
-    <button v-if="!ui.kioskMode" type="button" class="dismiss pointer" title="Close" aria-label="Close player" @click="close">
+    <button v-if="!ui.kioskMode" type="button" class="dismiss pointer" title="Close" aria-label="Close player" @click="close" @pointerdown="beginDismiss" @pointermove="moveDismiss" @pointerup="endDismiss" @pointercancel="cancelDismiss">
       <svg viewBox="0 0 24 12"><path d="M3 3l9 6 9-6"/></svg>
     </button>
     <button v-if="!fullscreen && !ui.kioskMode" type="button" class="player-position pointer"
@@ -46,9 +46,31 @@ Vue.component('lms-nowplaying', {
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
     </button>
 
+    <div class="player-review-toolbar">
+      <button type="button" class="player-name-command" :aria-label="playerPickerLabel" @click="openPlayerPicker">{{ activePlayerName }} <span aria-hidden="true">⌄</span></button>
+      <template v-if="fullscreen">
+        <button type="button" :title="shuffleLabel" :aria-label="shuffleLabel" :aria-pressed="String(!!store.shuffle)" @click="shuffle"><svg viewBox="0 0 24 24"><path d="M3 6h3c5 0 7 12 12 12h3M17 14l4 4-4 4M3 18h3c2 0 3-2 4-4M14 9c1-2 2-3 4-3h3M17 2l4 4-4 4"/></svg></button>
+        <button type="button" :title="repeatLabel" :aria-label="repeatLabel" :aria-pressed="String(!!store.repeat)" @click="repeat"><svg viewBox="0 0 24 24"><path d="M4 8a4 4 0 014-4h11M16 1l3 3-3 3M20 16a4 4 0 01-4 4H5M8 17l-3 3 3 3"/></svg></button>
+        <button type="button" :title="favoriteLabel" :aria-label="favoriteLabel" :aria-pressed="String(store.npFavorite)" @click="favorite"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-9.3A3.8 3.8 0 0112 8a3.8 3.8 0 017 2.7c0 4.7-7 9.3-7 9.3z"/></svg></button>
+        <button v-if="store.equalizer.status === 'ready'" type="button" title="Equalizer" aria-label="Equalizer" @click="openEqualizer"><svg viewBox="0 0 24 24"><path d="M5 3v18M12 3v18M19 3v18M2 9h6M9 15h6M16 7h6"/></svg></button>
+        <button type="button" title="Playback queue" aria-label="Playback queue" :aria-pressed="String(ui.queueInline)" @click="toggleQueueInline"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
+        <button type="button" :title="tr('Customize this panel')" :aria-label="tr('Customize this panel')" :aria-expanded="String(panelEditing)" @click="panelEditing=!panelEditing"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16M8 2v6M16 9v6M10 16v6"/></svg></button>
+      </template>
+      <div v-else-if="!ui.kioskMode" class="player-placement">
+        <button v-for="position in ['left','center','right']" :key="position" type="button" :aria-label="tr(position === 'left' ? 'Left' : position === 'center' ? 'Center' : 'Right')" :title="tr(position === 'left' ? 'Left' : position === 'center' ? 'Center' : 'Right')" :aria-pressed="String(ui.playerPosition === position)" @click="place(position)"><svg viewBox="0 0 30 20"><rect x="1" y="2" width="28" height="16"/><rect :x="position === 'left' ? 2 : position === 'center' ? 11 : 20" y="3" width="8" height="14" class="placement-fill"/></svg></button>
+        <button type="button" :title="tr('Mini player only')" :aria-label="tr('Mini player only')" @click="close"><svg viewBox="0 0 30 20"><rect x="1" y="2" width="28" height="16"/><path d="M2 14h26"/></svg></button>
+      </div>
+    </div>
+    <div class="player-main-column">
     <div class="cover" :class="{placeholder: !coverUrl || coverFailed}">
       <img v-if="coverUrl && !coverFailed" :src="coverUrl" alt="" @error="coverFailed = true">
       <span v-else class="art-placeholder" aria-hidden="true">♫</span>
+    </div>
+
+    <div v-if="store.canRate && np.id" class="rating-row" aria-label="Rating">
+      <button type="button" v-for="n in 5" :key="n" :class="{on: n <= rating}" @click="rate(n)"
+              :aria-label="ratingLabel(n)">★</button>
+      <span>{{ playCount }} {{ playCount === 1 ? 'playback' : 'plays' }}</span>
     </div>
 
     <div class="head">
@@ -57,12 +79,6 @@ Vue.component('lms-nowplaying', {
         <span v-if="ui.appendRatingToTitle && store.canRate && np.id" class="title-rating"
               :aria-label="ratingLabel(rating)">{{ ratingStars }}</span>
       </div>
-      <button type="button" class="np-player-row pointer" :aria-label="playerPickerLabel"
-              @click="openPlayerPicker">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h3l5 4V5L7 9z"/></svg>
-        <span class="ell">{{ activePlayerName }}</span>
-        <svg class="chevron" viewBox="0 0 12 20" aria-hidden="true"><path d="M2 2l8 8-8 8"/></svg>
-      </button>
       <div class="s ell" :title="subtitle" :aria-label="subtitle">{{ subtitle }}</div>
     </div>
 
@@ -136,21 +152,21 @@ Vue.component('lms-nowplaying', {
       </button>
     </div>
 
-    <div class="np-secondary">
+    </div>
+    <div v-if="!fullscreen" class="np-secondary">
       <button type="button" class="secondary-action pointer"
               :title="favoriteLabel" :aria-label="favoriteLabel"
               :aria-pressed="String(store.npFavorite)" @click="favorite">
         <svg class="heart" :class="{on: store.npFavorite}" aria-hidden="true"
              viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-9.3A3.8 3.8 0 0112 8a3.8 3.8 0 017 2.7c0 4.7-7 9.3-7 9.3z"/></svg>
       </button>
-      <div class="np-signal" v-if="badges.length || signalPathText || replayGainText"
+      <div class="np-signal" v-if="badges.length || np.isTranscoded || replayGainText"
            aria-live="polite" :title="signalPathTitle">
         <div class="specs" v-if="badges.length" aria-label="Output stream">
           <span v-for="b in badges" :key="b.text" class="badge" :class="{hi: b.hi}">{{ b.text }}</span>
         </div>
-        <div class="signal-path" v-if="signalPathText">
+        <div class="signal-path" v-if="np.isTranscoded || replayGainText">
           <span v-if="np.isTranscoded" class="transcoded">Transcoded</span>
-          <span>{{ signalPathText }}</span>
           <span v-if="replayGainText">{{ replayGainText }}</span>
         </div>
       </div>
@@ -168,17 +184,12 @@ Vue.component('lms-nowplaying', {
       </button>
     </div>
 
-    <div class="np-tools">
+    <div v-if="!fullscreen" class="np-tools">
       <button type="button" :class="{on: store.shuffle}" :aria-pressed="String(!!store.shuffle)" @click="shuffle">{{ shuffleLabel }}</button>
       <button type="button" :class="{on: store.repeat}" :aria-pressed="String(!!store.repeat)" @click="repeat">{{ repeatLabel }}</button>
       <button type="button" v-if="np.id" @click="info">Information</button>
     </div>
-    <div v-if="store.canRate && np.id" class="rating-row" aria-label="Rating">
-      <button type="button" v-for="n in 5" :key="n" :class="{on: n <= rating}" @click="rate(n)"
-              :aria-label="ratingLabel(n)">★</button>
-      <span>{{ playCount }} {{ playCount === 1 ? 'playback' : 'plays' }}</span>
-    </div>
-
+    <lms-player-library-panel v-if="fullscreen" :editing="panelEditing"></lms-player-library-panel>
     <lms-queue v-if="ui.queueInline" :inline="true"></lms-queue>
   </section>
 </div>`,
@@ -186,7 +197,7 @@ Vue.component('lms-nowplaying', {
     return {
       ui: LmsUi.state, store: LmsStore.state,
       dragTime: null, dragVolume: null, coverFailed: false,
-      viewportWidth: window.innerWidth, previousFocus: null
+      viewportWidth: window.innerWidth, previousFocus: null, panelEditing: false, dismissStart: null
     };
   },
   computed: {
@@ -268,12 +279,6 @@ Vue.component('lms-nowplaying', {
       if (this.np.format) out.push({ text: LmsFmt.format(this.np.format), hi: false });
       return out;
     },
-    signalPathText: function () {
-      var output = this.streamLabel(this.np.activeStream);
-      var source = this.streamLabel(this.np.sourceStream);
-      if (this.np.isTranscoded && source && output) return source + ' → ' + output;
-      return output ? 'Output ' + output : '';
-    },
     replayGainText: function () {
       if (this.store.replayGainApplied == null || !isFinite(Number(this.store.replayGainApplied))) return '';
       var gain = Number(this.store.replayGainApplied);
@@ -353,6 +358,11 @@ Vue.component('lms-nowplaying', {
     close: function () {
       LmsUi.closePlayer();
     },
+    place: function (position) { LmsUi.setPlayerPosition(position); },
+    beginDismiss: function (event) { this.dismissStart = event.clientY; if (event.currentTarget.setPointerCapture) event.currentTarget.setPointerCapture(event.pointerId); },
+    moveDismiss: function (event) { if (this.dismissStart == null) return; this.$refs.dialog.style.transform = 'translateY(' + Math.max(0, event.clientY - this.dismissStart) + 'px)'; },
+    cancelDismiss: function () { this.dismissStart = null; if (this.$refs.dialog) this.$refs.dialog.style.transform = ''; },
+    endDismiss: function (event) { var distance = this.dismissStart == null ? 0 : event.clientY - this.dismissStart; this.cancelDismiss(); if (distance > 70) this.close(); },
     openPlayerPicker: function (event) {
       LmsUi.openActions({ kind: 'player-picker', title: 'Player' },
                          event && event.currentTarget);
