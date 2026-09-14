@@ -15,6 +15,23 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.9] — 2026-09-14
+
+### Added
+- Equalizer now includes a live logarithmic frequency-response graph for SqueezeDSP and Apple Squeezer, including preamp, graphic bands and parametric filters. [live/measured] musicplayer.local; tests/equalizer-ui.test.js
+- Recently played can be shown as tracks, reduced to unique albums, or hidden from the Recent view. Apps is now labelled Apps & Extras so LMS services and plugin-provided extras are easier to find, and the persistent player bar exposes volume controls from My Music. [live/measured] musicplayer.local; tests/browse.test.js, tests/settings-groups.test.js
+- Bundled station artwork can override LMS's generic radio placeholder; WCRB is the first mapped station. [live/code] musicplayer.local; EchoClassic/HTML/echoclassic/html/js/format.js
+
+### Fixed
+- LMS virtual libraries are read from every supported response loop, de-duplicated and exposed as selectable My Music roots. [measured] tests/api.test.js, tests/search.test.js
+- Recent album details follow Now Playing when the track changes, while manual browsing remains pinned to the album the listener selected. [measured] tests/browse.test.js
+- Album and artist detail remain readable in Chrome when the centre pane becomes narrow. Missing MusicArtistInfo reviews now say “None found…”, and external biographies carry a visible reliability notice. [live/measured] musicplayer.local; tests/artist-metadata.test.js, tests/browse.test.js
+- Collection rejects implausible release years instead of creating future decade groups, explains albums absent from its track-derived index, and opens a cached dashboard without immediately presenting it as stale. [live/measured] musicplayer.local; tests/collection-dashboard.test.js, tests/library-review.test.js
+- The player picker describes Squeezelite as Echo's fallback rather than an LMS-defined default. [measured] tests/player-picker.test.js
+
+### Compatibility
+- Echo Classic 3.5.9 supports LMS 8.0 and later. SqueezeDSP, Apple Squeezer, MusicArtistInfo, Ratings Light and SACDPlayer remain optional; the new presentation and metadata safeguards degrade to the existing LMS behavior when those plugins are absent. [code/measured]
+
 ## [3.5.8] — 2026-09-10
 
 ### Fixed

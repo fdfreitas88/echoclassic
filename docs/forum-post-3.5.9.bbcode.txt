@@ -1,0 +1,53 @@
+[b]Echo Classic 3.5.9[/b]
+
+Echo Classic 3.5.9 adds a live Equalizer response graph and rounds out library, radio, metadata and responsive-layout behavior reported by LMS users.
+
+[b]What's New[/b]
+
+The Equalizer dashboard now plots the combined effect of the preamp, graphic bands and parametric filters on a logarithmic 20 Hz–20 kHz axis. The preview updates while settings are edited, before they are applied to the player, and supports both SqueezeDSP and Apple Squeezer.
+
+[img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/images/release-3.5.9-equalizer.png[/img]
+
+Recently played can now show individual tracks, collapse to unique albums or be hidden. Apps is labelled Apps & Extras to make LMS services and plugin-provided entries easier to find, and the persistent player bar provides a direct route to volume controls from My Music.
+
+Echo Classic can use bundled artwork for known radio stations instead of LMS's generic antenna image. WCRB is the first included mapping.
+
+[b]Improvements[/b]
+
+LMS virtual libraries are discovered from the response formats used by current servers, de-duplicated and exposed as selectable My Music roots.
+
+Recent album detail follows the album currently playing until the listener manually browses elsewhere. The centre detail pane also remains readable when Chrome gives it a narrow column.
+
+MusicArtistInfo biographies are visibly identified as external content that may contain errors. Missing album reviews use the neutral “None found…” state.
+
+[b]Fixes[/b]
+
+Collection no longer creates impossible future decade groups from malformed years such as 4070. Those albums are grouped under Unknown.
+
+Collection now explains when the LMS album census includes entries that are not represented by the track rows used for its analytics. Streaming entries remain excluded only from storage calculations, and missing file sizes are not estimated.
+
+A saved Collection dashboard opens as saved content instead of immediately displaying “Library changed · Update available.” A later revision check still offers an update when the LMS library has actually changed.
+
+The player picker now describes Squeezelite as Echo's fallback rather than implying that LMS defines a player named “LMS Default.”
+
+[b]Compatibility[/b]
+
+Echo Classic 3.5.9 supports Lyrion Music Server 8.0 and later. SqueezeDSP, Apple Squeezer, MusicArtistInfo, Ratings Light and SACDPlayer remain optional; ordinary playback and navigation continue without them.
+
+[b]Installation / Upgrade[/b]
+
+Add the Echo Classic repository URL under Server Settings > Plugins > Additional repositories, then install or update Echo Classic and restart LMS when requested:
+
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/repo.xml
+
+[b]Notes[/b]
+
+The Equalizer graph is a preview of the configured processing curve. External biography text remains supplied by MusicArtistInfo and is labelled accordingly.
+
+[b]Links[/b]
+
+Project: https://github.com/fdfreitas88/echoclassic
+Release: https://github.com/fdfreitas88/echoclassic/releases/tag/v3.5.9
+Changelog: https://github.com/fdfreitas88/echoclassic/blob/main/CHANGELOG.md
+
+By Felipe Freitas

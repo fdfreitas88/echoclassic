@@ -441,6 +441,17 @@ test('ARTMETA-01: album review and cover candidates use documented album_id call
   assert.ok(ctx.calls.some(function (cmd) { return cmd.join(' ') === 'musicartistinfo albumcovers album_id:42'; }));
 });
 
+test('ARTMETA-01: a plugin not-found apology is normalized as an empty review', async function () {
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'can') return { _can: 1 };
+    if (cmd[1] === 'albumreview') return { albumreview: "I'm sorry, didn't find an album review." };
+    return {};
+  });
+  const info = await ctx.api.musicAlbumInfo('p1', 42);
+  assert.equal(info.review, '');
+  assert.equal(info.reviewMissing, true);
+});
+
 test('LIST-01: OPML paging carries stable action identity and the requested window', async function () {
   const ctx = apiContext(function (cmd) {
     if (cmd[0] === 'apps') {
@@ -640,6 +651,18 @@ test('role-scoped album queries retain role and library constraints for multiple
   await ctx.api.albums('',0,500,{artistIds:['7','8'],roleId:2});
   assert.equal(ctx.calls.length,2);
   for (const cmd of ctx.calls) { assert.ok(cmd.includes('role_id:2')); assert.ok(cmd.includes('library_id:root')); }
+});
+
+test('libraries reads LMS virtual libraries from folder_loop and removes duplicates', async function () {
+  const ctx = apiContext(() => ({
+    folder_loop: [{ id:'sixties', name:'1960s Rock' }, { id:'disabled', name:'Hidden', enabled:0 }],
+    libraries_loop: [{ library_id:'sixties', library:'Duplicate' }, { library_id:'classical', library:'Classical Folder' }]
+  }));
+  assert.deepEqual(plain(await ctx.api.libraries('player')), [
+    { id:'sixties', name:'1960s Rock', enabled:true },
+    { id:'classical', name:'Classical Folder', enabled:true }
+  ]);
+  assert.deepEqual(ctx.calls[0], ['libraries', 0, 100]);
 });
 
 test('collectionTracks asks for the year tag and maps it', async function () {

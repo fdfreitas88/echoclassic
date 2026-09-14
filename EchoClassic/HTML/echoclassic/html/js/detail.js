@@ -28,7 +28,7 @@ Vue.component('lms-detail', {
         <div class="artist-compact-identity"><span v-if="albumInformationFields(a).artistCover" class="artist-compact-photo" :class="{placeholder:!enrichment.photoUrl||photoFailed}"><img v-if="enrichment.photoUrl&&!photoFailed" :src="largeArt(enrichment.photoUrl)" alt="" @error="photoFailed=true"><span v-else aria-hidden="true">{{ albumArtistInitial(a) }}</span></span><span><strong>{{ albumArtistLabel(a) }}</strong><small :id="artistEnrichmentTitleId(a)">{{ tr('Artist information') }}</small></span></div>
         <div v-if="enrichmentLoading" class="artist-enrichment-status" role="status">{{ tr('Finding artist information…') }}</div>
         <div v-else-if="enrichmentStatus === 'ready'">
-          <p v-if="enrichment.biography" class="artist-biography" :class="{expanded:enrichmentExpanded}">{{ enrichment.biography }}</p>
+          <p v-if="enrichment.biography" class="artist-biography" :class="{expanded:enrichmentExpanded}">{{ enrichment.biography }}</p><small v-if="enrichment.biography" class="artist-biography-notice">{{ tr('External biography · may contain errors') }}</small>
           <p v-else class="artist-enrichment-status">{{ tr('No artist biography was found.') }}</p>
           <div class="artist-enrichment-links"><button v-if="enrichment.biography" type="button" :aria-expanded="enrichmentExpanded?'true':'false'" @click="enrichmentExpanded=!enrichmentExpanded">{{ tr(enrichmentExpanded?'Show less':'Read biography') }}</button><button type="button" @click="retryEnrichment">{{ tr('Refresh') }}</button><button type="button" @click="removeEnrichment">{{ tr('Hide for now') }}</button></div>
         </div>
@@ -147,7 +147,7 @@ Vue.component('lms-detail', {
         <div class="artist-compact-identity"><span class="artist-compact-photo" :class="{placeholder:!frame.art||photoFailed}"><img v-if="frame.art&&!photoFailed" :src="largeArt(frame.art)" alt="" @error="photoFailed=true"><span v-else aria-hidden="true">{{ initial }}</span></span><span><strong>{{ frame.label }}</strong><small id="artist-enrichment-title">{{ tr('Artist information') }}</small></span></div>
         <div v-if="enrichmentLoading" class="artist-enrichment-status" role="status">{{ tr('Finding artist information…') }}</div>
         <div v-else-if="enrichmentStatus === 'ready'">
-          <p v-if="enrichment.biography" class="artist-biography" :class="{expanded:enrichmentExpanded}">{{ enrichment.biography }}</p>
+          <p v-if="enrichment.biography" class="artist-biography" :class="{expanded:enrichmentExpanded}">{{ enrichment.biography }}</p><small v-if="enrichment.biography" class="artist-biography-notice">{{ tr('External biography · may contain errors') }}</small>
           <p v-else class="artist-enrichment-status">{{ tr('No artist biography was found.') }}</p>
           <div class="artist-enrichment-links"><button v-if="enrichment.biography" type="button" :aria-expanded="enrichmentExpanded?'true':'false'" @click="enrichmentExpanded=!enrichmentExpanded">{{ tr(enrichmentExpanded?'Show less':'Read biography') }}</button><button type="button" @click="retryEnrichment">{{ tr('Refresh') }}</button><button type="button" @click="removeEnrichment">{{ tr('Hide for now') }}</button></div>
         </div>
@@ -181,7 +181,7 @@ Vue.component('lms-detail', {
         <button type="button" class="retry-command" @click="retryEnrichment">{{ tr('Find metadata') }}</button>
       </div>
       <template v-else-if="enrichmentStatus === 'ready'">
-        <p v-if="enrichment.biography" class="artist-biography" :class="{expanded: enrichmentExpanded}">{{ enrichment.biography }}</p>
+        <p v-if="enrichment.biography" class="artist-biography" :class="{expanded: enrichmentExpanded}">{{ enrichment.biography }}</p><small v-if="enrichment.biography" class="artist-biography-notice">{{ tr('External biography · may contain errors') }}</small>
         <p v-else class="artist-enrichment-status">{{ tr('No artist biography was found.') }}</p>
         <div class="artist-enrichment-links">
           <button v-if="enrichment.biography" type="button" class="retry-command artist-biography-toggle"
@@ -232,7 +232,7 @@ Vue.component('lms-detail', {
             <div class="artist-compact-identity"><span class="artist-compact-photo" :class="{placeholder:!detailArtistPhoto||photoFailed}"><img v-if="detailArtistPhoto&&!photoFailed" :src="largeArt(detailArtistPhoto)" alt="" @error="photoFailed=true"><span v-else aria-hidden="true">{{ detailArtistInitial(a) }}</span></span><span><strong>{{ detailArtistLabel(a) }}</strong><small :id="artistEnrichmentTitleId(a)">{{ tr('Artist information') }}</small></span></div>
             <div v-if="enrichmentLoading" class="artist-enrichment-status" role="status">{{ tr('Finding artist information…') }}</div>
             <div v-else-if="enrichmentStatus === 'ready'">
-              <p v-if="enrichment.biography" class="artist-biography" :class="{expanded:enrichmentExpanded}">{{ enrichment.biography }}</p>
+              <p v-if="enrichment.biography" class="artist-biography" :class="{expanded:enrichmentExpanded}">{{ enrichment.biography }}</p><small v-if="enrichment.biography" class="artist-biography-notice">{{ tr('External biography · may contain errors') }}</small>
               <p v-else class="artist-enrichment-status">{{ tr('No artist biography was found.') }}</p>
               <div class="artist-enrichment-links"><button v-if="enrichment.biography" type="button" :aria-expanded="enrichmentExpanded?'true':'false'" @click="enrichmentExpanded=!enrichmentExpanded">{{ tr(enrichmentExpanded?'Show less':'Read biography') }}</button><button type="button" @click="retryEnrichment">{{ tr('Refresh') }}</button><button type="button" @click="removeEnrichment">{{ tr('Hide for now') }}</button></div>
             </div>

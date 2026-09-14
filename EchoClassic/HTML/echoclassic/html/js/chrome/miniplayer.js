@@ -54,7 +54,7 @@ Vue.component('lms-miniplayer', {
   </button>
   <div v-if="!ui.full" class="r">
     <button v-if="hasTrack" type="button" class="mini-action pointer" title="Change player" aria-label="Change player" @click="playerPicker"><svg class="ic" viewBox="0 0 24 24"><path d="M4 9v6h3l5 4V5L7 9zM16 8a6 6 0 010 8"/></svg></button>
-    <button v-if="hasTrack" type="button" class="mini-action pointer" title="Open player" aria-label="Open player" @click="open"><svg class="ic" viewBox="0 0 24 24"><path d="M3 4h18v16H3zM15 4v16"/></svg></button>
+    <button v-if="hasTrack" type="button" class="mini-action mini-volume-command pointer" :title="volumeLabel" :aria-label="volumeLabel" @click="open"><svg class="ic" viewBox="0 0 24 24"><path d="M4 9v6h3l5 4V5L7 9zM16 8a6 6 0 010 8"/></svg><span class="mini-volume-label">{{ Math.round(store.volume) }}%</span></button>
     <button v-if="hasTrack && store.equalizer.status === 'ready'" type="button"
             class="mini-action mini-equalizer-command pointer"
             :class="{on: store.equalizer.settings && !store.equalizer.settings.Client.Bypass}"
@@ -89,7 +89,7 @@ Vue.component('lms-miniplayer', {
       return label + (this.np.title ? ': ' + this.np.title : '');
     },
     playing: function () { return this.store.mode === 'play'; },
-    coverUrl: function () { return LmsFmt.coverUrl(this.np.coverId, 50); },
+    coverUrl: function () { return LmsFmt.artworkUrl(this.np, 50); },
     subtitle: function () {
       var parts = [];
       if (this.np.artist) parts.push(this.np.artist);
@@ -104,6 +104,10 @@ Vue.component('lms-miniplayer', {
     elapsed: function () { return LmsFmt.duration(this.store.time); },
     remaining: function () {
       return LmsFmt.duration(Math.max(0, this.store.duration - this.store.time));
+    },
+    volumeLabel: function () {
+      if (!this.store.volumeControllable) return this.tr('Open player · volume is controlled on the DAC');
+      return this.tr('Volume') + ' ' + Math.round(this.store.volume) + '% · ' + this.tr('open volume controls');
     },
     badges: function () {
       var out = [];
@@ -128,6 +132,7 @@ Vue.component('lms-miniplayer', {
     'np.id': function () { this.coverFailed = false; }
   },
   methods: {
+    tr: function (value) { return window.LmsStr && LmsStr.t ? LmsStr.t(value) : value; },
     playerPicker: function (event) { LmsUi.openActions({ kind: 'player-picker', title: 'Player' }, event.currentTarget); },
     open: function () { if (this.hasTrack) this.$emit('full'); },
     play: function () { LmsStore.play(); },

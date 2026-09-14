@@ -63,7 +63,7 @@
              @keydown.up.stop.prevent="movePlayerFocus(-1)"
              @keydown.down.stop.prevent="movePlayerFocus(1)">
       <div v-if="activePlayer" class="player-picker-summary">
-        <small>Active player</small><strong class="ell">{{ activePlayer.name }} <em v-if="isDefaultPlayer(activePlayer)">LMS default</em></strong>
+        <small>Active player</small><strong class="ell">{{ activePlayer.name }} <em v-if="isFallbackPlayer(activePlayer)">Echo fallback</em></strong>
         <span class="ell">{{ activePlayerSummary }}{{ playerOutput(activePlayer) }}</span>
       </div>
       <p class="player-picker-intro">Choosing a player does not change playback until you apply the switch.</p>
@@ -74,7 +74,7 @@
                   :class="{on: p.id === store.playerId, selected: pendingPlayerId === p.id}" role="option"
                   :disabled="playerSwitchBusy" :aria-selected="pendingPlayerId === p.id ? 'true' : 'false'" @click="choosePlayer(p)">
             <span class="player-picker-icon" aria-hidden="true">▣</span>
-            <span class="player-picker-copy"><strong class="ell">{{ p.name }} <em v-if="isDefaultPlayer(p)">LMS default</em></strong><small class="ell">{{ playerDetail(p) }}{{ playerOutput(p) }}</small></span>
+            <span class="player-picker-copy"><strong class="ell">{{ p.name }} <em v-if="isFallbackPlayer(p)">Echo fallback</em></strong><small class="ell">{{ playerDetail(p) }}{{ playerOutput(p) }}</small></span>
             <span class="player-picker-radio" aria-hidden="true"></span>
           </button>
         </div>
@@ -94,7 +94,7 @@
       <div v-if="experimentalPlayers.length" class="player-picker-experimental">
         <strong>Experimental players</strong>
         <span v-for="p in experimentalPlayers" :key="p.id">{{ p.name }} · Test integration</span>
-        <small>Experimental players never replace the LMS default or fallback automatically.</small>
+        <small>Experimental players are never selected as Echo's automatic fallback.</small>
       </div>
       <div v-if="pendingPlayer" class="player-switch-review" aria-live="polite">
         <span>Switch control from <b>{{ activePlayer ? activePlayer.name : 'Squeezelite' }}</b> to <b>{{ pendingPlayer.name }}</b>. Music will stop during validation.</span>
@@ -209,7 +209,7 @@
         if (!this.item || this.item.kind === 'player-picker') return '';
         var id = this.item.coverId || this.item.artworkTrackId ||
           (this.item.kind === 'album' ? this.item.id : null);
-        return id ? LmsFmt.coverUrl(id, 80) : '';
+        return LmsFmt.artworkUrl(Object.assign({}, this.item || {}, { coverId: id }), 80);
       },
       filteredPlaylists: function () {
         var query = this.playlistQuery.toLocaleLowerCase();
@@ -459,7 +459,7 @@
         try { await LmsStore.refreshPlayers(); }
         catch (e) { this.playerSwitchError = LmsStore.friendlyError(e, 'Could not refresh players.'); }
       },
-      isDefaultPlayer: function (p) {
+      isFallbackPlayer: function (p) {
         return !!(p && /squeezelite/i.test((p.model || '') + ' ' + (p.name || '')));
       },
       playerOutput: function (p) {
@@ -716,7 +716,7 @@
       infoCoverUrl: function () {
         var id = this.item && (this.item.coverId || this.item.artworkTrackId);
         if (!id && this.isCurrentTrack) id = this.store.np.coverId;
-        return id ? LmsFmt.coverUrl(id, 160) : '';
+        return LmsFmt.artworkUrl(Object.assign({}, this.item || {}, { coverId: id }), 160);
       },
       infoCoverStyle: function () {
         return this.infoCoverUrl ? { backgroundImage: 'url(' + this.infoCoverUrl + ')' } : {};
@@ -904,7 +904,7 @@
       },
       art: function (item) {
         var id = item.coverId || item.artworkTrackId || (item.kind === 'album' ? item.id : null);
-        var url = id ? LmsFmt.coverUrl(id, 100) : '';
+        var url = LmsFmt.artworkUrl(Object.assign({}, item, { coverId: id }), 100);
         return url ? { backgroundImage: 'url(' + url + ')', backgroundSize: 'cover' } : {};
       },
       open: function (item) { LmsUi.openActions(item); }

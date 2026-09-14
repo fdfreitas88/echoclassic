@@ -5781,11 +5781,11 @@ ECHOCLASSIC_UI_SELECTION_SENT_TO_PLAYLIST_BUILDER
 	FR	Sélection envoyée au créateur de playlist.
 	PT	Seleção enviada ao Criador de playlist.
 
-ECHOCLASSIC_UI_LMS_DEFAULT
-	EN	LMS default
-	DE	LMS-Standard
-	FR	Par défaut LMS
-	PT	Padrão do LMS
+ECHOCLASSIC_UI_ECHO_FALLBACK
+	EN	Echo fallback
+	DE	Echo-Rückfalloption
+	FR	Lecteur de secours Echo
+	PT	Fallback do Echo
 
 ECHOCLASSIC_UI_PLAYER_PICKER_APPLY_NOTE
 	EN	Choosing a player does not change playback until you apply the switch.
@@ -5806,10 +5806,10 @@ ECHOCLASSIC_UI_TEST_INTEGRATION
 	PT	Integração de teste
 
 ECHOCLASSIC_UI_EXPERIMENTAL_DEFAULT_NOTE
-	EN	Experimental players never replace the LMS default or fallback automatically.
-	DE	Experimentelle Player ersetzen niemals automatisch den LMS-Standard oder die Rückfalloption.
-	FR	Les lecteurs expérimentaux ne remplacent jamais automatiquement le lecteur LMS par défaut ou de secours.
-	PT	Players experimentais nunca substituem automaticamente o padrão ou fallback do LMS.
+	EN	Experimental players are never selected as Echo's automatic fallback.
+	DE	Experimentelle Player werden nie automatisch als Echo-Rückfalloption ausgewählt.
+	FR	Les lecteurs expérimentaux ne sont jamais sélectionnés comme lecteur de secours automatique d’Echo.
+	PT	Players experimentais nunca são selecionados como fallback automático do Echo.
 
 ECHOCLASSIC_UI_SWITCH_CONTROL_FROM
 	EN	Switch control from
@@ -6777,3 +6777,69 @@ ECHOCLASSIC_OPTIONAL_EQ_3
 	DE	Apple Squeezer installieren
 	FR	Installer Apple Squeezer
 	PT	Instalar Apple Squeezer
+
+ECHOCLASSIC_EQUALIZER_FREQUENCY_RESPONSE
+	EN	Frequency response
+	DE	Frequenzgang
+	FR	Réponse en fréquence
+	PT	Resposta de frequência
+
+ECHOCLASSIC_RECENTLY_PLAYED_CHOICE
+	EN	Choose what appears above the Recent list.
+	DE	Wählen Sie, was über der Liste „Zuletzt“ erscheint.
+	FR	Choisissez ce qui apparaît au-dessus de la liste Récents.
+	PT	Escolha o que aparece acima da lista Recentes.
+
+ECHOCLASSIC_APPS_AND_EXTRAS
+	EN	Apps & Extras
+	DE	Apps & Extras
+	FR	Apps et extras
+	PT	Apps e extras
+
+ECHOCLASSIC_LMS_EXTRAS_DESCRIPTION
+	EN	Music services, plugins and LMS extras
+	DE	Musikdienste, Plugins und LMS-Extras
+	FR	Services musicaux, plugins et extras LMS
+	PT	Serviços de música, plugins e extras do LMS
+
+ECHOCLASSIC_NONE_FOUND
+	EN	None found…
+	DE	Keine gefunden…
+	FR	Aucun résultat…
+	PT	Nenhum encontrado…
+
+ECHOCLASSIC_OPEN_PLAYER_VOLUME_DAC
+	EN	Open player · volume is controlled on the DAC
+	DE	Player öffnen · Lautstärke wird am DAC geregelt
+	FR	Ouvrir le lecteur · le volume est contrôlé sur le DAC
+	PT	Abrir player · o volume é controlado no DAC
+
+ECHOCLASSIC_OPEN_VOLUME_CONTROLS
+	EN	open volume controls
+	DE	Lautstärkeregler öffnen
+	FR	ouvrir les commandes de volume
+	PT	abrir controles de volume
+
+ECHOCLASSIC_COLLECTION_TRACK_ROW_SCOPE
+	EN	Collection counts albums represented by track rows. Streaming entries are excluded from storage, and missing file sizes are not estimated.
+	DE	Die Sammlung zählt Alben, die durch Titelzeilen repräsentiert werden. Streaming-Einträge werden beim Speicher ausgeschlossen; fehlende Dateigrößen werden nicht geschätzt.
+	FR	Collection compte les albums représentés par des pistes. Les entrées en streaming sont exclues du stockage et les tailles manquantes ne sont pas estimées.
+	PT	A Coleção conta os álbuns representados por faixas. Entradas de streaming são excluídas do armazenamento e tamanhos ausentes não são estimados.
+
+ECHOCLASSIC_NOT_REPRESENTED_TRACK_ROWS
+	EN	not represented by track rows
+	DE	nicht durch Titelzeilen repräsentiert
+	FR	non représentés par des pistes
+	PT	não representados por faixas
+
+ECHOCLASSIC_SHOWING_SAVED_COLLECTION
+	EN	Showing saved collection
+	DE	Gespeicherte Sammlung wird angezeigt
+	FR	Collection enregistrée affichée
+	PT	Exibindo coleção salva
+
+ECHOCLASSIC_EXTERNAL_BIOGRAPHY_NOTICE
+	EN	External biography · may contain errors
+	DE	Externe Biografie · kann Fehler enthalten
+	FR	Biographie externe · peut contenir des erreurs
+	PT	Biografia externa · pode conter erros

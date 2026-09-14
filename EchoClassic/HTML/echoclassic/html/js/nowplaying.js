@@ -265,7 +265,7 @@ Vue.component('lms-nowplaying', {
       if (this.store.volumeModeBusy) return this.tr('Confirming…');
       return this.store.fixedVolume ? 'Fixed output' : 'LMS volume';
     },
-    coverUrl: function () { return LmsFmt.coverUrl(this.np.coverId, 600); },
+    coverUrl: function () { return LmsFmt.artworkUrl(this.np, 600); },
     badges: function () {
       var out = [];
       /* Cada etiqueta responde pelo proprio numero: um rip 44,1 kHz/24 bits so

@@ -18,21 +18,41 @@ touch-friendly music system for tablets, phones and desktop browsers. It brings
 library discovery, queue and playlist editing, synchronized-player control,
 live signal-path information and optional server-side DSP into one interface.
 
-Version **3.5.8** uses Vue 2 without a compilation or bundling step: the files in
+Version **3.5.9** uses Vue 2 without a compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
-![Echo Classic 3.5.7 Collection dashboard](images/release-3.5.7-collection.png)
+![Echo Classic 3.5.9 Equalizer response](images/release-3.5.9-equalizer.png)
 
-## What is new in 3.5.8
+## What is new in 3.5.9
 
-Version 3.5.8 retains the Collection dashboard, shared Playlist Builder and
-optional SACDPlayer cache controls introduced in 3.5.7, with corrected rating
-display and synchronization across the queue, Now Playing and track information.
+Version 3.5.9 adds a live Equalizer response graph, completes LMS virtual-library
+discovery and gives Recently played explicit Tracks, Albums and Off modes. Radio
+stations can use bundled artwork instead of the generic LMS antenna placeholder.
 
-When Ratings Light is installed, Echo Classic uses its published read and write
-commands. Without it, the same rating controls fall back to LMS ratings. Queue
-updates stay batched, so enabling rating display does not add one request per
-track.
+The release also keeps the centre detail pane readable in narrow Chrome layouts,
+follows Now Playing changes from Recent, clarifies Collection counts and external
+biography provenance, and makes LMS extras and volume controls easier to reach.
+
+### Equalizer response at a glance
+
+The Equalizer dashboard plots the combined result of preamp, graphic bands and
+parametric filters on a logarithmic 20 Hz–20 kHz axis. The graph updates while
+settings are edited, before they are applied to the player.
+
+### Recent, radio and LMS library improvements
+
+Recently played can keep its track strip, collapse it to unique albums or hide
+it. LMS virtual libraries are accepted from the response shapes used by current
+servers, and Apps & Extras gives plugin-provided services an explicit home.
+Bundled station artwork begins with WCRB, replacing the generic radio tile where
+the station identity is known.
+
+### More trustworthy detail and Collection summaries
+
+Recent details follow the active album until the listener manually browses away.
+MusicArtistInfo biographies are identified as external content, missing reviews
+have a neutral empty state, and Collection rejects implausible future years while
+explaining why its track-derived album count can differ from the LMS census.
 
 ### Collection becomes an interactive dashboard
 
@@ -288,7 +308,7 @@ an older cached stylesheet.
 
 ## Project status
 
-Prepared stable release: **3.5.8**.
+Prepared stable release: **3.5.9**.
 
 - 732 automated tests passing.
 - Six validation stages passing.

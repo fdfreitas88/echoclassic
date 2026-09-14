@@ -114,7 +114,7 @@ Vue.component('lms-opml', {
     playerId: function () { return LmsStore.state.playerId || ''; },
     rootLabel: function () {
       if (this.root === 'radio') return 'Radio';
-      if (this.root === 'apps') return 'Apps';
+      if (this.root === 'apps') return 'Apps & Extras';
       return 'Favourites';
     },
     /* O LMS devolve um placeholder do tipo `text` no lugar de uma lista vazia.

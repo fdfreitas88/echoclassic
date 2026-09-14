@@ -105,7 +105,7 @@ Vue.component('lms-more', {
   <div id="more-heading" class="sgh">More</div>
   <div class="sgroup more-destinations">
     <button type="button" class="srow settings-command-row pointer" @click="open('apps')">
-      <span class="more-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" v-html="icon('apps')"></svg></span><span class="setting-copy">Apps<small>Music services and plugins</small></span><span class="v">›</span>
+      <span class="more-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" v-html="icon('apps')"></svg></span><span class="setting-copy">{{ tr('Apps & Extras') }}<small>{{ tr('Music services, plugins and LMS extras') }}</small></span><span class="v">›</span>
     </button>
     <button type="button" class="srow settings-command-row pointer" @click="open('settings')">
       <span class="more-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" v-html="icon('settings')"></svg></span><span class="setting-copy">Settings<small>Player, appearance and server</small></span><span class="v">›</span>
@@ -122,6 +122,7 @@ Vue.component('lms-more', {
     version: function () { return typeof LMS_VERSION === 'string' && LMS_VERSION ? LMS_VERSION : '—'; }
   },
   methods: {
+    tr: function (value) { return window.LmsStr && LmsStr.t ? LmsStr.t(value) : value; },
     icon: function (key) {
       return {
         apps: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',

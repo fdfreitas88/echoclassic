@@ -172,7 +172,7 @@ Vue.component('lms-playlists', {
   },
   methods: {
     dur: function (s) { return LmsFmt.duration(s); },
-    cover: function (t) { return LmsFmt.coverUrl(t.coverId, 50); },
+    cover: function (t) { return LmsFmt.artworkUrl(t, 50); },
     hires: function (t) { return LmsFmt.isHiRes(t.sampleRate, t.sampleSize); },
 	    shortRate: function (t) {
 	      if (!t.sampleRate) return '';

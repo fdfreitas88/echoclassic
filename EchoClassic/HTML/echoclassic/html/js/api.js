@@ -120,6 +120,12 @@
       .replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"')
       .replace(/&#39;/gi, "'").replace(/\n{3,}/g, '\n\n').trim();
   }
+  function albumReviewText(v) {
+    var value = plainText(v);
+    return /^i(?:'|’)m sorry[,!. ]/i.test(value) && /\bdid(?:n't| not)\b/i.test(value)
+      ? { text: '', missing: true }
+      : { text: value, missing: false };
+  }
   function readableText(v) {
     var value = txt(v);
     if (!/[<&]/.test(value)) return value;
@@ -654,11 +660,20 @@
 
   async function libraries(playerId) {
     var r = await rpc(playerId, ['libraries', 0, 100]);
-    var rows = loop(r, 'libraries_loop').concat(loop(r, 'library_loop'));
+    /* LMS exposes Library Views through folder_loop even though these are not
+       music folders. Keep the alternate names for compatible third-party
+       servers, then de-duplicate in case a server publishes more than one. */
+    var rows = loop(r, 'folder_loop').concat(loop(r, 'libraries_loop'), loop(r, 'library_loop'));
+    var seen = Object.create(null);
     return rows.map(function (item) {
       return { id: item.id != null ? item.id : item.library_id,
                name: txt(item.name || item.library), enabled: item.enabled == null || num(item.enabled) === 1 };
-    }).filter(function (item) { return item.id != null && item.name && item.enabled; });
+    }).filter(function (item) {
+      var key = String(item.id);
+      if (item.id == null || !item.name || !item.enabled || seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
   }
 
   async function musicFolders(playerId, parentId) {
@@ -1247,9 +1262,10 @@
         return { error: e && e.detail ? e.detail : 'Album covers unavailable' };
       }) : {}
     ]);
+    var review = albumReviewText(responses[0].albumreview);
     return {
       available: true,
-      review: plainText(responses[0].albumreview), reviewError: txt(responses[0].error),
+      review: review.text, reviewMissing: review.missing, reviewError: txt(responses[0].error),
       covers: loop(responses[1], 'item_loop').map(function (item) {
         return { url: txt(item.url), credits: txt(item.credits), size: txt(item.size) };
       }).filter(function (item) { return item.url; }),

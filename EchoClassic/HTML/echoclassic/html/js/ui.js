@@ -8,7 +8,7 @@
   var TABS = Object.freeze([
     Object.freeze({ key: 'favourites', label: 'Favourites' }),
     Object.freeze({ key: 'radio', label: 'Radio' }),
-    Object.freeze({ key: 'apps', label: 'Apps' }),
+    Object.freeze({ key: 'apps', label: 'Apps & Extras' }),
     Object.freeze({ key: 'playlists', label: 'Playlists' }),
     Object.freeze({ key: 'collection', label: 'Collection' }),
     Object.freeze({ key: 'music', label: 'My Music' }),
@@ -68,6 +68,16 @@
     Object.freeze({ key: 2, label: 'Album' }),
     Object.freeze({ key: 3, label: 'Smart' })
   ]);
+
+  var RECENT_MODES = Object.freeze([
+    Object.freeze({ key: 'off', label: 'Off' }),
+    Object.freeze({ key: 'albums', label: 'Albums' }),
+    Object.freeze({ key: 'tracks', label: 'Tracks' })
+  ]);
+
+  function isRecentMode(value) {
+    return RECENT_MODES.some(function (option) { return option.key === value; });
+  }
 
   var FONT_OPTIONS = Object.freeze([
     Object.freeze({ key: 'system', label: 'System (default)' }),
@@ -485,6 +495,7 @@
 	    tab: isTab(saved.tab) ? saved.tab : 'music',
     musicView: initialMusicView,
     albumMode: saved.albumMode || 'albums',   // 'albums' = grade de capas | 'tracks' = pilha completa
+    recentMode: isRecentMode(saved.recentMode) ? saved.recentMode : 'tracks',
     /* Um valor gravado por uma versao futura (ou corrompido) nao pode zerar a
        capa da fila inteira -- cai no padrao em vez de travar num estado vazio. */
     queueArtMode: isQueueArtMode(saved.queueArtMode) ? saved.queueArtMode : 'album',
@@ -614,7 +625,7 @@
         rootKey: state.rootKey, libraryId: state.libraryId,
         theme: state.theme, dark: state.theme === 'dark',
         byView: byView, rootContexts: rootContexts,
-        albumMode: state.albumMode, queueArtMode: state.queueArtMode,
+        albumMode: state.albumMode, recentMode: state.recentMode, queueArtMode: state.queueArtMode,
         quickQueueControls: state.quickQueueControls,
         defaultPlayer: state.defaultPlayer,
         showBadges: state.showBadges,
@@ -1197,6 +1208,12 @@
     persist();
   }
 
+  function setRecentMode(value) {
+    if (!isRecentMode(value)) return;
+    state.recentMode = value;
+    persist();
+  }
+
   function setArtistDetailPreference(key, value) {
     if (key === 'layout' && ['sidecar', 'under'].indexOf(value) >= 0) state.artistDetailLayout = value;
     else if (key === 'controls' && ['buttons', 'icons'].indexOf(value) >= 0) state.artistDetailControls = value;
@@ -1588,6 +1605,7 @@
     COLOR_SCHEMES: COLOR_SCHEMES, setColorScheme: setColorScheme,
     FONT_OPTIONS: FONT_OPTIONS, setFontFamily: setFontFamily,
     REPLAY_GAIN_MODES: REPLAY_GAIN_MODES,
+    RECENT_MODES: RECENT_MODES, setRecentMode: setRecentMode,
     surfaceAttrs: surfaceAttrs, surfaceValues: surfaceValues,
     surfaceFollowsApp: surfaceFollowsApp,
     setSurfaceTheme: setSurfaceTheme, setSurfaceScheme: setSurfaceScheme,

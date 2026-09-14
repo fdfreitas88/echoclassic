@@ -33,6 +33,47 @@ var ECHOCLASSIC_EQUALIZER_PRESETS = [
   { name: 'Expansion', gains: [5, 5, 5, 7, 6, 5, 5, 4, 10, 15, 3, 5] }
 ];
 
+/* Preview the same cascaded biquad response SqueezeDSP applies. The graph is
+   deliberately calculated in the skin so edits move it immediately, before
+   the user commits the settings document to the player. */
+function echoClassicBiquadMagnitude(filter, frequency, sampleRate) {
+  var type = String(filter && filter.FilterType || '').toLowerCase();
+  var center = Math.max(10, Math.min(sampleRate * .49, Number(filter && filter.Frequency) || 1000));
+  var gain = Number(filter && filter.Gain) || 0;
+  var q = Math.max(.05, Number(filter && filter.Slope) || .707);
+  var w0 = 2 * Math.PI * center / sampleRate;
+  var cos = Math.cos(w0), sin = Math.sin(w0), alpha = sin / (2 * q);
+  var A = Math.pow(10, gain / 40), rootA = Math.sqrt(A);
+  var b0, b1, b2, a0, a1, a2;
+  if (type === 'peak') {
+    b0=1+alpha*A; b1=-2*cos; b2=1-alpha*A; a0=1+alpha/A; a1=-2*cos; a2=1-alpha/A;
+  } else if (type === 'lowshelf') {
+    alpha=sin/2*Math.sqrt(2); b0=A*((A+1)-(A-1)*cos+2*rootA*alpha); b1=2*A*((A-1)-(A+1)*cos); b2=A*((A+1)-(A-1)*cos-2*rootA*alpha); a0=(A+1)+(A-1)*cos+2*rootA*alpha; a1=-2*((A-1)+(A+1)*cos); a2=(A+1)+(A-1)*cos-2*rootA*alpha;
+  } else if (type === 'highshelf') {
+    alpha=sin/2*Math.sqrt(2); b0=A*((A+1)+(A-1)*cos+2*rootA*alpha); b1=-2*A*((A-1)+(A+1)*cos); b2=A*((A+1)+(A-1)*cos-2*rootA*alpha); a0=(A+1)-(A-1)*cos+2*rootA*alpha; a1=2*((A-1)-(A+1)*cos); a2=(A+1)-(A-1)*cos-2*rootA*alpha;
+  } else if (type === 'lowpass') {
+    b0=(1-cos)/2; b1=1-cos; b2=(1-cos)/2; a0=1+alpha; a1=-2*cos; a2=1-alpha;
+  } else if (type === 'highpass') {
+    b0=(1+cos)/2; b1=-(1+cos); b2=(1+cos)/2; a0=1+alpha; a1=-2*cos; a2=1-alpha;
+  } else if (type === 'notch') {
+    b0=1; b1=-2*cos; b2=1; a0=1+alpha; a1=-2*cos; a2=1-alpha;
+  } else return 1;
+  var w = 2 * Math.PI * frequency / sampleRate, c1=Math.cos(w), s1=Math.sin(w), c2=Math.cos(2*w), s2=Math.sin(2*w);
+  var nr=b0+b1*c1+b2*c2, ni=-(b1*s1+b2*s2), dr=a0+a1*c1+a2*c2, di=-(a1*s1+a2*s2);
+  return Math.sqrt((nr*nr+ni*ni)/Math.max(1e-20,dr*dr+di*di));
+}
+
+function echoClassicSqueezeDspResponse(settings, sampleRate, count) {
+  var client=settings&&settings.Client||{}, filters=Array.isArray(client.Filters)?client.Filters:[];
+  var rate=Math.max(44100,Number(sampleRate)||48000), total=Math.max(48,Number(count)||128), out=[];
+  for(var i=0;i<total;i+=1){
+    var hz=20*Math.pow(1000,i/(total-1)), db=Number(client.Preamp)||0;
+    filters.forEach(function(filter){db+=20*Math.log(Math.max(1e-10,echoClassicBiquadMagnitude(filter,hz,rate)))/Math.LN10;});
+    out.push({hz:hz,db:Math.max(-60,Math.min(30,db))});
+  }
+  return out;
+}
+
 /* Ajustes. Everything here is either read live from the server or is a real
    switch that changes the interface immediately. Advanced LMS pages still
    submit through the server's own controls; Echo Classic skins that real form
@@ -127,6 +168,8 @@ Vue.component('lms-settings', {
     <div class="sgh">Track ratings</div><div class="sgroup"><button type="button" class="srow settings-command-row pointer" role="switch" :aria-checked="String(ui.appendRatingToTitle)" @click="preference('appendRatingToTitle')"><span class="setting-copy">Rating beside track title<small>Show rating stars in the queue and on Now Playing.</small></span><span class="switch" :class="{on:ui.appendRatingToTitle}"></span></button></div>
   </template>
   <template v-else-if="isSettingsScreen('interface-settings')">
+    <div class="sgh">My Music</div>
+    <div class="sgroup"><div class="srow segmented-row"><span>Recently played<small>Choose what appears above the Recent list.</small></span><div class="segmented" role="radiogroup" aria-label="Recently played"><button v-for="option in recentModes" :key="'recent-'+option.key" type="button" role="radio" :class="{on:ui.recentMode===option.key}" :aria-checked="String(ui.recentMode===option.key)" @click="recentMode(option.key)">{{ tr(option.label) }}</button></div></div></div>
     <div class="sgh">Shared use</div><div class="sgroup interface-mode-group"><button type="button" class="srow settings-command-row pointer interface-mode-row" role="switch" :aria-checked="String(ui.partyMode)" @click="preference('partyMode')"><span class="setting-copy">Party mode<small>Keep playback available while hiding delete and reorder actions.</small></span><span class="switch" :class="{on:ui.partyMode}"></span></button><button type="button" class="srow settings-command-row pointer interface-mode-row" role="switch" :aria-checked="String(ui.kioskMode)" @click="preference('kioskMode')"><span class="setting-copy">Kiosk mode<small>Show only the full player. Exit remains available from the lock control or Esc.</small></span><span class="switch" :class="{on:ui.kioskMode}"></span></button></div>
     <div class="interface-mode-note">These modes affect this browser only. Kiosk mode never removes playback controls and cannot hide its own exit path.</div>
     <div class="sgh">Technical display</div>
@@ -165,9 +208,13 @@ Vue.component('lms-settings', {
         <section class="equalizer-dashboard-curve"><header class="equalizer-workspace-title"><h2>Curve</h2><span>{{ equalizerPresetLabel || 'Custom' }} · {{ dspOwner === 'apple-squeezer' ? nativeDspBands.length : equalizerBands.length }} bands</span><span class="eq-status-badge" :class="{on:equalizerAvailableNow&&activeEqualizerEnabled}">{{ !equalizerAvailableNow ? 'Paused' : (activeEqualizerEnabled ? 'Active' : 'Bypass') }}</span></header>
           <div v-if="!equalizerAvailableNow" class="equalizer-workspace-mode" role="status"><span><strong>{{ appleSqueezerModeLabel }} is active.</strong><small>The saved curve is shown below but is not processing audio. Nothing will be lost.</small></span><button type="button" class="eq-action-button primary" :disabled="appleSqueezer.busy" @click="activateEqualizerWorkspace">Use Equalizer mode</button></div>
           <div class="equalizer-workspace-surface" :class="{paused:!equalizerAvailableNow}">
-            <div v-if="dspOwner === 'apple-squeezer' && nativeDspDraft" class="equalizer-workspace-response">
-              <div class="native-signal-head"><span>Saved response<small>{{ appleSqueezer.diagnostics.rate ? appleSqueezer.diagnostics.rate + ' Hz' : 'Rate unavailable' }} · {{ equalizerPresetLabel || 'Custom' }}</small></span></div>
-              <svg v-if="nativeDspResponsePath" class="native-response" viewBox="0 0 320 76" role="img" aria-label="Saved equalizer frequency response"><path class="native-response-zero" d="M0 64 L320 64"></path><path class="native-response-line" :d="nativeDspResponsePath"></path></svg><div v-else class="native-response-empty">Saved response preview unavailable</div>
+            <div v-if="equalizerResponsePath" class="equalizer-workspace-response">
+              <div class="native-signal-head"><span>Frequency response<small>{{ dspOwner === 'apple-squeezer' ? 'Player-calculated response' : 'Live preview · preamp and filters' }} · {{ equalizerPresetLabel || 'Custom' }}</small></span></div>
+              <svg class="equalizer-response" viewBox="0 0 360 128" role="img" :aria-label="equalizerResponseSummary">
+                <g class="equalizer-response-grid"><path v-for="tick in equalizerDbTicks" :key="'db-'+tick.value" :class="{zero:tick.value===0}" :d="'M30 '+tick.y+' H352'"></path><path v-for="tick in equalizerFrequencyTicks" :key="'hz-'+tick.value" :d="'M'+tick.x+' 8 V100'"></path></g>
+                <g class="equalizer-response-labels" aria-hidden="true"><text v-for="tick in equalizerDbTicks" :key="'dbl-'+tick.value" x="26" :y="tick.y+3">{{ formatEqAxisTick(tick.value) }}</text><text v-for="tick in equalizerFrequencyTicks" :key="'hzl-'+tick.value" :x="tick.x" y="116">{{ tick.label }}</text><text class="axis-title" x="8" y="12">dB</text><text class="axis-title" x="352" y="126">Hz</text></g>
+                <path class="equalizer-response-area" :d="equalizerResponseAreaPath"></path><path class="native-response-line" :d="equalizerResponsePath"></path>
+              </svg>
             </div>
             <div v-if="dspOwner === 'apple-squeezer' && nativeDspDraft" class="eq-band-panel equalizer-workspace-bands"><div class="eq-band-bank" aria-label="Native equalizer bands"><label v-for="band in nativeDspBands" :key="'workspace-'+band.frequency" class="eq-band" :class="{disabled:!band.enabled}"><span class="eq-band-value">{{ formatEqGain(band.gain) }}</span><span class="eq-slider"><input :value="band.gain" type="range" min="-24" max="24" step="0.5" :disabled="!equalizerAvailableNow||nativeDspSaving||!band.enabled" :aria-label="band.label+' hertz'" @input="setNativeBand(band.index,$event.target.value)"></span><span>{{ band.label }}</span></label></div></div>
             <div v-else-if="equalizerDraft" class="eq-band-panel equalizer-workspace-bands"><div class="eq-band-bank" aria-label="Graphic equalizer bands"><label class="eq-band eq-preamp-band"><span class="eq-band-value">{{ formatEqGain(equalizerDraft.Client.Preamp) }}</span><span class="eq-slider"><input v-model.number="equalizerDraft.Client.Preamp" type="range" min="-30" max="0" step="0.1" aria-label="Preamp"></span><span>Pre</span></label><label v-for="band in equalizerBands" :key="'workspace-'+band.frequency" class="eq-band"><span class="eq-band-value">{{ formatEqGain(band.gain) }}</span><span class="eq-slider"><input :value="band.gain" type="range" min="-30" max="30" step="0.5" :aria-label="band.label+' hertz'" @input="setEqualizerBand(band.frequency,$event.target.value)"></span><span>{{ band.label }}</span></label></div></div>
@@ -909,6 +956,7 @@ Vue.component('lms-settings', {
       fontOptions: LmsUi.FONT_OPTIONS,
       themeOptions: LmsUi.THEME_OPTIONS,
       replayGainModes: LmsUi.REPLAY_GAIN_MODES,
+      recentModes: LmsUi.RECENT_MODES,
       dspOwnerOptions: [
         { key: 'apple-squeezer', label: 'Apple Squeezer' },
         { key: 'squeezedsp', label: 'SqueezeDSP' }
@@ -1231,6 +1279,36 @@ Vue.component('lms-settings', {
         var y = 64 - Math.max(-18, Math.min(18, Number(point.db))) / 18 * 52;
         return (index ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
       }).join(' ');
+    },
+    equalizerResponsePoints: function () {
+      if (this.dspOwner === 'apple-squeezer') return this.nativeDspResponse || [];
+      if (!this.equalizerDraft || !this.equalizerDraft.Client) return [];
+      return echoClassicSqueezeDspResponse(this.equalizerDraft, 48000, 144);
+    },
+    equalizerResponsePath: function () {
+      var points=this.equalizerResponsePoints||[], min=Math.log(20), span=Math.log(20000)-min;
+      if(points.length<2)return '';
+      return points.map(function(point,index){
+        var x=30+(Math.log(Math.max(20,Math.min(20000,Number(point.hz))))-min)/span*322;
+        var db=Math.max(-24,Math.min(18,Number(point.db)||0)), y=8+(18-db)/42*92;
+        return(index?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+      }).join(' ');
+    },
+    equalizerResponseAreaPath: function () {
+      return this.equalizerResponsePath ? this.equalizerResponsePath+' L352 47.4 L30 47.4 Z' : '';
+    },
+    equalizerDbTicks: function () {
+      return [18,12,6,0,-6,-12,-18,-24].map(function(value){return{value:value,y:Number((8+(18-value)/42*92).toFixed(1))};});
+    },
+    equalizerFrequencyTicks: function () {
+      var min=Math.log(20),span=Math.log(20000)-min;
+      return [20,50,100,200,500,1000,2000,5000,10000,20000].map(function(value){return{value:value,label:value>=1000?(value/1000)+'k':String(value),x:Number((30+(Math.log(value)-min)/span*322).toFixed(1))};});
+    },
+    equalizerResponseSummary: function () {
+      var points=this.equalizerResponsePoints||[];
+      if(!points.length)return 'Equalizer frequency response unavailable';
+      var values=points.map(function(point){return Number(point.db)||0;});
+      return 'Equalizer frequency response, from '+Math.min.apply(Math,values).toFixed(1)+' to '+Math.max.apply(Math,values).toFixed(1)+' decibels';
     },
     equalizerPlayerRules: function () {
       var playerId = this.store.playerId;
@@ -3303,6 +3381,9 @@ Vue.component('lms-settings', {
       var n = Number(value || 0);
       return (n > 0 ? '+' : '') + n.toFixed(n % 1 ? 1 : 0);
     },
+    formatEqAxisTick: function (value) {
+      return Number(value) > 0 ? '+' + value : String(value);
+    },
     setEqualizerBand: function (frequency, value) {
       var filters = this.equalizerDraft.Client.Filters;
       var index = filters.findIndex(function (filter) {
@@ -3553,6 +3634,7 @@ Vue.component('lms-settings', {
       if (key === 'kioskMode') { LmsUi.requestKioskMode(!this.ui.kioskMode); return; }
       LmsUi.setPreference(key, !this.ui[key]);
     },
+    recentMode: function (value) { LmsUi.setRecentMode(value); },
     artistDetailPreference: function (key, value) { LmsUi.setArtistDetailPreference(key, value); },
     setVolumeStep: function (value) { LmsUi.setVolumeStep(value); },
     control: function (p) { LmsStore.selectPlayer(p.id); },

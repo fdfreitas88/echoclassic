@@ -150,6 +150,7 @@ Vue.component('lms-album-block', {
     </div>
     <template v-else-if="albumInfoStatus === 'ready'">
       <p v-if="albumInfo.review" class="album-review" :class="{expanded: albumReviewExpanded}">{{ albumInfo.review }}</p>
+      <p v-else-if="albumInfo.reviewMissing" class="album-review-missing">{{ tr('None found…') }}</p>
       <button v-if="albumInfo.review" type="button" class="retry-command artist-biography-toggle"
               :aria-expanded="albumReviewExpanded ? 'true' : 'false'" @click="albumReviewExpanded = !albumReviewExpanded">
         {{ tr(albumReviewExpanded ? 'Show less' : 'Show more') }}
@@ -587,7 +588,7 @@ Vue.component('lms-album-block', {
         if (!info.available) this.albumInfoStatus = 'unavailable';
         else if (!info.review && !info.covers.length && (info.reviewError || info.coversError)) this.albumInfoStatus = 'error';
         else {
-          this.albumInfo = { review: info.review || '', covers: info.covers || [], retrievedAt: Date.now() };
+          this.albumInfo = { review: info.review || '', reviewMissing: !!info.reviewMissing, covers: info.covers || [], retrievedAt: Date.now() };
           this.albumInfoStatus = 'ready';
           this.albumInfoCachePut(this.albumInfo);
         }

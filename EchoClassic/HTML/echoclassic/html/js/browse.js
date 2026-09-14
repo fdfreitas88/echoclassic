@@ -125,10 +125,10 @@ Vue.component('lms-browse', {
         <button type="button" class="feedback-dismiss" :aria-label="tr('Dismiss message')" @click="LmsUi.dismissNotice">×</button>
       </div>
     </section>
-    <div v-if="view === 'recent' && store.history.length" class="history-strip">
+    <div v-if="view === 'recent' && recentHistory.length" class="history-strip">
       <div class="sectitle">Recently played</div>
       <div class="history-scroll">
-        <button v-for="h in store.history.slice(0, 12)" :key="h.id + '-' + h.playedAt"
+        <button v-for="h in recentHistory" :key="h.historyKey"
                 class="history-item" :aria-label="historyLabel(h)" @click="historyAction(h)">
           <span class="art" :style="historyArt(h)"></span>
           <span class="history-copy">
@@ -278,7 +278,7 @@ Vue.component('lms-browse', {
       reloadQueued: false, reloadPreserveNavigation: true, rootPaging: null, rootPageError: '', rootPageBusy: false,
 	      loadingMore: false, limitWarning: '', requestToken: 0, unknownCount: 0,
 	      artistIndexTruncated: false,
-      rootSelection: null,
+      rootSelection: null, followNowPlaying: false,
       first: 0, visible: 14, activeRail: '',
       mediaIndex: null,
       /* Largura real, nao nome de aparelho: a mesma tela vira estreita quando o
@@ -300,6 +300,23 @@ Vue.component('lms-browse', {
     };
   },
   computed: {
+    recentHistory: function () {
+      if (this.ui.recentMode === 'off') return [];
+      if (this.ui.recentMode !== 'albums') return this.store.history.slice(0, 12).map(function (item) {
+        return Object.assign({}, item, { historyKey: 'track-' + item.id + '-' + item.playedAt });
+      });
+      var seen = Object.create(null), albums = [];
+      this.store.history.some(function (item) {
+        if (item.albumId == null) return false;
+        var key = String(item.albumId);
+        if (!seen[key]) {
+          seen[key] = true;
+          albums.push(Object.assign({}, item, { title: item.album || item.title, historyKey: 'album-' + key }));
+        }
+        return albums.length >= 12;
+      });
+      return albums;
+    },
     view: function () { return LmsUi.state.musicView; },
     viewLabel: function () { return LmsUi.viewLabel(); },
     folderReveal: function () { return this.ui.folderReveal; },
@@ -607,6 +624,8 @@ Vue.component('lms-browse', {
   },
   watch: {
     view: function () { this.scheduleReload(false); },
+    'store.np.id': function () { this.syncNowPlayingDetail(); },
+    'store.trackInfo': function () { this.syncNowPlayingDetail(); },
     'ui.rootKey': function () { this.scheduleReload(true); },
     /* Filtrar e agrupar mudam o que e carregado; ordenar so reordena o que ja
        esta na tela, e displayRows cuida disso sozinho. Antes qualquer troca de
@@ -832,6 +851,7 @@ Vue.component('lms-browse', {
       this.jump(this.RAIL[Math.floor(ratio * this.RAIL.length)]);
     },
     open: function (r) {
+      this.followNowPlaying = this.matchesNowPlayingAlbum(r);
       this.rootSelection = null;
       LmsNav.reset('music');
       LmsNav.push('music', {
@@ -864,9 +884,63 @@ Vue.component('lms-browse', {
         var frameIds = (current.ids || [current.id]).map(String);
         return rowIds.some(function (id) { return frameIds.indexOf(id) >= 0; });
       });
-      if (currentExists) return;
+      if (currentExists) {
+        this.followNowPlaying = this.matchesNowPlayingAlbum(current);
+        return;
+      }
 
-      this.selectWithoutDrill(first);
+      var playing = this.nowPlayingAlbumRow();
+      if (playing) {
+        this.followNowPlaying = true;
+        this.selectWithoutDrill(playing);
+      } else {
+        this.followNowPlaying = false;
+        this.selectWithoutDrill(first);
+      }
+    },
+    nowPlayingAlbumRow: function () {
+      if (this.view !== 'recent') return null;
+      var np = this.store.np || {}, info = this.store.trackInfo || {};
+      var albumId = info.albumId != null ? info.albumId : np.albumId;
+      var title = String(info.album || np.album || '').trim().toLocaleLowerCase();
+      var artist = String(info.artist || np.artist || '').trim().toLocaleLowerCase();
+      return this.displayRows.filter(function (row) {
+        if (!row || row.kind !== 'album') return false;
+        if (albumId != null && String(row.id) === String(albumId)) return true;
+        var rowArtist = String(row.artist || String(row.sub || '').split(' • ')[0] || '').trim().toLocaleLowerCase();
+        return !!title && String(row.label || '').trim().toLocaleLowerCase() === title && (!artist || rowArtist === artist);
+      })[0] || null;
+    },
+    matchesNowPlayingAlbum: function (frame) {
+      if (!frame || frame.kind !== 'album') return false;
+      var np = this.store.np || {}, info = this.store.trackInfo || {};
+      var albumId = info.albumId != null ? info.albumId : np.albumId;
+      if (albumId != null && String(frame.id) === String(albumId)) return true;
+      var title = String(info.album || np.album || '').trim().toLocaleLowerCase();
+      var artist = String(info.artist || np.artist || '').trim().toLocaleLowerCase();
+      var frameArtist = String(frame.artist || String(frame.sub || '').split(' • ')[0] || '').trim().toLocaleLowerCase();
+      return !!title && String(frame.label || '').trim().toLocaleLowerCase() === title && (!artist || frameArtist === artist);
+    },
+    syncNowPlayingDetail: function () {
+      if (!this.followNowPlaying || this.view !== 'recent') return;
+      var np = this.store.np || {}, info = this.store.trackInfo || {};
+      var albumId = info.albumId != null ? info.albumId : np.albumId;
+      if (albumId == null) return;
+      var current = this.frame;
+      if (current && current.kind === 'album' && String(current.id) === String(albumId)) return;
+      var row = this.nowPlayingAlbumRow();
+      var album = row || {
+        kind: 'album', id: albumId, label: info.album || np.album || this.tr('Unknown Album'),
+        artist: info.artist || np.artist || '',
+        sub: [info.artist || np.artist || '', info.year || ''].filter(Boolean).join(' • '),
+        year: info.year || '', originalYear: info.originalYear || 0,
+        art: LmsFmt.coverUrl(np.coverId, 50) || null
+      };
+      this.rootSelection = null;
+      LmsNav.replace('music', {
+        kind: 'album', id: album.id, label: album.label, art: album.art,
+        artist: album.artist, sub: album.sub, year: album.year, originalYear: album.originalYear
+      });
     },
     normalize: function (value) {
       var s = String(value || '').toLowerCase();
@@ -1083,7 +1157,7 @@ Vue.component('lms-browse', {
       return [h.title, h.artist, h.album].filter(Boolean).join(', ');
     },
     historyArt: function (h) {
-      var url = LmsFmt.coverUrl(h.coverId, 80);
+      var url = LmsFmt.artworkUrl(h, 80);
       return url ? { backgroundImage: 'url(' + url + ')', backgroundSize: 'cover' } : {};
     },
     appendRows: function (items) {

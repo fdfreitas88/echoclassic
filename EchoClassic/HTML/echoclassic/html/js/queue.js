@@ -266,7 +266,7 @@ Vue.component('lms-queue', {
 	      return [t.title, this.sub(t), this.dur(t.duration)].filter(Boolean).join(', ');
 	    },
     coverStyle: function (t) {
-      var url = LmsFmt.coverUrl(t.coverId, 50);
+      var url = LmsFmt.artworkUrl(t, 50);
       return url ? { backgroundImage: 'url(' + url + ')', backgroundSize: 'cover' } : {};
     },
     close: function () {

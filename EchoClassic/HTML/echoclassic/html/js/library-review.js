@@ -1,3 +1,8 @@
+function validCollectionReleaseYear(value) {
+  var year = Number(value), latest = new Date().getFullYear() + 1;
+  return isFinite(year) && year >= 1000 && year <= latest ? Math.floor(year) : null;
+}
+
 /* Library display preferences are separate from playback and are never sent to LMS. */
 (function (global) {
   'use strict';
@@ -156,7 +161,7 @@
      overloading the server. */
   var firstPageSize = 500, scanPageSize = 5000, pageRetries = 2;
   var inFlight = null, generation = 0, prepared = Object.create(null);
-  var state = Vue.observable({ busy: false, processed: 0, total: null, freshness: 'unknown', serverLastscan: '', error: '', partialRows: [], partialStats: null, partialFirstMs: null });
+  var state = Vue.observable({ busy: false, processed: 0, total: null, freshness: 'unknown', serverLastscan: '', serverAlbumCount: null, error: '', partialRows: [], partialStats: null, partialFirstMs: null });
   function bucketList(bucket) {
     return Object.keys(bucket).map(function (key) { return { key: key, value: bucket[key] }; }).sort(function (a, b) { return b.value - a.value; });
   }
@@ -173,7 +178,7 @@
       if (/^(dsd|dsf|dff|flac|alac|wav|aiff|ape|wavpack)$/i.test(String(row.format || ''))) losslessTracks++;
       if (row.albumId == null) return;
       var albumKey = String(row.albumId), album = albums[albumKey] || (albums[albumKey] = { id: row.albumId, bytes: 0, known: true, local: false, year: null });
-      if (album.year == null && row.year) album.year = row.year;
+      if (album.year == null) album.year = validCollectionReleaseYear(row.year);
       if (!row.remote) { album.local = true; if (row.fileSize == null) album.known = false; else album.bytes += row.fileSize; }
       (genreAlbums[genreKey] || (genreAlbums[genreKey] = Object.create(null)))[albumKey] = true;
       if (!row.genre || /^no genre$/i.test(row.genre)) untaggedAlbums[albumKey] = true;
@@ -210,7 +215,7 @@
     var cached = LmsLibraryDisplay.state.collection;
     if (!cached) cached = await LmsLibraryDisplay.loadCollectionCache();
     var info, stamp;
-    try { info = await LmsApi.serverInfo(); stamp = String(info.lastscan || ''); }
+    try { info = await LmsApi.serverInfo(); stamp = String(info.lastscan || ''); state.serverAlbumCount = info.albums == null ? null : Number(info.albums); }
     catch (error) { if (!cached) throw error; stamp = String(cached.lastscan || ''); }
     return publishCache(cached, stamp);
   }
@@ -251,7 +256,8 @@
     var rows = [], seen = Object.create(null);
     pages.forEach(function (item) { item.rows.forEach(function (row) { var key = String(row.id); if (seen[key]) throw new Error('Duplicate collection track'); seen[key] = true; rows.push(row); }); });
     if (rows.length !== total) throw new Error('Incomplete collection page');
-    var confirmed = String((await LmsApi.serverInfo()).lastscan || '');
+    var confirmedInfo = await LmsApi.serverInfo(), confirmed = String(confirmedInfo.lastscan || '');
+    state.serverAlbumCount = confirmedInfo.albums == null ? state.serverAlbumCount : Number(confirmedInfo.albums);
     if (token !== generation) throw new Error('Collection scan cancelled');
     if (confirmed !== lastscan) throw new Error('Library changed during collection scan');
     var snapshot = { rows: rows, offset: rows.length, total: total, lastscan: lastscan, complete: true, error: '', cachedAt: Date.now(), firstMs: firstMs, completeMs: Date.now() - started, networkMs: networkMs, aggregationMs: aggregationMs, cacheMs: 0 };
@@ -266,7 +272,7 @@
   async function start(token) {
     var info = await LmsApi.serverInfo(), stamp = String(info.lastscan || '');
     if (token !== generation) throw new Error('Collection scan cancelled');
-    state.serverLastscan = stamp;
+    state.serverLastscan = stamp; state.serverAlbumCount = info.albums == null ? null : Number(info.albums);
     return build(stamp, token);
   }
   function rebuild() {
@@ -367,23 +373,23 @@ Vue.component('lms-collection', {
   <section v-if="!hasSnapshot && !scanning && cacheFreshness === 'empty'" class="collection-empty" role="status"><span class="collection-empty-icon" aria-hidden="true">▥</span><h3>{{ tr('Collection is not prepared yet') }}</h3><p>{{ tr('Scan your music folders to build collection statistics.') }}</p><button type="button" @click="refresh">{{ tr('Scan folders') }}</button></section>
   <h3 v-if="hasDisplay" class="collection-section-head">{{ tr('Summary') }}<small v-if="!hasSnapshot"> · {{ tr('Partial results') }}</small></h3>
   <div v-if="hasDisplay" class="collection-summary">
-    <button type="button" class="k1" :disabled="!hasSnapshot" @click="openDrill('all','',tr('Albums'))"><strong>{{ albumCount }}</strong><span>{{ tr('Albums') }}</span><small v-if="addedSinceScan !== null">{{ signedDelta(addedSinceScan) }} {{ tr('since last scan') }}</small></button>
+    <button type="button" class="k1" :disabled="!hasSnapshot" @click="openDrill('all','',tr('Albums'))"><strong>{{ albumCount }}</strong><span>{{ tr('Albums') }}</span><small v-if="unindexedAlbumCount > 0">{{ unindexedAlbumCount }} {{ tr('not represented by track rows') }}</small><small v-else-if="addedSinceScan !== null">{{ signedDelta(addedSinceScan) }} {{ tr('since last scan') }}</small></button>
     <button type="button" class="k2" :disabled="!hasSnapshot" @click="openDrill('all','',tr('Tracks'))"><strong>{{ displayTrackCount }}</strong><span>{{ tr('Tracks') }}</span><small>{{ hours(totalDuration) }}</small></button>
     <button type="button" class="k3" :disabled="!hasSnapshot" @click="openDrill('all','',tr('Known file sizes'))"><strong>{{ storageLabel }}</strong><span>{{ tr('Known file sizes') }}</span><small>{{ unknownSizes }} {{ tr('Unknown') }}</small></button>
     <button type="button" class="k4" :disabled="!hasSnapshot" @click="openDrill('all','',tr('Genres'))"><strong>{{ groups.genre.length }}</strong><span>{{ tr('Genres') }}</span><small>{{ albumsToTag }} {{ tr('albums untagged') }}</small></button>
     <button type="button" class="k5" :disabled="!hasSnapshot" @click="openDrill('untagged','',tr('Albums to tag'))"><strong>{{ albumsToTag }}</strong><span>{{ tr('Albums to tag') }}</span><small>{{ tr('No genre') }}</small></button>
     <button type="button" class="k6" :disabled="!hasSnapshot" @click="openDrill('lossless','',tr('Lossless tracks'))"><strong>{{ losslessPercent }}%</strong><span>{{ tr('Lossless tracks') }}</span><small>{{ tr('of all tracks') }}</small></button>
   </div>
-  <div v-if="hasSnapshot || scanning || error" class="collection-status" :class="{'is-stale': cacheFreshness === 'stale'}" role="status" aria-live="polite">
-    <div class="collection-status-main"><span><i class="collection-dot" :class="{busy: scanning,stale:cacheFreshness === 'stale'}" aria-hidden="true"></i>{{ tr(scanning ? (progressTotal === null ? 'Starting collection scan…' : 'Updating collection') : cacheFreshness === 'stale' ? 'Library changed · Update available' : complete ? 'Complete' : 'Partial results') }}<template v-if="!scanning && hasSnapshot"> · {{ rows.length }} {{ tr('Tracks') }}</template></span>
-      <button v-if="scanning" type="button" @click="stop">{{ tr('Stop') }}</button><button v-else-if="cacheFreshness === 'stale'" type="button" @click="refresh">{{ tr('Update collection') }}</button><button v-else-if="error" type="button" @click="refresh">{{ tr('Try again') }}</button><button v-else-if="hasSnapshot" type="button" @click="refresh">{{ tr('Scan collection now') }}</button>
+  <div v-if="hasSnapshot || scanning || error" class="collection-status" :class="{'is-stale': displayedFreshness === 'stale'}" role="status" aria-live="polite">
+    <div class="collection-status-main"><span><i class="collection-dot" :class="{busy: scanning,stale:displayedFreshness === 'stale'}" aria-hidden="true"></i>{{ tr(scanning ? (progressTotal === null ? 'Starting collection scan…' : 'Updating collection') : displayedFreshness === 'stale' ? 'Library changed · Update available' : displayedFreshness === 'saved' ? 'Showing saved collection' : complete ? 'Complete' : 'Partial results') }}<template v-if="!scanning && hasSnapshot"> · {{ rows.length }} {{ tr('Tracks') }}</template></span>
+      <button v-if="scanning" type="button" @click="stop">{{ tr('Stop') }}</button><button v-else-if="displayedFreshness === 'stale'" type="button" @click="refresh">{{ tr('Update collection') }}</button><button v-else-if="error" type="button" @click="refresh">{{ tr('Try again') }}</button><button v-else-if="hasSnapshot" type="button" @click="refresh">{{ tr('Scan collection now') }}</button>
       <label class="collection-measure">{{ tr('Measure') }}<select v-model="measure"><option value="albums">{{ tr('Albums') }}</option><option value="tracks">{{ tr('Tracks') }}</option><option value="storage">{{ tr('Storage') }}</option></select></label>
       <span class="collection-status-spacer"></span>
       <button v-if="hasSnapshot" type="button" class="collection-builder-command" :aria-expanded="builder.open?'true':'false'" @click="LmsPlaylistBuilder.open('collection')"><span aria-hidden="true">☷</span>{{ tr('Playlist Builder') }}<small v-if="builder.tracks.length">{{ builder.tracks.length }}</small></button>
       <button v-if="hasSnapshot" type="button" class="collection-edit" :class="{on:editing}" :aria-pressed="editing?'true':'false'" @click="toggleEdit">{{ tr(editing ? 'Done' : 'Edit') }}</button>
     </div>
     <div v-if="scanning" class="collection-scan-progress" :class="{'is-indeterminate':progressTotal === null}" role="progressbar" :aria-label="tr('Collection scan progress')" aria-valuemin="0" :aria-valuemax="progressTotal === null ? undefined : progressTotal" :aria-valuenow="progressTotal === null ? undefined : progressProcessed"><span class="collection-scan-copy"><strong v-if="progressTotal !== null">{{ progressPercent }}%</strong><span>{{ progressProcessed }}<template v-if="progressTotal !== null"> {{ tr('of') }} {{ progressTotal }}</template> {{ tr('tracks') }}</span></span><span class="collection-scan-track"><i :style="{width: progressTotal === null ? '35%' : progressPercent + '%'}"></i></span></div>
-    <span class="collection-caveat">{{ tr('Streaming entries are excluded from storage. Missing file sizes are not estimated.') }}</span><p v-if="error">{{ error }}</p></div>
+    <span class="collection-caveat">{{ tr('Collection counts albums represented by track rows. Streaming entries are excluded from storage, and missing file sizes are not estimated.') }}</span><p v-if="error">{{ error }}</p></div>
   <div v-if="hasDisplay" class="collection-body">
   <div class="collection-grid" @dragover.prevent="dragOver($event)" @drop.prevent="drop($event)">
     <section class="collection-card collection-graphics-card" data-card="graphics" :class="{dragging:dragging==='graphics'}" :style="dashboardCardStyle('graphics')" :draggable="editing" @dragstart="dragStart('graphics',$event)" @dragend="drop"><header>{{ tr('Collection graphics') }}</header><div class="collection-mini-charts"><article v-for="chart in overviewCharts" :key="chart.id" class="collection-mini-chart" :class="{'metric-active':metricCardActive(chart.id)}"><button type="button" class="collection-chart-title" @click="focusMetricCard(chart.id)"><strong>{{ tr(chart.label) }}</strong><small>{{ chartTotal(chart) }}</small></button><div class="collection-mini-chart-content"><svg class="collection-mini-donut" viewBox="0 0 42 42" role="group" :aria-label="tr(chart.label)+' '+groupSummary(chart.groups)"><circle class="collection-donut-base" cx="21" cy="21" r="15.9155"></circle><circle v-for="(group,index) in chart.groups.slice(0,7)" :key="group.key" class="collection-donut-segment" :class="{on:metricActive(chart.id,index)}" cx="21" cy="21" r="15.9155" pathLength="100" transform="rotate(-90 21 21)" :style="segmentStyle(chart.groups,index)" role="button" tabindex="0" :aria-label="metricLabel(chart,group)" @mouseenter="setMetric(chart.id,index,group.key)" @mouseleave="clearMetric" @focus="setMetric(chart.id,index,group.key)" @blur="clearMetric" @click="openOverviewGroup(chart,group,$event)" @keydown.enter.space.prevent="openOverviewGroup(chart,group,$event)"></circle></svg><span class="collection-chart-keys"><button v-for="(group,index) in chart.groups.slice(0,4)" :key="group.key" type="button" :class="{on:metricActive(chart.id,index)}" :style="{'--collection-color':chartColor(index)}" @mouseenter="setMetric(chart.id,index,group.key)" @mouseleave="clearMetric" @focus="setMetric(chart.id,index,group.key)" @blur="clearMetric" @click="openOverviewGroup(chart,group,$event)"><i aria-hidden="true"></i><span>{{ group.key === '?' ? tr('Unknown') : group.key }}</span><b>{{ percent(group.value,chart.groups) }}%</b></button></span></div></article></div><button v-if="editing" type="button" class="collection-grip" :aria-label="tr('Resize')+' '+tr('Collection graphics')" @pointerdown.stop.prevent="startResize('graphics',$event)" @keydown="resizeKey('graphics',$event)"></button></section>
@@ -425,7 +431,7 @@ Vue.component('lms-collection', {
   </div>
   <details class="collection-timings"><summary>{{ tr('Loading performance') }}</summary><p>{{ tr('First usable results') }}: {{ displayFirstMs === null ? tr('Not measured') : displayFirstMs + ' ms' }}</p><p>{{ tr('Complete collection') }}: {{ completeMs === null ? tr('Not measured') : completeMs + ' ms' }}</p><p>{{ tr('Network requests') }}: {{ networkMs === null ? tr('Not measured') : networkMs + ' ms' }}</p><p>{{ tr('Aggregation') }}: {{ aggregationMs === null ? tr('Not measured') : aggregationMs + ' ms' }}</p><p>{{ tr('Cache write') }}: {{ cacheMs === null ? tr('Not measured') : cacheMs + ' ms' }}</p><p>{{ tr('Render ready') }}: {{ renderMs === null ? tr('Not measured') : renderMs + ' ms' }}</p></details>
 </section>`,
-  data: function () { var builderApi=window.LmsPlaylistBuilder||{state:{open:false,tracks:[]},open:function(){},offerCollectionSet:function(){}};return { rows: [], offset: 0, total: null, lastscan: '', busy: false, collectionCache: LmsCollectionCache.state, builder: builderApi.state, LmsPlaylistBuilder:builderApi, complete: false, error: '', token: 0, selected: null, selectedAlbumIds: {}, visibleCount: 100, firstMs: null, completeMs: null, networkMs: null, aggregationMs: null, cacheMs: null, renderMs: null, started: 0, measure: 'albums', playlistOpen: false, playlistName: '', playlistList: [], playlistChoice: null, actionBusy: false, actionMessage: '', previousAlbumCount: null,
+  data: function () { var builderApi=window.LmsPlaylistBuilder||{state:{open:false,tracks:[]},open:function(){},offerCollectionSet:function(){}};return { rows: [], offset: 0, total: null, lastscan: '', busy: false, collectionCache: LmsCollectionCache.state, builder: builderApi.state, LmsPlaylistBuilder:builderApi, complete: false, error: '', token: 0, selected: null, selectedAlbumIds: {}, visibleCount: 100, firstMs: null, completeMs: null, networkMs: null, aggregationMs: null, cacheMs: null, renderMs: null, started: 0, measure: 'albums', playlistOpen: false, playlistName: '', playlistList: [], playlistChoice: null, actionBusy: false, actionMessage: '', previousAlbumCount: null, initialInspection: true, hasInspected: false,
     editing: false, dragging: null, activeMetric: null, crumb: '', pendingDrill: null, drillDialogOpen: false, drillOrigin: null, drillPreparing: false, drillReady: true, drillProcessed: 0, drillTotal: 0, drillAlbums: [], drillRows: [], drillError: '', drillToken: 0,
     cardLabels: { graphics: 'Collection graphics', genre: 'By genre', albums: 'Albums', size: 'Album file size', decade: 'Decades', tracks: 'Tracks', format: 'Album file type' } }; },
   computed: {
@@ -435,12 +441,14 @@ Vue.component('lms-collection', {
     displayTrackCount: function () { return this.partialStats ? this.partialStats.trackCount : this.rows.length; },
     displayFirstMs: function () { return this.firstMs == null ? this.collectionCache.partialFirstMs : this.firstMs; },
     cacheFreshness: function () { return this.collectionCache.freshness || (this.hasSnapshot ? 'current' : 'empty'); },
+    displayedFreshness: function () { return this.cacheFreshness === 'stale' && this.initialInspection ? 'saved' : this.cacheFreshness; },
     scanning: function () { return this.busy || this.collectionCache.busy; },
     progressProcessed: function () { return this.collectionCache.busy ? this.collectionCache.processed : this.rows.length; },
     progressTotal: function () { return this.collectionCache.busy ? this.collectionCache.total : this.total; },
     progressPercent: function () { return this.progressTotal ? Math.min(100, Math.round(100 * this.progressProcessed / this.progressTotal)) : 35; },
-    albumMap: function () { var out = Object.create(null); this.rows.forEach(function (r) { if (r.albumId == null) return; var key = String(r.albumId), a = out[key] || (out[key] = { id: r.albumId, title: r.album || String(r.albumId), artist: r.artist, bytes: 0, known: true, local: false, tracks: 0, duration: 0, year: null, url: '', format: '', coverId: null }); a.tracks++; a.duration += r.duration || 0; if (a.year == null && r.year) a.year = r.year; if (!a.format && r.format) a.format = r.format; if (a.coverId == null && r.coverId) a.coverId = r.coverId; if (!r.remote) { a.local = true; if (!a.url && r.url) a.url = r.url; if (r.fileSize == null) a.known = false; else a.bytes += r.fileSize; } }); return out; },
+    albumMap: function () { var out = Object.create(null); this.rows.forEach(function (r) { if (r.albumId == null) return; var key = String(r.albumId), a = out[key] || (out[key] = { id: r.albumId, title: r.album || String(r.albumId), artist: r.artist, bytes: 0, known: true, local: false, tracks: 0, duration: 0, year: null, url: '', format: '', coverId: null }); a.tracks++; a.duration += r.duration || 0; if (a.year == null) a.year = validCollectionReleaseYear(r.year); if (!a.format && r.format) a.format = r.format; if (a.coverId == null && r.coverId) a.coverId = r.coverId; if (!r.remote) { a.local = true; if (!a.url && r.url) a.url = r.url; if (r.fileSize == null) a.known = false; else a.bytes += r.fileSize; } }); return out; },
     albumCount: function () { return this.partialStats ? this.partialStats.albumCount : Object.keys(this.albumMap).length; },
+    unindexedAlbumCount: function () { var total=Number(this.collectionCache.serverAlbumCount);return total>this.albumCount?total-this.albumCount:0; },
     unknownSizes: function () { return this.partialStats ? this.partialStats.unknownSizes : this.rows.filter(function (r) { return !r.remote && r.fileSize == null; }).length; },
     storageLabel: function () { if (this.partialStats) return this.partialStats.storageBytes ? this.bytes(this.partialStats.storageBytes) : this.tr('Not available'); var known = this.rows.filter(function (r) { return !r.remote && r.fileSize != null; }); return known.length ? this.bytes(known.reduce(function (sum, r) { return sum + r.fileSize; }, 0)) : this.tr('Not available'); },
     albumsToTag: function () { if (this.partialStats) return this.partialStats.albumsToTag; var self = this, ids = Object.create(null); this.rows.forEach(function (r) { if (r.albumId != null && self.untagged(r)) ids[String(r.albumId)] = true; }); return Object.keys(ids).length; },
@@ -485,7 +493,7 @@ Vue.component('lms-collection', {
     sizeBand: function (a) { return !a.known ? '?' : a.bytes < 250e6 ? '< 250 MB' : a.bytes < 500e6 ? '250–500 MB' : a.bytes < 1e9 ? '500 MB–1 GB' : '> 1 GB'; },
     untagged: function (r) { return !r.genre || /^no genre$/i.test(r.genre); },
     isLosslessFormat: function (format) { return /^(dsd|dsf|dff)/i.test(String(format || '')) || (window.LmsFmt && LmsFmt.isLossless(String(format || '').toLowerCase())); },
-    decadeOf: function (album) { return album.year ? (Math.floor(album.year / 10) * 10) + 's' : '?'; },
+    decadeOf: function (album) { var year=validCollectionReleaseYear(album.year);return year ? (Math.floor(year / 10) * 10) + 's' : '?'; },
     matchesDrill: function (r, a) { var s = this.selected, k = s.key; switch (s.kind) {
       case 'all': return true; case 'untagged': return this.untagged(r); case 'lossless': return this.isLosslessFormat(r.format);
       case 'genre': return (r.genre || '?') === k; case 'format': return (r.format || '?') === k;
@@ -499,8 +507,8 @@ Vue.component('lms-collection', {
     stop: function () { if (this.collectionCache.busy) LmsCollectionCache.cancel(); this.token++; this.busy = false; if (this.complete) this.remember(); },
     applySnapshot: function (snapshot) { if (snapshot && this.rows.length) this.previousAlbumCount = this.albumCount; if (!snapshot) return false; var changed=this.lastscan&&this.lastscan!==snapshot.lastscan;LmsLibraryDisplay.state.collection = snapshot;var restored=this.restore(snapshot.lastscan);if(changed)this.resetDrillPreparation();return restored; },
     rebuild: function () { return this.refresh(); },
-    refresh: async function () { this.error = ''; try { var snapshot=await LmsCollectionCache.rebuild(),renderStarted=Date.now();this.applySnapshot(snapshot);await this.$nextTick();await new Promise(function(resolve){requestAnimationFrame(function(){requestAnimationFrame(resolve);});});this.renderMs=Date.now()-renderStarted; } catch (e) { if (!/cancelled/i.test(String(e&&e.message||''))) this.error = this.tr('Collection could not be loaded. Your previous collection is still available.'); } },
-    activate: async function () { this.error = ''; try { var snapshot=await LmsCollectionCache.inspect();if(snapshot)this.applySnapshot(snapshot); } catch (e) { this.error = this.tr('Collection could not be loaded. Retry when LMS is available.'); } },
+    refresh: async function () { this.initialInspection=false;this.error = ''; try { var snapshot=await LmsCollectionCache.rebuild(),renderStarted=Date.now();this.applySnapshot(snapshot);await this.$nextTick();await new Promise(function(resolve){requestAnimationFrame(function(){requestAnimationFrame(resolve);});});this.renderMs=Date.now()-renderStarted; } catch (e) { if (!/cancelled/i.test(String(e&&e.message||''))) this.error = this.tr('Collection could not be loaded. Your previous collection is still available.'); } },
+    activate: async function () { if(this.hasInspected)this.initialInspection=false;this.error = ''; try { var snapshot=await LmsCollectionCache.inspect();if(snapshot)this.applySnapshot(snapshot);this.hasInspected=true; } catch (e) { this.error = this.tr('Collection could not be loaded. Retry when LMS is available.'); } },
     scan: function () { return this.refresh(); },
     chartColor: function (index) { return ['#c83d31','#c98012','#087fb2','#238f74','#725aa7','#a85a73','#477d9b'][index % 7]; },
     chartTotal: function (chart) { return chart.id === 'format' ? this.rows.length+' '+this.tr('tracks') : chart.id === 'size' ? this.storageLabel : this.albumCount+' '+this.tr('albums'); },

@@ -842,7 +842,7 @@
       if (global.MediaMetadata) {
         var artwork = [];
         [96, 192, 512].forEach(function (size) {
-          var src = global.LmsFmt.coverUrl(state.np.coverId, size);
+          var src = global.LmsFmt.artworkUrl(state.np, size);
           if (src) artwork.push({ src: src, sizes: size + 'x' + size, type: 'image/jpeg' });
         });
         navigator.mediaSession.metadata = new MediaMetadata({

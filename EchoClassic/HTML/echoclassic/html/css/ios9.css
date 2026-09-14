@@ -640,7 +640,7 @@ button:disabled{opacity:.35}
 .pane-left>.scroller{grid-column:1;grid-row:9}
 .pane-left>.rail{grid-column:2;grid-row:9}
 .pane-left.no-rail{grid-template-columns:minmax(0,1fr) 0}
-.pane-right{flex:1;min-width:0;overflow-y:auto;background:var(--content)}
+.pane-right{flex:1;min-width:0;overflow-y:auto;background:var(--content);container:detail-pane / inline-size}
 .scroller{flex:1;overflow-y:auto;min-width:0}
 /* Every vertical region uses native momentum scrolling and contains its
    overscroll. This keeps a drawer, queue or sheet from handing the gesture to
@@ -1042,6 +1042,7 @@ body.dark .sacd-media-logo,[data-surface-theme="dark"] .sacd-media-logo{filter:b
 .artist-biography{display:-webkit-box;min-width:0;margin:0;overflow:hidden;white-space:pre-line;
   color:var(--text2);font-size:14px;line-height:1.5;-webkit-box-orient:vertical;-webkit-line-clamp:4}
 .artist-biography.expanded{display:block;overflow:visible;-webkit-line-clamp:unset}
+.artist-biography-notice{display:block;margin:5px 0;color:var(--text2);font-size:11px;line-height:1.35}
 .artist-biography-toggle{margin:0;padding:0}
 .artist-enrichment-status{margin:0;color:var(--text2);font-size:14px;line-height:1.45}
 .artist-enrichment-status p{margin:0}
@@ -1287,7 +1288,7 @@ body.dark .sacd-media-logo,[data-surface-theme="dark"] .sacd-media-logo{filter:b
 .equalizer-workspace-main{min-width:0;padding:20px 22px 28px}.equalizer-workspace-title{display:flex;align-items:center;gap:12px}.equalizer-workspace-title h2{margin:0;font-size:22px;font-weight:600}
 .equalizer-workspace-mode{display:flex;align-items:center;gap:14px;margin-top:12px;padding:11px 13px;border:.5px solid var(--hair);border-radius:9px;background:var(--field);color:var(--text);font-size:13px}.equalizer-workspace-mode>span{min-width:0;flex:1}.equalizer-workspace-mode strong,.equalizer-workspace-mode small{display:block}.equalizer-workspace-mode small{margin-top:3px;color:var(--text2);font-size:11px;line-height:1.35}
 .eq-action-button.primary{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
-.equalizer-workspace-surface{position:relative;margin-top:14px;border:.5px solid var(--hair);border-radius:12px;background:var(--group-bg);overflow:hidden}.equalizer-workspace-response{height:156px;padding:14px 18px 4px;border-bottom:.5px solid var(--hair);background:var(--group-bg)}.equalizer-workspace-response .native-response{height:108px;margin:4px 0 0}.equalizer-workspace-bands{margin:0;border:0;border-radius:0;padding-top:18px}.equalizer-workspace-bands .eq-band-bank{min-width:760px;height:270px}.equalizer-workspace-actions{min-height:58px;display:flex;align-items:center;gap:8px;padding:7px 14px;border-top:.5px solid var(--hair)}.equalizer-workspace-actions .sw{margin-left:0}.equalizer-workspace-apply{margin-left:auto}.equalizer-workspace-surface.paused .equalizer-workspace-response,.equalizer-workspace-surface.paused .equalizer-workspace-bands,.equalizer-workspace-surface.paused .equalizer-workspace-actions{opacity:.5}.equalizer-workspace-paused-label{position:absolute;inset:156px 0 58px;display:grid;place-items:center;background:color-mix(in srgb,var(--group-bg) 24%,transparent);color:var(--text2);font-size:13px;font-weight:600;pointer-events:none}
+.equalizer-workspace-surface{position:relative;margin-top:14px;border:.5px solid var(--hair);border-radius:12px;background:var(--group-bg);overflow:hidden}.equalizer-workspace-response{height:196px;padding:14px 18px 4px;border-bottom:.5px solid var(--hair);background:var(--group-bg)}.equalizer-response{display:block;width:100%;height:142px;margin-top:2px;overflow:visible}.equalizer-response-grid path{fill:none;stroke:var(--hair);stroke-width:.65;vector-effect:non-scaling-stroke}.equalizer-response-grid path.zero{stroke:var(--text2);stroke-width:1;stroke-dasharray:3 3}.equalizer-response-labels{fill:var(--text2);font:8px var(--app-font);font-variant-numeric:tabular-nums}.equalizer-response-labels text{text-anchor:end}.equalizer-response-labels text:not(.axis-title)[y="116"]{text-anchor:middle}.equalizer-response-labels .axis-title{font-size:8px;font-weight:600}.equalizer-response-area{fill:color-mix(in srgb,var(--accent) 12%,transparent);stroke:none}.equalizer-response .native-response-line{stroke-width:2.25}.equalizer-workspace-bands{margin:0;border:0;border-radius:0;padding-top:18px}.equalizer-workspace-bands .eq-band-bank{min-width:760px;height:270px}.equalizer-workspace-actions{min-height:58px;display:flex;align-items:center;gap:8px;padding:7px 14px;border-top:.5px solid var(--hair)}.equalizer-workspace-actions .sw{margin-left:0}.equalizer-workspace-apply{margin-left:auto}.equalizer-workspace-surface.paused .equalizer-workspace-response,.equalizer-workspace-surface.paused .equalizer-workspace-bands,.equalizer-workspace-surface.paused .equalizer-workspace-actions{opacity:.5}.equalizer-workspace-paused-label{position:absolute;inset:196px 0 58px;display:grid;place-items:center;background:color-mix(in srgb,var(--group-bg) 24%,transparent);color:var(--text2);font-size:13px;font-weight:600;pointer-events:none}
 .equalizer-now-playing{margin:0 var(--group-inset) 24px;padding:12px 16px;border-radius:var(--group-rad);background:var(--group-bg)}
 .equalizer-now-playing span,.equalizer-now-playing small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .equalizer-now-playing span{font-size:15px;font-weight:600}.equalizer-now-playing small{margin-top:3px;color:var(--text2);font-size:12px}
@@ -1434,7 +1435,7 @@ body.dark .sacd-media-logo,[data-surface-theme="dark"] .sacd-media-logo{filter:b
 .eq-filter-types{width:100%;display:flex;flex-wrap:wrap}.eq-filter-types button{min-width:86px;flex:1 1 86px}
 @media (max-width:560px){
   .equalizer-screen{padding-bottom:4px}
-  .equalizer-workspace{display:block;min-height:0;margin:-18px 0 -4px}.equalizer-workspace-rail{padding:10px;border-right:0;background:var(--group-page)}.equalizer-workspace-track,.equalizer-workspace-heading{display:none}.equalizer-workspace-nav{display:flex;gap:6px;overflow-x:auto;border:0;border-radius:0;background:transparent}.equalizer-workspace-nav+.equalizer-workspace-heading+.equalizer-workspace-nav{margin-top:6px}.equalizer-workspace-link{width:auto;min-width:max-content;min-height:40px;padding:0 11px;border:.5px solid var(--hair)!important;border-radius:8px;background:var(--group-bg)}.equalizer-workspace-link .setting-copy small,.equalizer-workspace-link .v{display:none}.equalizer-workspace-main{padding:14px 10px 22px}.equalizer-workspace-title h2{font-size:19px}.equalizer-workspace-mode{align-items:stretch;flex-direction:column}.equalizer-workspace-mode .eq-action-button{width:100%}.equalizer-workspace-response{height:138px;padding-left:14px;padding-right:14px}.equalizer-workspace-response .native-response{height:92px}.equalizer-workspace-bands .eq-band-bank{height:250px}.equalizer-workspace-actions{flex-wrap:wrap}.equalizer-workspace-apply{margin-left:0;flex:1}.equalizer-workspace-paused-label{inset:138px 0 106px;text-align:center}
+  .equalizer-workspace{display:block;min-height:0;margin:-18px 0 -4px}.equalizer-workspace-rail{padding:10px;border-right:0;background:var(--group-page)}.equalizer-workspace-track,.equalizer-workspace-heading{display:none}.equalizer-workspace-nav{display:flex;gap:6px;overflow-x:auto;border:0;border-radius:0;background:transparent}.equalizer-workspace-nav+.equalizer-workspace-heading+.equalizer-workspace-nav{margin-top:6px}.equalizer-workspace-link{width:auto;min-width:max-content;min-height:40px;padding:0 11px;border:.5px solid var(--hair)!important;border-radius:8px;background:var(--group-bg)}.equalizer-workspace-link .setting-copy small,.equalizer-workspace-link .v{display:none}.equalizer-workspace-main{padding:14px 10px 22px}.equalizer-workspace-title h2{font-size:19px}.equalizer-workspace-mode{align-items:stretch;flex-direction:column}.equalizer-workspace-mode .eq-action-button{width:100%}.equalizer-workspace-response{height:174px;padding-left:10px;padding-right:10px}.equalizer-response{height:126px}.equalizer-workspace-bands .eq-band-bank{height:250px}.equalizer-workspace-actions{flex-wrap:wrap}.equalizer-workspace-apply{margin-left:0;flex:1}.equalizer-workspace-paused-label{inset:174px 0 106px;text-align:center}
   .equalizer-subworkspace{display:block;min-height:0;margin:-18px 0 -4px}.equalizer-subworkspace-rail{position:sticky;z-index:5;top:0}.equalizer-subworkspace-main{padding:14px 0 22px;overflow:visible}.equalizer-subworkspace-main>.sgh{padding-left:16px;padding-right:16px}.equalizer-subworkspace-main>.native-signal-console{margin-left:10px;margin-right:10px}
   .equalizer-subworkspace-main .segmented-row{align-items:stretch;flex-direction:column;padding-top:8px;padding-bottom:8px}.equalizer-subworkspace-main .segmented-row>.segmented{width:100%;margin-left:0}.equalizer-subworkspace-main .setting-range{width:min(52vw,260px);min-width:120px}.equalizer-subworkspace-main .eq-preset-editor{align-items:stretch;flex-direction:column;padding-top:9px;padding-bottom:9px}.equalizer-subworkspace-main .eq-preset-editor input{width:100%;box-sizing:border-box;margin-left:0}
   .native-dsp-mode-notice{display:block;margin-top:-10px}.native-dsp-mode-notice .eq-action-button{width:100%;margin-top:10px}
@@ -1604,6 +1605,8 @@ body[data-mini-gauge-style="flat"] .mini-gauge i{background-image:none;box-shado
   flex:0 0 44px}
 .mini .mini-action .ic{width:22px;height:22px;stroke:var(--mini-control)}
 .mini .mini-action .ic.fill{fill:var(--mini-control);stroke:none}
+.mini .mini-volume-command{width:auto;min-width:52px;gap:2px;padding:0 5px}
+.mini-volume-label{color:var(--mini-control);font-size:10px;line-height:1;white-space:nowrap}
 .mini .mini-equalizer-command{color:var(--mini-control)}
 .mini .mini-equalizer-command.on{color:var(--accent)}
 .mini .mini-equalizer-command .ic{stroke:currentColor}
@@ -2861,6 +2864,25 @@ body.legacy [data-surface-scheme="silver"]:not([data-surface-theme="light"]):not
 @media(max-width:480px){
   .sacd-media-logo-row{width:52px;max-height:38px}
   .album-detail-approved .sacd-media-logo-detail{width:54px;max-height:40px}
+}
+/* The adaptive player can make the detail pane narrow while the browser
+   viewport remains desktop-wide. Size the album composition from the pane,
+   not from the window, so Chrome does not squeeze the title into one-letter
+   lines beside a 160px cover. */
+@container detail-pane (max-width:700px){
+  .album-detail-approved{padding:0 18px 20px}
+  .album-detail-approved>.albumblock>.reviewed-albumhead,.album-detail-approved>.albumblock>.album-enrichment,.album-detail-approved>.albumblock>.album-primary-actions{width:100%}
+  .album-detail-approved>.albumblock>.reviewed-albumhead{grid-template-columns:105px minmax(0,1fr);gap:10px 14px}
+  .album-detail-approved .reviewed-albumhead .albumart{width:105px;height:105px;flex-basis:105px}
+  .album-detail-approved .reviewed-albumhead .album-display-tool{top:-5px;right:0;width:48px}
+  .album-detail-approved .reviewed-albumhead .atitle{font-size:20px;overflow-wrap:break-word}
+  .album-detail-approved .reviewed-albumhead .ameta,.album-detail-approved .reviewed-albumhead .edition-years,.album-detail-approved .reviewed-albumhead .album-facts{font-size:13px}
+  .album-detail-approved .sacd-album-unit{align-items:flex-start;flex-direction:column;gap:7px;margin-top:7px}
+  .album-detail-approved .sacd-media-logo-detail{width:62px;max-height:44px}
+  .album-detail-approved .album-summary-inline{font-size:14px}
+  .album-artist-sidecar,.album-detail-approved.artist-information-left .album-artist-sidecar{position:static;width:auto;min-height:0;margin:0 0 18px;padding:14px 0 0;border-top:1px solid var(--hair);border-right:0;border-left:0}
+  .album-detail-approved.album-information-right>.albumblock>.reviewed-albumhead,.album-detail-approved.album-information-right>.albumblock>.album-primary-actions,.album-detail-approved.album-cover-right>.albumblock>.reviewed-albumhead{margin-left:0}
+  .album-information-metadata{grid-template-columns:1fr}
 }
 .collection-screen{background:var(--group-page);padding:20px;overflow:auto;min-width:0}
 .collection-screen h2{font-size:20px}

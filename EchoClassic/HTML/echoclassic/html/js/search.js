@@ -334,7 +334,7 @@ Vue.component('lms-search', {
       return found;
     },
 	    art: function (id) {
-	      var url = LmsFmt.coverUrl(id, 50);
+	      var url = LmsFmt.artworkUrl({ coverId: id }, 50);
 	      return url ? { backgroundImage: 'url(' + url + ')', backgroundSize: 'cover' } : {};
 	    },
 	    trackSubtitle: function (t) {

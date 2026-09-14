@@ -60,6 +60,17 @@
     if (!applyingHistory && history.pushState) history.pushState(historyState(tab), '');
   }
 
+  /* Replace a live detail without adding a Back step. This is used by views
+     which deliberately follow playback: a track change updates the current
+     album in place, while an explicit library choice still uses push(). */
+  function replace(tab, frame) {
+    var s = stack(tab);
+    if (s.length) Vue.set(s, s.length - 1, frame);
+    else s.push(frame);
+    persist();
+    if (!applyingHistory && history.replaceState) history.replaceState(historyState(tab), '');
+  }
+
   function pop(tab) {
     var s = stack(tab);
     var item = s.length ? s.splice(s.length - 1, 1)[0] : null;
@@ -144,7 +155,7 @@
   }
 
   global.LmsNav = {
-    stacks: stacks, push: push, pop: pop, top: top,
+    stacks: stacks, push: push, replace: replace, pop: pop, top: top,
     depth: depth, reset: reset, parentLabel: parentLabel,
     back: back, markTab: markTab, switchMusicRoot: switchMusicRoot
   };

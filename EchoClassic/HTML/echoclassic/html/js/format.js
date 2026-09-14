@@ -96,6 +96,26 @@
     return '/music/' + id + '/cover.jpg';
   }
 
+  /* Radio artwork bundled with the skin is more reliable than the generic
+     antenna image LMS assigns to streams. Keep the catalogue explicit: that
+     way an ordinary track containing a station-like word never points at a
+     file which is not actually shipped. */
+  var RADIO_ICONS = Object.freeze({ WCRB: 'WCRB.png' });
+
+  function radioIconUrl(item) {
+    if (!item) return '';
+    var text = [item.title, item.artist, item.album, item.url]
+      .filter(Boolean).join(' ').toUpperCase();
+    var key = Object.keys(RADIO_ICONS).filter(function (name) {
+      return new RegExp('(?:^|[^A-Z0-9])' + name + '(?:$|[^A-Z0-9])').test(text);
+    })[0];
+    return key ? 'html/images/Radio_Icons/' + RADIO_ICONS[key] : '';
+  }
+
+  function artworkUrl(item, size) {
+    return radioIconUrl(item) || coverUrl(item && item.coverId, size);
+  }
+
   /* Comparacao de edicoes equivalentes.
 
      Tupla comparada da esquerda para a direita, nunca um numero somado: somar
@@ -165,7 +185,8 @@
   global.LmsFmt = {
     count: count, duration: duration, longDuration: longDuration,
     rate: rate, depth: depth, format: format, year: year,
-    isHiRes: isHiRes, coverUrl: coverUrl,
+    isHiRes: isHiRes, coverUrl: coverUrl, radioIconUrl: radioIconUrl,
+    artworkUrl: artworkUrl,
     editionRank: editionRank, compareEditions: compareEditions, isLossless: isLossless
   };
 })(window);
