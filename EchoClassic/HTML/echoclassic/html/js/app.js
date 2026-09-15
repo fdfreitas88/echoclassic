@@ -277,6 +277,7 @@
       },
       goBack: function () {
         if (LmsUi.closeFolderReveal && LmsUi.closeFolderReveal()) return;
+        if (this.ui.tab === 'settings' && LmsUi.canLeaveEqualizer && !LmsUi.canLeaveEqualizer()) return;
         if (this.ui.tab === 'settings' && this.ui.advancedSettings) {
           if (LmsUi.canLeaveAdvancedSettings && !LmsUi.canLeaveAdvancedSettings()) return;
           if (LmsNav.top('settings') && LmsNav.top('settings').advanced) LmsNav.pop('settings');

@@ -131,6 +131,11 @@
   window.addEventListener('popstate', function (event) {
     var target = event.state;
     if (!target || !target.echoClassic) return;
+    if (global.LmsUi && global.LmsUi.state.tab === 'settings' &&
+        global.LmsUi.canLeaveEqualizer && !global.LmsUi.canLeaveEqualizer()) {
+      if (history.forward) history.forward();
+      return;
+    }
     applyingHistory = true;
     if (global.LmsUi && global.LmsUi.restoreTab) global.LmsUi.restoreTab(target.tab);
     var s = stack(target.tab);

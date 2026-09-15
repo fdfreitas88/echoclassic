@@ -671,6 +671,8 @@
 
   function setTab(name) {
     if (!isTab(name)) return;
+    if (state.tab === 'settings' && name !== 'settings' && global.LmsUi &&
+        global.LmsUi.canLeaveEqualizer && !global.LmsUi.canLeaveEqualizer()) return;
     if (name !== 'music') state.folderReveal = null;
     state.tab = name;
     state.selectionMode = false;
@@ -1611,6 +1613,7 @@
     setSurfaceTheme: setSurfaceTheme, setSurfaceScheme: setSurfaceScheme,
     setSurfaceFont: setSurfaceFont, setSurfaceFollowsApp: setSurfaceFollowsApp,
     canLeaveAdvancedSettings: canLeaveAdvancedSettings,
+    canLeaveEqualizer: null,
     applyAdvancedSettings: null,
     PLAYER_PRESENTATIONS: PLAYER_PRESENTATIONS,
     setPlayerPresentation: setPlayerPresentation,

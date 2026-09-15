@@ -6843,3 +6843,27 @@ ECHOCLASSIC_EXTERNAL_BIOGRAPHY_NOTICE
 	DE	Externe Biografie · kann Fehler enthalten
 	FR	Biographie externe · peut contenir des erreurs
 	PT	Biografia externa · pode conter erros
+
+ECHOCLASSIC_EQUALIZER_UNAPPLIED
+	EN	Changes have not been applied.
+	DE	Änderungen wurden noch nicht angewendet.
+	FR	Les modifications n’ont pas encore été appliquées.
+	PT	As alterações ainda não foram aplicadas.
+
+ECHOCLASSIC_DISCARD
+	EN	Discard
+	DE	Verwerfen
+	FR	Ignorer
+	PT	Descartar
+
+ECHOCLASSIC_LOAD
+	EN	Load
+	DE	Laden
+	FR	Charger
+	PT	Carregar
+
+ECHOCLASSIC_EQUALIZER_SWIPE_RESPONSE
+	EN	Swipe horizontally to inspect the full response
+	DE	Wischen Sie horizontal, um den vollständigen Frequenzgang zu prüfen
+	FR	Balayez horizontalement pour examiner toute la réponse
+	PT	Deslize horizontalmente para examinar toda a resposta
