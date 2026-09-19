@@ -192,13 +192,14 @@ Vue.component('lms-settings', {
         <div class="inline-commands"><button type="button" @click="openAppleSqueezerPluginManager">Install Apple Squeezer</button><button type="button" @click="openSqueezeDspPluginManager">Install SqueezeDSP</button></div>
       </div>
       <template v-else><div class="equalizer-dashboard" :class="{'owner-changing':dspOwnerChanging}">
+        <div v-if="dspOwnerChanging" class="equalizer-owner-transition" role="status" aria-live="polite"><i aria-hidden="true"></i><span>{{ tr('Switching to') }} {{ dspOwnerTargetLabel }}…</span></div>
         <section class="equalizer-dashboard-path" aria-label="Equalizer engine and playback mode">
-          <div class="equalizer-dashboard-control"><span>Engine</span><div class="equalizer-dashboard-segment" role="radiogroup" aria-label="Processing engine"><button v-for="owner in dspOwnerOptions" :key="owner.key" type="button" role="radio" :aria-checked="String(dspOwner===owner.key)" :tabindex="dspOwner===owner.key?0:-1" :class="{on:dspOwner===owner.key}" :disabled="dspOwnerChanging||(owner.key==='apple-squeezer'&&!appleSqueezerCompatible)" @keydown="radioKey($event,dspOwnerOptions,dspOwner,selectDspOwner)" @click="selectDspOwner(owner.key)">{{ owner.label }}</button><button v-if="dspOwnerChanging" type="button" class="busy" disabled aria-live="polite">Checking…</button></div></div>
+          <div class="equalizer-dashboard-control"><span>Engine</span><div class="equalizer-dashboard-segment" role="radiogroup" aria-label="Processing engine" :aria-busy="String(dspOwnerChanging)"><button v-for="owner in dspOwnerOptions" :key="owner.key" type="button" role="radio" :aria-checked="String(dspOwner===owner.key)" :tabindex="dspOwner===owner.key?0:-1" :class="{on:dspOwner===owner.key}" :disabled="dspOwnerChanging||(owner.key==='apple-squeezer'&&!appleSqueezerCompatible)" @keydown="radioKey($event,dspOwnerOptions,dspOwner,selectDspOwner)" @click="selectDspOwner(owner.key)">{{ owner.label }}</button></div></div>
           <div class="equalizer-dashboard-control"><span>Mode</span><div class="equalizer-dashboard-segment" role="radiogroup" aria-label="Playback mode"><button v-for="mode in appleSqueezerModes.slice(0,2)" :key="mode.key" type="button" role="radio" :aria-checked="String(appleSqueezer.mode===mode.key)" :tabindex="appleSqueezer.mode===mode.key?0:-1" :class="{on:appleSqueezer.mode===mode.key}" :disabled="appleSqueezer.busy||dspOwnerChanging||dspOwner!=='apple-squeezer'" @keydown="radioKey($event,appleSqueezerModes,appleSqueezer.mode,changeAppleSqueezerMode)" @click="changeAppleSqueezerMode(mode.key)">{{ mode.label }}</button><button type="button" class="more" :aria-expanded="String(equalizerMoreModesOpen)" :disabled="dspOwnerChanging||dspOwner!=='apple-squeezer'" @click="toggleEqualizerDashboard('modes')">{{ equalizerMoreModesOpen ? '−' : '+' }}</button></div></div>
         </section>
         <div v-if="equalizerMoreModesOpen" class="equalizer-dashboard-extra"><button v-for="mode in appleSqueezerModes.slice(2)" :key="mode.key" type="button" class="equalizer-dashboard-choice" :class="{on:appleSqueezer.mode===mode.key}" :disabled="appleSqueezer.busy||dspOwnerChanging" @click="changeAppleSqueezerMode(mode.key)"><span><strong>{{ mode.label }}</strong><small>{{ appleSqueezerModeHelp(mode.key) }}</small></span><span>{{ appleSqueezer.mode===mode.key ? '✓' : '' }}</span></button></div>
 
-        <section class="equalizer-dashboard-row equalizer-dashboard-presets" aria-label="Quick presets"><header><strong>Quick presets</strong><small>Choose a curve or manage saved profiles</small></header><button v-for="preset in equalizerDashboardPresets" :key="preset.key" type="button" class="equalizer-dashboard-preset" :class="{on:equalizerPresetLabel===preset.label}" :aria-pressed="String(equalizerPresetLabel===preset.label)" :disabled="dspOwnerChanging" @click="applyEqualizerDashboardPreset(preset)"><svg viewBox="0 0 34 18" aria-hidden="true"><path :d="preset.path"></path></svg><span>{{ preset.short }}</span></button><button type="button" class="equalizer-dashboard-more" :aria-expanded="String(equalizerMorePresetsOpen)" :disabled="dspOwnerChanging" @click="toggleEqualizerDashboard('presets')">{{ equalizerMorePresetsOpen ? '−' : '+' }}</button></section>
+        <section class="equalizer-dashboard-row equalizer-dashboard-presets" aria-label="Quick presets"><header><strong>Quick presets</strong></header><button v-for="preset in equalizerDashboardPresets" :key="preset.key" type="button" class="equalizer-dashboard-preset" :class="{on:equalizerPresetLabel===preset.label}" :aria-label="preset.label" :aria-pressed="String(equalizerPresetLabel===preset.label)" :disabled="dspOwnerChanging" @click="applyEqualizerDashboardPreset(preset)"><svg viewBox="0 0 34 18" aria-hidden="true"><path :d="preset.path"></path></svg><span>{{ preset.short }}</span></button><button type="button" class="equalizer-dashboard-more" :aria-label="tr('More')" :aria-expanded="String(equalizerMorePresetsOpen)" :disabled="dspOwnerChanging" @click="toggleEqualizerDashboard('presets')"><svg viewBox="0 0 34 18" aria-hidden="true"><path d="M1 15 L8 9 L14 12 L21 4 L27 9 L33 6"></path><path d="M28 3 H33 V8"></path></svg><span>{{ tr('More') }}</span></button></section>
         <div v-if="equalizerMorePresetsOpen" class="equalizer-dashboard-extra equalizer-preset-extra"><button v-for="preset in equalizerPresetOptions" :key="preset.key" type="button" class="equalizer-dashboard-choice" @click="chooseEqualizerPreset(preset)"><span><strong>{{ preset.name }}</strong><small>{{ preset.server ? 'Saved profile' : 'Built-in profile' }}</small></span><span>{{ equalizerPresetLabel===preset.name ? '✓' : '' }}</span></button><div v-if="dspOwner==='squeezedsp'" class="equalizer-dashboard-manager"><label for="eq-dashboard-preset-name">Preset name</label><input id="eq-dashboard-preset-name" v-model.trim="equalizerPresetName" type="text" maxlength="80" placeholder="My preset"><div><button type="button" class="eq-action-button" :disabled="!equalizerPresetName||equalizerSaving" @click="saveEqualizerPreset">Save as new</button><button type="button" class="eq-action-button destructive" :disabled="!equalizerServerPresetSelected||equalizerSaving" @click="deleteEqualizerPreset">Delete selected</button></div></div></div>
 
         <section class="equalizer-dashboard-row equalizer-dashboard-rules" aria-label="Apply automatically"><header><strong>Apply automatically</strong><small>Use this curve for</small><span class="equalizer-dashboard-now"><i aria-hidden="true"></i><span><b>{{ equalizerContextName }}</b><small>{{ equalizerContextMeta }}</small></span></span></header><div class="equalizer-dashboard-rule" v-for="scope in equalizerRuleScopes.slice(0,3)" :key="scope.type"><span><strong>{{ equalizerRuleTypeLabel(scope.type) }}</strong><small>{{ scope.value || 'Not set' }}</small></span><button type="button" class="sw" :class="{on:scope.active}" role="switch" :aria-checked="String(scope.active)" :disabled="equalizerDirty||!scope.key" @click="toggleEqualizerRule(scope.type)"></button></div><button type="button" class="equalizer-dashboard-more" :aria-expanded="String(equalizerMoreRulesOpen)" @click="toggleEqualizerDashboard('rules')">{{ equalizerMoreRulesOpen ? '−' : '+' }}</button></section>
@@ -223,7 +224,6 @@ Vue.component('lms-settings', {
               <button v-else type="button" class="eq-action-button" @click="loadNativeAB(nativeDspAB==='A'?'B':'A')">{{ tr('Load') }} {{ nativeDspAB==='A'?'B':'A' }}</button>
               <button v-if="dspOwner==='apple-squeezer' && nativeDspDraft" type="button" class="eq-action-button" @click="saveNativeAB(nativeDspAB)">Save {{ nativeDspAB }}</button>
               <button type="button" class="eq-action-button" :disabled="!equalizerAvailableNow" @click="dspOwner==='apple-squeezer'?applyNativePreset('flat'):resetEqualizerBands()">Reset</button>
-              <button type="button" class="eq-action-button primary equalizer-workspace-apply" :disabled="!equalizerAvailableNow||(dspOwner==='apple-squeezer'?(!nativeDspDirty||nativeDspSaving):(!equalizerDirty||equalizerSaving))" @click="dspOwner==='apple-squeezer'?applyNativeDsp():applyEqualizer()">{{ (nativeDspSaving||equalizerSaving)?'Applying…':'Apply changes' }}</button>
             </div>
             <div v-if="equalizerHasUnappliedChanges" class="equalizer-unapplied" role="status"><strong>{{ tr('Changes have not been applied.') }}</strong><button type="button" class="eq-action-button" @click="discardEqualizerChanges">{{ tr('Discard') }}</button><button type="button" class="eq-action-button primary" :disabled="nativeDspSaving||equalizerSaving" @click="dspOwner==='apple-squeezer'?applyNativeDsp():applyEqualizer()">{{ tr('Apply changes') }}</button></div>
             <div v-if="!equalizerAvailableNow" class="equalizer-workspace-paused-label">Saved curve preview · processing paused</div>
@@ -1017,7 +1017,7 @@ Vue.component('lms-settings', {
       equalizerMoreModesOpen: false,
       equalizerMorePresetsOpen: false, equalizerMoreRulesOpen: false,
       equalizerAdvancedOpen: { headroom:false, filters:false, spatial:false },
-      equalizerResponseExpanded: false, dspOwnerChanging: false
+      equalizerResponseExpanded: false, dspOwnerChanging: false, dspOwnerTarget: ''
       /* Fail closed to the ordinary LMS path until Apple Squeezer explicitly
          reports that it owns DSP for this player. Standard Squeezelite has no
          native DSP document and must never enter that render/control path
@@ -1043,6 +1043,7 @@ Vue.component('lms-settings', {
 		return !!(this.equalizerDraft && this.equalizerDraft.Client && !this.equalizerDraft.Client.Bypass);
 	},
 	appleSqueezerCompatible: function () { return this.appleSqueezer.available && (this.appleSqueezer.apiVersion >= 2 || this.appleCapability('dsp')); },
+	dspOwnerTargetLabel: function () { var option=this.dspOwnerOptions.filter(function(owner){return owner.key===this.dspOwnerTarget;},this)[0];return option?this.tr(option.label):''; },
 	squeezeDspAvailable: function () { return this.store.equalizer.status === 'ready'; },
 	equalizerEngineAvailable: function () { return this.appleSqueezerCompatible || this.squeezeDspAvailable; },
 	equalizerEngineLabel: function () { if(this.appleSqueezerCompatible&&this.dspOwner==='apple-squeezer')return 'Apple Squeezer';if(this.squeezeDspAvailable)return 'SqueezeDSP';return ''; },
@@ -3745,6 +3746,7 @@ Vue.component('lms-settings', {
     selectDspOwner: async function (owner) {
       if (owner === this.dspOwner || this.dspOwnerChanging) return;
       this.dspOwnerChanging = true;
+      this.dspOwnerTarget = owner;
       try {
         if (this.appleSqueezer.apiVersion >= 2 || this.appleCapability('dsp-owner')) {
           var state = await LmsApi.setAppleSqueezerDspOwner(this.store.playerId, owner);
@@ -3755,6 +3757,7 @@ Vue.component('lms-settings', {
         LmsUi.notify((owner === 'apple-squeezer' ? 'Apple Squeezer' : 'SqueezeDSP') + ' now owns DSP.', 'success', 3000);
       } catch (e) { LmsUi.notify(LmsStore.friendlyError(e, 'Could not change DSP owner.'), 'error', 6500); }
       this.dspOwnerChanging = false;
+      this.dspOwnerTarget = '';
     },
     setNativeBand: function (index, value) { Vue.set(this.nativeDspDraft.graphic_eq_db, index, Number(value)); },
     applyNativePreset: function (name) {

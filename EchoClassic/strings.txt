@@ -6867,3 +6867,9 @@ ECHOCLASSIC_EQUALIZER_SWIPE_RESPONSE
 	DE	Wischen Sie horizontal, um den vollständigen Frequenzgang zu prüfen
 	FR	Balayez horizontalement pour examiner toute la réponse
 	PT	Deslize horizontalmente para examinar toda a resposta
+
+ECHOCLASSIC_SWITCHING_TO
+	EN	Switching to
+	DE	Wechsel zu
+	FR	Passage à
+	PT	Alternando para
