@@ -15,6 +15,18 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.10] — 2026-09-25
+
+### Changed
+- The Equalizer frequency-response graph has larger labels and a horizontally inspectable view on phones. The quick-presets row has clearer names and selection state. [code/measured] EchoClassic/HTML/echoclassic/html/js/settings.js, EchoClassic/HTML/echoclassic/html/css/ios9.css; npm test, npm run validate
+- Switching the DSP owner now shows a progress state and temporarily disables conflicting controls. Unapplied Equalizer edits have visible Apply and Discard actions, with a warning before leaving the screen. [code/measured] EchoClassic/HTML/echoclassic/html/js/settings.js, EchoClassic/HTML/echoclassic/html/js/nav.js, EchoClassic/HTML/echoclassic/html/js/ui.js; npm test, npm run validate
+
+### Fixed
+- Qobuz menu rows with an Open action and shared Add action now open their submenu instead of invoking Add and appearing inert. Verified in Chrome through My Favourites, Releases and an album's track list; Android 16 Chrome and Firefox still need device confirmation. [live/measured] EchoClassic/HTML/echoclassic/html/js/api.js; tests/api.test.js
+
+### Compatibility
+- The 3.5.9 feature set and LMS 8.0+ requirement remain unchanged. SqueezeDSP and Apple Squeezer remain optional. [code] EchoClassic/install.xml, EchoClassic/HTML/echoclassic/html/js/settings.js
+
 ## [3.5.9] — 2026-09-14
 
 ### Added

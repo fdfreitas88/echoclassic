@@ -1346,6 +1346,9 @@
     if (item.type === 'audio' || item.type === 'track') return 'audio';
     if (item.type === 'search' || hasPlaceholder(item)) return 'search';
     if (item.style === 'itemNoAction') return 'text';
+    // LMS service menus can inherit add/play actions from result.base. A row
+    // with an explicit go destination is still a submenu, not a play command.
+    if (item.actions && item.actions.go && item.actions.go.cmd) return 'menu';
     if (item.actions && (item.actions.do || item.actions.playall || item.actions.add || item.actions.insert)) return 'action';
     if (item.type === 'text') return 'text';
     return 'menu';

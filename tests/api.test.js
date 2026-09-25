@@ -540,6 +540,26 @@ test('LIST-01: shared LMS base actions make Qobuz rows actionable on every page'
   assert.match(items[0].identity, /item_id.*2\.1\.100/);
 });
 
+test('Qobuz menu rows open their go action even when shared add actions exist', async function () {
+  const ctx = apiContext(function () {
+    return {
+      base: { actions: {
+        go: { cmd: ['qobuz', 'items'], params: { menu: 'qobuz' }, itemsParams: 'params' },
+        add: { cmd: ['qobuz', 'playlist', 'add'], params: { menu: 'qobuz' }, itemsParams: 'params' }
+      } },
+      item_loop: [{ text: 'My Favourites', actions: { go: {
+        cmd: ['qobuz', 'items'], params: { menu: 'qobuz', item_id: '2' }
+      } } }]
+    };
+  });
+  const items = await ctx.api.opmlBrowse('p1', ctx.api.opmlRoot('apps'), 0, 100);
+  assert.equal(items[0].kind, 'menu');
+  assert.deepEqual(plain(items[0].node), {
+    cmd: ['qobuz', 'items'], params: ['menu:qobuz', 'item_id:2'], title: 'My Favourites'
+  });
+  assert.equal(items[0].playNode, null);
+});
+
 test('SqueezeDSP settings and catalog are normalized without dropping plugin fields', async function () {
   const document = { Client: {
     Bypass: 0, Preamp: -2.5, Filters: [{ FilterType: 'peak', Frequency: 120 }],

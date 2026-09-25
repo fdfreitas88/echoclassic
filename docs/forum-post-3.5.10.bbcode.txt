@@ -1,0 +1,37 @@
+[b]Echo Classic 3.5.10[/b]
+
+Echo Classic 3.5.10 improves the Equalizer interface on desktop and phones.
+
+[b]What's New[/b]
+
+The frequency-response graph has larger labels and can be expanded for horizontal inspection on a phone. Quick presets have clearer names and selection states.
+
+Switching between Apple Squeezer and SqueezeDSP now shows progress and prevents conflicting input until the switch completes. Edited Equalizer settings offer Apply and Discard together, and Echo Classic warns before leaving a screen with unapplied changes, including with browser Back.
+
+[img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/images/release-3.5.10-equalizer-desktop.png[/img]
+
+On phones, the response graph can be expanded for horizontal inspection:
+
+[img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/images/release-3.5.10-equalizer-phone.png[/img]
+
+[b]Fixes[/b]
+
+Qobuz menu rows that provide both an Open action and a shared Add action now open their submenu. This was verified in Chrome through My Favourites, Releases and an album's track list. Android 16 Chrome and Firefox still need device confirmation.
+
+[b]Compatibility[/b]
+
+Echo Classic 3.5.10 supports Lyrion Music Server 8.0 and later. SqueezeDSP and Apple Squeezer remain optional; ordinary playback and navigation continue without them.
+
+[b]Installation / Upgrade[/b]
+
+Add the Echo Classic repository URL under Server Settings > Plugins > Additional repositories, then install or update Echo Classic and restart LMS when requested:
+
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/repo.xml
+
+[b]Links[/b]
+
+Project: https://github.com/fdfreitas88/echoclassic
+Release: https://github.com/fdfreitas88/echoclassic/releases/tag/v3.5.10
+Changelog: https://github.com/fdfreitas88/echoclassic/blob/main/CHANGELOG.md
+
+By Felipe Freitas

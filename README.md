@@ -18,12 +18,33 @@ touch-friendly music system for tablets, phones and desktop browsers. It brings
 library discovery, queue and playlist editing, synchronized-player control,
 live signal-path information and optional server-side DSP into one interface.
 
-Version **3.5.9** uses Vue 2 without a compilation or bundling step: the files in
+Version **3.5.10** uses Vue 2 without a compilation or bundling step: the files in
 the plugin are the files served to the browser.
+
+## What is new in 3.5.10
+
+The Equalizer graph has larger labels and can be expanded for horizontal
+inspection on a phone. Quick presets have clearer selection and accessible
+names. Switching between processing engines shows progress and prevents
+conflicting input until the switch finishes.
+
+Edited Equalizer settings now offer Apply and Discard together. Leaving with
+unapplied changes asks for confirmation, including when using browser Back.
+These changes build on the Equalizer graph introduced in 3.5.9.
+
+![Echo Classic 3.5.10 Equalizer on desktop](images/release-3.5.10-equalizer-desktop.png)
+
+![Echo Classic 3.5.10 expanded Equalizer graph on phone](images/release-3.5.10-equalizer-phone.png)
+
+Qobuz menus now open when a row provides both an Open action and a shared Add
+action. This was verified in Chrome against the live LMS; Android 16 Chrome and
+Firefox still need device confirmation.
+
+## Previous release: 3.5.9
 
 ![Echo Classic 3.5.9 Equalizer response](images/release-3.5.9-equalizer.png)
 
-## What is new in 3.5.9
+### What changed in 3.5.9
 
 Version 3.5.9 adds a live Equalizer response graph, completes LMS virtual-library
 discovery and gives Recently played explicit Tracks, Albums and Off modes. Radio
@@ -308,12 +329,13 @@ an older cached stylesheet.
 
 ## Project status
 
-Prepared stable release: **3.5.9**.
+Latest stable release: **3.5.10**. Live Chrome acceptance passed; Android 16
+Chrome and Firefox remain unverified on a device.
 
-- 732 automated tests passing.
+- 751 automated tests passing.
 - Six validation stages passing.
 - 25 Vue templates compiling.
-- 1,134 runtime string blocks with complete English and Portuguese coverage;
+- 1,150 runtime string blocks with complete English and Portuguese coverage;
   German and French each currently fall back to English for 14 entries.
 - 155/155 tested contrast pairs passing.
 
