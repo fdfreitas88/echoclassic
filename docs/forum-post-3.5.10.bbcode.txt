@@ -1,16 +1,14 @@
-[b]Echo Classic 3.5.10[/b]
+[b]Echo Classic 3.5.10 is now available[/b]
 
-Echo Classic 3.5.10 improves the Equalizer interface on desktop and phones.
+Echo Classic 3.5.10 makes the Equalizer clearer on desktop and phones and fixes Qobuz menus that appeared to do nothing when tapped.
 
 [b]What's New[/b]
 
-The frequency-response graph has larger labels and can be expanded for horizontal inspection on a phone. Quick presets have clearer names and selection states.
-
-Switching between Apple Squeezer and SqueezeDSP now shows progress and prevents conflicting input until the switch completes. Edited Equalizer settings offer Apply and Discard together, and Echo Classic warns before leaving a screen with unapplied changes, including with browser Back.
+The Equalizer's frequency-response graph has larger labels. Quick presets have clearer names and show which one is selected. Switching between Apple Squeezer and SqueezeDSP now shows progress and prevents conflicting input until the switch completes.
 
 [img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/images/release-3.5.10-equalizer-desktop.png[/img]
 
-On phones, the response graph can be expanded for horizontal inspection:
+On phones, expand the response graph and swipe horizontally to inspect the full frequency range. Edited Equalizer settings now offer Apply and Discard together, and Echo Classic warns before leaving with unapplied changes, including when using browser Back.
 
 [img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/images/release-3.5.10-equalizer-phone.png[/img]
 

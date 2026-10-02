@@ -705,7 +705,16 @@ Vue.component('lms-browse', {
       LmsUi.setLibraryRoot(key);
     },
     loadLibraries: async function () {
-      this.libraries = await LmsApi.libraryRoots(this.store.playerId || '');
+      var libraries;
+      try {
+        libraries = await LmsApi.libraryRoots(this.store.playerId || '');
+      } catch (e) {
+        // Optional root discovery must not reject the created hook, discard
+        // the known roots, or reset the selection when the server is slow.
+        console.debug('[Echo Classic] Library roots unavailable', e);
+        return false;
+      }
+      this.libraries = libraries;
       if (!this.libraries.some(function (x) { return x.key === this.ui.rootKey; }, this)) {
         LmsUi.setLibraryRoot('all');
       }

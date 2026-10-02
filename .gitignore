@@ -29,9 +29,22 @@ dist/
 
 # material local de desenvolvimento e validacao
 docs/
-tests/
+tests/*
+!tests/format.test.js
+!tests/store.test.js
+!tests/chrome-audit-round2.test.js
+!tests/unified-bottom-chrome.test.js
+!tests/library-roots-recovery.test.js
+!tests/css-flex-reserves.test.js
+!tests/library-review.test.js
+!tests/collection-dashboard.test.js
 tools/
-qa/
+qa/*
+!qa/playwright.config.js
+!qa/feedback-regressions.spec.js
+!qa/phone-text-audit.spec.js
+!qa/firefox-launch.js
+!qa/capture-release.js
 
 # backups gerados pelo INSTALL.sh e por copias manuais
 *.backup-*

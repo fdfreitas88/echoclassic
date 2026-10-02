@@ -15,6 +15,18 @@ what was announced.
 
 ## [Unreleased]
 
+## [3.5.11] — 2026-10-01
+
+### Fixed
+- Phone player metadata and commands now occupy separate rows, keeping the progress display and all touch controls apart. Playlist editing actions move below wrapped track/artist names; playlist detail headings, album rows, Now Playing text and settings values wrap instead of cutting off essential content. The phone status bar retains its full brand, support control and clock. [measured] Chrome and Firefox layout checks cover 320–412 px with badges, Replay Gain and equalizer controls present; actual Android 16 hardware was not tested.
+- Playlist and service-menu reads now allow up to 30 seconds for LMS/provider responses while playback commands retain their 10-second timeout. Background library-root discovery catches failures and preserves the current roots and selection. [live/measured] Reproduced Qobuz My Playlists timing out in Firefox; after the fix, Firefox opens saved playlists and the Qobuz 80s playlist's track list, with no uncaught page errors or browse-triggered playback commands. Android 16 hardware was not tested.
+- Remote track artwork now retains LMS `artwork_url` across playlist, queue and Now Playing metadata, preferring the explicit image URL to a synthetic cover ID. Metadata enrichment survives subsequent status polls, rejects late previous-track responses, and resets failed images when the artwork URL changes. [code/measured] Focused API, formatter and store regression tests pass; Android hardware was not tested.
+- The idle mini-player uses its own state class so the full-page empty-state padding and column layout cannot push “Nothing playing” into the divider or album tracks. [measured] Browser checks contain the label within the bar in idle, playing and paused states at 1440, 1190, 390 and 320 px in Chrome, WebKit and Firefox. Firefox QA uses an isolated application identity on macOS to avoid the installed browser's protected data directory.
+- Collection restores its saved dashboard before waiting for LMS, retains cached statistics across navigation and browser reloads, and no longer rewrites the full library when leaving the tab. Background checks flag changed scan revisions or track/album counts without discarding the saved results. A manual scan can finish after navigating away. [live/measured] 758 tests and validation gates pass; isolated Chrome test with 15,212 tracks and a delayed server response: repeat visits improved from about 5.4 seconds to 39–53 ms. Deployed server with 15,245 tracks: repeated visits took 15–23 ms and a full page reload restored the collection in 623 ms, with zero additional Collection track queries and no browser errors.
+
+### Compatibility
+- LMS 8.0+ remains supported. SqueezeDSP and Apple Squeezer remain optional. Deployed Chrome/Firefox phone layouts and WebKit tap checks pass; Android hardware was not tested. Dynamic Playlists integration is planned separately and is not included.
+
 ## [3.5.10] — 2026-09-25
 
 ### Changed

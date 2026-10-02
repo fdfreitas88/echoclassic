@@ -1559,13 +1559,13 @@ body.dark .swatch-dot.gauge-color-theme::before{background:linear-gradient(135de
 /* ====== mini player ==================================================== */
 .mini{height:var(--mini);flex:0 0 auto;background:var(--mini-bg);border-top:.5px solid var(--mini-edge);
   display:flex;align-items:center;padding:0 12px;gap:16px;position:relative}
-.mini.empty,.mini.inactive{height:58px}
+.mini.is-empty,.mini.inactive{height:58px}
 .mini .np{flex:1;min-width:0;display:flex;align-items:center;
   justify-content:center;text-align:left;padding:6px 2px;color:var(--text);gap:9px}
 .mini .np:disabled{opacity:.55;cursor:default}
-.mini.empty .np{position:relative;inset:auto;align-self:stretch;height:100%;padding:6px 2px;text-align:center;align-items:center}
-.mini.empty .np:disabled{opacity:1}
-.mini.empty .np .t{font-size:13px;line-height:16px;color:var(--text2)}
+.mini.is-empty .np{position:relative;inset:auto;align-self:stretch;height:100%;padding:6px 2px;text-align:center;align-items:center}
+.mini.is-empty .np:disabled{opacity:1}
+.mini.is-empty .np .t{font-size:13px;line-height:16px;color:var(--text2)}
 .mini-cover{width:42px;height:42px;flex:0 0 42px;overflow:hidden;background:var(--field-bg);
   display:flex;align-items:center;justify-content:center;color:var(--art-placeholder);font-size:15px}
 .mini-cover img{display:block;width:100%;height:100%;object-fit:cover}
@@ -1594,11 +1594,7 @@ body[data-mini-gauge-style="flat"] .mini-gauge i{background-image:none;box-shado
 .mini-signal{position:absolute;left:12px;bottom:3px;max-width:30%;text-align:left;
   color:var(--text2);font-size:8.5px;line-height:11px;pointer-events:none}
 .mini .r{margin-left:auto;display:flex;align-items:center;gap:0;z-index:var(--z-bar-local)}
-/* .mini agora e uma fileira flex real de 3 partes -- transporte / .np (flex:1,
-   min-width:0) / .r -- sem numeros magicos reservando espaco para o rotulo
-   traduzido de .queue-label. O z-index local so importa de novo em
-   max-width:360px, onde .transport e .r voltam a ser absolutos por cima de
-   .np (empilhados abaixo dele). */
+/* Desktop has three flex regions; phones place metadata above command rows. */
 .mini .transport{display:flex;align-items:center;gap:0;
   position:relative;z-index:var(--z-bar-local)}
 .mini .mini-action{width:44px;height:44px;display:flex;align-items:center;justify-content:center;
@@ -2590,20 +2586,29 @@ body[data-player-gauge-style="flat"] .npfull .times span:last-child{grid-column:
   .np-tools,.rating-row{width:calc(100vw - 32px)}
   .info-content .srow{font-size:14px}
 }
-@media (max-width:360px){
-  :root{--mini:94px}
-  .mini{height:var(--mini);align-items:flex-end;padding:0 4px}
-  .mini .np{position:absolute;inset:0 0 44px 0;padding:5px 8px;gap:7px}
-  .mini .transport{position:absolute;left:calc(50% - 88px);bottom:0}
-  .mini .r{position:absolute;right:4px;bottom:0}
-  .mini-cover{width:34px;height:34px;flex-basis:34px}
-  .mini .np .t{font-size:12px;line-height:14px}
-  .mini .np .s{font-size:10px;line-height:12px}
-  .mini-progress{margin-top:1px}
-  .mini .mini-badges{position:absolute;right:8px;bottom:2px;width:auto;max-width:150px;
-    justify-content:flex-end;background:var(--chrome)}
-  .mini .mini-badges .badge{font-size:8.5px}
-  .mini-signal{left:8px;bottom:2px;max-width:calc(100% - 165px)}
+/* Phone metadata and commands occupy separate rows. Each command retains its
+   44px touch target, including when player, volume and equalizer are present. */
+@media (max-width:560px){
+  :root{--mini:118px}
+  .mini:not(.is-empty):not(.inactive){height:auto;min-height:var(--mini);display:grid;
+    grid-template-columns:176px minmax(0,1fr);grid-template-rows:auto 44px;
+    align-items:center;gap:0;padding:4px 8px}
+  .mini:not(.is-empty) .np{grid-column:1/-1;grid-row:1;position:relative;inset:auto;
+    width:100%;min-height:66px;padding:6px 0;gap:8px}
+  .mini .transport{grid-column:1;grid-row:2;position:relative;inset:auto;justify-content:center}
+  .mini .r{grid-column:2;grid-row:2;position:relative;inset:auto;margin-left:0;justify-content:flex-end}
+  .mini .mini-volume-command{width:52px;min-width:52px;flex:0 0 52px;padding:0 2px}
+  .mini .mini-badges{position:static;width:100%;max-width:none;flex-wrap:wrap}
+  .mini-signal{position:static;max-width:none;width:100%;white-space:normal;overflow-wrap:anywhere}
+  .mini-progress{margin-top:2px}
+  .mini-time{width:auto;flex:0 0 auto}
+}
+@media (max-width:380px){
+  :root{--mini:162px}
+  .mini:not(.is-empty):not(.inactive){grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto 44px 44px}
+  .mini .transport{grid-column:1;grid-row:2}
+  .mini:not(.is-empty) .r{grid-column:1;grid-row:3;justify-content:center}
 }
 
 /* ====== movimento reduzido ============================================= */
@@ -3081,3 +3086,31 @@ body.legacy [data-surface-scheme="silver"]:not([data-surface-theme="light"]):not
 .upper-segments button:focus-visible{outline:2px solid var(--text);outline-offset:-2px}
 .upper-action{position:absolute;right:12px;top:2px;min-width:44px;height:44px;background:none;border:0;color:var(--accent);font:400 15px var(--app-font)}
 @media(max-width:600px){.navbar .back span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.navbar .back{overflow:hidden}.navbar .back .ic{flex:0 0 auto}.upper-context{padding-left:8px;padding-right:8px}.upper-context.has-action{padding-left:56px;padding-right:56px}}
+
+/* Phone readability: let content grow vertically rather than covering controls. */
+@media(max-width:560px){
+  .statusbar{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .statusbar .status-reserve{display:none}
+  .statusbar .brand,.support-trigger{flex-shrink:0}
+  .playlist-screen .row{height:auto;min-height:52px;padding-top:10px;padding-bottom:10px}
+  .playlist-screen .row .t,.playlist-screen .row>.ell,
+  .playlist-head .big,.albhead .big,
+  .playlist-screen .trow-main>.ell,.playlist-screen .trow .t,.playlist-screen .trow .s{
+    white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+  .playlist-screen .trow{height:auto;min-height:52px;padding-top:6px;padding-bottom:6px}
+  .playlist-screen .trow-main{height:auto;min-height:44px}
+  .playlist-screen .trow .dur,.playlist-screen .trow .spec{flex-shrink:0}
+  .playlist-screen .trow.is-editing{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,44px);gap:0}
+  .playlist-screen .trow.is-editing .trow-main{grid-column:1/-1;grid-row:1;gap:12px;padding-bottom:4px}
+  .playlist-screen .trow.is-editing .reorder-command:nth-of-type(2){grid-column:2;grid-row:2}
+  .playlist-screen .trow.is-editing .reorder-command:nth-of-type(3){grid-column:3;grid-row:2}
+  .playlist-screen .trow.is-editing .playlist-row-remove{grid-column:4;grid-row:2}
+  .settings-destination-group .setting-copy,.frequent-home-group .setting-copy{flex:1}
+  .settings-destination-group .srow .v,.frequent-home-group .srow .v{
+    flex:0 0 auto;max-width:42%;white-space:normal;overflow:visible;overflow-wrap:anywhere;text-align:right}
+  .settings-destination-group .srow,.frequent-home-group .srow{padding-top:7px;padding-bottom:7px}
+  .pane-left .row.albumrow{height:auto;min-height:88px;padding-top:8px;padding-bottom:8px}
+  .pane-left .row.albumrow .t{display:block;max-height:none;white-space:normal;overflow:visible;overflow-wrap:anywhere}
+  .pane-left .row.albumrow .s,.npfull .head .t,.npfull .head .s{
+    white-space:normal;overflow:visible;overflow-wrap:anywhere;text-overflow:clip}
+}

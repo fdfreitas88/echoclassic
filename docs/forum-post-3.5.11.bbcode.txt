@@ -1,0 +1,34 @@
+[b]Echo Classic 3.5.11 is now available[/b]
+
+This release repairs phone layouts, Now Playing artwork and slow playlist browsing, and makes Collection reopen faster.
+
+[b]Fixes and improvements[/b]
+
+Phone player information sits above the controls, keeping progress and buttons separate. Playlist editing puts move/remove actions below readable track names. Long headings and essential settings values wrap.
+
+[img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/v3.5.11/images/release-3.5.11-player-phone.png[/img]
+
+[img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/v3.5.11/images/release-3.5.11-playlist-phone.png[/img]
+
+Now Playing retains artwork supplied by LMS, including remote tracks. Saved and service playlists allow slower responses, and Firefox handles failed background library discovery without breaking browsing.
+
+Collection restores its saved dashboard after navigation or browser reloads. Background checks flag changed library data without discarding the saved results; use Update collection or a manual scan to replace them.
+
+[img]https://raw.githubusercontent.com/fdfreitas88/echoclassic/v3.5.11/images/release-3.5.11-collection-desktop.png[/img]
+
+[b]Compatibility and testing[/b]
+
+LMS 8.0+; SqueezeDSP and Apple Squeezer remain optional. Chrome mobile emulation, Firefox phone touch viewports and WebKit control checks passed. Actual Android 16 hardware was not tested. Dynamic Playlists support is planned separately.
+
+[b]Installation / Upgrade[/b]
+
+Add this repository under Server Settings > Plugins > Additional repositories, then update Echo Classic and restart LMS when requested:
+https://raw.githubusercontent.com/fdfreitas88/echoclassic/main/repo.xml
+
+[b]Links[/b]
+
+Release: https://github.com/fdfreitas88/echoclassic/releases/tag/v3.5.11
+Project: https://github.com/fdfreitas88/echoclassic
+Changelog: https://github.com/fdfreitas88/echoclassic/blob/v3.5.11/CHANGELOG.md
+
+By Felipe Freitas

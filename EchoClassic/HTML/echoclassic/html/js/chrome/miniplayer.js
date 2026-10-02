@@ -5,7 +5,7 @@
    skin exists is to show what actually reaches the DAC. */
 Vue.component('lms-miniplayer', {
   template: `
-<div class="mini" :class="{empty: !hasTrack, inactive: ui.full}">
+<div class="mini" :class="{'is-empty': !hasTrack, inactive: ui.full}">
   <!-- STATE-01: com o player perdido a faixa continua na tela como ultima
        conhecida, mas o transporte nao tem para onde mandar comando. Quem sabe
        disso e o store (state.commandable); aqui so se le. -->
@@ -129,6 +129,7 @@ Vue.component('lms-miniplayer', {
     }
   },
   watch: {
+    coverUrl: function () { this.coverFailed = false; },
     'np.id': function () { this.coverFailed = false; }
   },
   methods: {

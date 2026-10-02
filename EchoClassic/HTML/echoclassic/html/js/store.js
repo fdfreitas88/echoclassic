@@ -52,7 +52,7 @@
     dontStopMusic: { provider: '0', providers: [], busy: false },
     npFavorite: false, npFavoriteIndex: null,
     np: {
-      id: null, title: '', artist: '', album: '', coverId: null,
+      id: null, title: '', artist: '', album: '', coverId: null, artworkUrl: '',
       sampleRate: 0, sampleSize: 0, format: '', bitrate: 0, live: false,
       sourceStream: null, activeStream: null, isTranscoded: false
     }
@@ -60,6 +60,7 @@
 
   var timer = null;      // timeout pendente do polling
   var ticking = false;   // refresh do polling em voo
+  var nowPlayingPlayerId = null;
   var polling = false;   // o polling deveria estar rodando
 
   /* A preferencia do usuario e o player ativo sao coisas diferentes desde que
@@ -301,6 +302,7 @@
       id: state.np.id, title: state.np.title, artist: state.np.artist,
       album: state.np.album, albumId: state.np.albumId, trackNum: state.np.trackNum,
       coverId: state.np.coverId,
+      artworkUrl: state.np.artworkUrl,
       playedAt: Date.now()
     };
     state.history = [current].concat(state.history.filter(function (item) {
@@ -724,22 +726,32 @@
     state.replayGainApplied = st.replayGain;
     if (!state.volumeDragging) state.volume = st.volume;
     var oldTrackId = state.np.id;
+    var trackUrl = st.track.url || '';
+    var sameTrack = nowPlayingPlayerId === playerId &&
+      String(oldTrackId) === String(st.track.id) && (state.np.url || '') === trackUrl;
+    var metadata = sameTrack && state.trackInfo;
     state.np = {
       id: st.track.id, title: st.track.title, artist: st.track.artist,
       album: st.track.album, albumId: st.track.albumId, trackNum: st.track.trackNum,
-      coverId: st.track.coverId, url: st.track.url,
+      coverId: st.track.coverId || (metadata && metadata.coverId) || null,
+      artworkUrl: st.track.artworkUrl || (metadata && metadata.artworkUrl) || '', url: st.track.url,
       sampleRate: st.sampleRate, sampleSize: st.sampleSize,
       format: st.format, bitrate: st.bitrate, live: st.live,
       sourceStream: st.sourceStream, activeStream: st.activeStream,
       isTranscoded: st.isTranscoded
     };
-    if (oldTrackId !== state.np.id) {
+    nowPlayingPlayerId = playerId;
+    if (!sameTrack) {
       state.trackInfo = null;
       rememberTrack();
       if (state.np.id != null) {
         api.songInfo(playerId, state.np.id).then(async function (info) {
-          if (state.playerId === playerId && String(state.np.id) === String(info.id)) {
+          if (state.playerId === playerId && String(state.np.id) === String(info.id) &&
+              (state.np.url || '') === trackUrl) {
             state.trackInfo = info;
+            if (!state.np.coverId) state.np.coverId = info.coverId || null;
+            if (!state.np.artworkUrl) state.np.artworkUrl = info.artworkUrl || '';
+            updateMediaSession();
             if (info.albumId != null) {
               state.np.albumId = info.albumId;
               if (info.trackNum) state.np.trackNum = info.trackNum;

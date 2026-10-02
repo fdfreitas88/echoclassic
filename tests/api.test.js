@@ -28,6 +28,34 @@ function apiContext(responder, extra) {
   return { api: ctx.LmsApi, calls: calls, requests: requests };
 }
 
+test('service browsing allows upstream latency without extending transport timeouts or retrying commands', async function () {
+  const timers = [];
+  const ctx = apiContext(function () { return { item_loop: [] }; }, {
+    setTimeout: function (callback, delay) { timers.push(delay); return timers.length; },
+    clearTimeout: function () {}
+  });
+  await ctx.api.opmlBrowse('p1', { cmd: ['qobuz', 'items'], params: ['item_id:3'] }, 0, 100);
+  await ctx.api.playlists(0, 500);
+  await ctx.api.playlistTracks(1, 0, 100);
+  await ctx.api.transport('p1', 'pause');
+  assert.deepEqual(timers, [30000, 30000, 30000, 10000]);
+  assert.equal(ctx.calls.length, 4, 'no automatic retries can duplicate a command');
+});
+
+test('remote artwork survives status, queue, playlist and song metadata normalization', async function () {
+  const row = { id: -123, title: 'Remote', artist: 'Artist', coverid: '-123',
+    artwork_url: '/imageproxy/qobuz/image.jpg', type: 'flc', samplerate: 44100, samplesize: 16 };
+  const ctx = apiContext(function (cmd) {
+    if (cmd[0] === 'songinfo') return { songinfo_loop: [row] };
+    if (cmd[0] === 'playlists') return { playlisttracks_loop: [row], count: 1 };
+    return { playlist_loop: [row], playlist_tracks: 1 };
+  });
+  assert.equal((await ctx.api.status('p1')).track.artworkUrl, row.artwork_url);
+  assert.equal((await ctx.api.queue('p1', 0, 10)).tracks[0].artworkUrl, row.artwork_url);
+  assert.equal((await ctx.api.playlistTracks(1, 0, 10))[0].artworkUrl, row.artwork_url);
+  assert.equal((await ctx.api.songInfo('p1', -123)).artworkUrl, row.artwork_url);
+});
+
 test('player discovery uses global server scope and returns every registered player', async function () {
   const ctx = apiContext(function (cmd) {
     if (cmd[0] !== 'serverstatus') return {};

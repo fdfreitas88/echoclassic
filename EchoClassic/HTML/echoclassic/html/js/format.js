@@ -113,7 +113,11 @@
   }
 
   function artworkUrl(item, size) {
-    return radioIconUrl(item) || coverUrl(item && item.coverId, size);
+    var artwork = String(item && item.artworkUrl || '').trim();
+    // Service artwork is often an LMS imageproxy URL, not a cover identifier.
+    // Only image locations are accepted; protocol-relative URLs remain valid.
+    if (!/^(?:https?:\/\/|\/)/i.test(artwork)) artwork = '';
+    return radioIconUrl(item) || artwork || coverUrl(item && item.coverId, size);
   }
 
   /* Comparacao de edicoes equivalentes.

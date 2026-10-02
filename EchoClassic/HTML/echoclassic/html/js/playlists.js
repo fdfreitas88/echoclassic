@@ -4,7 +4,7 @@
    gives the nav bar its back button. */
 Vue.component('lms-playlists', {
   template: `
-<div class="scroller">
+<div class="scroller playlist-screen">
   <div v-if="loading" class="system-state system-loading" role="status" aria-live="polite">
     <div class="state-skeleton" aria-hidden="true"><span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span><span class="state-skeleton-art"></span><span><i></i><i class="short"></i></span></div>
     <div class="state-progress-copy"><span>Loading playlists…</span></div><div class="state-progress indeterminate" role="progressbar" aria-label="Loading playlists"><i></i></div>
@@ -49,12 +49,12 @@ Vue.component('lms-playlists', {
 	             @keydown.alt.down.prevent="editing && move(t, 1)"
 	             @keydown.delete.prevent="editing && removeOne(t)"
 	             @keydown.esc.prevent="editing && toggleEdit()"
-	             :class="{playing: store.np.id === t.id, chosen: isSelected(t)}"
+	             :class="{playing: store.np.id === t.id, chosen: isSelected(t), 'is-editing': editing}"
 	             role="group" :aria-label="trackLabel(t)">
 	          <button type="button" class="trow-main pointer" :aria-label="trackLabel(t)"
 	                  @click="trackClick(t)">
 	            <span v-if="editing" class="select-mark" :class="{on: isSelected(t)}"></span>
-	            <span class="cover" :style="t.coverId ? {backgroundImage:'url(' + cover(t) + ')', backgroundSize:'cover'} : {}"></span>
+	            <span class="cover" :style="(t.coverId || t.artworkUrl) ? {backgroundImage:'url(' + cover(t) + ')', backgroundSize:'cover'} : {}"></span>
 	            <span class="ell">
 	              <span class="t ell">{{ t.title }}</span>
 	              <span class="s ell">{{ t.artist }}</span>
@@ -229,7 +229,7 @@ Vue.component('lms-playlists', {
     trackItem: function (t) {
       return {
         kind: 'track', id: t.id, title: t.title, artist: t.artist,
-        album: t.album, url: t.url, coverId: t.coverId
+        album: t.album, url: t.url, coverId: t.coverId, artworkUrl: t.artworkUrl
       };
     },
     trackClick: function (t) {

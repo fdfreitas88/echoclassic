@@ -36,8 +36,14 @@ function validCollectionReleaseYear(value) {
   async function writeCollectionCache(value) {
     try {
       var db = await collectionDb();
-      await new Promise(function (resolve, reject) { var request = db.transaction('cache', 'readwrite').objectStore('cache').put(value, collectionCacheKey); request.onsuccess = resolve; request.onerror = function () { reject(request.error); }; });
-      db.close();
+      try {
+        await new Promise(function (resolve, reject) {
+          var transaction = db.transaction('cache', 'readwrite');
+          transaction.oncomplete = resolve;
+          transaction.onerror = transaction.onabort = function () { reject(transaction.error || new Error('Collection cache write failed')); };
+          transaction.objectStore('cache').put(value, collectionCacheKey);
+        });
+      } finally { db.close(); }
     } catch (e) {
       try { localStorage.setItem(collectionCacheKey, JSON.stringify(value)); } catch (ignored) {}
     }
@@ -160,7 +166,7 @@ function validCollectionReleaseYear(value) {
      dashboard, then use larger sequential pages to reduce round trips without
      overloading the server. */
   var firstPageSize = 500, scanPageSize = 5000, pageRetries = 2;
-  var inFlight = null, generation = 0, prepared = Object.create(null);
+  var inFlight = null, hydration = null, inspection = null, generation = 0, prepared = Object.create(null);
   var state = Vue.observable({ busy: false, processed: 0, total: null, freshness: 'unknown', serverLastscan: '', serverAlbumCount: null, error: '', partialRows: [], partialStats: null, partialFirstMs: null });
   function bucketList(bucket) {
     return Object.keys(bucket).map(function (key) { return { key: key, value: bucket[key] }; }).sort(function (a, b) { return b.value - a.value; });
@@ -168,18 +174,23 @@ function validCollectionReleaseYear(value) {
   function createAccumulator() {
     var albums = Object.create(null), genreAlbums = Object.create(null), untaggedAlbums = Object.create(null);
     var genre = Object.create(null), genreStorage = Object.create(null), format = Object.create(null), storage = Object.create(null);
-    var trackCount = 0, totalDuration = 0, unknownSizes = 0, storageBytes = 0, losslessTracks = 0;
+    var trackCount = 0, totalDuration = 0, unknownSizes = 0, knownSizes = 0, storageBytes = 0, losslessTracks = 0;
     function add(row) {
       trackCount++; totalDuration += row.duration || 0;
       var genreKey = row.genre || '?', formatKey = row.format || '?';
       genre[genreKey] = (genre[genreKey] || 0) + 1; format[formatKey] = (format[formatKey] || 0) + 1;
       if (!row.remote && row.fileSize == null) unknownSizes++;
-      if (!row.remote && row.fileSize != null) { storageBytes += row.fileSize; storage[formatKey] = (storage[formatKey] || 0) + row.fileSize; genreStorage[genreKey] = (genreStorage[genreKey] || 0) + row.fileSize; }
+      if (!row.remote && row.fileSize != null) { knownSizes++; storageBytes += row.fileSize; storage[formatKey] = (storage[formatKey] || 0) + row.fileSize; }
+      genreStorage[genreKey] = (genreStorage[genreKey] || 0) + (!row.remote && row.fileSize != null ? row.fileSize : 0);
       if (/^(dsd|dsf|dff|flac|alac|wav|aiff|ape|wavpack)$/i.test(String(row.format || ''))) losslessTracks++;
+      if (!genreAlbums[genreKey]) genreAlbums[genreKey] = Object.create(null);
       if (row.albumId == null) return;
-      var albumKey = String(row.albumId), album = albums[albumKey] || (albums[albumKey] = { id: row.albumId, bytes: 0, known: true, local: false, year: null });
+      var albumKey = String(row.albumId), album = albums[albumKey] || (albums[albumKey] = { id: row.albumId, title: row.album || String(row.albumId), artist: row.artist, bytes: 0, known: true, local: false, tracks: 0, duration: 0, year: null, url: '', format: '', coverId: null });
+      album.tracks++; album.duration += row.duration || 0;
       if (album.year == null) album.year = validCollectionReleaseYear(row.year);
-      if (!row.remote) { album.local = true; if (row.fileSize == null) album.known = false; else album.bytes += row.fileSize; }
+      if (!album.format && row.format) album.format = row.format;
+      if (album.coverId == null && row.coverId) album.coverId = row.coverId;
+      if (!row.remote) { album.local = true; if (!album.url && row.url) album.url = row.url; if (row.fileSize == null) album.known = false; else album.bytes += row.fileSize; }
       (genreAlbums[genreKey] || (genreAlbums[genreKey] = Object.create(null)))[albumKey] = true;
       if (!row.genre || /^no genre$/i.test(row.genre)) untaggedAlbums[albumKey] = true;
     }
@@ -187,16 +198,38 @@ function validCollectionReleaseYear(value) {
       var size = Object.create(null), decade = Object.create(null), genreAlbumCounts = Object.create(null);
       Object.keys(albums).forEach(function (key) { var album = albums[key], decadeKey = album.year ? (Math.floor(album.year / 10) * 10) + 's' : '?'; decade[decadeKey] = (decade[decadeKey] || 0) + 1; if (album.local) { var band = !album.known ? '?' : album.bytes < 250e6 ? '< 250 MB' : album.bytes < 500e6 ? '250–500 MB' : album.bytes < 1e9 ? '500 MB–1 GB' : '> 1 GB'; size[band] = (size[band] || 0) + 1; } });
       Object.keys(genreAlbums).forEach(function (key) { genreAlbumCounts[key] = Object.keys(genreAlbums[key]).length; });
-      return { trackCount: trackCount, albumCount: Object.keys(albums).length, totalDuration: totalDuration, unknownSizes: unknownSizes, storageBytes: storageBytes, albumsToTag: Object.keys(untaggedAlbums).length, losslessPercent: trackCount ? Math.round(100 * losslessTracks / trackCount) : 0,
+      return { trackCount: trackCount, albumCount: Object.keys(albums).length, totalDuration: totalDuration, unknownSizes: unknownSizes, knownSizes: knownSizes, storageBytes: storageBytes, albumsToTag: Object.keys(untaggedAlbums).length, losslessPercent: trackCount ? Math.round(100 * losslessTracks / trackCount) : 0,
         groups: { genre: bucketList(genre), format: bucketList(format), storage: bucketList(storage), size: bucketList(size), decade: bucketList(decade) }, genreAlbums: bucketList(genreAlbumCounts), genreTracks: bucketList(genre), genreStorage: bucketList(genreStorage) };
     }
-    return { addRows: function (rows) { rows.forEach(add); }, snapshot: snapshot };
+    return { addRows: function (rows) { rows.forEach(add); }, snapshot: snapshot, albums: albums };
   }
-  function publishCache(cached, stamp) {
-    if (cached) LmsLibraryDisplay.state.collection = cached;
-    state.serverLastscan = String(stamp || '');
-    state.freshness = !cached ? 'empty' : cached.lastscan === state.serverLastscan ? 'current' : 'stale';
-    return cached;
+  function prepareSnapshot(cached) {
+    if (!cached) return null;
+    if (cached.summaryVersion === 1 && cached.summary && cached.albumMap && Object.isFrozen(cached)) return cached;
+    var value = Object.assign({}, cached);
+    if (value.summaryVersion !== 1 || !value.summary || !value.albumMap) {
+      var accumulator = createAccumulator(); accumulator.addRows(value.rows);
+      value.summary = accumulator.snapshot(); value.albumMap = accumulator.albums; value.summaryVersion = 1;
+    }
+    // Library rows and derived statistics are immutable until the next scan.
+    // Skip Vue's deep observation of thousands of tracks on every restoration.
+    Object.freeze(value.rows); Object.freeze(value.summary); Object.freeze(value.albumMap);
+    return Object.freeze(value);
+  }
+  function hydrate() {
+    if (LmsLibraryDisplay.state.collection) return Promise.resolve(LmsLibraryDisplay.state.collection);
+    if (!hydration) hydration = LmsLibraryDisplay.loadCollectionCache().then(function (saved) {
+      var cached = prepareSnapshot(LmsLibraryDisplay.state.collection || saved);
+      if (cached) { LmsLibraryDisplay.state.collection = cached; state.freshness = 'saved'; }
+      return cached;
+    }).finally(function () { hydration = null; });
+    return hydration;
+  }
+  function census(info) {
+    return { lastscan: String(info.lastscan || ''), songs: info.songs == null ? null : Number(info.songs), albums: info.albums == null ? null : Number(info.albums) };
+  }
+  function libraryChanged(before, after) {
+    return before.lastscan !== after.lastscan || ['songs', 'albums'].some(function (key) { return before[key] != null && after[key] != null && before[key] !== after[key]; });
   }
   async function fetchCollectionPage(start, count, token) {
     var lastError;
@@ -211,15 +244,21 @@ function validCollectionReleaseYear(value) {
     }
     throw lastError;
   }
-  async function inspect() {
-    var cached = LmsLibraryDisplay.state.collection;
-    if (!cached) cached = await LmsLibraryDisplay.loadCollectionCache();
-    var info, stamp;
-    try { info = await LmsApi.serverInfo(); stamp = String(info.lastscan || ''); state.serverAlbumCount = info.albums == null ? null : Number(info.albums); }
-    catch (error) { if (!cached) throw error; stamp = String(cached.lastscan || ''); }
-    return publishCache(cached, stamp);
+  async function inspect(onCached) {
+    var cached = LmsLibraryDisplay.state.collection || await hydrate();
+    // Publish disk/session results before any network request can delay the UI.
+    if (onCached && cached) onCached(cached);
+    try {
+      if (!inspection) inspection = LmsApi.serverInfo().finally(function () { inspection = null; });
+      var info = await inspection, current = census(info);
+      cached = LmsLibraryDisplay.state.collection || cached;
+      state.serverLastscan = current.lastscan; state.serverAlbumCount = current.albums;
+      state.freshness = !cached ? 'empty' : info.scanning || libraryChanged(cached.census || { lastscan: cached.lastscan, songs: cached.total }, current) ? 'stale' : 'current';
+    } catch (error) { if (!cached) throw error; }
+    return cached;
   }
-  async function build(lastscan, token) {
+  async function build(initialInfo, token) {
+    var initialCensus = census(initialInfo), lastscan = initialCensus.lastscan;
     var started = Date.now(), networkMs = 0, aggregationMs = 0, accumulator = createAccumulator();
     state.busy = true; state.processed = 0; state.total = null; state.error = ''; state.partialRows = []; state.partialStats = null; state.partialFirstMs = null;
     var first = await fetchCollectionPage(0, firstPageSize, token);
@@ -256,15 +295,16 @@ function validCollectionReleaseYear(value) {
     var rows = [], seen = Object.create(null);
     pages.forEach(function (item) { item.rows.forEach(function (row) { var key = String(row.id); if (seen[key]) throw new Error('Duplicate collection track'); seen[key] = true; rows.push(row); }); });
     if (rows.length !== total) throw new Error('Incomplete collection page');
-    var confirmedInfo = await LmsApi.serverInfo(), confirmed = String(confirmedInfo.lastscan || '');
+    var confirmedInfo = await LmsApi.serverInfo();
     state.serverAlbumCount = confirmedInfo.albums == null ? state.serverAlbumCount : Number(confirmedInfo.albums);
     if (token !== generation) throw new Error('Collection scan cancelled');
-    if (confirmed !== lastscan) throw new Error('Library changed during collection scan');
-    var snapshot = { rows: rows, offset: rows.length, total: total, lastscan: lastscan, complete: true, error: '', cachedAt: Date.now(), firstMs: firstMs, completeMs: Date.now() - started, networkMs: networkMs, aggregationMs: aggregationMs, cacheMs: 0 };
-    LmsLibraryDisplay.state.collection = snapshot;
+    if (confirmedInfo.scanning || libraryChanged(initialCensus, census(confirmedInfo))) throw new Error('Library changed during collection scan');
+    var snapshot = prepareSnapshot({ rows: rows, offset: rows.length, total: total, lastscan: lastscan, census: census(confirmedInfo), summaryVersion: 1, summary: accumulator.snapshot(), albumMap: accumulator.albums, complete: true, error: '', cachedAt: Date.now(), firstMs: firstMs, completeMs: Date.now() - started, networkMs: networkMs, aggregationMs: aggregationMs, cacheMs: 0 });
     var cacheStarted = Date.now();
     await LmsLibraryDisplay.cacheCollection(snapshot);
-    snapshot.cacheMs = Date.now() - cacheStarted;
+    snapshot = Object.freeze(Object.assign({}, snapshot, { cacheMs: Date.now() - cacheStarted }));
+    prepared = Object.create(null);
+    LmsLibraryDisplay.state.collection = snapshot;
     state.partialRows = []; state.partialStats = null; state.partialFirstMs = null;
     state.freshness = 'current'; state.serverLastscan = lastscan;
     return snapshot;
@@ -272,8 +312,9 @@ function validCollectionReleaseYear(value) {
   async function start(token) {
     var info = await LmsApi.serverInfo(), stamp = String(info.lastscan || '');
     if (token !== generation) throw new Error('Collection scan cancelled');
+    if (info.scanning) throw new Error('Library changed during collection scan');
     state.serverLastscan = stamp; state.serverAlbumCount = info.albums == null ? null : Number(info.albums);
-    return build(stamp, token);
+    return build(info, token);
   }
   function rebuild() {
     if (inFlight) return inFlight;
@@ -284,7 +325,7 @@ function validCollectionReleaseYear(value) {
   function cancel() { if (!state.busy) return; generation++; state.busy = false; state.error = ''; state.partialRows = []; state.partialStats = null; state.partialFirstMs = null; }
   function preparedKey(lastscan, kind, key) { return String(lastscan || '') + '|' + kind + '|' + key; }
   global.LmsCollectionCache = {
-    state: state, inspect: inspect, rebuild: rebuild, cancel: cancel,
+    state: state, inspect: inspect, rebuild: rebuild, cancel: cancel, prepareSnapshot: prepareSnapshot,
     ensure: function (force) { return force ? rebuild() : inspect(); },
     prepared: function (lastscan, kind, key) { return prepared[preparedKey(lastscan, kind, key)] || null; },
     cachePrepared: function (lastscan, kind, key, value) { prepared[preparedKey(lastscan, kind, key)] = value; }
@@ -431,7 +472,7 @@ Vue.component('lms-collection', {
   </div>
   <details class="collection-timings"><summary>{{ tr('Loading performance') }}</summary><p>{{ tr('First usable results') }}: {{ displayFirstMs === null ? tr('Not measured') : displayFirstMs + ' ms' }}</p><p>{{ tr('Complete collection') }}: {{ completeMs === null ? tr('Not measured') : completeMs + ' ms' }}</p><p>{{ tr('Network requests') }}: {{ networkMs === null ? tr('Not measured') : networkMs + ' ms' }}</p><p>{{ tr('Aggregation') }}: {{ aggregationMs === null ? tr('Not measured') : aggregationMs + ' ms' }}</p><p>{{ tr('Cache write') }}: {{ cacheMs === null ? tr('Not measured') : cacheMs + ' ms' }}</p><p>{{ tr('Render ready') }}: {{ renderMs === null ? tr('Not measured') : renderMs + ' ms' }}</p></details>
 </section>`,
-  data: function () { var builderApi=window.LmsPlaylistBuilder||{state:{open:false,tracks:[]},open:function(){},offerCollectionSet:function(){}};return { rows: [], offset: 0, total: null, lastscan: '', busy: false, collectionCache: LmsCollectionCache.state, builder: builderApi.state, LmsPlaylistBuilder:builderApi, complete: false, error: '', token: 0, selected: null, selectedAlbumIds: {}, visibleCount: 100, firstMs: null, completeMs: null, networkMs: null, aggregationMs: null, cacheMs: null, renderMs: null, started: 0, measure: 'albums', playlistOpen: false, playlistName: '', playlistList: [], playlistChoice: null, actionBusy: false, actionMessage: '', previousAlbumCount: null, initialInspection: true, hasInspected: false,
+  data: function () { var builderApi=window.LmsPlaylistBuilder||{state:{open:false,tracks:[]},open:function(){},offerCollectionSet:function(){}};return { rows: [], summary: null, cachedAlbumMap: null, library: LmsLibraryDisplay.state, offset: 0, total: null, lastscan: '', busy: false, collectionCache: LmsCollectionCache.state, builder: builderApi.state, LmsPlaylistBuilder:builderApi, complete: false, error: '', token: 0, selected: null, selectedAlbumIds: {}, visibleCount: 100, firstMs: null, completeMs: null, networkMs: null, aggregationMs: null, cacheMs: null, renderMs: null, started: 0, measure: 'albums', playlistOpen: false, playlistName: '', playlistList: [], playlistChoice: null, actionBusy: false, actionMessage: '', previousAlbumCount: null,
     editing: false, dragging: null, activeMetric: null, crumb: '', pendingDrill: null, drillDialogOpen: false, drillOrigin: null, drillPreparing: false, drillReady: true, drillProcessed: 0, drillTotal: 0, drillAlbums: [], drillRows: [], drillError: '', drillToken: 0,
     cardLabels: { graphics: 'Collection graphics', genre: 'By genre', albums: 'Albums', size: 'Album file size', decade: 'Decades', tracks: 'Tracks', format: 'Album file type' } }; },
   computed: {
@@ -441,21 +482,21 @@ Vue.component('lms-collection', {
     displayTrackCount: function () { return this.partialStats ? this.partialStats.trackCount : this.rows.length; },
     displayFirstMs: function () { return this.firstMs == null ? this.collectionCache.partialFirstMs : this.firstMs; },
     cacheFreshness: function () { return this.collectionCache.freshness || (this.hasSnapshot ? 'current' : 'empty'); },
-    displayedFreshness: function () { return this.cacheFreshness === 'stale' && this.initialInspection ? 'saved' : this.cacheFreshness; },
+    displayedFreshness: function () { return this.cacheFreshness; },
     scanning: function () { return this.busy || this.collectionCache.busy; },
     progressProcessed: function () { return this.collectionCache.busy ? this.collectionCache.processed : this.rows.length; },
     progressTotal: function () { return this.collectionCache.busy ? this.collectionCache.total : this.total; },
     progressPercent: function () { return this.progressTotal ? Math.min(100, Math.round(100 * this.progressProcessed / this.progressTotal)) : 35; },
-    albumMap: function () { var out = Object.create(null); this.rows.forEach(function (r) { if (r.albumId == null) return; var key = String(r.albumId), a = out[key] || (out[key] = { id: r.albumId, title: r.album || String(r.albumId), artist: r.artist, bytes: 0, known: true, local: false, tracks: 0, duration: 0, year: null, url: '', format: '', coverId: null }); a.tracks++; a.duration += r.duration || 0; if (a.year == null) a.year = validCollectionReleaseYear(r.year); if (!a.format && r.format) a.format = r.format; if (a.coverId == null && r.coverId) a.coverId = r.coverId; if (!r.remote) { a.local = true; if (!a.url && r.url) a.url = r.url; if (r.fileSize == null) a.known = false; else a.bytes += r.fileSize; } }); return out; },
-    albumCount: function () { return this.partialStats ? this.partialStats.albumCount : Object.keys(this.albumMap).length; },
+    albumMap: function () { if (this.cachedAlbumMap) return this.cachedAlbumMap; var out = Object.create(null); this.rows.forEach(function (r) { if (r.albumId == null) return; var key = String(r.albumId), a = out[key] || (out[key] = { id: r.albumId, title: r.album || String(r.albumId), artist: r.artist, bytes: 0, known: true, local: false, tracks: 0, duration: 0, year: null, url: '', format: '', coverId: null }); a.tracks++; a.duration += r.duration || 0; if (a.year == null) a.year = validCollectionReleaseYear(r.year); if (!a.format && r.format) a.format = r.format; if (a.coverId == null && r.coverId) a.coverId = r.coverId; if (!r.remote) { a.local = true; if (!a.url && r.url) a.url = r.url; if (r.fileSize == null) a.known = false; else a.bytes += r.fileSize; } }); return out; },
+    albumCount: function () { return this.partialStats ? this.partialStats.albumCount : this.summary ? this.summary.albumCount : Object.keys(this.albumMap).length; },
     unindexedAlbumCount: function () { var total=Number(this.collectionCache.serverAlbumCount);return total>this.albumCount?total-this.albumCount:0; },
-    unknownSizes: function () { return this.partialStats ? this.partialStats.unknownSizes : this.rows.filter(function (r) { return !r.remote && r.fileSize == null; }).length; },
-    storageLabel: function () { if (this.partialStats) return this.partialStats.storageBytes ? this.bytes(this.partialStats.storageBytes) : this.tr('Not available'); var known = this.rows.filter(function (r) { return !r.remote && r.fileSize != null; }); return known.length ? this.bytes(known.reduce(function (sum, r) { return sum + r.fileSize; }, 0)) : this.tr('Not available'); },
-    albumsToTag: function () { if (this.partialStats) return this.partialStats.albumsToTag; var self = this, ids = Object.create(null); this.rows.forEach(function (r) { if (r.albumId != null && self.untagged(r)) ids[String(r.albumId)] = true; }); return Object.keys(ids).length; },
-    losslessPercent: function () { if (this.partialStats) return this.partialStats.losslessPercent; var self = this, n = this.rows.filter(function (r) { return self.isLosslessFormat(r.format); }).length; return this.rows.length ? Math.round(100 * n / this.rows.length) : 0; },
-    totalDuration: function () { return this.partialStats ? this.partialStats.totalDuration : this.rows.reduce(function (sum, r) { return sum + (r.duration || 0); }, 0); },
+    unknownSizes: function () { return this.partialStats ? this.partialStats.unknownSizes : this.summary ? this.summary.unknownSizes : this.rows.filter(function (r) { return !r.remote && r.fileSize == null; }).length; },
+    storageLabel: function () { if (this.summary) return this.summary.knownSizes ? this.bytes(this.summary.storageBytes) : this.tr('Not available'); if (this.partialStats) return this.partialStats.storageBytes ? this.bytes(this.partialStats.storageBytes) : this.tr('Not available'); var known = this.rows.filter(function (r) { return !r.remote && r.fileSize != null; }); return known.length ? this.bytes(known.reduce(function (sum, r) { return sum + r.fileSize; }, 0)) : this.tr('Not available'); },
+    albumsToTag: function () { if (this.summary) return this.summary.albumsToTag; if (this.partialStats) return this.partialStats.albumsToTag; var self = this, ids = Object.create(null); this.rows.forEach(function (r) { if (r.albumId != null && self.untagged(r)) ids[String(r.albumId)] = true; }); return Object.keys(ids).length; },
+    losslessPercent: function () { if (this.summary) return this.summary.losslessPercent; if (this.partialStats) return this.partialStats.losslessPercent; var self = this, n = this.rows.filter(function (r) { return self.isLosslessFormat(r.format); }).length; return this.rows.length ? Math.round(100 * n / this.rows.length) : 0; },
+    totalDuration: function () { return this.partialStats ? this.partialStats.totalDuration : this.summary ? this.summary.totalDuration : this.rows.reduce(function (sum, r) { return sum + (r.duration || 0); }, 0); },
     addedSinceScan: function () { return this.previousAlbumCount == null ? null : this.albumCount - this.previousAlbumCount; },
-    groups: function () { if (this.partialStats) return this.partialStats.groups; var buckets = { genre: Object.create(null), format: Object.create(null), storage: Object.create(null), size: Object.create(null), decade: Object.create(null) };
+    groups: function () { if (this.summary) return this.summary.groups; if (this.partialStats) return this.partialStats.groups; var buckets = { genre: Object.create(null), format: Object.create(null), storage: Object.create(null), size: Object.create(null), decade: Object.create(null) };
       this.rows.forEach(function (r) { var genre = r.genre || '?', format = r.format || '?'; buckets.genre[genre] = (buckets.genre[genre] || 0) + 1; buckets.format[format] = (buckets.format[format] || 0) + 1; if (!r.remote && r.fileSize != null) buckets.storage[format] = (buckets.storage[format] || 0) + r.fileSize; });
       Object.keys(this.albumMap).forEach(function (key) { var a = this.albumMap[key]; var decade = this.decadeOf(a); buckets.decade[decade] = (buckets.decade[decade] || 0) + 1; if (!a.local) return; var band = this.sizeBand(a); buckets.size[band] = (buckets.size[band] || 0) + 1; }, this);
       Object.keys(buckets).forEach(function (kind) { buckets[kind] = Object.keys(buckets[kind]).map(function (key) { return { key: key, value: buckets[kind][key] }; }).sort(function (a, b) { return b.value - a.value; }); }); return buckets;
@@ -463,7 +504,7 @@ Vue.component('lms-collection', {
     layout: function () { return LmsLibraryDisplay.state.dashboard; },
     visibleCards: function () { var self=this,details=['genre','decade','size','format'];return this.layout.order.filter(function(id){return details.indexOf(id)>=0;}).map(function(id){return {id:id,label:self.cardLabels[id]};}); },
     hiddenCards: function () { var self = this; return this.layout.order.filter(function (id) { return self.layout.hidden.indexOf(id) >= 0; }).map(function (id) { return { id: id, label: self.cardLabels[id] }; }); },
-    genreGroups: function () { if (this.partialStats) return this.measure === 'storage' ? this.partialStats.genreStorage : this.measure === 'tracks' ? this.partialStats.genreTracks : this.partialStats.genreAlbums; var self = this, buckets = Object.create(null); this.rows.forEach(function (r) { var key = r.genre || '?', value = self.measure === 'storage' ? (!r.remote && r.fileSize != null ? r.fileSize : 0) : 1; if (self.measure === 'albums') { if (!buckets[key]) buckets[key] = Object.create(null); if (r.albumId != null) buckets[key][r.albumId] = true; } else buckets[key] = (buckets[key] || 0) + value; }); return Object.keys(buckets).map(function (key) { return { key:key, value:self.measure === 'albums' ? Object.keys(buckets[key]).length : buckets[key] }; }).sort(function (a,b) { return b.value-a.value; }); },
+    genreGroups: function () { if (this.summary) return this.measure === 'storage' ? this.summary.genreStorage : this.measure === 'tracks' ? this.summary.genreTracks : this.summary.genreAlbums; if (this.partialStats) return this.measure === 'storage' ? this.partialStats.genreStorage : this.measure === 'tracks' ? this.partialStats.genreTracks : this.partialStats.genreAlbums; var self = this, buckets = Object.create(null); this.rows.forEach(function (r) { var key = r.genre || '?', value = self.measure === 'storage' ? (!r.remote && r.fileSize != null ? r.fileSize : 0) : 1; if (self.measure === 'albums') { if (!buckets[key]) buckets[key] = Object.create(null); if (r.albumId != null) buckets[key][r.albumId] = true; } else buckets[key] = (buckets[key] || 0) + value; }); return Object.keys(buckets).map(function (key) { return { key:key, value:self.measure === 'albums' ? Object.keys(buckets[key]).length : buckets[key] }; }).sort(function (a,b) { return b.value-a.value; }); },
     formatGroups: function () { return this.groups.format; },
     donutStyle: function () { var total=this.formatGroups.reduce(function(sum,g){return sum+g.value;},0), at=0, self=this; return 'conic-gradient(' + this.formatGroups.map(function(g,i){var from=100*at/total;at+=g.value;return self.chartColor(i)+' '+from+'% '+(100*at/total)+'%';}).join(',') + ')'; },
     formatSummary: function () { var self=this; return this.formatGroups.map(function(g){return g.key+' '+self.percent(g.value,self.formatGroups)+'%';}).join(', '); },
@@ -501,14 +542,28 @@ Vue.component('lms-collection', {
       case 'decade': return this.decadeOf(a) === k; } return false; },
     percentage: function (n, groupList) { return 100 * n / Math.max.apply(Math, groupList.map(function (g) { return g.value; }).concat([1])); },
     percent: function (n, groupList) { var total=groupList.reduce(function(sum,g){return sum+g.value;},0); return total ? Math.round(100*n/total) : 0; },
-    snapshot: function () { return { rows: this.rows, offset: this.offset, total: this.total, lastscan: this.lastscan, complete: this.complete, error: this.error, cachedAt: Date.now(), firstMs: this.firstMs, completeMs: this.completeMs }; },
-    remember: function () { var value = this.snapshot(); LmsLibraryDisplay.state.collection = value; if (value.complete && value.lastscan) LmsLibraryDisplay.cacheCollection(value); },
-    restore: function (lastscan) { var c = LmsLibraryDisplay.state.collection; if (!c || (lastscan && c.lastscan !== lastscan)) return false; this.rows = c.rows || []; this.offset = c.offset || 0; this.total = c.total == null ? null : c.total; this.lastscan = c.lastscan || ''; this.complete = !!c.complete; this.error = c.error || ''; this.firstMs = c.firstMs == null ? null : c.firstMs; this.completeMs = c.completeMs == null ? null : c.completeMs; this.networkMs = c.networkMs == null ? null : c.networkMs; this.aggregationMs = c.aggregationMs == null ? null : c.aggregationMs; this.cacheMs = c.cacheMs == null ? null : c.cacheMs; return true; },
-    stop: function () { if (this.collectionCache.busy) LmsCollectionCache.cancel(); this.token++; this.busy = false; if (this.complete) this.remember(); },
-    applySnapshot: function (snapshot) { if (snapshot && this.rows.length) this.previousAlbumCount = this.albumCount; if (!snapshot) return false; var changed=this.lastscan&&this.lastscan!==snapshot.lastscan;LmsLibraryDisplay.state.collection = snapshot;var restored=this.restore(snapshot.lastscan);if(changed)this.resetDrillPreparation();return restored; },
+    restore: function (lastscan) { var c = LmsLibraryDisplay.state.collection; if (!c || (lastscan && c.lastscan !== lastscan)) return false; c = LmsCollectionCache.prepareSnapshot(c); this.rows = c.rows; this.summary = c.summary; this.cachedAlbumMap = c.albumMap; this.offset = c.offset || 0; this.total = c.total == null ? null : c.total; this.lastscan = c.lastscan || ''; this.complete = !!c.complete; this.error = c.error || ''; this.firstMs = c.firstMs == null ? null : c.firstMs; this.completeMs = c.completeMs == null ? null : c.completeMs; this.networkMs = c.networkMs == null ? null : c.networkMs; this.aggregationMs = c.aggregationMs == null ? null : c.aggregationMs; this.cacheMs = c.cacheMs == null ? null : c.cacheMs; return true; },
+    stop: function () { if (this.collectionCache.busy) LmsCollectionCache.cancel(); this.token++; this.busy = false; },
+    applySnapshot: function (snapshot) {
+      if (!snapshot) return false;
+      if (this.complete && this.rows === snapshot.rows) return true;
+      if (this.rows.length) this.previousAlbumCount = this.albumCount;
+      var changed = this.complete && this.rows !== snapshot.rows;
+      LmsLibraryDisplay.state.collection = LmsCollectionCache.prepareSnapshot(snapshot);
+      var restored = this.restore(snapshot.lastscan);
+      if (changed) this.resetDrillPreparation();
+      return restored;
+    },
     rebuild: function () { return this.refresh(); },
-    refresh: async function () { this.initialInspection=false;this.error = ''; try { var snapshot=await LmsCollectionCache.rebuild(),renderStarted=Date.now();this.applySnapshot(snapshot);await this.$nextTick();await new Promise(function(resolve){requestAnimationFrame(function(){requestAnimationFrame(resolve);});});this.renderMs=Date.now()-renderStarted; } catch (e) { if (!/cancelled/i.test(String(e&&e.message||''))) this.error = this.tr('Collection could not be loaded. Your previous collection is still available.'); } },
-    activate: async function () { if(this.hasInspected)this.initialInspection=false;this.error = ''; try { var snapshot=await LmsCollectionCache.inspect();if(snapshot)this.applySnapshot(snapshot);this.hasInspected=true; } catch (e) { this.error = this.tr('Collection could not be loaded. Retry when LMS is available.'); } },
+    refresh: async function () { this.error = ''; try { var snapshot=await LmsCollectionCache.rebuild(),renderStarted=Date.now();this.applySnapshot(snapshot);await this.$nextTick();await new Promise(function(resolve){requestAnimationFrame(function(){requestAnimationFrame(resolve);});});this.renderMs=Date.now()-renderStarted; } catch (e) { if (!/cancelled/i.test(String(e&&e.message||''))) this.error = this.tr('Collection could not be loaded. Your previous collection is still available.'); } },
+    activate: async function () {
+      this.error = '';
+      var self = this, token = ++this.token;
+      function show(snapshot) { if (token === self.token) self.applySnapshot(snapshot); }
+      show(LmsLibraryDisplay.state.collection);
+      try { var snapshot = await LmsCollectionCache.inspect(show); show(snapshot); }
+      catch (e) { if (token === this.token) this.error = this.tr('Collection could not be loaded. Retry when LMS is available.'); }
+    },
     scan: function () { return this.refresh(); },
     chartColor: function (index) { return ['#c83d31','#c98012','#087fb2','#238f74','#725aa7','#a85a73','#477d9b'][index % 7]; },
     chartTotal: function (chart) { return chart.id === 'format' ? this.rows.length+' '+this.tr('tracks') : chart.id === 'size' ? this.storageLabel : this.albumCount+' '+this.tr('albums'); },
@@ -577,5 +632,7 @@ Vue.component('lms-collection', {
       for (var i = 0; i < tracks.length; i++) await LmsApi.editPlaylist(id, 'add', { title: tracks[i].title, url: tracks[i].url });
       self.playlistOpen = false; }, this.tr('Added to playlist.'), this.tr('Could not add to playlist.')); }
   },
-  mounted: function () { this.restoreReturnSnapshot();this.activate(); }, beforeDestroy: function () { if(this.selected)LmsLibraryDisplay.state.collectionReturn=this.returnSnapshot();this.stop(); }
+  watch: { 'library.collection': function (snapshot) { this.applySnapshot(snapshot); } },
+  mounted: function () { this.restoreReturnSnapshot();this.activate(); },
+  beforeDestroy: function () { if(this.selected)LmsLibraryDisplay.state.collectionReturn=this.returnSnapshot();this.token++;this.drillToken++; }
 });

@@ -327,6 +327,7 @@ Vue.component('lms-nowplaying', {
     }
   },
   watch: {
+    coverUrl: function () { this.coverFailed = false; },
     'np.id': function () { this.coverFailed = false; },
     isModal: function () { this.updateIsolation(); },
     'ui.queueInline': function (open) {

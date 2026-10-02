@@ -7,6 +7,9 @@
 
   var ENDPOINT = 'jsonrpc.js';
   var DEFAULT_TIMEOUT = 10000;
+  // Service menus can wait on an upstream provider before LMS sends headers.
+  // Keep transport controls responsive while allowing browse reads to finish.
+  var BROWSE_TIMEOUT = 30000;
   var activeRoot = { type: 'all', id: '', name: 'All music' };
 
   function rootFrom(value) {
@@ -840,6 +843,8 @@
       addedTime: num(flat.addedTime), lastUpdated: num(flat.lastUpdated),
       modificationTime: num(flat.modificationTime),
       comment: txt(flat.comment), lyrics: txt(flat.lyrics), url: txt(flat.url),
+      coverId: flat.coverid || flat.artwork_track_id || null,
+      artworkUrl: txt(flat.artwork_url),
       fileSize: num(flat.filesize), releaseType: txt(flat.release_type),
       sampleRate: num(flat.samplerate), sampleSize: num(flat.samplesize),
       format: txt(flat.type).toUpperCase(), bitrate: kbps(flat.bitrate)
@@ -906,6 +911,7 @@
         album: txt(cur.album), albumId: cur.album_id != null ? cur.album_id : cur.albumid,
         trackNum: num(cur.tracknum),
         coverId: cur.coverid || null,
+        artworkUrl: txt(cur.artwork_url || r.artwork_url),
         url: txt(cur.url)
       },
       sampleRate: activeStream.sampleRate,
@@ -931,6 +937,8 @@
       // A metadata miss must never take the whole status poll down with it.
       var info = await songInfo(playerId, st.track.id).catch(function () { return null; });
       if (info) {
+        if (!st.track.coverId) st.track.coverId = info.coverId;
+        if (!st.track.artworkUrl) st.track.artworkUrl = info.artworkUrl;
         if (!st.track.artist) st.track.artist = info.artist;
         if (!activeHasRate && !st.sampleRate) st.sampleRate = st.activeStream.sampleRate = info.sampleRate;
         if (!activeHasSize && !st.sampleSize) st.sampleSize = st.activeStream.sampleSize = info.sampleSize;
@@ -952,6 +960,7 @@
         title: txt(t.title), artist: rowArtist(t), album: txt(t.album),
         albumId: t.album_id != null ? t.album_id : null,
         duration: num(t.duration), coverId: t.coverid || null,
+        artworkUrl: txt(t.artwork_url),
         url: txt(t.url), rating: num(t.rating), playCount: num(t.playcount)
       };
     }));
@@ -1432,7 +1441,7 @@
 
   async function opmlRequest(playerId, node, start, count, extra) {
     var cmd = node.cmd.concat([start | 0, count | 0], node.params, extra || []);
-    var r = await rpc(playerId, cmd);
+    var r = await rpc(playerId, cmd, { timeout: BROWSE_TIMEOUT });
     var seen = Object.create(null);
     return loop(r, 'item_loop').map(function (raw, rawIndex) {
       var i = opmlItemWithBase(r, raw);
@@ -1513,6 +1522,7 @@
       /* Carimbo do ultimo scan da biblioteca. E a chave certa para invalidar
          cache derivado: muda exatamente quando o conteudo muda. */
       lastscan: txt(r.lastscan),
+      scanning: !!num(r.rescan),
       artists: num(r['info total artists']),
       albums: num(r['info total albums']),
       songs: num(r['info total songs']),
@@ -1522,7 +1532,7 @@
   }
 
   async function playlists(start, count) {
-    var r = await rpc('', ['playlists', start | 0, count | 0]);
+    var r = await rpc('', ['playlists', start | 0, count | 0], { timeout: BROWSE_TIMEOUT });
     var source = loop(r, 'playlists_loop');
     return pageMeta(source.map(function (p) {
 	      return { id: p.id, name: txt(p.playlist), url: txt(p.url), source: sourceFromUrl(p.url, false) };
@@ -1559,13 +1569,14 @@
   async function playlistTracks(playlistId, start, count) {
     var r = await rpc('', ['playlists', 'tracks', start | 0, count | 0,
                            'playlist_id:' + playlistId,
-                           'tags:AcCdefgiIjJkKlLmMnopPDUqrROStTuvwxXyY']);
+                           'tags:AcCdefgiIjJkKlLmMnopPDUqrROStTuvwxXyY'], { timeout: BROWSE_TIMEOUT });
     var source = loop(r, 'playlisttracks_loop').concat(loop(r, 'titles_loop'));
     return pageMeta(await fillArtists('', source.map(function (t, index) {
       return {
         id: t.id, title: txt(t.title), artist: rowArtist(t), album: txt(t.album),
         index: t['playlist index'] != null ? num(t['playlist index']) : (start | 0) + index,
         duration: num(t.duration), coverId: t.coverid || null,
+        artworkUrl: txt(t.artwork_url),
         sampleRate: num(t.samplerate), sampleSize: num(t.samplesize),
         format: txt(t.type).toUpperCase(), url: txt(t.url),
         rating: num(t.rating), playCount: num(t.playcount),

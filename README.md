@@ -18,10 +18,34 @@ touch-friendly music system for tablets, phones and desktop browsers. It brings
 library discovery, queue and playlist editing, synchronized-player control,
 live signal-path information and optional server-side DSP into one interface.
 
-Version **3.5.10** uses Vue 2 without a compilation or bundling step: the files in
+Version **3.5.11** uses Vue 2 without a compilation or bundling step: the files in
 the plugin are the files served to the browser.
 
-## What is new in 3.5.10
+## What is new in 3.5.11
+
+Phone player metadata and progress sit above the playback controls, with separate
+command rows on narrow screens. Playlist editing keeps readable track names above
+reorder/remove controls. Long playlist headings, album names and settings values
+wrap while touch controls remain accessible.
+
+![Echo Classic 3.5.11 player on phone](images/release-3.5.11-player-phone.png)
+
+![Echo Classic 3.5.11 playlist editing on phone](images/release-3.5.11-playlist-phone.png)
+
+Now Playing keeps the artwork supplied by LMS and rejects late metadata from the
+previous track. Saved and service playlists allow slower provider responses;
+Firefox also recovers cleanly from failed background library discovery.
+
+Collection restores its saved dashboard after navigation and browser reloads.
+Background library checks flag changed data without discarding the saved results;
+choose **Update collection** or a manual scan to replace them.
+
+![Echo Classic 3.5.11 saved Collection dashboard](images/release-3.5.11-collection-desktop.png)
+
+Chrome mobile emulation, Firefox phone touch viewports and WebKit tap checks were
+used for browser validation. Actual Android 16 hardware was not tested.
+
+## Previous release: 3.5.10
 
 The Equalizer graph has larger labels and can be expanded for horizontal
 inspection on a phone. Quick presets have clearer selection and accessible
@@ -87,6 +111,12 @@ scan continues in larger ordered pages. On the 15,212-track validation library,
 first usable results appeared in about two seconds. Complete snapshots are
 validated and cached; failed or cancelled refreshes keep the previous complete
 collection intact.
+
+Opening Collection restores the saved dashboard immediately, including after a
+browser reload. The snapshot has no time limit and is replaced only by a manual
+scan. Background library checks flag it as outdated when the LMS scan revision
+or track/album counts change, including newly indexed music folders, while keeping
+the saved results visible until you choose **Update collection**.
 
 ### Playlist Builder across Collection and Folders
 
@@ -329,10 +359,10 @@ an older cached stylesheet.
 
 ## Project status
 
-Latest stable release: **3.5.10**. Live Chrome acceptance passed; Android 16
-Chrome and Firefox remain unverified on a device.
+Latest stable release: **3.5.11**. Deployed Chrome and Firefox playlist/artwork
+and phone-layout checks pass. Actual Android 16 hardware was not tested.
 
-- 751 automated tests passing.
+- 763 automated tests passing in the local suite.
 - Six validation stages passing.
 - 25 Vue templates compiling.
 - 1,150 runtime string blocks with complete English and Portuguese coverage;
